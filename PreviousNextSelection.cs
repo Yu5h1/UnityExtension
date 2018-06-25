@@ -70,7 +70,7 @@ public class PreviousNextSelection : EditorWindow {
 					
 					s.richText = true;
 					s.normal.textColor = Color.yellow;
-					GUILayout.Label(("Element."+i.ToString()+countInfo).Bold(),s);
+					GUILayout.Label("<b>"+("Element."+i.ToString()+countInfo)+"</b>",s);
 				}else{
 					if (GUILayout.Button("Element."+i.ToString()+countInfo,s)){
 						current = i;
