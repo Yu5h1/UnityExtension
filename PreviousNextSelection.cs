@@ -11,7 +11,26 @@ public class PreviousNextSelection : EditorWindow {
 		get {
 			if (m_ObjectsRecorder == null){
 				m_ObjectsRecorder = new List<int[]>();
-				m_ObjectsRecorder.Add(Selection.instanceIDs);
+				var load = EditorPrefs.GetString("PreviousNextSelection");
+				if (load == ""){
+					Record();
+				}else{
+					var elements = load.Split('-');
+					foreach (var ele in elements) {
+						if (ele != ""){
+							var sobjs = ele.Split(',');	
+							int[] objs = new int[sobjs.Length];
+							for (int i = 0; i < sobjs.Length; i++) {
+								if (sobjs[i] != ""){
+									objs[i] = int.Parse(sobjs[i]);
+								}
+							}
+							if (objs.Length > 0){
+								m_ObjectsRecorder.Add(objs);
+							}
+						}
+					}
+				}
 			}
 
 			return m_ObjectsRecorder;
@@ -33,7 +52,7 @@ public class PreviousNextSelection : EditorWindow {
 	static bool enablePreviouse { get { return ObjectsRecorder.Count > 0 && current > 0; } }
 	static bool enableNext { get { return ObjectsRecorder.Count > 0 && current < ObjectsRecorder.Count-1; } }
 	static bool ShowWindow = false;
-	private Vector2 scrollerPos = Vector2.zero;
+//	private Vector2 scrollerPos = Vector2.zero;
 	[MenuItem("Window/Previous Next Selection")]
 	static void Init()
 	{
@@ -93,12 +112,23 @@ public class PreviousNextSelection : EditorWindow {
 		if (GUI.Button (clearPos,"Clear")) {
 			current = 0;
 			ObjectsRecorder.Clear();
-			ObjectsRecorder.Add(Selection.instanceIDs);
+			Record();
 		}
 
 	}
 	void OnDisable(){
 		ShowWindow = false;
+	}
+	static void Record(){
+		ObjectsRecorder.Add(Selection.instanceIDs);
+		string save = "";
+		foreach (var item in ObjectsRecorder) {
+			foreach (var obj in item) {
+				save+=obj.ToString()+",";
+			}
+			save+="-";
+		}
+		EditorPrefs.SetString("PreviousNextSelection",save);
 	}
 	static void SelectionChangeEvent()
 	{
@@ -108,7 +138,7 @@ public class PreviousNextSelection : EditorWindow {
 			if (current != ObjectsRecorder.Count-1){
 				ObjectsRecorder.RemoveRange(current+1,ObjectsRecorder.Count-(current+1));
 			}
-			ObjectsRecorder.Add(Selection.instanceIDs);
+			Record();
 			if (ObjectsRecorder.Count > 21){	ObjectsRecorder.RemoveAt(0);	}
 			current = ObjectsRecorder.Count-1;
 		}
