@@ -53,7 +53,7 @@ public class PreviousNextSelection : EditorWindow {
 	static bool enableNext { get { return ObjectsRecorder.Count > 0 && current < ObjectsRecorder.Count-1; } }
 	static bool ShowWindow = false;
 //	private Vector2 scrollerPos = Vector2.zero;
-	[MenuItem("Window/Previous Next Selection")]
+	[MenuItem("Edit/Selection/Previous Next Selection")]
 	static void Init()
 	{
 		ShowWindow = true;
@@ -146,17 +146,17 @@ public class PreviousNextSelection : EditorWindow {
 			window.Repaint();
 		}
 	}
-	[MenuItem("Window/Previouse Selected &LEFT",true)]
+	[MenuItem("Edit/Selection/Previouse Selected &LEFT",true)]
 	static bool CheckPreviouseSelected(){return enablePreviouse;}
-	[MenuItem("Window/Previouse Selected &LEFT")]
+	[MenuItem("Edit/Selection/Previouse Selected &LEFT")]
 	static void PreviouseSelected(){
 		current-=1;
 		changeSelectionObjectsFromList();
 
 	}
-	[MenuItem("Window/Next Selected &RIGHT",true)]
+	[MenuItem("Edit/Selection/Next Selected &RIGHT",true)]
 	static bool CheckNextSelected(){return enableNext;}
-	[MenuItem("Window/Next Selected &RIGHT")]
+	[MenuItem("Edit/Selection/Next Selected &RIGHT")]
 	static void NextSelected(){
 		current+=1;
 		changeSelectionObjectsFromList();
