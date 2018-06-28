@@ -4,7 +4,7 @@ A extension for Unity editor .It record Selection objects and change Previous or
 # For use this plugin , file must move to Editor folder
 
 # Shortcut Keys
-![Alt Text](https://github.com/Yu5h1/PreviousNextSelection/blob/master/Shortcut key.jpg)
+![Alt Text](https://github.com/Yu5h1/PreviousNextSelection/blob/master/Shortcut%20key.jpg)
 
 # WithoutWindow
 ![Alt Text](https://github.com/Yu5h1/PreviousNextSelection/blob/master/WithoutWindow.gif)
