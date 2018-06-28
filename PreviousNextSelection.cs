@@ -171,10 +171,7 @@ public class PreviousNextSelection : EditorWindow {
 		Selection.objects = objs;
 	}
 	[UnityEditor.Callbacks.DidReloadScripts]
-	private static void OnScriptsReloaded() { 
-		var result = Selection.selectionChanged.GetInvocationList().ToList().Find(d => d.Method.Name == "OnSelectionChangeAction");
-		if (result == null){
-			Selection.selectionChanged += () => PreviousNextSelection.SelectionChangeEvent();
-		}
+	private static void OnScriptsReloaded() {
+		Selection.selectionChanged += () => PreviousNextSelection.SelectionChangeEvent();
 	}
 }
