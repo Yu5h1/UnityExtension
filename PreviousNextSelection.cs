@@ -57,8 +57,11 @@ public class PreviousNextSelection : EditorWindow {
 	static System.Type DockAreaType { get { return typeof(Editor).Assembly.GetType("UnityEditor.DockArea"); } }  
 	static List<MethodInfo> DockAreaMethods { get { return DockAreaType.GetMethods().ToList(); } }
 	static Object InspectorArea { get { return Resources.FindObjectsOfTypeAll(DockAreaType).ToList().Find( d => new SerializedObject(d).FindProperty("m_Panes").GetArrayElementAtIndex(0).objectReferenceValue.GetType() == InspectorType); } }
+	static SerializedProperty Panels {get{return new SerializedObject(InspectorArea).FindProperty("m_Panes");}}
+	static int currentTab {get{return (int)FindDockAreaMethod("Int32 get_selected()").Invoke(InspectorArea,null);}}
+
 //	private Vector2 scrollerPos = Vector2.zero;
-	[MenuItem("Edit/Selection/Previous Next Selection")]
+	[MenuItem("Edit/Selection/Previous Next Selection List")]
 	static void Init()
 	{
 		ShowWindow = true;
@@ -192,13 +195,31 @@ public class PreviousNextSelection : EditorWindow {
 			newInspector.Show();
 		}
 	}
-	[MenuItem("Edit/Selection/Remove Tab %W")]
+	[MenuItem("Edit/Selection/Remove Tab &DOWN")]
 	static void RemoveTab()
 	{
-		var panels = new SerializedObject(InspectorArea).FindProperty("m_Panes");
-		var removeTab =  FindDockAreaMethod("Void RemoveTab(UnityEditor.EditorWindow)");
-		var currentTab = FindDockAreaMethod("Int32 get_selected()");
-		removeTab.Invoke(InspectorArea,new object[]{panels.GetArrayElementAtIndex((int)currentTab.Invoke(InspectorArea,null)).objectReferenceValue});
+		if (Panels.arraySize > 1){
+			var removeTab =  FindDockAreaMethod("Void RemoveTab(UnityEditor.EditorWindow)");
+			removeTab.Invoke(InspectorArea,new object[]{Panels.GetArrayElementAtIndex(currentTab).objectReferenceValue});
+		}else{
+			Debug.LogWarning ("Because there is only one tab left, no action is performed.");
+		}
+	}
+	[MenuItem("Edit/Selection/Change Tab %1")]
+	static void ChangeTab()
+	{
+		if (Panels.arraySize > 1){
+			int nextTab = currentTab+1 < Panels.arraySize ? currentTab+1 : 0;
+			((EditorWindow)Panels.GetArrayElementAtIndex(nextTab).objectReferenceValue).Focus();
+		}
+	}
+	[MenuItem("Edit/Selection/Lock/UnLock Inspector %L")]
+	static void LockOrUnLockInspector()
+	{
+		var currentTabWindow = Panels.GetArrayElementAtIndex(currentTab).objectReferenceValue;
+		bool result = (bool)InspectorType.GetProperty("isLocked").GetValue(currentTabWindow,null) ? false:true;
+		InspectorType.GetProperty("isLocked", BindingFlags.Instance | BindingFlags.Public).GetSetMethod().Invoke(currentTabWindow, new object[] { result });
+		InspectorType.GetMethods().ToList().Find(d => d.ToString() == "Void Repaint()").Invoke(currentTabWindow,null);
 	}
 	static MethodInfo FindDockAreaMethod(string val){return DockAreaMethods.Find(d => d.ToString().Contains(val));}
 }
