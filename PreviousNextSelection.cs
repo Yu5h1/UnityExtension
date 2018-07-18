@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using UnityEditor;
+using System.Linq;
 
 public class PreviousNextSelection : EditorWindow {
 
@@ -52,6 +53,10 @@ public class PreviousNextSelection : EditorWindow {
 	static bool enablePreviouse { get { return ObjectsRecorder.Count > 0 && current > 0; } }
 	static bool enableNext { get { return ObjectsRecorder.Count > 0 && current < ObjectsRecorder.Count-1; } }
 	static bool ShowWindow = false;
+	static System.Type InspectorType { get { return typeof(Editor).Assembly.GetType("UnityEditor.InspectorWindow"); } }
+	static System.Type DockAreaType { get { return typeof(Editor).Assembly.GetType("UnityEditor.DockArea"); } }  
+	static List<MethodInfo> DockAreaMethods { get { return DockAreaType.GetMethods().ToList(); } }
+	static Object InspectorArea { get { return Resources.FindObjectsOfTypeAll(DockAreaType).ToList().Find( d => new SerializedObject(d).FindProperty("m_Panes").GetArrayElementAtIndex(0).objectReferenceValue.GetType() == InspectorType); } }
 //	private Vector2 scrollerPos = Vector2.zero;
 	[MenuItem("Edit/Selection/Previous Next Selection")]
 	static void Init()
@@ -172,6 +177,28 @@ public class PreviousNextSelection : EditorWindow {
 	}
 	[UnityEditor.Callbacks.DidReloadScripts]
 	private static void OnScriptsReloaded() {
-		Selection.selectionChanged += () => PreviousNextSelection.SelectionChangeEvent();
+		Selection.selectionChanged += () => PreviousNextSelection.SelectionChangeEvent();	
 	}
+
+	[MenuItem("Edit/Selection/Add Lock Inspector &UP")]
+	static void AddLockInspectorTab()
+	{
+		if (Selection.activeObject == null){
+			Debug.LogWarning ("Selected Object is not exist");
+		}else{
+			var newInspector =  ScriptableObject.CreateInstance(InspectorType) as EditorWindow;
+			InspectorType.GetProperty("isLocked", BindingFlags.Instance | BindingFlags.Public).GetSetMethod().Invoke(newInspector, new object[] { true });
+			FindDockAreaMethod("Void AddTab(UnityEditor.EditorWindow)").Invoke(InspectorArea,new object[]{newInspector});
+			newInspector.Show();
+		}
+	}
+	[MenuItem("Edit/Selection/Remove Tab %W")]
+	static void RemoveTab()
+	{
+		var panels = new SerializedObject(InspectorArea).FindProperty("m_Panes");
+		var removeTab =  FindDockAreaMethod("Void RemoveTab(UnityEditor.EditorWindow)");
+		var currentTab = FindDockAreaMethod("Int32 get_selected()");
+		removeTab.Invoke(InspectorArea,new object[]{panels.GetArrayElementAtIndex((int)currentTab.Invoke(InspectorArea,null)).objectReferenceValue});
+	}
+	static MethodInfo FindDockAreaMethod(string val){return DockAreaMethods.Find(d => d.ToString().Contains(val));}
 }
