@@ -59,7 +59,6 @@ public class PreviousNextSelection : EditorWindow {
 	static Object InspectorArea { get { return Resources.FindObjectsOfTypeAll(DockAreaType).ToList().Find( d => new SerializedObject(d).FindProperty("m_Panes").GetArrayElementAtIndex(0).objectReferenceValue.GetType() == InspectorType); } }
 	static SerializedProperty Panels {get{return new SerializedObject(InspectorArea).FindProperty("m_Panes");}}
 	static int currentTab {get{return (int)FindDockAreaMethod("Int32 get_selected()").Invoke(InspectorArea,null);}}
-
 //	private Vector2 scrollerPos = Vector2.zero;
 	[MenuItem("Edit/Selection/Previous Next Selection List")]
 	static void Init()
@@ -182,20 +181,20 @@ public class PreviousNextSelection : EditorWindow {
 	private static void OnScriptsReloaded() {
 		Selection.selectionChanged += () => PreviousNextSelection.SelectionChangeEvent();	
 	}
-
-	[MenuItem("Edit/Selection/Add Lock Inspector &UP")]
+	[MenuItem("Edit/Selection/Add Lock Inspector %T")]
 	static void AddLockInspectorTab()
 	{
 		if (Selection.activeObject == null){
-			Debug.LogWarning ("Selected Object is not exist");
+			Debug.LogWarning ("Selected Objects do not exist");
 		}else{
 			var newInspector =  ScriptableObject.CreateInstance(InspectorType) as EditorWindow;
 			InspectorType.GetProperty("isLocked", BindingFlags.Instance | BindingFlags.Public).GetSetMethod().Invoke(newInspector, new object[] { true });
 			FindDockAreaMethod("Void AddTab(UnityEditor.EditorWindow)").Invoke(InspectorArea,new object[]{newInspector});
+
 			newInspector.Show();
 		}
 	}
-	[MenuItem("Edit/Selection/Remove Tab &DOWN")]
+	[MenuItem("Edit/Selection/Remove Tab %W")]
 	static void RemoveTab()
 	{
 		if (Panels.arraySize > 1){
@@ -205,8 +204,16 @@ public class PreviousNextSelection : EditorWindow {
 			Debug.LogWarning ("Because there is only one tab left, no action is performed.");
 		}
 	}
-	[MenuItem("Edit/Selection/Change Tab %1")]
-	static void ChangeTab()
+	[MenuItem("Edit/Selection/Next Tab %PGUP")]
+	static void ChangeNextTab()
+	{
+		if (Panels.arraySize > 1){
+			int nextTab = currentTab-1 >= 0 ? currentTab-1 : Panels.arraySize-1 ;
+			((EditorWindow)Panels.GetArrayElementAtIndex(nextTab).objectReferenceValue).Focus();
+		}
+	}
+	[MenuItem("Edit/Selection/Previous Tab %PGDN")]
+	static void ChangePreviouseTab()
 	{
 		if (Panels.arraySize > 1){
 			int nextTab = currentTab+1 < Panels.arraySize ? currentTab+1 : 0;
