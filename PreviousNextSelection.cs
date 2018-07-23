@@ -220,7 +220,7 @@ public class PreviousNextSelection : EditorWindow {
 			((EditorWindow)Panels.GetArrayElementAtIndex(nextTab).objectReferenceValue).Focus();
 		}
 	}
-	[MenuItem("Edit/Selection/Lock/UnLock Inspector %L")]
+	[MenuItem("Edit/Selection/LockOrUnLock Inspector %L")]
 	static void LockOrUnLockInspector()
 	{
 		var currentTabWindow = Panels.GetArrayElementAtIndex(currentTab).objectReferenceValue;
