@@ -56,7 +56,26 @@ public class PreviousNextSelection : EditorWindow {
 	static System.Type InspectorType { get { return typeof(Editor).Assembly.GetType("UnityEditor.InspectorWindow"); } }
 	static System.Type DockAreaType { get { return typeof(Editor).Assembly.GetType("UnityEditor.DockArea"); } }  
 	static List<MethodInfo> DockAreaMethods { get { return DockAreaType.GetMethods().ToList(); } }
-	static Object InspectorArea { get { return Resources.FindObjectsOfTypeAll(DockAreaType).ToList().Find( d => new SerializedObject(d).FindProperty("m_Panes").GetArrayElementAtIndex(0).objectReferenceValue.GetType() == InspectorType); } }
+	static Object InspectorArea {
+		get {
+			if (EditorWindow.focusedWindow.GetType() == InspectorType){
+				var InspectorAreas = Resources.FindObjectsOfTypeAll(DockAreaType).ToList().FindAll( d => new SerializedObject(d).FindProperty("m_Panes").GetArrayElementAtIndex(0).objectReferenceValue.GetType() == InspectorType);
+				if (InspectorAreas.Count > 1){
+					foreach (var item in InspectorAreas) {
+						var Panes = new SerializedObject(item).FindProperty("m_Panes");
+						for (int i = 0; i < Panes.arraySize; i++) {
+							if (Panes.GetArrayElementAtIndex(i).objectReferenceValue == EditorWindow.focusedWindow){
+								return item;
+							}
+						}
+					}
+				}else{
+					return InspectorAreas[0];
+				}
+			}
+			return Resources.FindObjectsOfTypeAll(DockAreaType).ToList().Find( d => new SerializedObject(d).FindProperty("m_Panes").GetArrayElementAtIndex(0).objectReferenceValue.GetType() == InspectorType);	
+		} 
+	}
 	static SerializedProperty Panels {get{return new SerializedObject(InspectorArea).FindProperty("m_Panes");}}
 	static int currentTab {get{return (int)FindDockAreaMethod("Int32 get_selected()").Invoke(InspectorArea,null);}}
 //	private Vector2 scrollerPos = Vector2.zero;
