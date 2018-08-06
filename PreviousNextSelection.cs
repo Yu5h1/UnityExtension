@@ -55,25 +55,24 @@ public class PreviousNextSelection : EditorWindow {
 	static bool ShowWindow = false;
 	static System.Type InspectorType { get { return typeof(Editor).Assembly.GetType("UnityEditor.InspectorWindow"); } }
 	static System.Type DockAreaType { get { return typeof(Editor).Assembly.GetType("UnityEditor.DockArea"); } }  
+	static System.Type WindowLayoutType { get { return typeof(Editor).Assembly.GetType("UnityEditor.WindowLayout"); } }  
+
 	static List<MethodInfo> DockAreaMethods { get { return DockAreaType.GetMethods().ToList(); } }
+	static List<Object> InspectorAreas { get { return Resources.FindObjectsOfTypeAll(DockAreaType).ToList().FindAll( d => new SerializedObject(d).FindProperty("m_Panes").GetArrayElementAtIndex(0).objectReferenceValue.GetType() == InspectorType); } }
 	static Object InspectorArea {
 		get {
-			if (EditorWindow.focusedWindow.GetType() == InspectorType){
-				var InspectorAreas = Resources.FindObjectsOfTypeAll(DockAreaType).ToList().FindAll( d => new SerializedObject(d).FindProperty("m_Panes").GetArrayElementAtIndex(0).objectReferenceValue.GetType() == InspectorType);
-				if (InspectorAreas.Count > 1){
-					foreach (var item in InspectorAreas) {
-						var Panes = new SerializedObject(item).FindProperty("m_Panes");
-						for (int i = 0; i < Panes.arraySize; i++) {
-							if (Panes.GetArrayElementAtIndex(i).objectReferenceValue == EditorWindow.focusedWindow){
-								return item;
-							}
+			var results = InspectorAreas;
+			if (EditorWindow.focusedWindow != null && EditorWindow.focusedWindow.GetType() == InspectorType && results.Count > 1){
+				foreach (var item in results) {
+					var Panes = new SerializedObject(item).FindProperty("m_Panes");
+					for (int i = 0; i < Panes.arraySize; i++) {
+						if (Panes.GetArrayElementAtIndex(i).objectReferenceValue == EditorWindow.focusedWindow){
+							return item;
 						}
 					}
-				}else{
-					return InspectorAreas[0];
 				}
 			}
-			return Resources.FindObjectsOfTypeAll(DockAreaType).ToList().Find( d => new SerializedObject(d).FindProperty("m_Panes").GetArrayElementAtIndex(0).objectReferenceValue.GetType() == InspectorType);	
+			return results[0];
 		} 
 	}
 	static SerializedProperty Panels {get{return new SerializedObject(InspectorArea).FindProperty("m_Panes");}}
@@ -82,11 +81,13 @@ public class PreviousNextSelection : EditorWindow {
 	[MenuItem("Edit/Selection/Previous Next Selection List")]
 	static void Init()
 	{
+		
 		ShowWindow = true;
 		window.Show();
 	}
 	void OnGUI()
 	{
+
 		EditorGUILayout.BeginHorizontal ();
 		EditorGUI.BeginDisabledGroup(!enablePreviouse);
 		if (GUILayout.Button ("<")) {
@@ -99,7 +100,6 @@ public class PreviousNextSelection : EditorWindow {
 		}
 		EditorGUI.EndDisabledGroup();
 		EditorGUILayout.EndHorizontal ();
-
 		if (ObjectsRecorder != null){
 //			scrollerPos = EditorGUILayout.BeginScrollView(scrollerPos);
 			for (int i = 0; i < ObjectsRecorder.Count; i++) {
@@ -203,49 +203,87 @@ public class PreviousNextSelection : EditorWindow {
 	[MenuItem("Edit/Selection/Add Lock Inspector %T")]
 	static void AddLockInspectorTab()
 	{
-		if (Selection.activeObject == null){
-			Debug.LogWarning ("Selected Objects do not exist");
-		}else{
+		if (InspectorAreas.Count > 0){
 			var newInspector =  ScriptableObject.CreateInstance(InspectorType) as EditorWindow;
 			InspectorType.GetProperty("isLocked", BindingFlags.Instance | BindingFlags.Public).GetSetMethod().Invoke(newInspector, new object[] { true });
 			FindDockAreaMethod("Void AddTab(UnityEditor.EditorWindow)").Invoke(InspectorArea,new object[]{newInspector});
-
 			newInspector.Show();
+		}
+	
+	}
+	[MenuItem("Edit/Selection/Add Lock Inspector Window %#T")]
+	static void AddLockInspectorWindowAtRight()
+	{
+		if (InspectorAreas.Count > 0){
+			var a =  new SerializedObject(InspectorArea).FindProperty("m_Panes").GetArrayElementAtIndex(0).objectReferenceValue as EditorWindow;
+			var newInspector =  ScriptableObject.CreateInstance(InspectorType) as EditorWindow;
+			newInspector.Show();
+			PreviousNextSelection.DockEditorWindow(a,newInspector);
+			newInspector.Focus();
 		}
 	}
 	[MenuItem("Edit/Selection/Remove Tab %W")]
-	static void RemoveTab()
+	static void RemoveInspectorTab()
 	{
-		if (Panels.arraySize > 1){
-			var removeTab =  FindDockAreaMethod("Void RemoveTab(UnityEditor.EditorWindow)");
-			removeTab.Invoke(InspectorArea,new object[]{Panels.GetArrayElementAtIndex(currentTab).objectReferenceValue});
-		}else{
-			Debug.LogWarning ("Because there is only one tab left, no action is performed.");
+		if (InspectorAreas.Count > 0){
+			if (Panels.arraySize > 1 || InspectorAreas.Count > 1){
+				var removeTab =  FindDockAreaMethod("Void RemoveTab(UnityEditor.EditorWindow)");
+				removeTab.Invoke(InspectorArea,new object[]{Panels.GetArrayElementAtIndex(currentTab).objectReferenceValue});
+			}else{
+				Debug.LogWarning ("Because there is only one tab left, no action is performed.");
+			}
 		}
 	}
 	[MenuItem("Edit/Selection/Next Tab %PGUP")]
 	static void ChangeNextTab()
 	{
-		if (Panels.arraySize > 1){
-			int nextTab = currentTab-1 >= 0 ? currentTab-1 : Panels.arraySize-1 ;
-			((EditorWindow)Panels.GetArrayElementAtIndex(nextTab).objectReferenceValue).Focus();
+		if (InspectorAreas.Count > 0){
+			if (Panels.arraySize > 1){
+				int nextTab = currentTab-1 >= 0 ? currentTab-1 : Panels.arraySize-1 ;
+				((EditorWindow)Panels.GetArrayElementAtIndex(nextTab).objectReferenceValue).Focus();
+			}
 		}
 	}
 	[MenuItem("Edit/Selection/Previous Tab %PGDN")]
 	static void ChangePreviouseTab()
 	{
-		if (Panels.arraySize > 1){
-			int nextTab = currentTab+1 < Panels.arraySize ? currentTab+1 : 0;
-			((EditorWindow)Panels.GetArrayElementAtIndex(nextTab).objectReferenceValue).Focus();
+		if (InspectorAreas.Count > 0){
+			if (Panels.arraySize > 1){
+				int nextTab = currentTab+1 < Panels.arraySize ? currentTab+1 : 0;
+				((EditorWindow)Panels.GetArrayElementAtIndex(nextTab).objectReferenceValue).Focus();
+			}
 		}
 	}
 	[MenuItem("Edit/Selection/LockOrUnLock Inspector %L")]
 	static void LockOrUnLockInspector()
 	{
-		var currentTabWindow = Panels.GetArrayElementAtIndex(currentTab).objectReferenceValue;
-		bool result = (bool)InspectorType.GetProperty("isLocked").GetValue(currentTabWindow,null) ? false:true;
-		InspectorType.GetProperty("isLocked", BindingFlags.Instance | BindingFlags.Public).GetSetMethod().Invoke(currentTabWindow, new object[] { result });
-		InspectorType.GetMethods().ToList().Find(d => d.ToString() == "Void Repaint()").Invoke(currentTabWindow,null);
+		if (InspectorAreas.Count > 0){
+			var currentTabWindow = Panels.GetArrayElementAtIndex(currentTab).objectReferenceValue;
+			bool result = (bool)InspectorType.GetProperty("isLocked").GetValue(currentTabWindow,null) ? false:true;
+			InspectorType.GetProperty("isLocked", BindingFlags.Instance | BindingFlags.Public).GetSetMethod().Invoke(currentTabWindow, new object[] { result });
+			InspectorType.GetMethods().ToList().Find(d => d.ToString() == "Void Repaint()").Invoke(currentTabWindow,null);
+		}
 	}
 	static MethodInfo FindDockAreaMethod(string val){return DockAreaMethods.Find(d => d.ToString().Contains(val));}
+
+	public static void DockEditorWindow(EditorWindow parent, EditorWindow child)
+	{
+		Vector2 screenPoint = parent.position.position + new Vector2(parent.position.width * .9f,parent.position.height/2);
+
+		Assembly assembly = typeof(UnityEditor.EditorWindow).Assembly;
+		System.Type sv = assembly.GetType("UnityEditor.SplitView");
+
+		var tp = typeof(EditorWindow).GetField("m_Parent", BindingFlags.NonPublic | BindingFlags.Instance);
+		var opArea = tp.GetValue(parent);
+		var ocArea = tp.GetValue(child);
+		var tview = DockAreaType.GetProperty("parent", BindingFlags.Public | BindingFlags.Instance);
+		var oview = tview.GetValue(opArea, null);
+		var tDragOver = sv.GetMethod("DragOver", BindingFlags.Public | BindingFlags.Instance);
+		var oDropInfo = tDragOver.Invoke(oview, new object[] { child, screenPoint });
+		DockAreaType.GetField("s_OriginalDragSource", BindingFlags.NonPublic | BindingFlags.Static).SetValue(null, ocArea);
+
+		var tPerformDrop = sv.GetMethod("PerformDrop", BindingFlags.Public | BindingFlags.Instance);
+		tPerformDrop.Invoke(oview, new object[] { child, oDropInfo, null });
+
+	}
 }
