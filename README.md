@@ -5,6 +5,9 @@ A extension for Unity editor .It record Selection objects and change Previous or
 
 Update20180806: 
 
+#SplitView
+![Alt Text](https://github.com/Yu5h1/PreviousNextSelection/blob/master/SplitView.gif)
+
 # Shortcut Keys
 ![Alt Text](https://github.com/Yu5h1/PreviousNextSelection/blob/master/Shortcut%20key.jpg)
 
