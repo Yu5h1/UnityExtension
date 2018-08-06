@@ -217,6 +217,7 @@ public class PreviousNextSelection : EditorWindow {
 		if (InspectorAreas.Count > 0){
 			var a =  new SerializedObject(InspectorArea).FindProperty("m_Panes").GetArrayElementAtIndex(0).objectReferenceValue as EditorWindow;
 			var newInspector =  ScriptableObject.CreateInstance(InspectorType) as EditorWindow;
+			InspectorType.GetProperty("isLocked", BindingFlags.Instance | BindingFlags.Public).GetSetMethod().Invoke(newInspector, new object[] { true });
 			newInspector.Show();
 			PreviousNextSelection.DockEditorWindow(a,newInspector);
 			newInspector.Focus();
