@@ -208,6 +208,7 @@ public class PreviousNextSelection : EditorWindow {
 			InspectorType.GetProperty("isLocked", BindingFlags.Instance | BindingFlags.Public).GetSetMethod().Invoke(newInspector, new object[] { true });
 			FindDockAreaMethod("Void AddTab(UnityEditor.EditorWindow)").Invoke(InspectorArea,new object[]{newInspector});
 			newInspector.Show();
+			newInspector.Focus();
 		}
 	
 	}
@@ -223,16 +224,11 @@ public class PreviousNextSelection : EditorWindow {
 			newInspector.Focus();
 		}
 	}
-	[MenuItem("Edit/Selection/Remove Tab %W")]
-	static void RemoveInspectorTab()
+	[MenuItem("Edit/Selection/Close Focused Window %W")]
+	static void CloseFocusedWindow()
 	{
-		if (InspectorAreas.Count > 0){
-			if (Panels.arraySize > 1 || InspectorAreas.Count > 1){
-				var removeTab =  FindDockAreaMethod("Void RemoveTab(UnityEditor.EditorWindow)");
-				removeTab.Invoke(InspectorArea,new object[]{Panels.GetArrayElementAtIndex(currentTab).objectReferenceValue});
-			}else{
-				Debug.LogWarning ("Because there is only one tab left, no action is performed.");
-			}
+		if (focusedWindow != null){
+			focusedWindow.Close();
 		}
 	}
 	[MenuItem("Edit/Selection/Next Tab %PGUP")]
