@@ -17,5 +17,5 @@ Update20180806:
 # WithWindow
 ![Alt Text](https://github.com/Yu5h1/PreviousNextSelection/blob/master/WithWindow.gif)
 
-#Reference 
+# Reference
 	https://github.com/liuxq/blog/issues/7
