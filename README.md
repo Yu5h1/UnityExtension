@@ -18,4 +18,5 @@ Update20180806:
 ![Alt Text](https://github.com/Yu5h1/PreviousNextSelection/blob/master/WithWindow.gif)
 
 # Reference
-	https://github.com/liuxq/blog/issues/7
+
+https://github.com/liuxq/blog/issues/7
