@@ -9,7 +9,7 @@ Update20180806:
 ![Alt Text](https://github.com/Yu5h1/PreviousNextSelection/blob/master/SplitView.gif)
 
 # Shortcut Keys
-![Alt Text](https://github.com/Yu5h1/PreviousNextSelection/blob/master/Shortcut%20key.jpg)
+![Alt Text](https://user-images.githubusercontent.com/30456365/50373899-5ec1f380-0620-11e9-9e37-00a8a52341c9.jpg)
 
 # WithoutWindow
 ![Alt Text](https://github.com/Yu5h1/PreviousNextSelection/blob/master/WithoutWindow.gif)
