@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Linq;
 
-public class PreviousNextSelection : EditorWindow {
+public class SelectionRecorder : EditorWindow {
 
 	public static List<int[]> m_ObjectsRecorder;
 	public static List<int[]> ObjectsRecorder {
@@ -38,12 +38,12 @@ public class PreviousNextSelection : EditorWindow {
 		}
 	}
 	public static int current;
-	static PreviousNextSelection m_window;
-	static PreviousNextSelection window {
+	static SelectionRecorder m_window;
+	static SelectionRecorder window {
 		get {
 			if (m_window == null){
 				// Get existing open window or if none, make a new one:
-				PreviousNextSelection.m_window = (PreviousNextSelection)EditorWindow.GetWindow(typeof(PreviousNextSelection));
+				SelectionRecorder.m_window = (SelectionRecorder)EditorWindow.GetWindow(typeof(SelectionRecorder));
 				m_window.titleContent = new GUIContent("Previous Next Selection");
 			}
 			return m_window;
@@ -198,7 +198,7 @@ public class PreviousNextSelection : EditorWindow {
 	}
 	[UnityEditor.Callbacks.DidReloadScripts]
 	private static void OnScriptsReloaded() {
-		Selection.selectionChanged += () => PreviousNextSelection.SelectionChangeEvent();	
+		Selection.selectionChanged += () => SelectionRecorder.SelectionChangeEvent();	
 	}
 	[MenuItem("Edit/Selection/Add Lock Inspector %T")]
 	static void AddLockInspectorTab()
@@ -220,7 +220,7 @@ public class PreviousNextSelection : EditorWindow {
 			var newInspector =  ScriptableObject.CreateInstance(InspectorType) as EditorWindow;
 			InspectorType.GetProperty("isLocked", BindingFlags.Instance | BindingFlags.Public).GetSetMethod().Invoke(newInspector, new object[] { true });
 			newInspector.Show();
-			PreviousNextSelection.DockEditorWindow(a,newInspector);
+			SelectionRecorder.DockEditorWindow(a,newInspector);
 			newInspector.Focus();
 		}
 	}
