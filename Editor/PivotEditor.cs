@@ -35,7 +35,6 @@ namespace Yu5h1Tools.Test
         Vector3 OriginalPosition;
 
         object snapPoint = null;
-        SceneView currentSceneView;
 
         float detectDistance = 0.1f;
         string warningTxT;
@@ -173,7 +172,6 @@ namespace Yu5h1Tools.Test
         bool IsMouseDrag;
         void OnSceneGUI(SceneView sceneview)
         {
-            currentSceneView = sceneview;
 
             if (EnableEdit)
             {
@@ -273,7 +271,7 @@ namespace Yu5h1Tools.Test
             {
                 EditMod = false;
             }
-
+            SnapMod = false;
             Repaint();
         }
         public void Point(Vector3 position, Color color = default(Color), float size = 0.2f)
