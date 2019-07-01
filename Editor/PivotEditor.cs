@@ -2,8 +2,6 @@
 using UnityEditor;
 using System.Collections.Generic;
 using System.IO;
-using Yu5h1Tools.UnityEditorEx;
-using Yu5h1Tools.Runtime;
 
 namespace Yu5h1Tools.Test
 {
@@ -336,5 +334,44 @@ namespace Yu5h1Tools.Test
             string firstletter = content[0].ToString().ChangeColor(color).Size(amount);
             return (bold ? firstletter.Bold() : firstletter) + content.Remove(0,1);
         }
-    } 
+    }
+    public static class BoundsEx
+    {
+        public static Vector3 Top(this Bounds bounds)
+        {
+            Vector3 result = bounds.center;
+            result.y = bounds.max.y;
+            return result;
+        }
+        public static Vector3 Buttom(this Bounds bounds)
+        {
+            Vector3 result = bounds.center;
+            result.y = bounds.min.y;
+            return result;
+        }
+        public static Vector3 Left(this Bounds bounds)
+        {
+            Vector3 result = bounds.center;
+            result.x = bounds.min.x;
+            return result;
+        }
+        public static Vector3 Right(this Bounds bounds)
+        {
+            Vector3 result = bounds.center;
+            result.x = bounds.max.x;
+            return result;
+        }
+        public static Vector3 Front(this Bounds bounds)
+        {
+            Vector3 result = bounds.center;
+            result.z = bounds.max.z;
+            return result;
+        }
+        public static Vector3 Back(this Bounds bounds)
+        {
+            Vector3 result = bounds.center;
+            result.z = bounds.min.z;
+            return result;
+        }
+    }
 }
