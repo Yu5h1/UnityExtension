@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Linq;
 
+
 public class SelectionRecorder : EditorWindow {
 
 	public static List<int[]> m_ObjectsRecorder;
@@ -55,12 +56,11 @@ public class SelectionRecorder : EditorWindow {
 	static bool ShowWindow = false;
 	static System.Type InspectorType { get { return typeof(Editor).Assembly.GetType("UnityEditor.InspectorWindow"); } }
 	static System.Type DockAreaType { get { return typeof(Editor).Assembly.GetType("UnityEditor.DockArea"); } }  
-	static System.Type WindowLayoutType { get { return typeof(Editor).Assembly.GetType("UnityEditor.WindowLayout"); } }  
 
 	static List<MethodInfo> DockAreaMethods { get { return DockAreaType.GetMethods().ToList(); } }
 	static List<Object> InspectorAreas { get { return Resources.FindObjectsOfTypeAll(DockAreaType).ToList().FindAll( d => new SerializedObject(d).FindProperty("m_Panes").GetArrayElementAtIndex(0).objectReferenceValue.GetType() == InspectorType); } }
 	static Object InspectorArea {
-		get {
+		get {            
 			var results = InspectorAreas;
 			if (EditorWindow.focusedWindow != null && EditorWindow.focusedWindow.GetType() == InspectorType && results.Count > 1){
 				foreach (var item in results) {
@@ -178,7 +178,6 @@ public class SelectionRecorder : EditorWindow {
 	static void PreviouseSelected(){
 		current-=1;
 		changeSelectionObjectsFromList();
-
 	}
 	[MenuItem("Edit/Selection/Next Selected &RIGHT",true)]
 	static bool CheckNextSelected(){return enableNext;}
@@ -196,7 +195,7 @@ public class SelectionRecorder : EditorWindow {
 		}
 		Selection.objects = objs;
 	}
-	[UnityEditor.Callbacks.DidReloadScripts]
+	[InitializeOnLoadMethod]
 	private static void OnScriptsReloaded() {
 		Selection.selectionChanged += () => SelectionRecorder.SelectionChangeEvent();	
 	}
@@ -210,7 +209,6 @@ public class SelectionRecorder : EditorWindow {
 			newInspector.Show();
 			newInspector.Focus();
 		}
-	
 	}
 	[MenuItem("Edit/Selection/Add Lock Inspector Window %#T")]
 	static void AddLockInspectorWindowAtRight()
