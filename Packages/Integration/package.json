@@ -5,9 +5,7 @@
 	"description": "Library",
 	"unity": "2019.4",
 	"unityRelease": "",
-	"dependencies": {
-		"com.yu5h1.library": "file:Packages/Integration"
-	},
+	"dependencies": {},
 	"keywords": [ "Extension" ],
 	"author": {
 		"name": "Yu5h1",
