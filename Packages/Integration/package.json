@@ -1,0 +1,15 @@
+{
+	"name": "com.yu5h1.library",
+	"version": "1.0.1",
+	"displayName": "Yu5h1Lib",
+	"description": "Library",
+	"unity": "2019.4",
+	"unityRelease": "",
+	"dependencies": {},
+	"keywords": [ "Extension" ],
+	"author": {
+		"name": "Yu5h1",
+		"email": "jenyu5h10415@gmail.com",
+		"url": "https://github.com/Yu5h1"
+	}
+}
