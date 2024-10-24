@@ -3,4 +3,4 @@ Welcome to the my Unity Extension !
 * [Pivot Editor](https://github.com/Yu5h1/UnityExtension/wiki/Pivot-Editor)
 
 Package:
-*[Integration](https://github.com/Yu5h1/UnityExtension.git?path=/Packages/Integration)
+* [Integration](https://github.com/Yu5h1/UnityExtension.git?path=/Packages/Integration)
