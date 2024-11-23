@@ -1,0 +1,24 @@
+using UnityEngine;
+using UnityEditor;
+using System.Collections.Generic;
+using System.IO;
+public class #SCRIPTNAME# : EditorWindow
+{
+    private static #SCRIPTNAME# m_#SCRIPTNAME#;
+    private static #SCRIPTNAME# window {
+        get {
+            if (m_#SCRIPTNAME# == null) Init();
+            return m_#SCRIPTNAME#;
+        }
+    }
+	[MenuItem("Tools/#SCRIPTNAME#")]
+	public static void Init()
+	{
+        m_#SCRIPTNAME# = (#SCRIPTNAME#)EditorWindow.GetWindow(typeof(#SCRIPTNAME#));
+        window.titleContent = new GUIContent("#SCRIPTNAME#");
+    }
+	void OnGUI()
+	{
+        
+	}
+}
