@@ -1,0 +1,16 @@
+{
+    "name": "DOTweenBehaviour",
+    "rootNamespace": "Yu5h1Lib",
+    "references": [
+        "GUID:7edec522519534f4a91ca8423a296222"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

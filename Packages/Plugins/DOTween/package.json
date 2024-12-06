@@ -1,0 +1,19 @@
+{
+  "name": "com.yu5h1.DOTween.Extension",
+  "version": "1.0.0",
+  "displayName": "Yu5h1's DOTween Extension",
+  "description": "Extension for Unity DOTween",
+  "unity": "2024.1",
+  "dependencies": {      
+	"com.unity.ugui": "1.0.0",
+    "com.yu5h1.library": "1.0.1"	
+  },
+  "keywords": [
+    "Tween"  
+  ],
+  "author": {
+    "name": "Yu5h1",
+    "email": "jenyu5h10415@gmail.com",
+    "url": "https://github.com/Yu5h1"
+  }
+}
