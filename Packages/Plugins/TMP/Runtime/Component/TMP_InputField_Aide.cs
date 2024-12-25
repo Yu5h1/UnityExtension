@@ -6,7 +6,7 @@ using UnityEngine.Events;
 using ContentType = TMPro.TMP_InputField.ContentType;
 
 [DisallowMultipleComponent, RequireComponent(typeof(TMP_InputField))]
-public class TMP_InputFieldEnhance : MonoBehaviour
+public class TMP_InputField_Aide : MonoBehaviour
 {
     [SerializeField]
     private TMP_InputField _TMP_InputField;

@@ -1,15 +1,15 @@
 {
-  "name": "com.yu5h1.DOTween.Extension",
+  "name": "com.yu5h1.dotweenextension",
   "version": "1.0.0",
-  "displayName": "Yu5h1's DOTween Extension",
-  "description": "Extension for Unity DOTween",
+  "displayName": "Yu5h1Lib.DOTweenExtension",
+  "description": "Utilities for Unity DOTween",
   "unity": "2024.1",
   "dependencies": {      
 	"com.unity.ugui": "1.0.0",
-    "com.yu5h1.library": "1.0.1"	
+    "com.yu5h1.library": "1.0.1"
   },
   "keywords": [
-    "Tween"  
+    "DOTween"  
   ],
   "author": {
     "name": "Yu5h1",

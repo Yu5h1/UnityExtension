@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Yu5h1Lib
 {
-    using FloatTweener = DG.Tweening.Core.TweenerCore<float, float, DG.Tweening.Plugins.Options.FloatOptions>;
+    using FloatTweener = DG.Tweening.Core.TweenerCore<float, float, FloatOptions>;
     public abstract class TweenFloat<T> : TweenBehaviour<T, float, float, FloatOptions> where T : Component
     {
         protected abstract float GetFloat();

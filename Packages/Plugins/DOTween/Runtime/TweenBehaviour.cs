@@ -27,9 +27,9 @@ namespace Yu5h1Lib
         
         public Tweener tweener { get; protected set; }
         public float normalizedTime => tweener.ElapsedPercentage();
-        protected abstract Tweener Create();
-        public bool IsInitinalized => tweener != null;
-        protected abstract void Init();
+        protected internal abstract Tweener Create();
+        public bool IsInitinalized => tweener != null && DOTween.IsTweening(tweener);
+        protected internal abstract void Init();
         public void Kill()
         {
             if (!IsInitinalized)
@@ -42,10 +42,27 @@ namespace Yu5h1Lib
         where TComponent : Component
         where TPlugOptions : struct, IPlugOptions
     {
-        public TComponent component { get; private set; }
-        
+        [SerializeField, ReadOnly]
+        public TComponent _component;
+        public TComponent component
+        {
+            get
+            {
+                if (!_component)
+                {
+                    _component = OverrideGetComponent() ?? GetComponent<TComponent>();
+                    "component does not exist !".printWarningIf(!_component);
+                }
+                return _component;
+            }
+        }
+        public virtual TComponent OverrideGetComponent() => null;
+
         protected TweenerCore<T1, T2, TPlugOptions> TweenerCore
-        { get => (TweenerCore<T1, T2, TPlugOptions>)tweener; set => tweener = value; }
+        { 
+            get => (TweenerCore<T1, T2, TPlugOptions>)tweener; 
+            set => tweener = value;
+        }
 
         [SerializeField]
         protected T2 _startValue;
@@ -53,8 +70,6 @@ namespace Yu5h1Lib
         [SerializeField]
         protected bool ChangeStartValue;
         
-
-
         [SerializeField]
         protected T2 _endValue;
         public T2 endValue { 
@@ -65,7 +80,6 @@ namespace Yu5h1Lib
                     TweenerCore.endValue = value;
             } 
         }
-
 
         [SerializeField]
         private UnityEvent _PlayEvent;
@@ -83,16 +97,12 @@ namespace Yu5h1Lib
         protected UnityEvent<T2> OnRewindEvent;
         public event UnityAction<TweenBehaviour, T2> RewindEvent;
 
-        protected override Tweener Create() => CreateTweenCore();
+        protected internal override Tweener Create() => CreateTweenCore();
         protected abstract TweenerCore<T1, T2, TPlugOptions> CreateTweenCore();
-
-        public virtual TComponent OverrideGetComponent() => null;
-
-        protected override void Init()
+        protected internal override void Init()
         {
             if (IsInitinalized)
-                return;
-            component = OverrideGetComponent() ?? GetComponent<TComponent>();
+                return;            
             TweenerCore = CreateTweenCore();
             if (ChangeStartValue)
                 TweenerCore.ChangeStartValue(startValue);
@@ -122,7 +132,7 @@ namespace Yu5h1Lib
         {
             Init();
         }
-        private void OnEnable()
+        protected virtual void OnEnable()
         {
             Init();
             if (!playOnEnable)
@@ -184,7 +194,7 @@ namespace Yu5h1Lib
         Coroutine coroutine;
         public void TryPlayBackwards(float delay)
         {
-            if (!gameObject.activeSelf || !enabled || TweenerCore.IsPlaying() || IsWaiting)
+            if (!isActiveAndEnabled || TweenerCore.IsPlaying() || IsWaiting)
                 return;
             if (coroutine != null)
                 StopCoroutine(coroutine);
@@ -205,6 +215,6 @@ namespace Yu5h1Lib
     public abstract class TweenBehaviour<TComponent, TValue, TPlugOptions> : TweenBehaviour<TComponent, TValue, TValue, TPlugOptions>
                 where TComponent : Component
                 where TPlugOptions : struct, IPlugOptions
-    { 
+    {
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using Yu5h1Lib;
 
-public abstract class UI_DialogBase : MonoBehaviour
+public abstract class UI_DialogBase : UIControl
 {
     public string[] lines;
     public string Content 
@@ -32,9 +32,19 @@ public abstract class UI_DialogBase : MonoBehaviour
 
 
     [SerializeField]
-    private UnityEvent OnSkip;
+    private UnityEvent _Skiped;
+    public event UnityAction Skiped
+    {
+        add => _Skiped.AddListener(value);
+        remove => _Skiped.RemoveListener(value);
+    }
     [SerializeField]
-    private UnityEvent OnNext;
+    private UnityEvent _DialogOver;
+    public event UnityAction DialogOver
+    {
+        add => _DialogOver.AddListener(value);
+        remove => _DialogOver.RemoveListener(value);
+    }
 
     private Timer timer = new Timer();
     private Timer.Wait<Timer> wait;
@@ -124,7 +134,7 @@ public abstract class UI_DialogBase : MonoBehaviour
                 if (!IsPerforming)
                 {
                     Content = text;
-                    OnSkip?.Invoke();
+                    _Skiped?.Invoke();
                     _PerformCompleted?.Invoke();
                     yield break;
                 }
@@ -176,7 +186,7 @@ public abstract class UI_DialogBase : MonoBehaviour
         if (IsPerforming)
             IsPerforming = false;
         else if (!Next())
-            OnNext?.Invoke();
+            _DialogOver?.Invoke();
     }
     public void RefreshLayout(VerticalLayoutGroup verticalLayoutGroup)
     {

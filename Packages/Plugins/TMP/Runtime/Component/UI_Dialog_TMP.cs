@@ -19,14 +19,14 @@ public class UI_Dialog_TMP : UI_DialogBase
             textMeshProUGUI = GetComponentInChildren<TextMeshProUGUI>();
     }
 
-    protected override void Start()
-    {
-        base.Start();
-        textMeshProUGUI.OnPreRenderText += TextMeshProUGUI_OnPreRenderText;
+    //protected override void Start()
+    //{
+    //    base.Start();
+    //    textMeshProUGUI.OnPreRenderText += TextMeshProUGUI_OnPreRenderText;
         
-    }
-    private void TextMeshProUGUI_OnPreRenderText(TMP_TextInfo obj)
-    {
+    //}
+    //private void TextMeshProUGUI_OnPreRenderText(TMP_TextInfo obj)
+    //{
         
-    }
+    //}
 }

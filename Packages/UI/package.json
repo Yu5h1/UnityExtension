@@ -1,7 +1,7 @@
 {
   "name": "com.yu5h1.ui",
   "version": "1.0.0",
-  "displayName": "Yu5h1's UI",
+  "displayName": "Yu5h1Lib.UI",
   "description": "Utilities for Unity UI",
   "unity": "2024.1",
   "dependencies": {      
