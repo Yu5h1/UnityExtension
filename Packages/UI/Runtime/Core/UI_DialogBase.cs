@@ -7,7 +7,6 @@ using Yu5h1Lib;
 
 public abstract class UI_DialogBase : MonoBehaviour
 {
-    
     public string[] lines;
     public string Content 
     {
@@ -30,30 +29,44 @@ public abstract class UI_DialogBase : MonoBehaviour
     public bool IsPerforming { get; private set; }
     public bool NothingToSay => StepIndex >= lines.Length - 1 && !IsPerforming;
     public bool PerformOnEnable = true;
-    [SerializeField]
-    private UnityEvent OnPerformBegin;
-    [SerializeField]
-    private UnityEvent OnPerformCompleted = default!;
+
+
     [SerializeField]
     private UnityEvent OnSkip;
     [SerializeField]
     private UnityEvent OnNext;
 
-    public UnityEvent<string> OnContentChangedEvent;
-    public UnityEvent<int> OnLineCountChangedEvent;
-
     private Timer timer = new Timer();
     private Timer.Wait<Timer> wait;
 
-    public event UnityAction PerformCompleted {
-        add => OnPerformCompleted.AddListener(value);
-        remove => OnPerformCompleted.RemoveListener(value);
-    }
-
+    [SerializeField]
+    private UnityEvent _PerformBegin;
     public event UnityAction PerformBegin
     {
-        add => OnPerformBegin.AddListener(value);
-        remove => OnPerformBegin.RemoveListener(value);
+        add => _PerformBegin.AddListener(value);
+        remove => _PerformBegin.RemoveListener(value);
+    }
+    [SerializeField]
+    private UnityEvent _PerformCompleted = default!;
+    public event UnityAction PerformCompleted
+    {
+        add => _PerformCompleted.AddListener(value);
+        remove => _PerformCompleted.RemoveListener(value);
+    }
+
+    [SerializeField]
+    private UnityEvent<string> _ContentChanged;
+    public event UnityAction<string> ContentChanged
+    {
+        add => _ContentChanged.AddListener(value);
+        remove => _ContentChanged.RemoveListener(value);
+    }
+    [SerializeField]
+    private UnityEvent<int> _LineCountChangedEvent;
+    public event UnityAction<int> LineCountChangedEvent
+    {
+        add => _LineCountChangedEvent.AddListener(value);
+        remove => _LineCountChangedEvent.RemoveListener(value);
     }
 
     private IEnumerator lastCoroutine;
@@ -88,7 +101,7 @@ public abstract class UI_DialogBase : MonoBehaviour
             StopCoroutine(lastCoroutine);        
         StartCoroutine(lastCoroutine = PerformVerbatimProcess(lines[StepIndex = 0]));
     }
-    public void PerformVerbatim(string content)
+    public virtual void PerformVerbatim(string content)
     {
         lines = new string[] { content };
         Perform();
@@ -96,9 +109,9 @@ public abstract class UI_DialogBase : MonoBehaviour
 
     IEnumerator PerformVerbatimProcess(string text)
     {
-        if (Speed == 0 || text.Length < 1)
+        if (Speed == 0 || string.IsNullOrEmpty(text))
         {
-            Content = text;            
+            Content = text;
             yield break;
         }
         IsPerforming = true;
@@ -112,17 +125,17 @@ public abstract class UI_DialogBase : MonoBehaviour
                 {
                     Content = text;
                     OnSkip?.Invoke();
-                    OnPerformCompleted?.Invoke();
+                    _PerformCompleted?.Invoke();
                     yield break;
                 }
                 Content += letter;
                 
-                OnPerformBegin?.Invoke();
+                _PerformBegin?.Invoke();
                 timer.Start();
                 yield return wait;
             }
 
-        OnPerformCompleted?.Invoke();
+        _PerformCompleted?.Invoke();
         IsPerforming = false;
     }
 
@@ -134,7 +147,7 @@ public abstract class UI_DialogBase : MonoBehaviour
 
     private void OnContentChanged(string oldContent)
     {
-        OnContentChangedEvent?.Invoke(oldContent);
+        _ContentChanged?.Invoke(oldContent);
         var newLineCount = GetLineCount();
         if (LineCountCache != newLineCount)
         {
@@ -144,7 +157,7 @@ public abstract class UI_DialogBase : MonoBehaviour
     }
     private void OnLineCountChanged(int oldCount)
     {
-        OnLineCountChangedEvent?.Invoke(oldCount);
+        _LineCountChangedEvent?.Invoke(oldCount);
     }
     #endregion
     #region Action
@@ -175,11 +188,11 @@ public abstract class UI_DialogBase : MonoBehaviour
         verticalLayoutGroup.SetLayoutVertical();
     }
     #endregion
-    public void AddElementFromContent()
+    public void AddLinesFromContent()
     {
         var newIndex = lines.Length;
         System.Array.Resize(ref lines, newIndex + 1);
         lines[newIndex] = Content;
     }
-
+    public void Log(string msg) => msg.print();
 }

@@ -1,8 +1,8 @@
 {
-  "name": "com.yu5h1.UI.Extension",
+  "name": "com.yu5h1.ui",
   "version": "1.0.0",
-  "displayName": "Yu5h1's UI Extension",
-  "description": "Extension for Unity UI",
+  "displayName": "Yu5h1's UI",
+  "description": "Utilities for Unity UI",
   "unity": "2024.1",
   "dependencies": {      
 	"com.unity.ugui": "1.0.0",
