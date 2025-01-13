@@ -204,5 +204,4 @@ public abstract class UI_DialogBase : UIControl
         System.Array.Resize(ref lines, newIndex + 1);
         lines[newIndex] = Content;
     }
-    public void Log(string msg) => msg.print();
 }
