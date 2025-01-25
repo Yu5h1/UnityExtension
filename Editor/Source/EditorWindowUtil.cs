@@ -12,8 +12,7 @@ namespace Yu5h1Lib.EditorExtension
             var results = GetAllEditorWindows();
             foreach (var item in results) 
                 if (item.GetType() == type) return item;
-
-            Debug.LogWarning("Type " + type.Name + " does not exists.");
+            $"Type {type.Name} does not exist.".printWarning();
             return null;
         }
         public static bool TryGetExistsWindow(System.Predicate<EditorWindow> expression, out EditorWindow? window)

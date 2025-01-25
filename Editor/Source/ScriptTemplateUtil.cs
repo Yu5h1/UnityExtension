@@ -16,10 +16,12 @@ namespace Yu5h1Lib.EditorExtension
         static string GetTemplateFilePath(string fileName, bool UseBuiltInLocation = false)
             => BuiltInScriptTemplatesPath + @"\" + fileName;
 
-        static string CheckIfTemplateNotExistThenCreate(string fileName, string content) {
+        /// <summary>
+        /// if not exists in the local folder then load from resources.
+        /// </summary>
+        static string GetTemplate(string fileName, string content) {
             var filepath = GetTemplateFilePath(fileName);
             if (File.Exists(filepath)) content = File.ReadAllText(filepath);
-            else File.WriteAllText(filepath, content);
             return content;
         }
         [MenuItem("Assets/Create/Miscellaneous/Exeplore Built-in Templetes Folder")]
@@ -56,7 +58,7 @@ namespace Yu5h1Lib.EditorExtension
             var templateFileName = className + "Editor.cs";
 
             CreateScriptAssetWithContents(templateFileName,
-                CheckIfTemplateNotExistThenCreate(
+                GetTemplate(
                     "C# Script-Inspector.cs.txt",
                     Properties.Resources.C__Script_Inspector_cs
                 ), 
@@ -66,7 +68,7 @@ namespace Yu5h1Lib.EditorExtension
         [MenuItem("Assets/Create/Editor/Editor Window", false, 85)]
         static void CreateFocusSingleInstanceWindow() {
             CreateScriptAssetWithContents("NewEditorWindow.cs",
-                CheckIfTemplateNotExistThenCreate(
+                GetTemplate(
                     "C# Script-EditorWindow.cs.txt",
                     Properties.Resources.C__Script_EditorWindow_cs
                 ),null,true); }
@@ -75,7 +77,7 @@ namespace Yu5h1Lib.EditorExtension
         static void CreatePropertyDrawerScript()
         {   
             CreateScriptAssetWithContents("NewPropertyDrawer.cs", 
-                CheckIfTemplateNotExistThenCreate(
+                GetTemplate(
                     "C# Script-PropertyDrawer.cs.txt",
                 Properties.Resources.C__Script_PropertyDrawer_cs ) ,
             (filename, content) => content.Replace("#SCRIPTNAME#", filename.Replace("PropertyDrawer", "")), true); 
@@ -83,7 +85,7 @@ namespace Yu5h1Lib.EditorExtension
         [MenuItem("Assets/Create/Miscellaneous/ScriptableObject Script", false, 85)]
         static void CreateScriptableObjectScript() {
             CreateScriptAssetWithContents("NewScriptableObject.cs", 
-                CheckIfTemplateNotExistThenCreate(
+                GetTemplate(
                     "C# Script-ScriptableObject.cs.txt",
                     Properties.Resources.C__Script_ScriptableObject_cs
                 ));

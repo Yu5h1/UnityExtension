@@ -1,0 +1,14 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEditor;
+using Yu5h1Lib.EditorExtension;
+
+[CustomEditor(typeof(#SCRIPTNAME#))]
+public class #SCRIPTNAME#Editor : Editor<#SCRIPTNAME#> {
+   public override void OnInspectorGUI()
+   {
+		EditorGUILayout.HelpBox("#SCRIPTNAME# Inspector",MessageType.Info);
+		DrawDefaultInspector();
+   }
+}

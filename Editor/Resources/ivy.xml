@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ivy-module version="1.0">
+  <info version="5.6.3" organisation="Unity" module="Yu5h1Tools" e:packageType="UnityExtension" e:unityVersion="5.6.3f1" xmlns:e="http://ant.apache.org/ivy/extra" />
+  <publications xmlns:e="http://ant.apache.org/ivy/extra">  
+  <artifact name="Yu5h1Tools.Runtime" type="dll" ext="dll" />
+    <artifact name="Editor/Yu5h1Tools.UnityEditorEx" type="dll" ext="dll" />
+  </publications>
+</ivy-module>

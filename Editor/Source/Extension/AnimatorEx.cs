@@ -47,7 +47,7 @@ namespace Yu5h1Lib.EditorExtension
                     if (transform != null) {
                         if (bodylayer > -1) transform.gameObject.layer = bodylayer;
                         RagdollBuilderType.GetField(name, BindingFlags.Public | BindingFlags.Instance).SetValue(RagDollWizardWindow, transform);
-                    }else Debug.Log(val.ToString() + " transform does not exists.");
+                    }else $"{val} transform does not exist.".print();
                 };
 
                 SetTransformField("pelvis", HumanBodyBones.Hips);
