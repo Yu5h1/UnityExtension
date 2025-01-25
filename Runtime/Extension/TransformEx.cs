@@ -5,27 +5,47 @@ namespace Yu5h1Lib
 {
     public static class TransformEx
     {
-			public static bool TryFind(this Transform t,string name, out Transform result)
-        => result = t.Find(name);
-    #region 2D
-    public static Vector3 TransformPoint(this Transform t,float x,float y) => t.TransformPoint(new Vector3(x, y));
-    #endregion
-		
-		
-        public static Vector3 back(this Transform transform) { return -transform.forward; }
-        public static Vector3 down(this Transform transform) { return -transform.up; }
-        public static Vector3 left(this Transform transform) { return -transform.right; }
 
-        /// <summary>
-        /// reset local postion and rotation
-        /// </summary>
-        /// <param name="transform"></param>
+        #region Modification
         public static void Reset(this Transform transform)
         {
             transform.localPosition = Vector3.zero;
             transform.localEulerAngles = Vector3.zero;
             transform.localScale = Vector3.one;
         }
+        public static void Sync(this Transform t,Transform target,bool pos = true,bool rot =false, bool scale = false)
+        {
+            if (pos)
+                t.position = target.position;
+            if (rot)
+                t.rotation = target.rotation;
+            if (scale){
+                var s = target.lossyScale;
+                var parentScale = t.parent ? t.parent.lossyScale : Vector3.one;
+                t.localScale = new Vector3(s.x / parentScale.x, s.y / parentScale.y, s.z / parentScale.z);
+            }
+            "Why are you use this methods ?".printWarningIf(pos == rot == scale == false);
+        }
+        #endregion
+
+        #region Direction
+        public static Vector3 back(this Transform transform) => -transform.forward; 
+        public static Vector3 down(this Transform transform) => -transform.up; 
+        public static Vector3 left(this Transform transform) => -transform.right; 
+        #endregion
+
+        #region Find
+        public static bool TryFind(this Transform t, string name, out Transform result) => result = t.Find(name);
+        #endregion
+
+        #region 2D
+        public static Vector3 TransformPoint(this Transform t,float x,float y) => t.TransformPoint(new Vector3(x, y));
+        #endregion
+
+
+
+
+
 
         public static Vector3 GetDirection(this Transform transform, Direction directdironType)
         {
@@ -56,12 +76,7 @@ namespace Yu5h1Lib
             }
             return results;
         }
-        public static T Find<T>(this Transform transform,string name) where T : Component
-        {
-            var child = transform.Find(name);
-            if (child != null) return transform.GetComponent<T>();
-            return null;
-        }
+
         public static void SetPosition(this Transform transform,float x, float? y = null, float? z = null, Space space = Space.World) {
             Vector3 pos = space == Space.World ? transform.position : transform.localPosition ;
             pos.x = x;
@@ -80,26 +95,18 @@ namespace Yu5h1Lib
             if (space == Space.World) transform.position = pos;
             else transform.localPosition = pos;
         }
-        public static Vector3 GetDirection(this Transform transform,Vector3 point)
-        { return (point-transform.position).normalized; }
+        public static Vector3 GetDirection(this Transform transform,Vector3 point) => (point-transform.position).normalized; 
 
-        public static void LookAt(this Transform transform,Vector3 point, Vector3 upward, Axis axis)
-            => transform.rotation = Quaternion.LookRotation(transform.GetDirection(point), upward).LookTo(axis);
-
-        public static void LookAt(this Transform transform, Vector3 point, Vector3 upward, Direction direction)
-            => transform.rotation = Quaternion.LookRotation(transform.GetDirection(point), upward).LookAt(direction);
-
-        //public static void LookAt(this Transform transform, Vector3 point, Direction direction)
-        //    => transform.rotation = Quaternion.LookRotation(transform.GetDirection(point), transform.up).LookAt(direction);
-
-        public static void LookAt(this Transform transform, Vector3 point, Axis axis)
-            => transform.LookAt(point, transform.up, axis);
-
-        //public static void LookAt(this Transform transform, Transform target, Axis axis)
-        //    => transform.LookAt(target.position, axis); 
-
-        public static void LookAt(this Transform transform, Transform target, Vector3 upward, Axis axis)
-            => transform.LookAt(target.position, upward, axis);
+        #region LookAt
+        //public static void LookAt(this Transform transform, Vector3 point, Vector3 upward, Axis axis)
+        //    => transform.rotation = Quaternion.LookRotation(transform.GetDirection(point), upward).LookTo(axis);
+        //public static void LookAt(this Transform transform, Vector3 point, Vector3 upward, Direction direction)
+        //    => transform.rotation = Quaternion.LookRotation(transform.GetDirection(point), upward).LookAt(direction);
+        //public static void LookAt(this Transform transform, Vector3 point, Axis axis)
+        //    => transform.LookAt(point, transform.up, axis);
+        //public static void LookAt(this Transform transform, Transform target, Vector3 upward, Axis axis)
+        //    => transform.LookAt(target.position, upward, axis); 
+        #endregion
 
     }
 }

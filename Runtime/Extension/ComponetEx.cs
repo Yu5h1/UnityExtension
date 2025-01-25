@@ -11,16 +11,16 @@ namespace Yu5h1Lib
             return result = component.GetComponentInParent<T>();
         }
 
-		public static bool TryGetComponentInChildren<T>(this Component component, out T result, bool IncludeSelf = false) where T : Component
+		public static bool TryGetComponentInChildren<T>(this Component component, out T result,bool includeInactive, bool IncludeSelf = false) where T : Component
 		{
             if (IncludeSelf && component.TryGetComponent(out result))
                 return true;
-            return result = component.GetComponentInChildren<T>();
+            return result = component.GetComponentInChildren<T>(includeInactive);
         }
 		public static bool TryGetComponentInChildren<T>(this Component c, string name, out T component) where T : Object
 		{
 			component = null;
-			return c.transform.TryFind(name, out Transform child) && child.TryGetComponent(out component);
+            return c.transform.TryFind(name, out Transform child) && child.TryGetComponent(out component);
 		}
 		public static T GetOrAdd<T>(this Component c, out T componentParam) where T : Component
 		{

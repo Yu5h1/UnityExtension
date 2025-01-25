@@ -1,43 +1,40 @@
-﻿//using UnityEngine;
-//using UnityEngine.Events;
+﻿using UnityEngine;
+using UnityEngine.Events;
 
-//namespace Yu5h1Lib
-//{
-//    public partial class Timer : ITimer
-//    {
-//        public class Event
-//        {
-//            [SerializeField]
-//            private UnityEvent _Update = new UnityEvent();
-//            public event UnityAction Update
-//            {
-//                add => _Update?.AddListener(value);
-//                remove => _Update.RemoveListener(value);
-//            }
-//            [SerializeField]
-//            private UnityEvent _Completed = new UnityEvent();
-//            public event UnityAction Completed
-//            {
-//                add => _Completed?.AddListener(value);
-//                remove => _Completed?.RemoveListener(value);
-//            }
-//            [SerializeField]
-//            private UnityEvent _Repeated = new UnityEvent();
-//            public event UnityAction Repeated
-//            {
-//                add => _Repeated.AddListener(value);
-//                remove => _Repeated.RemoveListener(value);
-//            }
-//            [SerializeField]
-//            private UnityEvent _FinalRepetition = new UnityEvent();
-//            public event UnityAction FinalRepetition
-//            {
-//                add => _FinalRepetition.AddListener(value);
-//                remove => _FinalRepetition.RemoveListener(value);
-//            }
+namespace Yu5h1Lib
+{
+    public abstract class TimerBehaviour : MonoBehaviour , ITimer
+    {
+        [SerializeField]
+        private Timer timer;
+        
+        [SerializeField]
+        private UnityEvent<float> Completed = new UnityEvent<float>();
+        [SerializeField]
+        private UnityEvent<int> Repeated = new UnityEvent<int>();
+        [SerializeField]
+        private UnityEvent<int> FinalRepetition = new UnityEvent<int>();
+        [SerializeField]
+        private UnityEvent<ITimer> Update = new UnityEvent<ITimer>();
 
+        #region interface properties
+        public float time => ((ITimer)timer).time;
+        public float timeElapsed => ((ITimer)timer).timeElapsed;
+        public float normalized => ((ITimer)timer).normalized;
+        public int repeatCounter => ((ITimer)timer).repeatCounter;
+        #endregion
 
-//        }
+        public void RegeristerTimerEvents()
+        {
+            timer.Update += timer_Update;
+            timer.Completed += Timer_Completed;
+            timer.Repeated += Timer_Repeated;
+            timer.FinalRepetition += Timer_FinalRepetition;
+        }
 
-//    }
-//}
+        private void Timer_FinalRepetition() => FinalRepetition?.Invoke(repeatCounter);
+        private void Timer_Repeated() => Repeated?.Invoke(repeatCounter);
+        private void Timer_Completed() => Completed?.Invoke(timeElapsed);
+        private void timer_Update() => Update?.Invoke(timer);
+    }
+}
