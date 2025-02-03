@@ -8,13 +8,14 @@ using DG.Tweening;
 using System.Reflection;
 using UnityEngine.UIElements;
 using UnityEngine.UI;
+using Unity.VisualScripting;
 
 public abstract class TweenBehaviourEditor<T> : Editor<T> where T : TweenBehaviour
 {
 	public float normalized;
     Tweener tweener => targetObject.tweener;
     Component component;
-    protected void OnEnable()
+    private void OnEnable()
     {
         if (EditorApplication.isPlaying)
             return;
@@ -28,7 +29,6 @@ public abstract class TweenBehaviourEditor<T> : Editor<T> where T : TweenBehavio
     public override void OnInspectorGUI()
     {
         DrawDefaultInspector();
-
         if (this.TrySlider("Simulation:", normalized, 0, 1, out float result))
         {
             normalized = result;
@@ -42,7 +42,8 @@ public abstract class TweenBehaviourEditor<T> : Editor<T> where T : TweenBehavio
             SceneView.RepaintAll();
         }
     }
-    protected void OnDisable()
+    
+    private void OnDisable()
     {
         targetObject.Kill();
     }

@@ -45,9 +45,11 @@ public abstract class UI_DialogBase : UIControl
         add => _DialogOver.AddListener(value);
         remove => _DialogOver.RemoveListener(value);
     }
-
+    
     private Timer timer = new Timer();
-    private Timer.Wait<Timer> wait;
+    [SerializeField]
+    private bool useUnscaledTime = true;
+    private Timer.Wait<Timer> waiter;
 
     [SerializeField]
     private UnityEvent _PerformBegin;
@@ -79,7 +81,7 @@ public abstract class UI_DialogBase : UIControl
         remove => _LineCountChangedEvent.RemoveListener(value);
     }
 
-    private IEnumerator lastCoroutine;
+    private Coroutine performCoroutine;
 
     #region Cache
     private int LineCountCache { get; set; }
@@ -88,7 +90,7 @@ public abstract class UI_DialogBase : UIControl
     protected virtual void Start()
     {
         timer.duration = Speed;
-        wait = timer.Waiting();
+        waiter = timer.Waiting();
 
     }
 
@@ -107,9 +109,11 @@ public abstract class UI_DialogBase : UIControl
     {
         if (!gameObject.activeSelf)
             gameObject.SetActive(true);
-        if (lastCoroutine != null)
-            StopCoroutine(lastCoroutine);        
-        StartCoroutine(lastCoroutine = PerformVerbatimProcess(lines[StepIndex = 0]));
+        //if (lastCoroutine != null)
+        //    StopCoroutine(lastCoroutine);        
+        //StartCoroutine(lastCoroutine = );
+
+        this.StartCoroutine(ref performCoroutine, PerformVerbatimProcess(lines[StepIndex = 0]));
     }
     public virtual void PerformVerbatim(string content)
     {
@@ -126,7 +130,7 @@ public abstract class UI_DialogBase : UIControl
         }
         IsPerforming = true;
         Content = Speed > 0 ? "" : text;
-
+        timer.useUnscaledTime = useUnscaledTime;
         if (Speed > 0)
             for (int i = 0; i < text.Length; i++)
             {
@@ -142,7 +146,7 @@ public abstract class UI_DialogBase : UIControl
                 
                 _PerformBegin?.Invoke();
                 timer.Start();
-                yield return wait;
+                yield return waiter;
             }
 
         _PerformCompleted?.Invoke();

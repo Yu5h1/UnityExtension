@@ -9,7 +9,7 @@ namespace Yu5h1Lib
     public class DOMove2DInspector : Editor<DOMove2D>
     {
         Collider2D collider;
-        private void OnEnable()
+        protected void OnEnable()
         {
             collider = targetObject.GetComponent<Collider2D>();
         }
