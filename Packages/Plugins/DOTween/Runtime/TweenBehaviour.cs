@@ -4,6 +4,8 @@ using UnityEngine.Events;
 using System.Collections;
 using DG.Tweening.Core;
 using DG.Tweening.Plugins.Options;
+using System;
+
 #if UNITY_EDITOR
 using System.Runtime.CompilerServices;
 
@@ -64,13 +66,24 @@ namespace Yu5h1Lib
             set => tweener = value;
         }
 
-        [SerializeField]
+        [SerializeField,ContextMenuItem("Reset",nameof(ResetStartValue))]
         protected T2 _startValue;
-        public T2 startValue { get => _startValue; protected set => _startValue = TweenerCore.endValue = value; }
+        public T2 startValue 
+        { 
+            get => _startValue;
+            protected set 
+            {
+                _startValue = value;
+                if (TweenerCore != null)
+                    TweenerCore.startValue = value;
+            }
+        }
+
         [SerializeField]
         protected bool ChangeStartValue;
         
         [SerializeField]
+        [ContextMenuItem("Reset", nameof(ResetEndValue))]
         protected T2 _endValue;
         public T2 endValue { 
             get => _endValue; 
@@ -99,6 +112,10 @@ namespace Yu5h1Lib
 
         protected internal override Tweener Create() => CreateTweenCore();
         protected abstract TweenerCore<T1, T2, TPlugOptions> CreateTweenCore();
+
+        protected virtual void ResetStartValue() { "NotImplementedException ResetStartValue".printWarning(); }
+        protected virtual void ResetEndValue() { "NotImplementedException ResetEndValue ".printWarning(); }
+
         protected internal override void Init()
         {
             if (IsInitinalized)

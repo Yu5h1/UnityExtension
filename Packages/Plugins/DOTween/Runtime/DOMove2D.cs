@@ -22,10 +22,9 @@ public class DOMove2D : DOTransform<Vector3,VectorOptions>
     protected override void OnComplete() => OnComplete(velocity * ValueMultiplier);
     protected override void OnRewind() => OnRewind( -velocity * ValueMultiplier);
 
-    [ContextMenu("Set End Value From Position")]
-    public void SetEndValueFromPosition()
+    protected override void ResetEndValue()
     {
-        _endValue = local ? transform.localPosition : transform.position;
+        _endValue = local ? Vector3.zero : transform.position;
     }
 
     public override string ToString() => tweener.ToString();
