@@ -21,13 +21,17 @@ namespace Yu5h1Lib
         {
             if (sprites.IsEmpty() || !sprites.IsValid(index))
                 return;
+            SetSprite(index);
+        }
+        public void SetSprite(int frame)
+        {
             switch (component)
             {
                 case SpriteRenderer renderer:
-                    renderer.sprite = sprites[index];
+                    renderer.sprite = sprites[frame];
                     break;
                 case Image image:
-                    image.sprite = sprites[index];
+                    image.sprite = sprites[frame];
                     break;
             }
         }

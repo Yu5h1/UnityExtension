@@ -91,7 +91,7 @@ namespace Yu5h1Lib
                     Handles.DrawWireCube(Vector3.zero, boxCol2D.size * boxCol2D.transform.lossyScale);
                     Handles.matrix = matrix;
                     break;
-            }
+                }
 
             if (endValue != newEndValue)
             {

@@ -208,6 +208,19 @@ namespace Yu5h1Lib
                 return;
             PlayTween();
         }
+        public void TryPlayTween(float delay)
+        {
+            if (!gameObject.activeSelf || !enabled || TweenerCore.IsPlaying() || IsWaiting)
+                return;
+            tweener.onComplete += RevertToOriginal;
+            tweener.SetDelay(delay);
+            PlayTween();
+        }
+        void RevertToOriginal()
+        {
+            tweener.SetDelay(Delay);
+            tweener.onComplete = RevertToOriginal;
+        }
         Coroutine coroutine;
         public void TryPlayBackwards(float delay)
         {
