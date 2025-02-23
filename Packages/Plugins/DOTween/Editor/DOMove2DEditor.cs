@@ -79,7 +79,7 @@ namespace Yu5h1Lib
                     Vector3.up,
                     HandleUtility.GetHandleSize(endValue) * 0.1f,
                     Handles.DotHandleCap,
-                    1f
+                    Event.current.alt ? 0.1f : 1f
                 );
 
             if (!ShowAllHandles || !editable )

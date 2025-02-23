@@ -24,7 +24,7 @@ public class DOMove2D : DOTransform<Vector3,VectorOptions>
 
     protected override void ResetEndValue()
     {
-        _endValue = transform.parent && local ? Vector3.zero : transform.position;
+        _endValue = transform.parent && local ? transform.localPosition : transform.position;
     }
 
     public override string ToString() => tweener.ToString();

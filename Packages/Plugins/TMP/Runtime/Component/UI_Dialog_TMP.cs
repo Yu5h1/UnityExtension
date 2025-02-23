@@ -1,8 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
-using UnityEngine;
-using UnityEngine.UI;
+using Yu5h1Lib.UI;
 
 public class UI_Dialog_TMP : UI_DialogBase
 {
@@ -13,20 +10,11 @@ public class UI_Dialog_TMP : UI_DialogBase
 
     public override int GetLineCount() => textMeshProUGUI.textInfo == null ? 0 : textMeshProUGUI.textInfo.lineCount;
 
-    private void Reset()
+    protected override void Reset()
     {
+        base.Reset();
         if (!TryGetComponent(out textMeshProUGUI))
             textMeshProUGUI = GetComponentInChildren<TextMeshProUGUI>();
     }
-
-    //protected override void Start()
-    //{
-    //    base.Start();
-    //    textMeshProUGUI.OnPreRenderText += TextMeshProUGUI_OnPreRenderText;
-        
-    //}
-    //private void TextMeshProUGUI_OnPreRenderText(TMP_TextInfo obj)
-    //{
-        
-    //}
+ 
 }

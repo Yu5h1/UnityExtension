@@ -26,7 +26,7 @@ namespace Yu5h1Lib
         public bool RewindOnDisable = true;
         public bool UseUnscaledTime = false;
         public bool IsWaiting { get; protected set; }
-        
+
         public Tweener tweener { get; protected set; }
         public float normalizedTime => tweener.ElapsedPercentage();
         protected internal abstract Tweener Create();
@@ -39,8 +39,19 @@ namespace Yu5h1Lib
             tweener.Kill();
             tweener = null;
         }
+        [RuntimeInitializeOnLoadMethod]
+        private static void Initinalize()
+        {
+            Application.wantsToQuit -= Application_wantsToQuit;
+            Application.wantsToQuit += Application_wantsToQuit;
+        }
+        private static bool Application_wantsToQuit()
+        {
+            DOTween.Clear(true);
+            return true;
+        }
     }
-        public abstract class TweenBehaviour<TComponent,T1, T2, TPlugOptions> : TweenBehaviour
+    public abstract class TweenBehaviour<TComponent, T1, T2, TPlugOptions> : TweenBehaviour
         where TComponent : Component
         where TPlugOptions : struct, IPlugOptions
     {
@@ -61,17 +72,17 @@ namespace Yu5h1Lib
         public virtual TComponent OverrideGetComponent() => null;
 
         protected TweenerCore<T1, T2, TPlugOptions> TweenerCore
-        { 
-            get => (TweenerCore<T1, T2, TPlugOptions>)tweener; 
+        {
+            get => (TweenerCore<T1, T2, TPlugOptions>)tweener;
             set => tweener = value;
         }
 
-        [SerializeField,ContextMenuItem("Reset",nameof(ResetStartValue))]
+        [SerializeField, ContextMenuItem("Reset", nameof(ResetStartValue))]
         protected T2 _startValue;
-        public T2 startValue 
-        { 
+        public T2 startValue
+        {
             get => _startValue;
-            protected set 
+            protected set
             {
                 _startValue = value;
                 if (TweenerCore != null)
@@ -81,17 +92,19 @@ namespace Yu5h1Lib
 
         [SerializeField]
         protected bool ChangeStartValue;
-        
+
         [SerializeField]
         [ContextMenuItem("Reset", nameof(ResetEndValue))]
         protected T2 _endValue;
-        public T2 endValue { 
-            get => _endValue; 
-            internal set {
+        public T2 endValue
+        {
+            get => _endValue;
+            internal set
+            {
                 _endValue = value;
                 if (TweenerCore != null)
                     TweenerCore.endValue = value;
-            } 
+            }
         }
 
         [SerializeField]
@@ -119,7 +132,7 @@ namespace Yu5h1Lib
         protected internal override void Init()
         {
             if (IsInitinalized)
-                return;            
+                return;
             TweenerCore = CreateTweenCore();
             if (ChangeStartValue)
                 TweenerCore.ChangeStartValue(startValue);
@@ -203,7 +216,7 @@ namespace Yu5h1Lib
             tweener.PlayForward();
         }
         public void TryPlayTween()
-        {            
+        {
             if (!gameObject.activeSelf || !enabled || TweenerCore.IsPlaying() || IsWaiting)
                 return;
             PlayTween();
