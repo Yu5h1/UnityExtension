@@ -5,10 +5,23 @@ using Yu5h1Lib;
 using FloatTweener = DG.Tweening.Core.TweenerCore<float, float, DG.Tweening.Plugins.Options.FloatOptions>;
 using System;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 [DisallowMultipleComponent]
 public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
 {
+    public bool IncludeChildren;
+    private Image[] images;
+    private SpriteRenderer[] spriteRenderers;
+    protected override void Start()
+    {
+        base.Start();
+        if (IncludeChildren)
+        {
+            images = gameObject.GetComponentsInChildren<Image>();
+            spriteRenderers = gameObject.GetComponentsInChildren<SpriteRenderer>();
+        }
+    }
     public override Component OverrideGetComponent()
     {
         if (transform is RectTransform m)
@@ -51,11 +64,17 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
                 color = img.color;
                 color.a = alpha;
                 img.color = color;
+                if (IncludeChildren && !images.IsEmpty())
+                    for (int i = 0; i < images.Length; i++)
+                        images[i].color = images[i].color.ChangeAlpha(alpha);
                 break;
             case SpriteRenderer renderer:
                 color = renderer.color;
                 color.a = alpha;
                 renderer.color = color;
+                if (IncludeChildren && !spriteRenderers.IsEmpty())
+                    for (int i = 0; i < spriteRenderers.Length; i++)
+                        spriteRenderers[i].color = spriteRenderers[i].color.ChangeAlpha(alpha);
                 break;
                 case CanvasGroup c:
                 c.alpha = alpha;
