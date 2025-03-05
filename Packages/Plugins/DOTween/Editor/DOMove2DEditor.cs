@@ -45,12 +45,22 @@ namespace Yu5h1Lib
         }
 
 
-
+        Transform transform => targetObject.transform;
         Collider2D collider;
+        private Transform lastParent;
+        private Vector3 lastPosition;
+
+        private void UpdateCache(){
+            lastParent = transform.parent;
+            lastPosition = transform.position;
+        }
 
         protected void OnEnable()
         {
             collider = targetObject.GetComponent<Collider2D>();
+            UpdateCache();
+            RegisterAdvancedMethods(this);
+            
         }
         public override void OnInspectorGUI()
         {
@@ -62,6 +72,15 @@ namespace Yu5h1Lib
             if (!InternalEditorUtility.GetIsInspectorExpanded(target))
                 return;
             Handle(targetObject);
+        }
+      
+        protected override void HierarchyChanged()
+        {
+            if (lastParent != transform.parent || lastPosition != transform.position)
+            {
+                $"{targetObject.name} changed".print();
+            }
+            UpdateCache();
         }
 
         private static void Handle(DOMove2D target,bool editable = true)
@@ -101,5 +120,9 @@ namespace Yu5h1Lib
             }
         }
 
+        private void OnDisable()
+        {
+            UnregisterAdvancedMethods(this);
+        }
     }
 }
