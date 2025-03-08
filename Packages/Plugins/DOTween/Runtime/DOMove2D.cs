@@ -6,27 +6,29 @@ using Yu5h1Lib;
 
 public class DOMove2D : DOTransform<Vector3,VectorOptions>
 {
-    public Vector2 velocity { get; private set; }
-    public float ValueMultiplier = 1;
+    [SerializeField,ReadOnly]
+    public Vector2 velocity ;//{ get; private set; }
 
     protected override void Start() {
+        velocity = (_endValue - _startValue) / Duration;
+        _startValue = transform.TransformPoint(_startValue);
+        _endValue = transform.TransformPoint(_endValue);
         base.Start();
-        velocity = (endValue - (local ? transform.localPosition : transform.position)) / Duration;
-        if (local)
-            velocity = transform.up * velocity.y + transform.right * velocity.x;
+        
     }
     protected override TweenerCore<Vector3, Vector3, VectorOptions> CreateTweenCore()
-        => local ? transform.DOLocalMove(endValue, Duration) :
-                   transform.DOMove(endValue, Duration);
+        => transform.DOMove(endValue, Duration);
 
-    protected override void OnComplete() => OnComplete(velocity * ValueMultiplier);
-    protected override void OnRewind() => OnRewind( -velocity * ValueMultiplier);
+    protected override void OnComplete() => OnComplete(velocity);
+    protected override void OnRewind() => OnRewind(-velocity);
 
-    protected override void ResetEndValue()
-    {
-        _endValue = transform.parent && local ? transform.localPosition : transform.position;
-    }
+    protected override void ResetEndValue() => _endValue = Vector3.zero;
 
     public override string ToString() => tweener.ToString();
 
+    [ContextMenu("endvalue to local")]
+    public void valueToLoacl()
+    {
+        _endValue = transform.InverseTransformPoint(_endValue);
+    }
 }

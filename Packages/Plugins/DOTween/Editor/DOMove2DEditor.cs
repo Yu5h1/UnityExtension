@@ -4,24 +4,25 @@ using Yu5h1Lib.EditorExtension;
 using System.Runtime.CompilerServices;
 using UnityEditorInternal;
 using System;
+using System.Linq;
+using UnityEditor.SceneManagement;
 
 namespace Yu5h1Lib
 {
     [CustomEditor(typeof(DOMove2D)),CanEditMultipleObjects]
     public class DOMove2DInspector : Editor<DOMove2D>
     {
-        private static bool _ShowAllHandles;
+        
+        public static string ShowAllHandlesKey => typeof(DOMove2DInspector).FullName + "_ShowAllHandles";
+        
         public static bool ShowAllHandles
         {
-            get => _ShowAllHandles;
+            get => EditorPrefs.GetBool(ShowAllHandlesKey,false);
             set {
-                if (_ShowAllHandles == value)
+                if (ShowAllHandles == value)
                     return;
-                _ShowAllHandles = value;
-                if (value)
-                    SceneView.duringSceneGui += OnSceneGUI;
-                else
-                    SceneView.duringSceneGui -= OnSceneGUI;
+                EditorPrefs.SetBool(ShowAllHandlesKey, value);
+                RegisterEvent();
             }
         }
         private static void OnSceneGUI(SceneView view)
@@ -36,30 +37,59 @@ namespace Yu5h1Lib
             ShowAllHandles = !ShowAllHandles;
             Menu.SetChecked("CONTEXT/DOMove2D/Show all handles", ShowAllHandles);
         }
+        static DragDropHandler dragdropHandler = new DragDropHandler();
 
         [InitializeOnLoadMethod]
-        static void Init()
+        static void RegisterEvent()
         {
-            if (_ShowAllHandles)
+            SceneView.duringSceneGui -= OnSceneGUI;
+            if (ShowAllHandles)
                 SceneView.duringSceneGui += OnSceneGUI;
+
+            SceneMouseListener.Enable = true;
+            SceneMouseListener.Register();
+            dragdropHandler.Register();
+            dragdropHandler.defaultSet.DragStart    -= DefaultSet_DragStart;
+            dragdropHandler.defaultSet.DragBegin    -= DefaultSet_DragBegin; ;
+            dragdropHandler.defaultSet.Dragging     -= DefaultSet_Dragging;
+            dragdropHandler.defaultSet.DragEnd      -= DefaultSet_DragEnd;
+
+            dragdropHandler.defaultSet.DragVerification += DefaultSet_DragVerification;
+            dragdropHandler.defaultSet.DragStart += DefaultSet_DragStart;
+            dragdropHandler.defaultSet.DragBegin += DefaultSet_DragBegin; ;
+            dragdropHandler.defaultSet.Dragging += DefaultSet_Dragging;
+            dragdropHandler.defaultSet.DragEnd += DefaultSet_DragEnd;
         }
 
+        private static bool DefaultSet_DragVerification(object arg1, Event e)
+        {
+            return e.button == 0;
+        }
 
+        private static void DefaultSet_DragStart(object arg1, Event arg2)
+        {
+
+        }
+        private static void DefaultSet_DragBegin(object arg1, Event arg2)
+        {
+
+        }
+ 
+        private static void DefaultSet_Dragging(object arg1, Event arg2)
+        {
+
+        }
+        private static void DefaultSet_DragEnd(object arg1, Event arg2)
+        {
+
+        }
         Transform transform => targetObject.transform;
         Collider2D collider;
-        private Transform lastParent;
-        private Vector3 lastPosition;
-
-        private void UpdateCache(){
-            lastParent = transform.parent;
-            lastPosition = transform.position;
-        }
+  
 
         protected void OnEnable()
         {
             collider = targetObject.GetComponent<Collider2D>();
-            UpdateCache();
-            RegisterAdvancedMethods(this);
             
         }
         public override void OnInspectorGUI()
@@ -73,33 +103,28 @@ namespace Yu5h1Lib
                 return;
             Handle(targetObject);
         }
-      
-        protected override void HierarchyChanged()
-        {
-            if (lastParent != transform.parent || lastPosition != transform.position)
-            {
-                $"{targetObject.name} changed".print();
-            }
-            UpdateCache();
-        }
 
         private static void Handle(DOMove2D target,bool editable = true)
         {
-            var localMod = target.local && target.transform.parent != null;
-            var endValue = localMod ? target.transform.parent.TransformPoint(target.endValue) : target.endValue;
+            if (PrefabUtility.IsPartOfPrefabAsset(target.gameObject))
+                return;
+            var isPlaying = Application.isPlaying;
+            var endValue = isPlaying ? target.endValue : 
+                                       target.transform.TransformPoint(target.endValue);
             Handles.DrawDottedLine(target.transform.position, endValue, 3);
 
             Vector3 newEndValue = endValue;
-            if (editable)
-                newEndValue = Handles.Slider2D(
+            EditorGUI.BeginChangeCheck();
+            if (!isPlaying && editable)
+                newEndValue = target.transform.InverseTransformPoint(Handles.Slider2D(
                     endValue,
                     Vector3.forward,
                     Vector3.right,
                     Vector3.up,
                     HandleUtility.GetHandleSize(endValue) * 0.1f,
                     Handles.DotHandleCap,
-                    Event.current.alt ? 0.1f : 1f
-                );
+                    Event.current.alt ? 0.01f : 0.1f
+                ));
 
             if (!ShowAllHandles || !editable )
             switch (target.GetComponent<Collider2D>())
@@ -112,17 +137,16 @@ namespace Yu5h1Lib
                     break;
                 }
 
-            if (endValue != newEndValue)
+            if (EditorGUI.EndChangeCheck() && endValue != newEndValue)
             {
                 Undo.RecordObject(target, "Move EndValue");
-                target.endValue = localMod ? target.transform.parent.InverseTransformPoint(newEndValue) : newEndValue;
+                target.endValue = newEndValue;
                 EditorUtility.SetDirty(target);
             }
         }
 
         private void OnDisable()
         {
-            UnregisterAdvancedMethods(this);
         }
     }
 }
