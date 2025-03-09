@@ -113,36 +113,24 @@ namespace Yu5h1Lib
                                        target.transform.TransformPoint(target.endValue);
             Handles.DrawDottedLine(target.transform.position, endValue, 3);
 
-            Vector3 newEndValue = endValue;
-            EditorGUI.BeginChangeCheck();
-            if (!isPlaying && editable)
-                newEndValue = target.transform.InverseTransformPoint(Handles.Slider2D(
-                    endValue,
-                    Vector3.forward,
-                    Vector3.right,
-                    Vector3.up,
-                    HandleUtility.GetHandleSize(endValue) * 0.1f,
-                    Handles.DotHandleCap,
-                    Event.current.alt ? 0.01f : 0.1f
-                ));
-
-            if (!ShowAllHandles || !editable )
-            switch (target.GetComponent<Collider2D>())
-            {
-                case BoxCollider2D boxCol2D:
-                    var matrix = Handles.matrix;
-                    Handles.matrix = Matrix4x4.TRS(endValue, target.transform.rotation, Vector3.one);
-                    Handles.DrawWireCube(Vector3.zero, boxCol2D.size * boxCol2D.transform.lossyScale);
-                    Handles.matrix = matrix;
-                    break;
-                }
-
-            if (EditorGUI.EndChangeCheck() && endValue != newEndValue)
+            
+            if (!isPlaying && editable && endValue.Slider2D(out Vector3 newEndValue))
             {
                 Undo.RecordObject(target, "Move EndValue");
-                target.endValue = newEndValue;
-                EditorUtility.SetDirty(target);
+                target.endValue = target.transform.InverseTransformPoint(newEndValue);
+                //EditorUtility.SetDirty(target);
             }
+
+            if (!ShowAllHandles || !editable )
+                switch (target.GetComponent<Collider2D>())
+                {
+                    case BoxCollider2D boxCol2D:
+                        var matrix = Handles.matrix;
+                        Handles.matrix = Matrix4x4.TRS(endValue, target.transform.rotation, Vector3.one);
+                        Handles.DrawWireCube(Vector3.zero, boxCol2D.size * boxCol2D.transform.lossyScale);
+                        Handles.matrix = matrix;
+                        break;
+                }
         }
 
         private void OnDisable()
