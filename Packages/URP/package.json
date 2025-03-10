@@ -5,10 +5,9 @@
   "description": "Utilities for URP",
   "unity": "2024.1",
   "dependencies": {
-    "com.unity.ugui": "1.0.0",
-    "com.unity.textmeshpro": "3.0.6",
     "com.yu5h1.library": "1.0.1",
-    "com.yu5h1.ui": "1.0.1"
+    "com.unity.render-pipelines.core": "14.0.11",
+    "com.unity.render-pipelines.universal": "14.0.11"
   },
   "keywords": [
     "URP"
