@@ -56,19 +56,8 @@ namespace Yu5h1Lib
         where TPlugOptions : struct, IPlugOptions
     {
         [SerializeField, ReadOnly]
-        public TComponent _component;
-        public TComponent component
-        {
-            get
-            {
-                if (!_component)
-                {
-                    _component = OverrideGetComponent() ?? GetComponent<TComponent>();
-                    "component does not exist !".printWarningIf(!_component);
-                }
-                return _component;
-            }
-        }
+        protected TComponent _component;
+        public virtual TComponent component => _component;
         public virtual TComponent OverrideGetComponent() => null;
 
         protected TweenerCore<T1, T2, TPlugOptions> TweenerCore
@@ -133,6 +122,9 @@ namespace Yu5h1Lib
         {
             if (IsInitinalized)
                 return;
+            "component does not exist !".printWarningIf(!(_component = 
+                OverrideGetComponent() ?? GetComponent<TComponent>()));
+
             TweenerCore = CreateTweenCore();
             if (ChangeStartValue)
                 TweenerCore.ChangeStartValue(startValue);
@@ -167,8 +159,6 @@ namespace Yu5h1Lib
             Init();
             if (!playOnEnable)
                 return;
-            if (TweenerCore == null)
-                TweenerCore = CreateTweenCore();
             PlayTween();
         }
         protected void OnRewind(T2 value)

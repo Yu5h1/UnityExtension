@@ -13,5 +13,15 @@ namespace Yu5h1Lib
                 name = name.Remove(name.Length - "(Clone)".Length);
             return name;
         }
+        public static bool WarnningIfNullOrMissing(this Object obj)
+        {
+            if (obj)
+                return false;
+            if (ReferenceEquals(obj, null))
+                $"Warning: {obj.GetType()} is MISSING! The reference was lost.".printWarning();
+            else
+                $"Warning: {obj.GetType()}  has NOT been assigned!".printWarning();
+            return true;
+        }
     }
 }

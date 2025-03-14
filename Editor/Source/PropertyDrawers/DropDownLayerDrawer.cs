@@ -1,8 +1,6 @@
 using UnityEditor;
 using UnityEngine;
 
-
-
 [CustomPropertyDrawer(typeof(DropDownLayerAttribute))]
 public class DropDownLayerDrawer : PropertyDrawer
 {
@@ -14,14 +12,20 @@ public class DropDownLayerDrawer : PropertyDrawer
 
             int layerValue = EditorGUI.LayerField(position, label, property.intValue);
 
-            if (EditorGUI.EndChangeCheck())
-            {
+            if (EditorGUI.EndChangeCheck() && layerValue¡@!= property.intValue)
                 property.intValue = layerValue;
-            }
         }
-        else
+        else if (property.propertyType == SerializedPropertyType.String)
         {
-            EditorGUI.LabelField(position, label, "Use LayerSelector with int.");
+            EditorGUI.BeginChangeCheck();
+
+            var currentLayer = LayerMask.NameToLayer(property.stringValue);
+            int newValue = EditorGUI.LayerField(position, label, currentLayer);
+            if (currentLayer == -1) currentLayer = 0;
+            if (EditorGUI.EndChangeCheck() && newValue != currentLayer)
+                property.stringValue = LayerMask.LayerToName(newValue);
         }
+        else 
+            EditorGUI.LabelField(position, label, "Use LayerSelector with int.");
     }
 }

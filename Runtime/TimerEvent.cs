@@ -3,38 +3,37 @@ using UnityEngine.Events;
 
 namespace Yu5h1Lib
 {
-    public abstract class TimerBehaviour : MonoBehaviour , ITimer
+    [System.Serializable]
+    public class TimerEvent : Timer
     {
         [SerializeField]
-        private Timer timer;
-        
+        private UnityEvent<Timer> _Completed = new UnityEvent<Timer>();
         [SerializeField]
-        private UnityEvent<float> Completed = new UnityEvent<float>();
+        private UnityEvent<Timer> _Repeated = new UnityEvent<Timer>();
         [SerializeField]
-        private UnityEvent<int> Repeated = new UnityEvent<int>();
+        private UnityEvent<Timer> _FinalRepetition = new UnityEvent<Timer>();
         [SerializeField]
-        private UnityEvent<int> FinalRepetition = new UnityEvent<int>();
-        [SerializeField]
-        private UnityEvent<ITimer> Update = new UnityEvent<ITimer>();
+        private UnityEvent<Timer> _Update = new UnityEvent<Timer>();
 
-        #region interface properties
-        public float time => ((ITimer)timer).time;
-        public float timeElapsed => ((ITimer)timer).timeElapsed;
-        public float normalized => ((ITimer)timer).normalized;
-        public int repeatCounter => ((ITimer)timer).repeatCounter;
-        #endregion
+        private void OnCompleted(Timer t ) => _Completed?.Invoke(t);
+        private void OnRepeated(Timer t) => _Repeated?.Invoke(t);
+        private void OnFinalRepetition(Timer t) => _FinalRepetition?.Invoke(t);
+        private void OnUpdate(Timer t) => _Update?.Invoke(t);
 
-        public void RegeristerTimerEvents()
+        public void Register()
         {
-            timer.Update += timer_Update;
-            timer.Completed += Timer_Completed;
-            timer.Repeated += Timer_Repeated;
-            timer.FinalRepetition += Timer_FinalRepetition;
+            Unregister();
+            Completed += OnCompleted;
+            Repeated += OnRepeated;
+            FinalRepetition += OnFinalRepetition;
+            Update += OnUpdate;
         }
-
-        private void Timer_FinalRepetition() => FinalRepetition?.Invoke(repeatCounter);
-        private void Timer_Repeated() => Repeated?.Invoke(repeatCounter);
-        private void Timer_Completed() => Completed?.Invoke(timeElapsed);
-        private void timer_Update() => Update?.Invoke(timer);
+        public void Unregister()
+        {
+            Completed -= OnCompleted;
+            Repeated -= OnRepeated;
+            FinalRepetition -= OnFinalRepetition;
+            Update -= OnUpdate;
+        }
     }
 }

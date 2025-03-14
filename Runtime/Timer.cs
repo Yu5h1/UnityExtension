@@ -1,12 +1,11 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Events;
 using Yu5h1Lib.Mathematics;
 
 namespace Yu5h1Lib
 {
     [System.Serializable]
-    public class Timer : TimerBase, ITimer
+    public class Timer 
     {
         public enum RepeatType : int {
             Infinite = -1,
@@ -22,14 +21,21 @@ namespace Yu5h1Lib
         [SerializeField]
         private bool UseUnscaledTime;
 
+        #region Cache
+        public float LastTime { get; protected set; } 
+        #endregion
+
         public float delay { get => Delay; set => Delay = value; }
         public float duration { get => Duration; set => Duration = value; }
         public int repeatCount { get => RepeatCount; set => RepeatCount = value; }
+        public bool useUnscaledTime { get => UseUnscaledTime; set => UseUnscaledTime = value; }
         public RepeatType repeatType => (RepeatType)System.Math.Sign(repeatCount);
+
+        protected float GetTime() => UseUnscaledTime ? Time.unscaledTime : Time.time;
+        public float time => GetTime() - LastTime;
         public float normalized => time.GetNormal(duration);
 
-        protected override float GetTime()
-            => UseUnscaledTime ? base.GetTime() : Time.unscaledTime;
+        
 
         public event System.Func<bool> keepwaitingCondition;
         public bool keepWaiting
@@ -45,10 +51,10 @@ namespace Yu5h1Lib
                 return true;
             }
         }
-        public event UnityAction Update;
-        public event UnityAction Completed;
-        public event UnityAction Repeated;
-        public event UnityAction FinalRepetition;
+        public event UnityAction<Timer> Update;
+        public event UnityAction<Timer> Completed;
+        public event UnityAction<Timer> Repeated;
+        public event UnityAction<Timer> FinalRepetition;
 
         #region Caches
         public int repeatCounter { get; private set; }
@@ -62,9 +68,8 @@ namespace Yu5h1Lib
         public bool IsRepeatComplete => repeatType == RepeatType.Infinite ? false : repeatCounter == repeatCount;        
         public bool IsCompleting => IsRepeatComplete && TimesUp;            
 
-
-        public override void Start()
-        {
+        public virtual void Start()
+        {            
             LastTime = GetTime() + delay;
             repeatCounter = 0;
             IsCompleted = false;
@@ -80,7 +85,7 @@ namespace Yu5h1Lib
             {
                 IsCompleted = true;
                 OnCompleted();
-                Completed?.Invoke();
+                Completed?.Invoke(this);
             }
             else if (TimesUp)
             {
@@ -89,16 +94,16 @@ namespace Yu5h1Lib
                     if (repeatCounter + 1 == repeatCount)
                     {
                         OnFinalRepetition();
-                        FinalRepetition?.Invoke();
+                        FinalRepetition?.Invoke(this);
                     }
                     repeatCounter++;
                     OnRepeat();
-                    Repeated?.Invoke();
+                    Repeated?.Invoke(this);
                     LastTime = GetTime();
                 }
             }
             else
-                Update?.Invoke();
+                Update?.Invoke(this);
         }
         protected virtual void OnRepeat() { }
         protected virtual void OnFinalRepetition() { }
@@ -108,6 +113,14 @@ namespace Yu5h1Lib
         public Wait<Timer> Waiting() => new Wait<Timer>(this);
 
         public override string ToString() => $"{time} Duration:{Duration} IsCompleted:{IsCompleted} repeatCount:{repeatCounter}";
+
+        //public IEnumerator GetEnumerator(IEnumerator[] enumerators)
+        //{
+        //    for (int i = 0; i < enumerators.Length; i++)
+        //    {
+        //        yield return enumerators[i];
+        //    }
+        //}
 
         public abstract class Wait : CustomYieldInstruction 
         {
@@ -135,13 +148,7 @@ namespace Yu5h1Lib
                 timer.Start();
             }
         }
+        
+    }
 
-    }
-    public interface ITimer
-    {
-        float time { get; }
-        float timeElapsed { get; }
-        float normalized { get; }
-        int repeatCounter { get; }
-    }
 }

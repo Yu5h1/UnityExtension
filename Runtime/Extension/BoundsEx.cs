@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using UnityEngine;
 
-namespace Yu5h1Lib.Runtime
+namespace Yu5h1Lib
 {
     [EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
     public static class BoundsEx

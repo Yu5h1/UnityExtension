@@ -25,5 +25,6 @@ namespace Yu5h1Lib
         {
             CheckComponent();
         }
+        public void Log(string msg) => msg.print();
     }
 }

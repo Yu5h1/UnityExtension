@@ -1,0 +1,19 @@
+{
+  "name": "com.yu5h1.ai",
+  "version": "1.0.0",
+  "displayName": "Yu5h1Lib.AI",
+  "description": "Utilities for AI",
+  "unity": "2024.1",
+  "dependencies": {
+    "com.yu5h1.library": "1.0.1",
+    "com.unity.ai.navigation": "1.1.5"
+  },
+  "keywords": [
+    "AI"
+  ],
+  "author": {
+    "name": "Yu5h1",
+    "email": "jenyu5h10415@gmail.com",
+    "url": "https://github.com/Yu5h1"
+  }
+}

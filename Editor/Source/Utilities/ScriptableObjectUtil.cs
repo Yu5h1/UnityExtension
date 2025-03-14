@@ -1,8 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System.IO;
-using System.Reflection;
-using Yu5h1Lib.Runtime;
 
 namespace Yu5h1Lib.EditorExtension
 {

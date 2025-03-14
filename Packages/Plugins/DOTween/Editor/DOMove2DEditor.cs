@@ -12,9 +12,7 @@ namespace Yu5h1Lib
     [CustomEditor(typeof(DOMove2D)),CanEditMultipleObjects]
     public class DOMove2DInspector : Editor<DOMove2D>
     {
-        
         public static string ShowAllHandlesKey => typeof(DOMove2DInspector).FullName + "_ShowAllHandles";
-        
         public static bool ShowAllHandles
         {
             get => EditorPrefs.GetBool(ShowAllHandlesKey,false);
@@ -25,18 +23,20 @@ namespace Yu5h1Lib
                 RegisterEvent();
             }
         }
-        private static void OnSceneGUI(SceneView view)
-        {
-            foreach (var obj in GameObject.FindObjectsOfType<DOMove2D>())
-                Handle(obj, false);
-        }
-
         [MenuItem("CONTEXT/DOMove2D/Show all handles")]
         private static void ShowAllHandlesToggle(MenuCommand command)
         {
             ShowAllHandles = !ShowAllHandles;
             Menu.SetChecked("CONTEXT/DOMove2D/Show all handles", ShowAllHandles);
         }
+
+        private static void OnSceneGUI(SceneView view)
+        {
+            foreach (var obj in GameObject.FindObjectsOfType<DOMove2D>())
+                Handle(obj, false);
+        }
+
+
         static DragDropHandler dragdropHandler = new DragDropHandler();
 
         [InitializeOnLoadMethod]

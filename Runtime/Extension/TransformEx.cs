@@ -3,14 +3,14 @@ using System.CartesianCoordinate;
 
 namespace Yu5h1Lib
 {
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never), System.ComponentModel.Browsable(false)]
     public static class TransformEx
     {
-
         #region Modification
         public static void Reset(this Transform transform)
         {
             transform.localPosition = Vector3.zero;
-            transform.localEulerAngles = Vector3.zero;
+            transform.localRotation = Quaternion.identity;
             transform.localScale = Vector3.one;
         }
         public static void Sync(this Transform t,Transform target,bool pos = true,bool rot =false, bool scale = false)
@@ -28,13 +28,18 @@ namespace Yu5h1Lib
         }
         #endregion
 
-        #region Direction
-        public static Vector3 back(this Transform transform) => -transform.forward; 
-        public static Vector3 down(this Transform transform) => -transform.up; 
-        public static Vector3 left(this Transform transform) => -transform.right; 
-        #endregion
-
         #region Find
+        public static Transform Find(this Transform t,string text,StringComparisonStyle style,System.StringComparison comparison = System.StringComparison.OrdinalIgnoreCase)
+        {
+            if (t == null || string.IsNullOrEmpty(text))
+                return null;
+            foreach (Transform child in t)
+            {
+                if (child.name.Compare(text, style, comparison))
+                    return child;
+            }
+            return null;
+        }
         public static bool TryFind(this Transform t, string name, out Transform result) => result = t.Find(name);
         #endregion
 
@@ -63,7 +68,8 @@ namespace Yu5h1Lib
         public static Transform[] GetChildren(this Transform transform)
         {
             Transform[] results = new Transform[transform.childCount];
-            for (int i = 0; i < transform.transform.childCount; i++) results[i] = transform.transform.GetChild(i);
+            for (int i = 0; i < transform.transform.childCount; i++) 
+                results[i] = transform.transform.GetChild(i);
             return results;
         }
         public static GameObject[] ToGameObjects(this Transform[] transforms)

@@ -4,7 +4,7 @@ namespace Yu5h1Lib
 {
 	public static class ComponentEx
 	{
-		public static bool TryGetComponentInParent<T>(this Component component, out T result, bool IncludeSelf = false) where T : Component
+        public static bool TryGetComponentInParent<T>(this Component component, out T result, bool IncludeSelf = false) where T : Component
 		{
 			if (IncludeSelf && component.TryGetComponent(out result)) 
 				return true;

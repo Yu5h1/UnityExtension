@@ -5,7 +5,6 @@ namespace Yu5h1Lib
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never), System.ComponentModel.Browsable(false)]
     public static partial class GameObjectEx
     {
-
         #region Unorgernized
 
         public static Component GetOrAddComponet(this GameObject gameObject, System.Type type)

@@ -1,0 +1,18 @@
+{
+    "name": "com.yu5h1.AI.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:e6c4283d96a06cb498ff7ced6deaabd1"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
