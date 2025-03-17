@@ -24,23 +24,19 @@ namespace Yu5h1Lib.UI
         [ReadOnly]
         public List<T> elements = new List<T>();
 
-        private bool initialized;
-        private void Init()
+
+        protected override void OnInitializing()
         {
-            if (initialized)
-                return;
-            var existsElements = transform.GetComponentsInChildren<T>();            
+            base.OnInitializing();
+            var existsElements = transform.GetComponentsInChildren<T>();
             for (int i = 0; i < initialSpawnCount; i++)
             {
                 var element = i >= existsElements.Length ? CreateElement() : existsElements[i];
                 elements.Add(element);
                 element.gameObject.name = $"{i}.Element";
                 _ElementSpawned?.Invoke(element);
-            }            
-            initialized = true;
-            
+            }
         }
-
         private void OnEnable()
         {
             Init();

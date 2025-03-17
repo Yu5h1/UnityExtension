@@ -159,7 +159,8 @@ namespace Yu5h1Lib
             Init();
             if (!playOnEnable)
                 return;
-            PlayTween();
+            tweener.Play();
+            //tweener.PlayForward();
         }
         protected void OnRewind(T2 value)
         {
@@ -189,9 +190,9 @@ namespace Yu5h1Lib
             if (RewindOnDisable)
                 tweener.Rewind();
             else
-                tweener.Pause();
-
-            //Kill();
+                DOTween.Pause(component);//tweener.Pause();
+            
+            //DOTween.Pause(component);
 
             //if (!playOnEnable && TweenerCore?.IsComplete() == true)
             //{
@@ -201,13 +202,13 @@ namespace Yu5h1Lib
         }
         protected void PlayTween()
         {
-            if (!gameObject.activeSelf || !enabled)
+            if (!isActiveAndEnabled)
                 return;
             tweener.PlayForward();
         }
         public void TryPlayTween()
         {
-            if (!gameObject.activeSelf || !enabled || TweenerCore.IsPlaying() || IsWaiting)
+            if (TweenerCore.IsPlaying() || IsWaiting)
                 return;
             PlayTween();
         }

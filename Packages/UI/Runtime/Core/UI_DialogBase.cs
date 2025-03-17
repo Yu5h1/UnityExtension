@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
@@ -7,6 +8,12 @@ namespace Yu5h1Lib.UI
 {
     public abstract class UI_DialogBase : UIControl
     {
+        [Flags]
+        public enum Style {
+            Verbatim  = 1 << 0,
+            Fade      = 1 << 1,
+        }
+        public Style style = Style.Verbatim;
         public string[] lines;
         public string Content
         {
@@ -22,6 +29,13 @@ namespace Yu5h1Lib.UI
         }
         protected abstract string GetText();
         protected abstract void SetText(string text);
+        public Color color
+        { 
+            get => GetColor();
+            set => SetColor(value);
+        }
+        protected abstract Color GetColor();
+        protected abstract void SetColor(Color color);
 
         public abstract int GetLineCount();
 
@@ -85,18 +99,13 @@ namespace Yu5h1Lib.UI
 
         private Coroutine performCoroutine;
 
+
+
+
         #region Cache
         private int LineCountCache { get; set; }
         #endregion
 
-        protected override void Reset()
-        {
-            base.Reset();
-        }
-        protected override void Awake()
-        {
-            base.Awake();
-        }
         protected virtual void Start()
         {
             timer.duration = Speed;
@@ -117,21 +126,21 @@ namespace Yu5h1Lib.UI
         {
             if (!gameObject.activeSelf)
                 gameObject.SetActive(true);
-            this.StartCoroutine(ref performCoroutine, PerformVerbatimProcess(lines[StepIndex = 0], Delay, Speed));
+            this.StartCoroutine(ref performCoroutine, CreateProcess(lines[StepIndex = 0], Delay, Speed,style));
         }
         public virtual void Perform(string content, float delay, float speed)
         {
             lines = content.Split("\n\n");
             if (!gameObject.activeSelf)
                 gameObject.SetActive(true);
-            this.StartCoroutine(ref performCoroutine, PerformVerbatimProcess(lines[StepIndex = 0], delay, speed));
+            this.StartCoroutine(ref performCoroutine, CreateProcess(lines[StepIndex = 0], delay, speed));
         }
         public virtual void Perform(string content)
         {
             lines = content.Split("\n\n");
             Perform();
         }
-        public IEnumerator PerformVerbatimProcess(string text, float delay = 0, float speed = 0.05f)
+        public IEnumerator CreateProcess(string text, float delay = 0, float speed = 0.05f, Style style = Style.Verbatim)
         {
             if (delay > 0)
                 yield return new WaitForSeconds(delay);
@@ -142,24 +151,45 @@ namespace Yu5h1Lib.UI
             }
             IsPerforming = true;
             Content = speed > 0 ? "" : text;
-            timer.useUnscaledTime = useUnscaledTime;
-            if (speed > 0)
-                for (int i = 0; i < text.Length; i++)
-                {
-                    var letter = text[i];
-                    if (!IsPerforming)
-                    {
-                        Content = text;
-                        _Skiped?.Invoke();
-                        _PerformCompleted?.Invoke();
-                        yield break;
-                    }
-                    Content += letter;
 
-                    _PerformBegin?.Invoke();
+            timer.useUnscaledTime = useUnscaledTime;
+
+            switch (style)
+            {
+                case Style.Verbatim:
+                    timer.duration = speed;
+                    if (speed > 0)
+                        for (int i = 0; i < text.Length; i++)
+                        {
+                            var letter = text[i];
+                            if (!IsPerforming)
+                            {
+                                Content = text;
+                                _Skiped?.Invoke();
+                                _PerformCompleted?.Invoke();
+                                yield break;
+                            }
+                            Content += letter;
+
+                            _PerformBegin?.Invoke();
+                            timer.Start();
+                            yield return waiter;
+                        }
+                    break;
+                case Style.Fade:
+                    var from = color.ChangeAlpha(0);
+                    var to = color.ChangeAlpha(1);
+                    color = from;
                     timer.Start();
-                    yield return waiter;
-                }
+                    Content = text;
+                    while (!timer.IsCompleted)
+                    {
+                        color = Color.Lerp(from, to, Mathf.PingPong(timer.normalized,0.5f));
+                        timer.Tick();
+                        yield return null;
+                    }
+                    break;
+            }
 
             _PerformCompleted?.Invoke();
             IsPerforming = false;
@@ -190,7 +220,7 @@ namespace Yu5h1Lib.UI
         {
             if (NothingToSay)
                 return false;
-            StartCoroutine(PerformVerbatimProcess(lines[++StepIndex]));
+            StartCoroutine(CreateProcess(lines[++StepIndex]));
             return true;
         }
 

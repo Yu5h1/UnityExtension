@@ -21,6 +21,7 @@ public class DOMove2D : DOTransform<Vector3,VectorOptions>
     protected override void OnComplete() => OnComplete(velocity);
     protected override void OnRewind() => OnRewind(-velocity);
 
+    protected override void ResetStartValue() => _startValue = Vector3.zero;
     protected override void ResetEndValue() => _endValue = Vector3.zero;
 
     public override string ToString() => tweener.ToString();
