@@ -4,6 +4,7 @@ using DG.Tweening;
 using DG.Tweening.Plugins.Options;
 using Yu5h1Lib;
 using FloatTweener = DG.Tweening.Core.TweenerCore<float, float, DG.Tweening.Plugins.Options.FloatOptions>;
+using System.Linq;
 
 
 [DisallowMultipleComponent]
@@ -16,20 +17,8 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
     [SerializeField, ReadOnly] private MeshRenderer[] meshRenderers;
     private MaterialPropertyBlock propblock;
     private MaterialPropertyBlock[] propblocks;
+    private bool TweenFromChildren;
 
-    public Component GetFirstComponent(){
-        var c = component;
-        if (!c && IncludeChildren)
-        {
-            if (!images.IsEmpty())
-                c = images[0];
-            else if (!spriteRenderers.IsEmpty())
-                c = spriteRenderers[0];
-            else if (!meshRenderers.IsEmpty())
-                c = meshRenderers[0];
-        }
-        return c;
-    }
     public override Component OverrideGetComponent()
     {
         if (IncludeChildren)
@@ -54,28 +43,43 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
             return spriteRenderer;
         else if (TryGetComponent(out MeshRenderer mr))
         {
+            propblock = new MaterialPropertyBlock();
             if (IncludeChildren)
                 SetMeshsColor(GetBlockColor(mr, propblock));
             return mr;
+        }else if (IncludeChildren)
+        {
+            Component result = null;
+            if (!images.IsEmpty())
+                result = images.First();
+            else if (!spriteRenderers.IsEmpty())
+                result = spriteRenderers.First();
+            else if (!meshRenderers.IsEmpty())
+            {
+                propblock = new MaterialPropertyBlock();
+                result = meshRenderers.First();
+            }
+
+            if (TweenFromChildren = result)
+                return result;
         }
         return null;
     }
     protected override FloatTweener CreateTweenCore() {
-        switch (GetFirstComponent())
+        switch (component)
         {
             case CanvasGroup g:
                 return g.DOFade(endValue, Duration);
             case Image img:
             case SpriteRenderer sr :
             case MeshRenderer mr:
-                return DOTween.To(GetAlpha, SetAlpha, endValue, Duration);
+                return DOTween.To(GetAlpha, SetAlpha, endValue, Duration).SetTarget(component);
             default:
                 throw new System.NullReferenceException($"{component} DOFade require CanvasGroup or SpriteRenderer");
         }
-        
     }
     private float GetAlpha() {
-        switch (GetFirstComponent())
+        switch (component)
         {
             case CanvasGroup g:
                 return g.alpha;

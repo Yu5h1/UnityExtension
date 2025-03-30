@@ -9,6 +9,10 @@ namespace Yu5h1Lib.UI
         private RectTransform _rectTransform;
         public RectTransform rectTransform => _rectTransform;
 
+        private void Reset()
+        {
+            Init();
+        }
         protected override void OnInitializing()
         {
             this.GetComponent(ref _rectTransform);

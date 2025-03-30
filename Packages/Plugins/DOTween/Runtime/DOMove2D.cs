@@ -9,11 +9,12 @@ public class DOMove2D : DOTransform<Vector3,VectorOptions>
     [SerializeField,ReadOnly]
     public Vector2 velocity ;//{ get; private set; }
 
-    private void Awake()
+    protected override void Awake()
     {
         velocity = (_endValue - _startValue) / Duration;
         _startValue = transform.TransformPoint(_startValue);
         _endValue = transform.TransformPoint(_endValue);
+        base.Awake();
     }
     protected override TweenerCore<Vector3, Vector3, VectorOptions> CreateTweenCore()
         => transform.DOMove(endValue, Duration);

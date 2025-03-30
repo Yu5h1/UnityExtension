@@ -13,7 +13,7 @@ using System.Runtime.CompilerServices;
 #endif
 namespace Yu5h1Lib
 {
-    public abstract class TweenBehaviour : MonoBehaviour
+    public abstract class TweenBehaviour : BaseMonoBehaviour
     {
         public float Delay;
         public float Duration = 1;
@@ -30,17 +30,17 @@ namespace Yu5h1Lib
         public Tweener tweener { get; protected set; }
         public float normalizedTime => tweener.ElapsedPercentage();
         protected internal abstract Tweener Create();
-        public bool IsInitinalized => tweener != null && DOTween.IsTweening(tweener);
-        protected internal abstract void Init();
-        public void Kill()
+
+        public virtual bool Kill()
         {
-            if (!IsInitinalized)
-                return;
+            if (!initialized)
+                return false;
             tweener.Kill();
             tweener = null;
+            return true;
         }
         [RuntimeInitializeOnLoadMethod]
-        private static void Initinalize()
+        private static void StaticInitialize()
         {
             Application.wantsToQuit -= Application_wantsToQuit;
             Application.wantsToQuit += Application_wantsToQuit;
@@ -51,24 +51,24 @@ namespace Yu5h1Lib
             return true;
         }
     }
-    public abstract class TweenBehaviour<TComponent, T1, T2, TPlugOptions> : TweenBehaviour
+    public abstract class TweenBehaviour<TComponent, TValue1, TValue2, TPlugOptions> : TweenBehaviour
         where TComponent : Component
         where TPlugOptions : struct, IPlugOptions
     {
         [SerializeField, ReadOnly]
-        protected TComponent _component;
-        public virtual TComponent component => _component;
+        private TComponent _component;
+        public virtual TComponent component { get => _component; private set => _component = value; }
         public virtual TComponent OverrideGetComponent() => null;
 
-        protected TweenerCore<T1, T2, TPlugOptions> TweenerCore
+        protected TweenerCore<TValue1, TValue2, TPlugOptions> TweenerCore
         {
-            get => (TweenerCore<T1, T2, TPlugOptions>)tweener;
+            get => (TweenerCore<TValue1, TValue2, TPlugOptions>)tweener;
             set => tweener = value;
         }
 
         [SerializeField, ContextMenuItem("Reset", nameof(ResetStartValue))]
-        protected T2 _startValue;
-        public T2 startValue
+        protected TValue2 _startValue;
+        public TValue2 startValue
         {
             get => _startValue;
             protected set
@@ -84,8 +84,8 @@ namespace Yu5h1Lib
 
         [SerializeField]
         [ContextMenuItem("Reset", nameof(ResetEndValue))]
-        protected T2 _endValue;
-        public T2 endValue
+        protected TValue2 _endValue;
+        public TValue2 endValue
         {
             get => _endValue;
             internal set
@@ -105,23 +105,21 @@ namespace Yu5h1Lib
         }
 
         [SerializeField]
-        protected UnityEvent<T2> OnCompleteEvent;
-        public event UnityAction<TweenBehaviour, T2> CompleteEvent;
+        protected UnityEvent<TValue2> OnCompleteEvent;
+        public event UnityAction<TweenBehaviour, TValue2> CompleteEvent;
 
         [SerializeField]
-        protected UnityEvent<T2> OnRewindEvent;
-        public event UnityAction<TweenBehaviour, T2> RewindEvent;
+        protected UnityEvent<TValue2> OnRewindEvent;
+        public event UnityAction<TweenBehaviour, TValue2> RewindEvent;
 
         protected internal override Tweener Create() => CreateTweenCore();
-        protected abstract TweenerCore<T1, T2, TPlugOptions> CreateTweenCore();
+        protected abstract TweenerCore<TValue1, TValue2, TPlugOptions> CreateTweenCore();
 
         protected virtual void ResetStartValue() { "NotImplementedException ResetStartValue".printWarning(); }
         protected virtual void ResetEndValue() { "NotImplementedException ResetEndValue ".printWarning(); }
 
-        protected internal override void Init()
+        protected override void OnInitializing()
         {
-            if (IsInitinalized)
-                return;
             "component does not exist !".printWarningIf(!(_component = 
                 OverrideGetComponent() ?? GetComponent<TComponent>()));
 
@@ -162,7 +160,18 @@ namespace Yu5h1Lib
             tweener.Play();
             //tweener.PlayForward();
         }
-        protected void OnRewind(T2 value)
+        public override bool Kill()
+        {
+            if (TweenerCore == null)
+                return false;
+            TweenerCore.onPlay -= OnPlay;
+            TweenerCore.onComplete -= OnComplete;
+            TweenerCore.onStepComplete -= OnLoop;
+            TweenerCore.onRewind -= OnRewind;
+
+            return base.Kill();
+        }
+        protected void OnRewind(TValue2 value)
         {
             OnRewindEvent?.Invoke(value);
             RewindEvent?.Invoke(this, value);
@@ -175,7 +184,7 @@ namespace Yu5h1Lib
         {
 
         }
-        protected void OnComplete(T2 value)
+        protected void OnComplete(TValue2 value)
         {
             OnCompleteEvent?.Invoke(value);
             CompleteEvent?.Invoke(this, TweenerCore.changeValue);
@@ -189,10 +198,8 @@ namespace Yu5h1Lib
         {
             if (RewindOnDisable)
                 tweener.Rewind();
-            else
-                DOTween.Pause(component);//tweener.Pause();
-            
-            //DOTween.Pause(component);
+
+            DOTween.Pause(component);
 
             //if (!playOnEnable && TweenerCore?.IsComplete() == true)
             //{

@@ -1,0 +1,19 @@
+{
+    "name": "com.yu5h1.URPExtension.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:15fc0a57446b3144c949da3e2b9737a9",
+        "GUID:8f38fb0f121e0394694786a408aac426"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

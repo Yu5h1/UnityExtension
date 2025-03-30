@@ -8,6 +8,10 @@ namespace Yu5h1Lib
     {
         public TweenBehaviour[] tweeners { get; private set; }
 
+        protected override void OnInitializing()
+        {
+        }
+
         protected void OnEnable()
         {
             //tweeners = GetComponentsInChildren<TweenBehaviour>();
@@ -26,6 +30,6 @@ namespace Yu5h1Lib
             
         }
 
-        
+
     }
 }
