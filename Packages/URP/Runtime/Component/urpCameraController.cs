@@ -19,54 +19,6 @@ public class urpCameraController : BaseMonoBehaviour
     {
         this.GetComponent(ref _camera);
     }
-
     void Start() {}
-    //public void AddSceneOverlaysAsStacks(Camera owner)
-    //{
-    //    var ownerData = owner.GetUniversalAdditionalCameraData();
-    //    if (ownerData.renderType == CameraRenderType.Overlay)
-    //        return;
-    //    foreach (var camer in GameObject.FindObjectsOfType<Camera>())
-    //    {
-    //        if (camer == owner)
-    //            continue;
-    //        var data = camer.GetUniversalAdditionalCameraData();
-    //        if (data.renderType == CameraRenderType.Overlay)
-    //            ownerData.cameraStack.Add(camer);
 
-    //    }
-    //    owner.Render();
-    //}
-    public void AddSceneOverlaysAsStacks(Camera owner)
-    {
-        var ownerData = owner.GetUniversalAdditionalCameraData();
-
-        if (ownerData.renderType == CameraRenderType.Overlay)
-            return;
-
-        ownerData.cameraStack.Clear();
-
-        foreach (var camer in GameObject.FindObjectsOfType<Camera>())
-        {
-            if (camer == owner) continue;
-
-            var data = camer.GetUniversalAdditionalCameraData();
-
-            if (data.renderType == CameraRenderType.Overlay)
-            {
-                if (!ownerData.cameraStack.Contains(camer))
-                {
-                    ownerData.cameraStack.Add(camer);
-                }
-            }
-        }
-
-        ForceRender(owner);
-    }
-
-    private void ForceRender(Camera cam)
-    {
-        cam.Render();
-        Graphics.ExecuteCommandBuffer(new UnityEngine.Rendering.CommandBuffer());
-    }
 }

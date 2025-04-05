@@ -47,6 +47,7 @@ namespace Yu5h1Lib
         }
         private static bool Application_wantsToQuit()
         {
+            DOTween.KillAll(false);
             DOTween.Clear(true);
             return true;
         }
@@ -157,8 +158,8 @@ namespace Yu5h1Lib
             Init();
             if (!playOnEnable)
                 return;
-            tweener.Play();
-            //tweener.PlayForward();
+            if (IsAvailable())
+                tweener.PlayForward();
         }
         public override bool Kill()
         {
@@ -250,7 +251,7 @@ namespace Yu5h1Lib
         }
         private void OnDestroy()
         {
-            TweenerCore.Kill();
+            Kill();
         }
     }
     public abstract class TweenBehaviour<TComponent, TValue, TPlugOptions> : TweenBehaviour<TComponent, TValue, TValue, TPlugOptions>

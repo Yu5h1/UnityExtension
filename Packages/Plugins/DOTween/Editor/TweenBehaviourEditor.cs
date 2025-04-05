@@ -43,7 +43,7 @@ public abstract class TweenBehaviourEditor<T> : Editor<T> where T : TweenBehavio
         }
     }
     
-    private void OnDisable()
+    protected virtual void OnDisable()
     {
         targetObject.Kill();
     }
