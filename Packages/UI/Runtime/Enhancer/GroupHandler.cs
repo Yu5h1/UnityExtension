@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Yu5h1Lib.UI
@@ -36,13 +38,28 @@ namespace Yu5h1Lib.UI
                 element.gameObject.name = $"{i}.Element";
                 _ElementSpawned?.Invoke(element);
             }
+            var count = elements.Count;
+            for (int i = 0; i < count; i++)
+            {
+                int next = (i + 1) % count;
+                int prev = (i - 1 + count) % count;
+
+                var nextItem = elements[next];
+                var prevItem = elements[prev];
+
+                var nav = elements[i].navigation;
+                nav.mode = Navigation.Mode.Explicit;
+                nav.selectOnDown = nextItem;
+                nav.selectOnRight = nextItem;
+                nav.selectOnUp = prevItem;
+                nav.selectOnLeft = prevItem;
+                elements[i].navigation = nav;
+            }
         }
         private void OnEnable()
         {
-            Init();
             _Enabled?.Invoke();
         }
-
         #region Methods
         public abstract T CreateElement();
         #endregion

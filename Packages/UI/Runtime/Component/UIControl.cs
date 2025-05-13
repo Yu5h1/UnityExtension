@@ -9,7 +9,7 @@ namespace Yu5h1Lib.UI
         private RectTransform _rectTransform;
         public RectTransform rectTransform => _rectTransform;
 
-        private void Reset()
+        protected void Reset()
         {
             Init();
         }

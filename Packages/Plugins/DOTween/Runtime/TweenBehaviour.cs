@@ -135,10 +135,7 @@ namespace Yu5h1Lib
                 TweenerCore.Pause();
             if (Delay > 0)
                 TweenerCore.SetDelay(Delay);
-            if (updateType != DG.Tweening.UpdateType.Normal)
-                TweenerCore.SetUpdate(updateType);
-            if (isIndependentUpdate)
-                TweenerCore.SetUpdate(isIndependentUpdate);
+            TweenerCore.SetUpdate(updateType, isIndependentUpdate);
 
             TweenerCore.onPlay += OnPlay;
             TweenerCore.onComplete += OnComplete;
@@ -200,6 +197,7 @@ namespace Yu5h1Lib
             if (RewindOnDisable)
                 tweener.Rewind();
 
+            //tweener.Pause();
             DOTween.Pause(component);
 
             //if (!playOnEnable && TweenerCore?.IsComplete() == true)
@@ -224,14 +222,15 @@ namespace Yu5h1Lib
         {
             if (!gameObject.activeSelf || !enabled || TweenerCore.IsPlaying() || IsWaiting)
                 return;
-            tweener.onComplete += RevertToOriginal;
+            tweener.onComplete -= RestoreDefaultOnComplete;
+            tweener.onComplete += RestoreDefaultOnComplete;
             tweener.SetDelay(delay);
             PlayTween();
         }
-        void RevertToOriginal()
+        void RestoreDefaultOnComplete()
         {
             tweener.SetDelay(Delay);
-            tweener.onComplete = RevertToOriginal;
+            tweener.onComplete = OnComplete;
         }
         Coroutine coroutine;
         public void TryPlayBackwards(float delay)
