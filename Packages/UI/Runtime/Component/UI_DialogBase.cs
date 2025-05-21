@@ -42,8 +42,9 @@ namespace Yu5h1Lib.UI
         public float Delay;
         public float Speed = 0.05f;
         public int StepIndex { get; private set; }
-        public bool IsPerforming { get; private set; }
-        public bool NothingToSay => StepIndex >= lines.Length - 1 && !IsPerforming;
+        public bool IsPlaying { get; private set; }
+        public bool GetIsPlaying() => IsPlaying;
+        public bool NothingToSay => StepIndex >= lines.Length - 1 && !IsPlaying;
         public bool PerformOnEnable = true;
 
 
@@ -126,21 +127,22 @@ namespace Yu5h1Lib.UI
         {
             if (!gameObject.activeSelf)
                 gameObject.SetActive(true);
-            this.StartCoroutine(ref performCoroutine, CreateProcess(lines[StepIndex = 0], Delay, Speed,style));
+            this.StartCoroutine(ref performCoroutine, BuildPerformRoutine(lines[StepIndex = 0], Delay, Speed,style));
         }
-        public virtual void Perform(string content, float delay, float speed)
+        public virtual void Perform(string content, float? delay = null, float? speed = null,
+            Style? style = null, bool append = false)
         {
+            delay ??= Delay;
+            speed ??= Speed;
+            style ??= this.style;
+
             lines = content.Split("\n\n");
             if (!gameObject.activeSelf)
                 gameObject.SetActive(true);
-            this.StartCoroutine(ref performCoroutine, CreateProcess(lines[StepIndex = 0], delay, speed));
+            this.StartCoroutine(ref performCoroutine, BuildPerformRoutine(lines[StepIndex = 0], delay.Value, speed.Value, style.Value, append));
         }
-        public virtual void Perform(string content)
-        {
-            lines = content.Split("\n\n");
-            Perform();
-        }
-        public IEnumerator CreateProcess(string text, float delay = 0, float speed = 0.05f, Style style = Style.Verbatim)
+        public IEnumerator BuildPerformRoutine(string text, float delay = 0, float speed = 0.05f,
+            Style style = Style.Verbatim, bool append = false)
         {
             if (delay > 0)
                 yield return new WaitForSeconds(delay);
@@ -149,8 +151,11 @@ namespace Yu5h1Lib.UI
                 Content = text;
                 yield break;
             }
-            IsPerforming = true;
-            Content = speed > 0 ? "" : text;
+            IsPlaying = true;
+            
+            Content = (append ? $"{Content}\n" : "") + (speed > 0 ? "" : text);
+            
+                
 
             timer.useUnscaledTime = useUnscaledTime;
 
@@ -162,7 +167,7 @@ namespace Yu5h1Lib.UI
                         for (int i = 0; i < text.Length; i++)
                         {
                             var letter = text[i];
-                            if (!IsPerforming)
+                            if (!IsPlaying)
                             {
                                 Content = text;
                                 _Skiped?.Invoke();
@@ -192,7 +197,7 @@ namespace Yu5h1Lib.UI
             }
 
             _PerformCompleted?.Invoke();
-            IsPerforming = false;
+            IsPlaying = false;
         }
         public void PerformThinking()
         {
@@ -220,7 +225,7 @@ namespace Yu5h1Lib.UI
         {
             if (NothingToSay)
                 return false;
-            StartCoroutine(CreateProcess(lines[++StepIndex]));
+            StartCoroutine(BuildPerformRoutine(lines[++StepIndex]));
             return true;
         }
 
@@ -228,8 +233,8 @@ namespace Yu5h1Lib.UI
         {
             if (!gameObject.activeSelf)
                 return;
-            if (IsPerforming)
-                IsPerforming = false;
+            if (IsPlaying)
+                IsPlaying = false;
             else if (!Next())
                 _DialogOver?.Invoke();
         }
