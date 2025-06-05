@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Events;
 using Yu5h1Lib.Runtime;
 
 namespace Yu5h1Lib.UI
@@ -21,6 +22,8 @@ namespace Yu5h1Lib.UI
         where T0 : Component 
         where T1 : Component
     {
+
+        [SerializeField] private UnityEvent<string> TextChanged;
         public override string text
         {
             get => component switch
@@ -31,19 +34,21 @@ namespace Yu5h1Lib.UI
             };
             set
             {
+                if (text == value)
+                    return;
                 switch (component)
                 {
                     case T0 t0: SetText(t0, value); break;
                     case T1 t1: SetText(t1, value); break;
                     default: Unhandled(); break;
                 }
+                TextChanged?.Invoke(value);
             }
         }
         public abstract string GetText(T0 t0);
         public abstract void SetText(T0 t0,string val); 
         public abstract string GetText(T1 t1);
         public abstract void SetText(T1 t1, string val);
-
 
         public override Color color
         {
@@ -122,14 +127,17 @@ namespace Yu5h1Lib.UI
         }
         public void Unhandled()
         {
-            Debug.LogWarning($"TextAdapter: 無法處理 {component.GetType().Name} 類型的 component。");
+            Debug.LogWarning($"{GetType().Name}: 無法處理 {component.GetType().Name} 類型的 component。");
         }
         public T Unhandled<T>()
         {
             Unhandled();
             return default(T);
         }
+
  
+
+
         protected override void OnInitializing()
         {
             if (TryGetComponent(out T0 t0))
@@ -141,6 +149,9 @@ namespace Yu5h1Lib.UI
             else if (this.TryGetComponentInChildren(out t1, true))
                 component = t1;
         }
+
+
+
     }
     public abstract class TextAdapter<T0, T1,T2> : TextAdapter<T0,T1>
         where T0 : Component

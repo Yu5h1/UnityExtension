@@ -61,5 +61,10 @@ public class TMP_TextAdapter : TextAdapter<Text, TMP_Text>
         }
         
     }
- 
+
+
+    private void Reset()
+    {
+        Init();
+    }
 }

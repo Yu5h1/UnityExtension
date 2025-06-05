@@ -11,3 +11,12 @@ public class ResultEvent : EventContainer
     public void Invoke(bool result)
         => (result ? success : failure)?.Invoke();
 }
+
+[System.Serializable]
+public class ResultEvent<T> : EventContainer
+{
+    public UnityEvent<T> success;
+    public UnityEvent<T> failure;
+    public void Invoke(bool result,T t)
+        => (result ? success : failure)?.Invoke(t);
+}
