@@ -16,5 +16,17 @@ namespace TMPro
         }
         public static void SwapContentType(this TMP_InputField field, ContentType a)
             => field.SwapContentType(a,ContentType.Standard);
+
+        public static string GetPlaceholderText(this TMP_InputField field)
+        {
+            if (field.placeholder is TMP_Text text)
+                return text.text;
+            return "";
+        }
+        public static void SetPlaceholderText(this TMP_InputField field, string value)
+        {
+            if (field.placeholder is TMP_Text text)
+                text.text = value;
+        }
     }
 }

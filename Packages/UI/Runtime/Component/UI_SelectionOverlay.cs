@@ -78,6 +78,6 @@ public class UI_SelectionOverlay : UIControl
     public void MatchFrameToTarget(RectTransform frame, RectTransform target)
     {
         frame.SetParent(target, worldPositionStays: false);
-        frame.SetAnchorPreset(AnchorPreset.StretchFull);
+        frame.SetAnchorPreset(Yu5h1Lib.Runtime.Alignment.Fill);
     }
 }

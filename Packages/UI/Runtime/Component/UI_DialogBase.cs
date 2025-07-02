@@ -20,11 +20,11 @@ namespace Yu5h1Lib.UI
             get => GetText();
             set
             {
-                var previouseContent = GetText();
-                if (previouseContent == value)
+                var previousContent = GetText();
+                if (previousContent == value)
                     return;
                 SetText(value);
-                OnContentChanged(previouseContent);
+                OnContentChanged(previousContent);
             }
         }
         protected abstract string GetText();
@@ -132,6 +132,8 @@ namespace Yu5h1Lib.UI
         public virtual void Perform(string content, float? delay = null, float? speed = null,
             Style? style = null, bool append = false)
         {
+            if (content.IsEmpty())
+                return;
             delay ??= Delay;
             speed ??= Speed;
             style ??= this.style;

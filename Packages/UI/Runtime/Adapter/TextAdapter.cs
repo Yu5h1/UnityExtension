@@ -7,16 +7,25 @@ using Yu5h1Lib.Runtime;
 
 namespace Yu5h1Lib.UI
 {
-    public abstract class TextAdapter : BaseMonoBehaviour
+    public abstract class TextAdapter : UIControl
     {
         public Component component;
+        public RectTransform targetRectTransform => (RectTransform)component.transform;
         public abstract string text { get; set; }
         public abstract Color color { get; set; }
+        public abstract float fontSize { get; set; }
+        public abstract float lineSpacing { get; set; }
         public abstract CanvasRenderer canvasRenderer { get; }
 
         public abstract void CrossFadeAlpha(float alpha, float duration, bool ignoreTimeScale);
 
         public abstract Alignment alignment { get; set; }
+
+        public abstract float GetActualFontSize();
+
+        public abstract float GetWrapDistance();
+        public abstract float GetFirstLineOffsetY();
+
     }
     public abstract class TextAdapter<T0, T1> : TextAdapter
         where T0 : Component 
@@ -96,6 +105,52 @@ namespace Yu5h1Lib.UI
         public abstract Alignment GetAlignment(T1 t0);
         public abstract void SetAlignment(T1 t0, Alignment val);
 
+        public override float fontSize
+        {
+            get => component switch
+            {
+                T0 t0 => GetFontSize(t0),
+                T1 t1 => GetFontSize(t1),
+                _ => Unhandled<int>()
+            };
+            set
+            {
+                switch (component)
+                {
+                    case T0 t0: SetFontSize(t0, value); break;
+                    case T1 t1: SetFontSize(t1, value); break;
+                    default: Unhandled(); break;
+                }
+            }
+        }
+        protected abstract float GetFontSize(T0 t0);
+        protected abstract void SetFontSize(T0 t0, float value);
+        protected abstract float GetFontSize(T1 t0);
+        protected abstract void SetFontSize(T1 t0, float value);
+
+
+        public override float lineSpacing
+        {
+            get => component switch
+            {
+                T0 t0 => GetlineSpacing(t0),
+                T1 t1 => GetlineSpacing(t1),
+                _ => Unhandled<int>()
+            };
+            set
+            {
+                switch (component)
+                {
+                    case T0 t0: SetlineSpacing(t0, value); break;
+                    case T1 t1: SetlineSpacing(t1, value); break;
+                    default: Unhandled(); break;
+                }
+            }
+        }
+        protected abstract float GetlineSpacing(T0 t0);
+        protected abstract void SetlineSpacing(T0 t0, float value);
+        protected abstract float GetlineSpacing(T1 t0);
+        protected abstract void SetlineSpacing(T1 t0, float value);
 
         public override CanvasRenderer canvasRenderer 
         { 
@@ -140,6 +195,7 @@ namespace Yu5h1Lib.UI
 
         protected override void OnInitializing()
         {
+            base.OnInitializing();
             if (TryGetComponent(out T0 t0))
                 component = t0;
             else if (TryGetComponent(out T1 t1))

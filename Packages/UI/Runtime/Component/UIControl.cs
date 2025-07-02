@@ -9,7 +9,7 @@ namespace Yu5h1Lib.UI
         private RectTransform _rectTransform;
         public RectTransform rectTransform => _rectTransform;
 
-        protected void Reset()
+        protected virtual void Reset()
         {
             Init();
         }
@@ -17,5 +17,7 @@ namespace Yu5h1Lib.UI
         {
             this.GetComponent(ref _rectTransform);
         }
+
+    
     } 
 }
