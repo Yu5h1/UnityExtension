@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -24,7 +25,7 @@ namespace Yu5h1Lib
             if (!(arrayProperty.isArray && arrayProperty.IsDefined<SerializeReference>()))
                 return;
             var baseType = arrayProperty.GetElementType();
-            var types = baseType.GetDerivedTypes();
+            var types = baseType.GetDerivedTypes().Where(t=>!t.IsAbstract);
             if (!baseType.IsAbstract)
                 menu.AddTypeItem(arrayProperty, baseType);
 

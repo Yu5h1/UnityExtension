@@ -17,6 +17,10 @@ public class ResultEvent<T> : EventContainer
 {
     public UnityEvent<T> success;
     public UnityEvent<T> failure;
+    public UnityEvent<bool> finished;
     public void Invoke(bool result,T t)
-        => (result ? success : failure)?.Invoke(t);
+    {
+        (result ? success : failure)?.Invoke(t);
+        finished?.Invoke(result);
+    }
 }

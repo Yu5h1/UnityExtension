@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using TMPro;
 using Yu5h1Lib;
 using ContentType = TMPro.TMP_InputField.ContentType;
@@ -5,6 +6,7 @@ using ContentType = TMPro.TMP_InputField.ContentType;
 
 namespace TMPro
 {
+    [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
     public static class TMP_InputFieldEx
     {
         public static void SwapContentType(this TMP_InputField field, ContentType a, ContentType b)
