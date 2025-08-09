@@ -22,9 +22,13 @@ namespace Yu5h1Lib
 
             var arrayProperty = property;
 
-            if (!(arrayProperty.isArray && arrayProperty.IsDefined<SerializeReference>()))
+            if (!arrayProperty.isArray)
                 return;
-            var baseType = arrayProperty.GetElementType();
+            if (!arrayProperty.IsDefined<SerializeReference>())
+                return;
+            if ("ElementType not found ! ".printWarningIf(!arrayProperty.TryGetElementType(out Type baseType)))
+                return;
+
             var types = baseType.GetDerivedTypes().Where(t=>!t.IsAbstract);
             if (!baseType.IsAbstract)
                 menu.AddTypeItem(arrayProperty, baseType);
@@ -32,17 +36,6 @@ namespace Yu5h1Lib
             foreach (var derivedType in types)
                     menu.AddTypeItem(arrayProperty, derivedType);
 
-        }
-        private static void AddTypeItem(this GenericMenu menu,SerializedProperty arrayProperty, Type type)
-        {
-            menu.AddItem(new GUIContent($"Add/{type.Name}"), false, () =>
-            {
-                arrayProperty.arraySize++;
-                SerializedProperty newElement = arrayProperty.GetArrayElementAtIndex(arrayProperty.arraySize - 1);
-
-                newElement.managedReferenceValue = System.Activator.CreateInstance(type);
-                arrayProperty.serializedObject.ApplyModifiedProperties();
-            });
         }
     }
 }

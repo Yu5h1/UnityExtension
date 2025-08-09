@@ -184,8 +184,8 @@ namespace Yu5h1Lib.UI
                         }
                     break;
                 case Style.Fade:
-                    var from = color.ChangeAlpha(0);
-                    var to = color.ChangeAlpha(1);
+                    var from = color.SetAlpha(0);
+                    var to = color.SetAlpha(1);
                     color = from;
                     timer.Start();
                     Content = text;

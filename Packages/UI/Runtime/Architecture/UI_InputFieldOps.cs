@@ -29,17 +29,17 @@ public sealed class UIInputFieldOps : InputFieldOps<InputField> , IInputFieldOps
     public override event UnityAction<string> submit
     { 
         add => c.onSubmit.AddListener(value);
-        remove => c.onSubmit.AddListener(value);
+        remove => c.onSubmit.RemoveListener(value);
     }
     public override event UnityAction<string> textChanged
     {
         add => c.onValueChanged.AddListener(value);
-        remove => c.onValueChanged.AddListener(value);
+        remove => c.onValueChanged.RemoveListener(value);
     }
     public override event UnityAction<string> endEdit
     {
         add => c.onEndEdit.AddListener(value);
-        remove => c.onEndEdit.AddListener(value);
+        remove => c.onEndEdit.RemoveListener(value);
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]

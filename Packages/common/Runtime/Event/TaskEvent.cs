@@ -4,7 +4,7 @@ using UnityEngine;
 
 
 [System.Serializable]
-public class RequestHandler : EventContainer
+public class TaskEvent : EventContainer
 {
     public LifeCycleEvent lifeCycle;
     public ResultEvent _result;
@@ -15,8 +15,9 @@ public class RequestHandler : EventContainer
 }
 
 [System.Serializable]
-public class RequestHandler<T> : EventContainer
+public class TaskEvent<T> : EventContainer
 {
+    public bool triggerSharedEvent = true;
     public LifeCycleEvent<T> lifeCycle;
     public ResultEvent<T> _result;
 

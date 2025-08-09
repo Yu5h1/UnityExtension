@@ -17,11 +17,8 @@ public interface ITextAttribute
     Color color { get; set; }
     float fontSize { get; set; }
     float lineSpacing { get; set; }
-
     Alignment alignment { get; set; }
-
     CanvasRenderer canvasRenderer { get; }
-
 }
 public abstract class TextOps<T> : OpsBase<T>, ITextOps where T : Component
 {

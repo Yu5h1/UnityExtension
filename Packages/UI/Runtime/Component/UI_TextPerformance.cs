@@ -8,8 +8,6 @@ using Yu5h1Lib.UI;
 public class UI_TextPerformance : MonoBehaviour
 {
     public TextAdapter textAdapter;
-
-
     private Timer timer = new Timer();
     private Coroutine coroutine;
     //public float a;
@@ -45,7 +43,7 @@ public class UI_TextPerformance : MonoBehaviour
         while (!timer.IsCompleted)
         {
             timer.Tick();
-            textAdapter.color = textAdapter.color.ChangeAlpha(Mathf.Lerp(0, 1, timer.normalized));
+            textAdapter.color = textAdapter.color.SetAlpha(Mathf.Lerp(0, 1, timer.normalized));
             yield return null;
         }
         yield return new WaitForSeconds(lifeTime);
@@ -58,7 +56,7 @@ public class UI_TextPerformance : MonoBehaviour
         while (!timer.IsCompleted)
         {
             timer.Tick();
-            textAdapter.color = textAdapter.color.ChangeAlpha(Mathf.Lerp(1, 0, timer.normalized));
+            textAdapter.color = textAdapter.color.SetAlpha(Mathf.Lerp(1, 0, timer.normalized));
             yield return null;
         }
 

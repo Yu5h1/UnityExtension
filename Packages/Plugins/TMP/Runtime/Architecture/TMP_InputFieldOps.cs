@@ -21,7 +21,10 @@ public sealed class TMP_InputFieldOps : InputFieldOps<TMP_InputField>
     public override bool MaskPassword
     {
         get => c.contentType == TMP_InputField.ContentType.Password;
-        set => c.contentType = value ? TMP_InputField.ContentType.Password : TMP_InputField.ContentType.Standard;
+        set {
+            c.contentType = value ? TMP_InputField.ContentType.Password : TMP_InputField.ContentType.Standard;
+            c.ForceLabelUpdate();
+        }
     }
     
 
@@ -30,17 +33,17 @@ public sealed class TMP_InputFieldOps : InputFieldOps<TMP_InputField>
     public override event UnityAction<string> submit
     { 
         add => c.onSubmit.AddListener(value);
-        remove => c.onSubmit.AddListener(value);
+        remove => c.onSubmit.RemoveListener(value);
     }
     public override event UnityAction<string> textChanged
     {
         add => c.onValueChanged.AddListener(value);
-        remove => c.onValueChanged.AddListener(value);
+        remove => c.onValueChanged.RemoveListener(value);
     }
     public override event UnityAction<string> endEdit
     {
         add => c.onEndEdit.AddListener(value);
-        remove => c.onEndEdit.AddListener(value);
+        remove => c.onEndEdit.RemoveListener(value);
     }
 
 

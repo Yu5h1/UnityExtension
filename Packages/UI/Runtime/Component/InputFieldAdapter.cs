@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace Yu5h1Lib.UI
 {
-    public class InputFieldAdapter : SelectableAdapter<IInputFieldOps>, IInputFieldOps
+    public class InputFieldAdapter : SelectableAdapter<IInputFieldOps>, IInputFieldOps,IBindable
     {
         [SerializeField] private Toggle _PasswordMaskToggle;
         public bool showPasswordMaskToggle
@@ -15,12 +15,30 @@ namespace Yu5h1Lib.UI
             set => _PasswordMaskToggle?.gameObject?.SetActive(value);
         }
 
+        #region Ops 
         public string text { get => Ops.text; set => Ops.text = value; }
         public string placeholder { get => Ops.placeholder; set => Ops.placeholder = value; }
         public bool MaskPassword { get => Ops.MaskPassword; set => Ops.MaskPassword = value; }
         public int characterLimit { get => Ops.characterLimit; set => Ops.characterLimit = value; }
-
         public void SetTextWithoutNotify(string value) => Ops.SetTextWithoutNotify(value);
+        #endregion
+        private bool _allowSubmit = true;
+        public bool allowSubmit
+        {
+            get => _allowSubmit;
+            set
+            {
+                if (_allowSubmit == value)
+                    return;
+                _allowSubmit = value;
+                if (value)
+                    Ops.submit += OnSubmit;
+                else
+                    Ops.submit -= OnSubmit;
+            }
+        }
+
+        [SerializeField] private bool DontSubmitIfIsNullOrWhiteSpace;
 
         public UnityEvent<string> _submit;
         public event UnityAction<string> submit
@@ -41,26 +59,37 @@ namespace Yu5h1Lib.UI
             remove => Ops.endEdit -= value;
         }
 
+   
+
+        #region IBingable
+        public string GetFieldName() => gameObject.name;
+        public string GetValue() => text;
+        public void SetValue(string value) => text = value;
+        #endregion
+
 
         protected override void OnInitializing()
         {
             base.OnInitializing();
             submit += OnSubmit;
-            textChanged += InputFieldAdapter_textChanged;
+            textChanged += TextChanged;
         }
-
-        private void InputFieldAdapter_textChanged(string txt)
+        private void OnSubmit(string txt)
+        {
+            if (!allowSubmit)
+                return;
+            if (DontSubmitIfIsNullOrWhiteSpace && txt.IsEmpty())
+                return;
+            _submit?.Invoke(txt);
+        }
+        private void TextChanged(string txt)
         {
             
         }
 
-        private void OnSubmit(string text)
-        {
-            _submit?.Invoke(text);
-        }
-        
-        public void Submit() => TriggerEvent(ExecuteEvents.submitHandler);
+  
 
+        public void Submit() => TriggerEvent(ExecuteEvents.submitHandler);
         //public bool DisableIMEOnSelect;
         //public static IMECompositionMode? forerlyMode;
         //public override void OnSelect(BaseEventData eventData)
@@ -74,10 +103,10 @@ namespace Yu5h1Lib.UI
 
         //}
         //public override void OnDeselect(BaseEventData eventData)
-        //{            
+        //{
         //    base.OnDeselect(eventData);
-        //    if (DisableIMEOnSelect && forerlyMode != null)
-        //            Input.imeCompositionMode = forerlyMode.Value;
+        //    //if (DisableIMEOnSelect && forerlyMode != null)
+        //    //    Input.imeCompositionMode = forerlyMode.Value;
         //}
         //void DisableIME()
         //{
