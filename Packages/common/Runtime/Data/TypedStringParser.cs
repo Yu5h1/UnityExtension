@@ -41,7 +41,6 @@ namespace Yu5h1Lib.Common
             if (Parsers.TryGetValue(targetType, out var parser))
                 return parser(input);
 
-            // ¦^°h¨ì Convert.ChangeType
             try
             {
                 return Convert.ChangeType(input, targetType);

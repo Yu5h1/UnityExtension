@@ -5,15 +5,15 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using Yu5h1Lib;
 
-public class SelectionMonitor : SingletonBehaviour<SelectionMonitor>
+public class SelectionAide : SingletonBehaviour<SelectionAide>
 {
-    private UnityEvent<GameObject> _selectionChanged;
+    [SerializeField] private UnityEvent<GameObject> _selectionChanged;
     public event UnityAction<GameObject> selectionChanged
     { 
         add => _selectionChanged.AddListener(value);
         remove => _selectionChanged.RemoveListener(value);
     }
-
+    [SerializeField, ReadOnly] private GameObject _lastSelected;
     public static GameObject lastSelected { get; private set; }
 
     public bool checkOnUpdate = true;
@@ -40,6 +40,7 @@ public class SelectionMonitor : SingletonBehaviour<SelectionMonitor>
 #endif
         }
     }
+    public void SetSelection(GameObject gobj) => EventSystem.current?.SetSelectedGameObject(gobj);
 
 
 }

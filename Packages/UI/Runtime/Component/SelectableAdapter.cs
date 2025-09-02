@@ -37,7 +37,6 @@ namespace Yu5h1Lib.UI
         public virtual void OnDeselect(BaseEventData eventData)
         {
             StartCoroutine(DelayInvoke(eventData));
-            
         }
         IEnumerator DelayInvoke(BaseEventData eventData)
         {
@@ -60,6 +59,7 @@ namespace Yu5h1Lib.UI
             if (EventSystem.current.currentSelectedGameObject == gameObject)
                 EventSystem.current.SetSelectedGameObject(focused ? gameObject : null);
         }
+        public void Deselect() => TriggerEvent(ExecuteEvents.deselectHandler);
 
         protected virtual void OnDisable()
         {

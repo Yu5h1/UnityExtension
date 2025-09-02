@@ -17,7 +17,6 @@ public class TaskEvent : EventContainer
 [System.Serializable]
 public class TaskEvent<T> : EventContainer
 {
-    public bool triggerSharedEvent = true;
     public LifeCycleEvent<T> lifeCycle;
     public ResultEvent<T> _result;
 

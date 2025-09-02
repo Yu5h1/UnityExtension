@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 using Yu5h1Lib.UI;
 using Yu5h1Lib;
 
-public abstract class UI_Aide<T> : UIControl where T : UIBehaviour
+public abstract class UI_Aide<T> : UIControl where T : UIBehaviour,ISelectHandler
 {
     [SerializeField,ReadOnly]
     private T _ui;
@@ -16,4 +16,5 @@ public abstract class UI_Aide<T> : UIControl where T : UIBehaviour
         base.OnInitializing();
         _ui = this.GetComponent(ref _ui);
     }
+    
 }

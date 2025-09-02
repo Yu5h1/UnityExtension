@@ -23,6 +23,14 @@ namespace Yu5h1Lib
                 value %= Count;
                 if (value < 0)
                     value = Count - 1;
+
+                if (skipIndices.Contains(value))
+                {
+                    var interval = value > _current || value == 0 && _current == Count - 1  ? 1 : -1;
+                    if (!TryFindNextValidIndex(value, out int next, interval))
+                        return;
+                    value = next;
+                }
                 _current = value;
 
                 optionSet.Select(value);
@@ -31,6 +39,7 @@ namespace Yu5h1Lib
                     bindable.SetValue(optionSet.GetValue());
             }
         }
+        public int[] skipIndices;
         protected override void OnInitializing()
         {
             
@@ -42,6 +51,21 @@ namespace Yu5h1Lib
             add => _selectionChanged.AddListener(value);
             remove => _selectionChanged.RemoveListener(value);
         }
+        private bool TryFindNextValidIndex(int startIndex,out int result, int interval = 1)
+        {
+            result = startIndex;
+            for (int i = 0; i < Count; i++)
+            {
+                int index = (startIndex + i + interval) % Count;
+                if (!skipIndices.Contains(index))
+                {
+                    result = index;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public void MoveNext()
         {
             current++;

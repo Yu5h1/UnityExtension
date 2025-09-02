@@ -25,16 +25,17 @@ public sealed class TMPTextOps : TextOps<TMP_Text>
     public override void CrossFadeAlpha(float a, float d, bool ig)
         => c.CrossFadeAlpha(a, d, ig);
 
+    public override void ForceUpdate() => c.ForceMeshUpdate();
+
     public override float GetActualFontSize()
     {
-        c.ForceMeshUpdate();
+        ForceUpdate();
         return c.fontSize;
     }
 
     public override float GetWrapDistance()
     {
-        c.ForceMeshUpdate();
-
+        ForceUpdate();
         if (c.textInfo?.lineInfo != null && c.textInfo.lineInfo.Length > 0)
             return c.textInfo.lineInfo[0].lineHeight;
         return 0;
@@ -42,9 +43,41 @@ public sealed class TMPTextOps : TextOps<TMP_Text>
 
     public override float GetFirstLineOffsetY()
     {
-        if (c.textInfo?.lineInfo != null && c.textInfo.lineInfo.Length > 0)
-            return c.textInfo.lineInfo[0].baseline + (GetActualFontSize() * 0.5f);
+
+        //c.ForceMeshUpdate();
+
+        //return GetActualFontSize();
+        //c.textInfo.lineInfo[0].baseline.print();
+        //return ((TMP_Text)RawComponent).textBounds.max.y;
+
+        if (c.textInfo?.characterInfo != null && c.textInfo.characterCount > 0)
+        {
+            var firstChar = c.textInfo.characterInfo[0];
+            if (firstChar.isVisible)
+            {
+                return firstChar.bottomLeft.y;
+            }
+        }
+
+        //if (c.textInfo?.lineInfo != null && c.textInfo.lineInfo.Length > 0)
+        //    return c.textInfo.lineInfo[0].baseline + (GetActualFontSize() * 0.5f);
         return 0;
+
+        //return 56;
+
+        //c.ForceMeshUpdate();
+        //// 檢查文字信息是否有效
+        //if (c.textInfo?.lineInfo != null &&
+        //    c.textInfo.lineInfo.Length > 0 &&
+        //    c.textInfo.characterCount > 0)
+        //{
+        //    var firstLine = c.textInfo.lineInfo[0];
+
+        //    // 使用 ascender 或 baseline 都可以，看你的需求
+        //    return firstLine.ascender;  // 或 firstLine.baseline
+        //}
+
+        //return c.fontSize * 0.8f;
     }
    
 

@@ -11,6 +11,7 @@ public interface IInputFieldOps : ISelectableOps
     bool MaskPassword { get; set; }
 
     void SetTextWithoutNotify(string value);
+    void DeactivateInputField();
 
     event UnityAction<string> submit;
     event UnityAction<string> textChanged;
@@ -30,7 +31,7 @@ public abstract class InputFieldOps<T> : OpsBase<T>, IInputFieldOps where T : Co
     
 
     public abstract void SetTextWithoutNotify(string value);
-
+    public abstract void DeactivateInputField();
     public abstract event UnityAction<string> submit;
     public abstract event UnityAction<string> textChanged;
     public abstract event UnityAction<string> endEdit;

@@ -1,12 +1,14 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Yu5h1Lib.UI
 {
-    [DisallowMultipleComponent]
+    [DisallowMultipleComponent,RequireComponent(typeof(CanvasGroup))]
     public class PopupPanel : SingletonBehaviour<PopupPanel>
     {
+        public static string tipComponentPath => "Text Area/tip";
         #region Nested Structures
         public interface ILogic
         {
@@ -38,15 +40,17 @@ namespace Yu5h1Lib.UI
 
             public virtual void Init(InputFieldAdapter input, int index)
             {
+      
                 input.gameObject.SetActive(true);
                 input.text = "";
                 input.placeholder = settings[index].placeHolder;
                 input.characterLimit = settings[index].characterLimit;
                 input.showPasswordMaskToggle = settings[index].usePasswordMask;
                 input.MaskPassword = settings[index].usePasswordMask;
-                if (input.transform.TryFind("Text Area/Caution", out Transform c))
+                if (input.transform.TryFind(tipComponentPath, out Transform c))
                     c.gameObject.SetActive(false);
                 settings[index].init?.Invoke(input);
+
             }
 
             public void Close(bool canceled)
@@ -81,17 +85,20 @@ namespace Yu5h1Lib.UI
             public virtual void Report(Result result)
                => _reported?.Invoke(result ?? false, result == null ? "The result is a null value" : result.Content);
 
+
             public virtual void Init(InputFieldAdapter input,int index)
             {
-                settings[index].init?.Invoke(input);
+       
                 input.gameObject.SetActive(true);
                 input.text = "";
                 input.placeholder = settings[index].placeHolder;
                 input.characterLimit = settings[index].characterLimit;
                 input.showPasswordMaskToggle = settings[index].usePasswordMask;
                 input.MaskPassword = settings[index].usePasswordMask;
-                if (input.transform.TryFind("Text Area/Caution", out Transform c))
+                if (input.transform.TryFind(tipComponentPath, out Transform c))
                     c.gameObject.SetActive(false);
+                settings[index].init?.Invoke(input);
+
             }
 
             public void Close(bool canceled) {}
@@ -103,9 +110,9 @@ namespace Yu5h1Lib.UI
             public string Content = "Not Implemented ! ";
             public static implicit operator bool(Result r) => r != null && r.Succeeded;
 
-        } 
+        }
         #endregion
-
+        [SerializeField] private CanvasGroup canvasGroup;
         [SerializeField] private InputFieldAdapter[] _fields;
         public InputFieldAdapter[] fields { get => _fields; private set => _fields = value; }
 
@@ -118,6 +125,30 @@ namespace Yu5h1Lib.UI
 
         public Result result { get; private set; }
 
+
+        public bool visible 
+        { 
+            get => isActiveAndEnabled && canvasGroup.alpha > 0 && canvasGroup.blocksRaycasts;
+            set
+            {
+                if (visible == value)
+                    return;
+                if (value)
+                {
+                    if (!isActiveAndEnabled)
+                        gameObject.SetActive(true);
+                    canvasGroup.alpha = 1;
+                    canvasGroup.blocksRaycasts = true;
+                }
+                else
+                {
+                    EventSystem.current.SetSelectedGameObject(null);
+                    canvasGroup.alpha = 0;
+                    canvasGroup.blocksRaycasts = false;
+                }
+            }
+        }
+        public bool IsVisible() => visible;
 
         Coroutine WaitResultRoutine;
 
@@ -149,8 +180,15 @@ namespace Yu5h1Lib.UI
                 };
             }
         }
-        public void Verify() => this.StartCoroutine(ref WaitResultRoutine, BuildWaitResultRoutine());
 
+        private void Start()
+        {
+            TryGetComponent(out canvasGroup);
+            
+        }
+
+        public void Verify() => this.StartCoroutine(ref WaitResultRoutine, BuildWaitResultRoutine());
+        
         public void Verify(InputFieldAdapter inputField)
         {
             if (inputField.characterLimit > 0 && inputField.text.Length != inputField.characterLimit)
@@ -163,6 +201,7 @@ namespace Yu5h1Lib.UI
             yield return BuildWaitResult();
             _taskEvent.End("");
             result = Validator?.Invoke(this);
+            yield return null;
             rule.Report(result);
             _taskEvent.Report(result, result.Content);
         }
@@ -171,6 +210,8 @@ namespace Yu5h1Lib.UI
 
         public void Show(ILogic Ilogic)
         {
+            if ("Faild to Show Popup with null Ilogic".printWarningIf(Ilogic == null))
+                return;
             if (!isActiveAndEnabled)
                 gameObject.SetActive(true);
             rule = Ilogic;
@@ -181,8 +222,15 @@ namespace Yu5h1Lib.UI
             foreach (var btn in buttons) btn.gameObject.SetActive(Ilogic.showButtons);
             BuildWaitResult = Ilogic.BuildRoutine;
             Validator = Ilogic.GetResult;
+            visible = true;
         }
-
+        public bool Hide()
+        {
+            if (!visible)
+                return false;
+            visible = false;
+            return true;
+        }
         private void OnDisable()
         {
             Validator = null;
@@ -192,7 +240,6 @@ namespace Yu5h1Lib.UI
                 StopCoroutine(WaitResultRoutine);
             
         }
-
-
+        
     }
 }

@@ -15,12 +15,19 @@ namespace Yu5h1Lib.UI
         public CanvasRenderer canvasRenderer => Ops.canvasRenderer;
 
         public void CrossFadeAlpha(float alpha, float duration, bool ignoreTimeScale) => Ops.CrossFadeAlpha(alpha, duration, ignoreTimeScale);
+
         public float GetActualFontSize() => Ops.GetActualFontSize();
         public float GetWrapDistance() => Ops.GetWrapDistance();
         public float GetFirstLineOffsetY() => Ops.GetFirstLineOffsetY();
 
-        public void Append(string content) => text += $"\n{content}";
+        public void ForceUpdate() => Ops.ForceUpdate();
 
+        public void Append(string content) => text += $"\n{content}";
+        public void Show(string content)
+        {
+            text = content;
+            gameObject.SetActive(true);
+        }
         public char[] ParseTrimCharacters()
             => CharactersToTrim.Replace("\\n", "\n")       // ´«¦æ
                                .Replace("\\r", "\r")       // ¦^¨®
@@ -38,6 +45,13 @@ namespace Yu5h1Lib.UI
         public string GetFieldName() => gameObject.name;
         public string GetValue() => text;
         public void SetValue(string value) => text = value;
+        public void SetValue(Object bindable)
+        {
+            if (bindable is IBindable Ibindable)
+                SetValue(Ibindable.GetValue());
+        }
         #endregion
+
+
     }
 }

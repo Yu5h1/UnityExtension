@@ -26,7 +26,8 @@ public sealed class TMP_InputFieldOps : InputFieldOps<TMP_InputField>
             c.ForceLabelUpdate();
         }
     }
-    
+
+    public override void DeactivateInputField() => c.DeactivateInputField();
 
     public override void SetTextWithoutNotify(string value) => c.SetTextWithoutNotify(value);
 

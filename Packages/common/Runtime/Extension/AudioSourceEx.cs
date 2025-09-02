@@ -16,5 +16,6 @@ namespace Yu5h1Lib
             audioSource.Stop();
             return true;
         }
+        public static bool NotPlaying(this AudioSource audioSource) => audioSource?.isPlaying ?? true;
     }
 }

@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using Yu5h1Lib;
+using Yu5h1Lib.Serialization;
 
 
 [System.Serializable]
@@ -78,4 +79,17 @@ public class AccountFields
 
     public void OnTextNotEmptyChanged(string txt)
       => Validated?.Invoke(!AnyFieldEmpty());
+
+    public void Load(DataView userData)
+    {
+        if (userData == null)
+            return;
+        if (email)
+            email.text = userData["Email"];
+        if (userName)
+            userName.text = userData["Name"];
+        if (password)
+            password.text = userData["Password"];
+    }
+
 }

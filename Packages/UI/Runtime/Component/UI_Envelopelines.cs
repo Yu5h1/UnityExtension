@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace Yu5h1Lib.UI
@@ -42,16 +43,23 @@ namespace Yu5h1Lib.UI
                     Debug.LogError("找不到 UI/EnvelopeLinesAA shader");
                 }
             }
-
-            StartCoroutine(EnsureStencilReady());
+            RefreshFromTextAfterFrame();
         }
-        private IEnumerator EnsureStencilReady()
+        public void RefreshFromTextAfterFrame()
         {
+            if (!isActiveAndEnabled || adapter == null)
+                return;
+            StartCoroutine(WaitInvoke(RefreshFromText));
+        }
+        private IEnumerator WaitInvoke(UnityAction action,YieldInstruction instruction = null)
+        {
+            yield return instruction;
             yield return null;
-            RefreshFromText();
+            action();
         }
         private void CalculateLineSettings()
         {
+            adapter.ForceUpdate();
             if (followTextSettings && adapter != null)
             {
                 currentLineSpacing = adapter.GetWrapDistance();
@@ -63,6 +71,8 @@ namespace Yu5h1Lib.UI
                 currentStartOffset = startOffset;
             }
         }
+        
+
 
         public override Material GetModifiedMaterial(Material baseMaterial)
         {
@@ -134,6 +144,8 @@ namespace Yu5h1Lib.UI
         protected override void OnRectTransformDimensionsChange()
         {
             base.OnRectTransformDimensionsChange();
+            if (!isActiveAndEnabled)
+                return;
             RefreshFromText();
         }
 

@@ -7,6 +7,7 @@ public interface ITextOps : ITextAttribute, IOps
 {
     void CrossFadeAlpha(float alpha, float duration, bool ignoreTimeScale);
 
+    void ForceUpdate();
     float GetActualFontSize();
     float GetWrapDistance();
     float GetFirstLineOffsetY();
@@ -30,10 +31,11 @@ public abstract class TextOps<T> : OpsBase<T>, ITextOps where T : Component
     public abstract Alignment alignment { get; set; }
 
     public abstract CanvasRenderer canvasRenderer { get; }
-    
 
+    
     public abstract void CrossFadeAlpha(float alpha, float duration, bool ignoreTimeScale);
 
+    public abstract void ForceUpdate();
     public abstract float GetActualFontSize();
     public abstract float GetWrapDistance();
     public abstract float GetFirstLineOffsetY();

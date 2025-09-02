@@ -16,6 +16,9 @@ namespace UnityEngine.UI
 				return;
 			if (EventSystem.current.currentSelectedGameObject != selectable.gameObject)
 				return;
+#if UNITY_EDITOR
+			"EventSystem SetSelectedGameObject(null)".print();
+#endif
             EventSystem.current.SetSelectedGameObject(null);
         }
 		//public static void SelectNext(this Selectable selectable,Direction2D direction)

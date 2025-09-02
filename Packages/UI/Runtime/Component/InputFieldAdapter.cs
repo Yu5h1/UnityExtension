@@ -21,6 +21,8 @@ namespace Yu5h1Lib.UI
         public bool MaskPassword { get => Ops.MaskPassword; set => Ops.MaskPassword = value; }
         public int characterLimit { get => Ops.characterLimit; set => Ops.characterLimit = value; }
         public void SetTextWithoutNotify(string value) => Ops.SetTextWithoutNotify(value);
+        public void DeactivateInputField() => Ops.DeactivateInputField();
+
         #endregion
         private bool _allowSubmit = true;
         public bool allowSubmit
@@ -65,6 +67,11 @@ namespace Yu5h1Lib.UI
         public string GetFieldName() => gameObject.name;
         public string GetValue() => text;
         public void SetValue(string value) => text = value;
+        public void SetValue(Object bindable)
+        {
+            if (bindable is IBindable Ibindable)
+                SetValue(Ibindable.GetValue());
+        }
         #endregion
 
 
@@ -86,10 +93,13 @@ namespace Yu5h1Lib.UI
         {
             
         }
-
-  
-
         public void Submit() => TriggerEvent(ExecuteEvents.submitHandler);
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+        }
+
         //public bool DisableIMEOnSelect;
         //public static IMECompositionMode? forerlyMode;
         //public override void OnSelect(BaseEventData eventData)

@@ -25,6 +25,7 @@ public sealed class UIInputFieldOps : InputFieldOps<InputField> , IInputFieldOps
     
 
     public override void SetTextWithoutNotify(string value) => c.SetTextWithoutNotify(value);
+    public override void DeactivateInputField() => c.DeactivateInputField();
 
     public override event UnityAction<string> submit
     { 

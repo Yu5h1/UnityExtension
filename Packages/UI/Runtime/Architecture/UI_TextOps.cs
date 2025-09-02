@@ -25,6 +25,8 @@ public sealed class UI_TextOps : TextOps<Text>
     public override void CrossFadeAlpha(float a, float d, bool ig)
         => c.CrossFadeAlphaFixed(a, d, ig);
 
+    public override void ForceUpdate() {}
+
     public override float GetActualFontSize()
     {
         var gen = c.cachedTextGenerator;
