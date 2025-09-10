@@ -5,9 +5,9 @@ using Yu5h1Lib;
 
 public class GameObjectOption : OptionSet<GameObject>
 {
-    public void ActivateSelected(GameObject target)
+    protected override void OnSelected(GameObject current)
     {
         foreach (var item in Items)
-            item.gameObject.SetActive(item == target);
+            item.gameObject.SetActive(item == current);
     }
 }

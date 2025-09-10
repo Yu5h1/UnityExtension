@@ -39,11 +39,14 @@ public sealed class UI_TextOps : TextOps<Text>
     public override float GetWrapDistance()
         => c.cachedTextGenerator.GetLinesArray()[0].height;
 
-    public override float GetFirstLineOffsetY()
-        => c.cachedTextGenerator.GetLinesArray()[0].height;
+    public override float GetFirstLineOffsetY() => c.cachedTextGenerator.GetLinesArray()[0].height;
+    public override int GetLineCount() => c.cachedTextGenerator.lineCount;
+
+
+
 
 #if UNITY_EDITOR
-    [UnityEditor.InitializeOnLoadMethod]
+[UnityEditor.InitializeOnLoadMethod]
 #else
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
 #endif

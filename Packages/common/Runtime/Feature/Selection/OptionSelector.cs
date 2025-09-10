@@ -11,7 +11,7 @@ namespace Yu5h1Lib
         [SerializeField] private OptionSetBase _OptionSet;
         public OptionSetBase optionSet { get => _OptionSet; set => _OptionSet = value; }
         public int Count => optionSet.Count;
-        [SerializeField,ReadOnly] private int _current;
+        [SerializeField] private int _current = -1;
         [SerializeField] private Object binding;
         public int current
         {

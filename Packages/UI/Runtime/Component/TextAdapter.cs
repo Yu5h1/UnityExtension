@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 using Yu5h1Lib.Runtime;
 
 namespace Yu5h1Lib.UI
@@ -19,7 +20,7 @@ namespace Yu5h1Lib.UI
         public float GetActualFontSize() => Ops.GetActualFontSize();
         public float GetWrapDistance() => Ops.GetWrapDistance();
         public float GetFirstLineOffsetY() => Ops.GetFirstLineOffsetY();
-
+        public int GetLineCount() => Ops.GetLineCount();
         public void ForceUpdate() => Ops.ForceUpdate();
 
         public void Append(string content) => text += $"\n{content}";
@@ -50,8 +51,9 @@ namespace Yu5h1Lib.UI
             if (bindable is IBindable Ibindable)
                 SetValue(Ibindable.GetValue());
         }
-        #endregion
+        #endregion           
 
-
+        public void Invoke(InlineEvent inlineEvent)
+            => inlineEvent?.Invoke();
     }
 }

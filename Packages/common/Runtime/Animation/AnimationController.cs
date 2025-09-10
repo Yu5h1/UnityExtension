@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Yu5h1Lib;
 
-public class AudioClipOption : OptionSet<AudioClip>
+public class AnimationController : ComponentController<Animator>
 {
  
 }

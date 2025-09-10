@@ -11,6 +11,7 @@ public interface ITextOps : ITextAttribute, IOps
     float GetActualFontSize();
     float GetWrapDistance();
     float GetFirstLineOffsetY();
+    int GetLineCount();
 }
 public interface ITextAttribute
 {
@@ -39,6 +40,7 @@ public abstract class TextOps<T> : OpsBase<T>, ITextOps where T : Component
     public abstract float GetActualFontSize();
     public abstract float GetWrapDistance();
     public abstract float GetFirstLineOffsetY();
+    public abstract int GetLineCount();
 
     public void Apply(ITextAttribute setting)
     {

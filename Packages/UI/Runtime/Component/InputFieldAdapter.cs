@@ -74,12 +74,11 @@ namespace Yu5h1Lib.UI
         }
         #endregion
 
-
         protected override void OnInitializing()
         {
             base.OnInitializing();
             submit += OnSubmit;
-            textChanged += TextChanged;
+            textChanged += TextChanged;            
         }
         private void OnSubmit(string txt)
         {

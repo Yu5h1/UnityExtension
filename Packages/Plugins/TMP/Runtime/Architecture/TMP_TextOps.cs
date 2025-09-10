@@ -79,7 +79,10 @@ public sealed class TMPTextOps : TextOps<TMP_Text>
 
         //return c.fontSize * 0.8f;
     }
-   
+
+    public override int GetLineCount() => c.textInfo == null ? 0 : c.textInfo.lineCount;
+
+
 
 #if UNITY_EDITOR
 [UnityEditor.InitializeOnLoadMethod]

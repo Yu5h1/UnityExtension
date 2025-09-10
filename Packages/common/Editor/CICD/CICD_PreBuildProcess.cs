@@ -9,8 +9,9 @@ using System.ComponentModel;
 namespace Yu5h1Lib.EditorExtension
 {
     [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-    public class CICD_PreBuildProcess : IPreprocessBuildWithReport
+    public class CICD_PreBuildProcess : IPreprocessBuildWithReport , IPostprocessBuildWithReport
     {
+        public int callbackOrder => 0;
         public static bool Add_version_before_build
         {
             get => EditorPrefs.GetBool(nameof(Add_version_before_build), false);
@@ -32,27 +33,48 @@ namespace Yu5h1Lib.EditorExtension
             });
         }
 
-        public int callbackOrder => 0;
+        static string previouse_version;
+        static int? previouse_bundleVersionCode;
 
         public void OnPreprocessBuild(BuildReport report)
         {
             if (Add_version_before_build)
-                IncrementProductVersion();
+            {
+                previouse_version = PlayerSettings.bundleVersion;
+                PlayerSettings.bundleVersion = IncrementVersion(PlayerSettings.bundleVersion);
+                $"[CICD_PreBuildProcess] Auto increment version to {PlayerSettings.bundleVersion}".print();
+            }
 
             if (report.summary.platform == BuildTarget.Android)
             {
                 if (Auto_add_BundleVersionCode)
                 {
+                    previouse_bundleVersionCode = PlayerSettings.Android.bundleVersionCode;
                     PlayerSettings.Android.bundleVersionCode++;
                     $"Auto add bundleVersionCode:{PlayerSettings.Android.bundleVersionCode}".print();
                 }
             }
 
         }
-        public static void IncrementProductVersion()
+        public void OnPostprocessBuild(BuildReport report)
         {
-            PlayerSettings.bundleVersion = IncrementVersion(PlayerSettings.bundleVersion);
-            $"[CICD_PreBuildProcess] Auto increment version to {PlayerSettings.bundleVersion}".print();
+            if (report.summary.result != BuildResult.Succeeded)
+            {
+                if (!previouse_version.IsEmpty())
+                {
+                    PlayerSettings.bundleVersion = previouse_version;
+                    $"Revert bundleVersion:{PlayerSettings.bundleVersion} because build {report.summary.result} ".printWarning();
+                }
+                if (previouse_bundleVersionCode.HasValue)
+                {
+                    PlayerSettings.Android.bundleVersionCode  = previouse_bundleVersionCode.Value;
+                    $"Revert bundleVersionCode:{PlayerSettings.Android.bundleVersionCode} because build {report.summary.result} ".printWarning();
+                    
+                }
+            }
+            previouse_version = null;
+            previouse_bundleVersionCode = null;
+            "QQQ OnPostprocessBuild".print();
         }
         public static string IncrementVersion(string versionString)
         {
@@ -69,5 +91,5 @@ namespace Yu5h1Lib.EditorExtension
 
             return $"{major}.{minor}.{patch}";
         }
-    } 
+    }
 }

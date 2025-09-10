@@ -8,17 +8,17 @@ namespace Yu5h1Lib
     using WaitForSecondsEx = YieldInstructionExtension.WaitForSeconds;
     public class Skippable : CustomYieldInstruction 
     {
-        protected Func<bool> condition;
+        protected Func<bool> keepWaitingCheck;
 
         public Skippable(Func<bool> condition)
         {
-            this.condition = condition ?? throw new ArgumentNullException(nameof(condition));
+            this.keepWaitingCheck = condition ?? throw new ArgumentNullException(nameof(condition));
         }
-        public override bool keepWaiting => !condition();
+        public override bool keepWaiting => keepWaitingCheck();
 
-        public static Skippable WaitForSeconds(float duration, Func<bool> condition) 
+        public static Skippable WaitForSeconds(float duration, Func<bool> keepWaitingCheck) 
         {
-            return new Skippable<WaitForSecondsEx>(new WaitForSecondsEx(duration),condition);
+            return new Skippable<WaitForSecondsEx>(new WaitForSecondsEx(duration),keepWaitingCheck);
         }
  
     }
@@ -26,15 +26,15 @@ namespace Yu5h1Lib
     {
         private T instruction;
 
-        public Skippable(T instruction, Func<bool> condition) : base(condition)
+        public Skippable(T instruction, Func<bool> keepWaitingCheck) : base(keepWaitingCheck)
         {
             this.instruction = instruction ?? throw new ArgumentNullException(nameof(instruction));
         }
 
-        public override bool keepWaiting => !condition() && instruction.keepWaiting;
+        public override bool keepWaiting => keepWaitingCheck() && instruction.keepWaiting;
 
         public T WrappedInstruction => instruction;
-        public bool WasSkipped => condition() && instruction.keepWaiting;
+        public bool WasSkipped => keepWaitingCheck() && instruction.keepWaiting;
         public bool IsCompleted => !keepWaiting;
 
     }
