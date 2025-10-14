@@ -133,7 +133,9 @@ namespace Yu5h1Lib.WebSupport
         {
             if (jsonData.IsEmpty())
             {
-                "[WebInput] Received empty key data".printWarning();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                "[WebInput] Received empty key data".printWarning(); 
+#endif
                 return;
             }
 
@@ -147,8 +149,9 @@ namespace Yu5h1Lib.WebSupport
                     return;
                 }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 Debug.Log($"[WebInput] OnKeyDown: {keyMsg.code} (Shift:{keyMsg.shift}, Ctrl:{keyMsg.ctrl}, Alt:{keyMsg.alt})");
-
+#endif
                 var binding = PrepareKeyBinding(keyMsg.code);
                 if (!binding.IsPressed)
                 {
@@ -167,7 +170,9 @@ namespace Yu5h1Lib.WebSupport
         {
             if (jsonKeyMessage.IsEmpty())
             {
-                Debug.LogWarning("[WebInput] Received empty key data");
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                Debug.LogWarning("[WebInput] Received empty key data"); 
+#endif
                 return;
             }
 
@@ -177,7 +182,9 @@ namespace Yu5h1Lib.WebSupport
 
                 if (string.IsNullOrEmpty(keyMsg.code))
                 {
-                    Debug.LogWarning("[WebInput] Key data has no code");
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    Debug.LogWarning("[WebInput] Key data has no code"); 
+#endif
                     return;
                 }
 
