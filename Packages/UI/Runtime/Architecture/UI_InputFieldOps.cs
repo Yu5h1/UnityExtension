@@ -5,8 +5,6 @@ using Yu5h1Lib.Common;
 
 public sealed class UIInputFieldOps : InputFieldOps<InputField> , IInputFieldOps
 {
-    public UIInputFieldOps(InputField input) : base(input) {}
-
     public override bool interactable { get => c.interactable; set => c.interactable = value; }
 
     public override string text { get => c.text; set => c.text = value; }
@@ -15,6 +13,14 @@ public sealed class UIInputFieldOps : InputFieldOps<InputField> , IInputFieldOps
         get => (c.placeholder as Text)?.text;
         set { if (c.placeholder is Text t) t.text = value; }
     }
+    public override int caretPosition { get => c.caretPosition; set => c.caretPosition = value; }
+    public override int selectionAnchorPosition { get => c.selectionAnchorPosition; set => c.selectionAnchorPosition = value; }
+    public override int selectionFocusPosition { get => c.selectionFocusPosition; set => c.selectionFocusPosition = value; }
+
+    public override Component textComponent => c.textComponent;
+    public override int lineType { get => (int)c.lineType; set => c.lineType = (InputField.LineType)value; }
+
+
     public override int characterLimit { get => c.characterLimit; set => c.characterLimit = value; }
 
     public override bool MaskPassword
@@ -22,11 +28,11 @@ public sealed class UIInputFieldOps : InputFieldOps<InputField> , IInputFieldOps
         get => c.contentType == InputField.ContentType.Password;
         set => c.contentType = value ? InputField.ContentType.Password : InputField.ContentType.Standard;
     }
-    
 
+    public override void ActivateInputField() => c.ActivateInputField();
     public override void SetTextWithoutNotify(string value) => c.SetTextWithoutNotify(value);
     public override void DeactivateInputField() => c.DeactivateInputField();
-
+    public override bool isFocused => c.isFocused;
     public override event UnityAction<string> submit
     { 
         add => c.onSubmit.AddListener(value);
@@ -43,9 +49,12 @@ public sealed class UIInputFieldOps : InputFieldOps<InputField> , IInputFieldOps
         remove => c.onEndEdit.RemoveListener(value);
     }
 
+    public UIInputFieldOps(InputField input) : base(input) { }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Register()
     {
         OpsFactory.Register<InputField,IInputFieldOps>(c => new UIInputFieldOps(c));
     }
+ 
 }

@@ -6,7 +6,6 @@ using UnityEngine.Events;
 
 namespace Yu5h1Lib
 {
-
     [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
     public static class UnityEventEx
     {

@@ -10,6 +10,8 @@ public sealed class TMPTextOps : TextOps<TMP_Text>
     public TMPTextOps(TMP_Text t) : base(t) {}
 
     public override string text { get => c.text; set => c.text = value; }
+    public override float preferredWidth => c.preferredWidth;
+    public override float preferredHeight => c.preferredHeight;
     public override Color color { get => c.color; set => c.color = value; }
 
     public override float fontSize { get => c.fontSize; set => c.fontSize = value; }
@@ -20,20 +22,30 @@ public sealed class TMPTextOps : TextOps<TMP_Text>
         get => c.alignment.ToAlignment();
         set => c.alignment = value.ToAlignmentOption();
     }
+
     public override CanvasRenderer canvasRenderer => c.canvasRenderer;
+
+
+    public override void SetWrappingOverflowMode(bool wrap)
+    {
+        if (wrap)
+        {
+            c.textWrappingMode = TextWrappingModes.PreserveWhitespace;
+            c.overflowMode = TextOverflowModes.ScrollRect;
+        }
+        else
+        {
+            c.textWrappingMode = TextWrappingModes.Normal;
+            c.overflowMode = TextOverflowModes.Overflow;
+        }        
+    }
 
     public override void CrossFadeAlpha(float a, float d, bool ig)
         => c.CrossFadeAlpha(a, d, ig);
 
     public override void ForceUpdate() => c.ForceMeshUpdate();
 
-    public override float GetActualFontSize()
-    {
-        ForceUpdate();
-        return c.fontSize;
-    }
-
-    public override float GetWrapDistance()
+    public override float GetBaseLineHeight()
     {
         ForceUpdate();
         if (c.textInfo?.lineInfo != null && c.textInfo.lineInfo.Length > 0)
@@ -41,51 +53,60 @@ public sealed class TMPTextOps : TextOps<TMP_Text>
         return 0;
     }
 
-    public override float GetFirstLineOffsetY()
+    public override float GetLineY(int index, bool local)
     {
-
-        //c.ForceMeshUpdate();
-
-        //return GetActualFontSize();
-        //c.textInfo.lineInfo[0].baseline.print();
-        //return ((TMP_Text)RawComponent).textBounds.max.y;
-
-        if (c.textInfo?.characterInfo != null && c.textInfo.characterCount > 0)
-        {
-            var firstChar = c.textInfo.characterInfo[0];
-            if (firstChar.isVisible)
-            {
-                return firstChar.bottomLeft.y;
-            }
-        }
-
-        //if (c.textInfo?.lineInfo != null && c.textInfo.lineInfo.Length > 0)
-        //    return c.textInfo.lineInfo[0].baseline + (GetActualFontSize() * 0.5f);
-        return 0;
-
-        //return 56;
-
-        //c.ForceMeshUpdate();
-        //// 檢查文字信息是否有效
-        //if (c.textInfo?.lineInfo != null &&
-        //    c.textInfo.lineInfo.Length > 0 &&
-        //    c.textInfo.characterCount > 0)
-        //{
-        //    var firstLine = c.textInfo.lineInfo[0];
-
-        //    // 使用 ascender 或 baseline 都可以，看你的需求
-        //    return firstLine.ascender;  // 或 firstLine.baseline
-        //}
-
-        //return c.fontSize * 0.8f;
+        var y = 0f;
+        if (c.textInfo?.lineInfo != null && c.textInfo.lineInfo.Length > index && index >= 0)
+            y = c.textInfo.lineInfo[index].ascender;
+        return local ? y : c.transform.TransformPoint(0,y,0).y;
     }
 
+    public override void SetLayoutDirty() => c.SetLayoutDirty();
     public override int GetLineCount() => c.textInfo == null ? 0 : c.textInfo.lineCount;
 
+    public override int GetLineIndexByPosition(int pos)
+    {
+        if (c == null )
+            return 0;
 
+        c.ForceMeshUpdate();
+        
+        pos = Mathf.Clamp(pos, 0, c.text.Length);
+
+        var textInfo = c.textInfo;
+
+        if (textInfo.characterCount == 0)
+            return 0;
+
+        int validPos = Mathf.Min(pos, textInfo.characterCount - 1);
+
+        if (validPos >= 0 && validPos < textInfo.characterCount)
+            return textInfo.characterInfo[validPos].lineNumber;
+
+        return 0;
+    }
+
+    public override Vector3 GetCharacterPosition(int pos, bool local)
+    {
+        var textInfo = c.textInfo;
+
+        if (textInfo.characterCount == 0)
+            return c.transform.position;
+
+        //c.ForceMeshUpdate(true);
+
+
+        pos = Mathf.Clamp(pos, 0, textInfo.characterCount - 1);
+
+        TMP_CharacterInfo charInfo = textInfo.characterInfo[pos];
+        var localPos = new Vector3(0, charInfo.baseLine,0) ;// (charInfo.bottomLeft + charInfo.topLeft) * 0.5f;
+        return local ? localPos : c.transform.TransformPoint(localPos);
+    }
+
+    
 
 #if UNITY_EDITOR
-[UnityEditor.InitializeOnLoadMethod]
+    [UnityEditor.InitializeOnLoadMethod]
 #else
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
 #endif

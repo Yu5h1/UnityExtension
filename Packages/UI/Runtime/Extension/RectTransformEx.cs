@@ -9,6 +9,8 @@ namespace Yu5h1Lib.UI
     [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
     public static class RectTransformEx
     {
+        public static void ForceRebuildLayoutImmediate(this RectTransform rt) => LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
+
         public static void FitSize(this RectTransform rectTransform)
         {
             rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, LayoutUtility.GetPreferredSize(rectTransform, (int)RectTransform.Axis.Horizontal));
@@ -25,35 +27,35 @@ namespace Yu5h1Lib.UI
             RectTransformUtility.ScreenPointToLocalPointInRectangle(t, screenPoint, null, out Vector2 localPoint);
             return localPoint;
         }
-        public static void SetAnchorPreset(this RectTransform rectTransform, Alignment alignment)
+        public static void Align(this RectTransform rt, Alignment alignment)
         {
             switch (alignment)
             {
-                case Alignment.TopLeft: SetFixed(rectTransform, new Vector2(0, 1)); break;
-                case Alignment.Top: SetFixed(rectTransform, new Vector2(0.5f, 1)); break;
-                case Alignment.TopRight: SetFixed(rectTransform, new Vector2(1, 1)); break;
+                case Alignment.TopLeft: rt.SetFixed(new Vector2(0, 1)); break;
+                case Alignment.Top: SetFixed(rt, new Vector2(0.5f, 1)); break;
+                case Alignment.TopRight: SetFixed(rt, new Vector2(1, 1)); break;
                 case Alignment.Left: break;
-                case Alignment.VerticalLeft: SetFixed(rectTransform, new Vector2(0, 0.5f)); break;
-                case Alignment.Center: SetFixed(rectTransform, new Vector2(0.5f, 0.5f)); break;
+                case Alignment.VerticalLeft: SetFixed(rt, new Vector2(0, 0.5f)); break;
+                case Alignment.Center: SetFixed(rt, new Vector2(0.5f, 0.5f)); break;
                 case Alignment.Right: break;
-                case Alignment.VerticalRight: SetFixed(rectTransform, new Vector2(1, 0.5f)); break;
-                case Alignment.BottomLeft: SetFixed(rectTransform, new Vector2(0, 0)); break;
-                case Alignment.Bottom: SetFixed(rectTransform, new Vector2(0.5f, 0)); break;
-                case Alignment.BottomRight: SetFixed(rectTransform, new Vector2(1, 0)); break;
-                case Alignment.HorizontalTop: SetStretchHorizontal(rectTransform, 1); break;
-                case Alignment.Horizontal: SetStretchHorizontal(rectTransform, 0.5f); break;
-                case Alignment.HorizontalBottom: SetStretchHorizontal(rectTransform, 0); break;
-                case Alignment.Vertical: SetStretchVertical(rectTransform, 0.5f); break;
+                case Alignment.VerticalRight: SetFixed(rt, new Vector2(1, 0.5f)); break;
+                case Alignment.BottomLeft: SetFixed(rt, new Vector2(0, 0)); break;
+                case Alignment.Bottom: SetFixed(rt, new Vector2(0.5f, 0)); break;
+                case Alignment.BottomRight: SetFixed(rt, new Vector2(1, 0)); break;
+                case Alignment.HorizontalTop: SetStretchHorizontal(rt, 1); break;
+                case Alignment.Horizontal: SetStretchHorizontal(rt, 0.5f); break;
+                case Alignment.HorizontalBottom: SetStretchHorizontal(rt, 0); break;
+                case Alignment.Vertical: SetStretchVertical(rt, 0.5f); break;
                 case Alignment.Fill:
-                    rectTransform.anchorMin = Vector2.zero;
-                    rectTransform.anchorMax = Vector2.one;
-                    rectTransform.offsetMin = Vector2.zero;
-                    rectTransform.offsetMax = Vector2.zero;
-                    rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                    rt.anchorMin = Vector2.zero;
+                    rt.anchorMax = Vector2.one;
+                    rt.offsetMin = Vector2.zero;
+                    rt.offsetMax = Vector2.zero;
+                    rt.pivot = new Vector2(0.5f, 0.5f);
                     break;
                 default:
                     if ((int)alignment == -1)
-                        ApplyFill(rectTransform);
+                        ApplyFill(rt);
                     break;
             }
         }
@@ -69,8 +71,7 @@ namespace Yu5h1Lib.UI
 
         #region Private
 
-        // ©T©wÂI preset (9®æ)
-        private static void SetFixed(RectTransform rect, Vector2 point)
+        private static void SetFixed(this RectTransform rect, Vector2 point)
         {
             rect.anchorMin = point;
             rect.anchorMax = point;

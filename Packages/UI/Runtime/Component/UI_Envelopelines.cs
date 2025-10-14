@@ -62,8 +62,8 @@ namespace Yu5h1Lib.UI
             adapter.ForceUpdate();
             if (followTextSettings && adapter != null)
             {
-                currentLineSpacing = adapter.GetWrapDistance();
-                currentStartOffset = adapter.GetFirstLineOffsetY();
+                currentLineSpacing = adapter.GetBaseLineHeight();
+                currentStartOffset = adapter.GetLineY(0,true);
             }
             else
             {

@@ -73,8 +73,7 @@ namespace Yu5h1Lib.EditorExtension
                 }
             }
             previouse_version = null;
-            previouse_bundleVersionCode = null;
-            "QQQ OnPostprocessBuild".print();
+            previouse_bundleVersionCode = null;            
         }
         public static string IncrementVersion(string versionString)
         {

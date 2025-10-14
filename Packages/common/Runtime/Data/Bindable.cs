@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Yu5h1Lib
 {
@@ -12,6 +13,16 @@ namespace Yu5h1Lib
         { 
             if (bindable is IBindable Ibindable)
                 SetValue(Ibindable.GetValue());
+        }
+    }
+    public abstract class Bindable<T> : Bindable
+    {
+        public abstract T value { get; set; }
+        [SerializeField] private UnityEvent<T> _ValueChanged;
+        public event UnityAction<T> valueChanged 
+        {
+            add { _ValueChanged.AddListener(value); }
+            remove { _ValueChanged.RemoveListener(value); }
         }
     }
     public interface IBindable
