@@ -66,7 +66,9 @@ namespace Yu5h1Lib.WebSupport
                 if (_mobileKeyboardSupport == value)
                     return;
                 _mobileKeyboardSupport = value;
-                WebGLInput.mobileKeyboardSupport = value;
+#if UNITY_WEBGL
+                WebGLInput.mobileKeyboardSupport = value; 
+#endif
 
             }
         }
@@ -79,7 +81,9 @@ namespace Yu5h1Lib.WebSupport
                 if (_captureAllKeyboardInput == value)
                     return;
                 _captureAllKeyboardInput = value;
-                WebGLInput.captureAllKeyboardInput = value;
+#if UNITY_WEBGL
+                WebGLInput.captureAllKeyboardInput = value; 
+#endif
             }
         }
         public readonly Dictionary<string, KeyBinding> bindings = new Dictionary<string, KeyBinding>();
@@ -118,12 +122,16 @@ namespace Yu5h1Lib.WebSupport
         protected override void OnInstantiated() { }
         protected override void OnInitializing()
         {
-#if UNITY_WEBGL && !UNITY_EDITOR
-            if (!Application.isMobilePlatform && registerkeylisteners)
-                RegisterKeyListeners(gameObject.name);
-
-            WebGLInput.mobileKeyboardSupport = _mobileKeyboardSupport;
-            WebGLInput.captureAllKeyboardInput = _captureAllKeyboardInput;
+#if UNITY_WEBGL 
+            if (!Application.isEditor)
+            {
+#if !UNITY_EDITOR
+                if (!Application.isMobilePlatform && registerkeylisteners)
+                    RegisterKeyListeners(gameObject.name); 
+#endif
+                WebGLInput.mobileKeyboardSupport = _mobileKeyboardSupport;
+                WebGLInput.captureAllKeyboardInput = _captureAllKeyboardInput;
+            }
 #endif
 
             foreach (var b in _keybindings)
