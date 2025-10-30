@@ -15,6 +15,18 @@ public class AudioVolumePrefs : SingletonBehaviour<AudioVolumePrefs>
         get => instance.bgmVolumeInfo.Value;
         set => instance.bgmVolumeInfo.Value = value;
     }
+
+    [SerializeField] private ObservableBoolPref bgmVolume_enabledPref = new ObservableBoolPref()
+    {
+        key = nameof(bgmVolume_enabled),
+        defaultValue = true
+    };
+    public static bool bgmVolume_enabled
+    {
+        get => instance.bgmVolume_enabledPref.Value;
+        set => instance.bgmVolume_enabledPref.Value = value;
+    }
+
     [SerializeField] private ObservableFloatPref sfxVolumeInfo = new ObservableFloatPref() {
         key = nameof(sfxVolume),
         defaultValue = 0.5f
@@ -24,6 +36,7 @@ public class AudioVolumePrefs : SingletonBehaviour<AudioVolumePrefs>
         get => instance.sfxVolumeInfo.Value;
         set => instance.sfxVolumeInfo.Value = value;
     }
+    
     [SerializeField] private ObservableFloatPref voiceVolumeInfo = new ObservableFloatPref()
     {
         key = nameof(voiceVolume),
@@ -39,13 +52,14 @@ public class AudioVolumePrefs : SingletonBehaviour<AudioVolumePrefs>
 
     protected override void OnInitializing() 
     {
-  
+        
     }
     private void Start()
     {
         bgmVolumeInfo.Init(false);
         sfxVolumeInfo.Init(false);
         voiceVolumeInfo.Init(false);
+        bgmVolume_enabledPref.Init(false);
     }
     //[SerializeField]
     //public void ResetValue()

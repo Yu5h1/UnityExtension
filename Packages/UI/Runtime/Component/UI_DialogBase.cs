@@ -127,10 +127,12 @@ namespace Yu5h1Lib.UI
         {
             if (!gameObject.activeSelf)
                 gameObject.SetActive(true);
-            this.StartCoroutine(ref performCoroutine, BuildPerformRoutine(lines[StepIndex = 0], Delay, Speed,style));
+            this.StartCoroutine(ref performCoroutine, BuildPerformRoutine(lines[StepIndex = 0],false, Delay, Speed,style));
         }
-        public virtual void Perform(string content, float? delay = null, float? speed = null,
-            Style? style = null, bool append = false)
+        public void Perform(string content) => Perform(content, false, null, null, null);
+
+        public virtual void Perform(string content, bool append , float? delay = null, float? speed = null,
+            Style? style = null)
         {
             if (content.IsEmpty())
                 return;
@@ -141,10 +143,10 @@ namespace Yu5h1Lib.UI
             lines = content.Split("\n\n");
             if (!gameObject.activeSelf)
                 gameObject.SetActive(true);
-            this.StartCoroutine(ref performCoroutine, BuildPerformRoutine(lines[StepIndex = 0], delay.Value, speed.Value, style.Value, append));
+            this.StartCoroutine(ref performCoroutine, BuildPerformRoutine(lines[StepIndex = 0], append, delay.Value, speed.Value, style.Value));
         }
-        public IEnumerator BuildPerformRoutine(string text, float delay = 0, float speed = 0.05f,
-            Style style = Style.Verbatim, bool append = false)
+        public IEnumerator BuildPerformRoutine(string text, bool append , float delay = 0, float speed = 0.05f,
+            Style style = Style.Verbatim)
         {
             if (delay > 0)
                 yield return new WaitForSeconds(delay);
@@ -227,7 +229,7 @@ namespace Yu5h1Lib.UI
         {
             if (NothingToSay)
                 return false;
-            StartCoroutine(BuildPerformRoutine(lines[++StepIndex]));
+            StartCoroutine(BuildPerformRoutine(lines[++StepIndex],false));
             return true;
         }
 
