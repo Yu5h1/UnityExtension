@@ -4,13 +4,14 @@ using UnityEngine.Events;
 
 namespace Yu5h1Lib
 {
-    public abstract class OptionSetBase : Bindable, IBindable
+    public abstract class OptionSet : Bindable, IBindable
     {
         [SerializeField] protected OptionSelector selector;
         public abstract int Count { get; }
         public abstract void Select(int index);
+        public abstract string GetItemName(int index);
     }
-    public abstract class OptionSet<T> : OptionSetBase , IBindable
+    public abstract class OptionSet<T> : OptionSet , IBindable
     {
         public T current
         { 
@@ -36,10 +37,7 @@ namespace Yu5h1Lib
 
         public override int Count => Items.Count;
 
-        protected override void OnInitializing()
-        {
-            //selector?.selectionChanged += OptionSet_selectionChanged;
-        }
+        protected override void OnInitializing() { }
 
         public override void Select(int index)
         {
@@ -53,8 +51,11 @@ namespace Yu5h1Lib
 
         public virtual string ToString(T item)
         {
-            if (item is Object uObj)
-                return uObj.name;
+            switch (item)
+            {
+                case string str: return str;
+                case Object obj: return obj.name;
+            }
             return item?.ToString() ?? string.Empty;
         }
 
@@ -69,5 +70,6 @@ namespace Yu5h1Lib
             else
                 Debug.LogWarning($"Value '{value}' not found in option set.");
         }
+        public override string GetItemName(int index) => ToString(Items[index]);
     } 
 }

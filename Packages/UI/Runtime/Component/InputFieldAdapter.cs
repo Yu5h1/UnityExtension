@@ -68,7 +68,11 @@ namespace Yu5h1Lib.UI
             remove => Ops.endEdit -= value;
         }
 
-   
+        public void Select()
+        { 
+            if (IsAvailable())
+                selectable.Select();
+        }
 
         #region IBingable
         public string GetFieldName() => gameObject.name;

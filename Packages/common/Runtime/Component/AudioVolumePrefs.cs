@@ -6,7 +6,7 @@ using Yu5h1Lib;
 
 public class AudioVolumePrefs : SingletonBehaviour<AudioVolumePrefs>
 {
-    [SerializeField] private ObservableFloatPref bgmVolumeInfo = new ObservableFloatPref(){
+    [SerializeField] private ObservablePref<float> bgmVolumeInfo = new ObservablePref<float>(){
         key = nameof(bgmVolume),
         defaultValue = 0.5f
     };
@@ -16,7 +16,7 @@ public class AudioVolumePrefs : SingletonBehaviour<AudioVolumePrefs>
         set => instance.bgmVolumeInfo.Value = value;
     }
 
-    [SerializeField] private ObservableBoolPref bgmVolume_enabledPref = new ObservableBoolPref()
+    [SerializeField] private ObservablePref<bool> bgmVolume_enabledPref = new ObservablePref<bool>()
     {
         key = nameof(bgmVolume_enabled),
         defaultValue = true
@@ -27,7 +27,7 @@ public class AudioVolumePrefs : SingletonBehaviour<AudioVolumePrefs>
         set => instance.bgmVolume_enabledPref.Value = value;
     }
 
-    [SerializeField] private ObservableFloatPref sfxVolumeInfo = new ObservableFloatPref() {
+    [SerializeField] private ObservablePref<float> sfxVolumeInfo = new ObservablePref<float>() {
         key = nameof(sfxVolume),
         defaultValue = 0.5f
     };
@@ -37,7 +37,7 @@ public class AudioVolumePrefs : SingletonBehaviour<AudioVolumePrefs>
         set => instance.sfxVolumeInfo.Value = value;
     }
     
-    [SerializeField] private ObservableFloatPref voiceVolumeInfo = new ObservableFloatPref()
+    [SerializeField] private ObservablePref<float> voiceVolumeInfo = new ObservablePref<float>()
     {
         key = nameof(voiceVolume),
         defaultValue = 0.5f

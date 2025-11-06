@@ -7,17 +7,23 @@ using Yu5h1Lib;
 
 public class SelectionAide : SingletonBehaviour<SelectionAide>
 {
-    [SerializeField] private UnityEvent<GameObject> _selectionChanged;
-    public event UnityAction<GameObject> selectionChanged
-    { 
-        add => _selectionChanged.AddListener(value);
-        remove => _selectionChanged.RemoveListener(value);
-    }
+    public bool checkOnUpdate = true;
+
+#if UNITY_EDITOR
+    public bool PingObjectOnSelectionChange = true;
+#endif
+
+
     [SerializeField, ReadOnly] private GameObject _lastSelected;
     public static GameObject lastSelected { get; private set; }
 
-    public bool checkOnUpdate = true;
 
+    [SerializeField] private UnityEvent<GameObject> _selectionChanged;
+    public event UnityAction<GameObject> selectionChanged
+    {
+        add => _selectionChanged.AddListener(value);
+        remove => _selectionChanged.RemoveListener(value);
+    }
     protected override void OnInstantiated() { }
     protected override void OnInitializing() { }
 
@@ -36,7 +42,8 @@ public class SelectionAide : SingletonBehaviour<SelectionAide>
             lastSelected = current;
 
 #if UNITY_EDITOR
-            UnityEditor.EditorGUIUtility.PingObject(current);
+            if (PingObjectOnSelectionChange)
+                UnityEditor.EditorGUIUtility.PingObject(current);
 #endif
         }
     }

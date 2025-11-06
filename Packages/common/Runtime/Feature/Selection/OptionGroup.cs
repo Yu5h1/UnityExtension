@@ -8,10 +8,10 @@ using Yu5h1Lib.Runtime;
 
 namespace Yu5h1Lib
 {
-	public class OptionGroup : OptionSetBase
+	public class OptionGroup : OptionSet
     {
-		[SerializeField] private List<OptionSetBase> _OptionSets;
-		public List<OptionSetBase> optionSets { get => _OptionSets; set => _OptionSets = value; }
+		[SerializeField] private List<OptionSet> _OptionSets;
+		public List<OptionSet> optionSets { get => _OptionSets; set => _OptionSets = value; }
 
         public int MaxCount => _OptionSets.IsEmpty() ? 0 : optionSets.Max(s => s.Count);
         public int MinCount => _OptionSets.IsEmpty() ? 0 : optionSets.Min(s => s.Count);
@@ -19,6 +19,8 @@ namespace Yu5h1Lib
         [SerializeField] private MinMax.Option rangeOption;
         public override int Count => rangeOption == MinMax.Option.Min ? MinCount : MaxCount;
 
+        public override string GetItemName(int index)
+            => optionSets.IsEmpty() ? string.Empty : optionSets[0].GetItemName(index);
 
         //[SerializeField] private int _currentSet;
         //public int currentSet

@@ -8,8 +8,8 @@ namespace Yu5h1Lib
 {
     [DisallowMultipleComponent]
     public class OptionSelector : BaseMonoBehaviour {
-        [SerializeField] private OptionSetBase _OptionSet;
-        public OptionSetBase optionSet { get => _OptionSet; set => _OptionSet = value; }
+        [SerializeField] private OptionSet _OptionSet;
+        public OptionSet optionSet { get => _OptionSet; set => _OptionSet = value; }
         public int Count => optionSet.Count;
         [SerializeField] private int _current = -1;
         [SerializeField] private Object binding;
