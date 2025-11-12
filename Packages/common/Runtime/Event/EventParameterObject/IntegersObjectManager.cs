@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Yu5h1Lib;
 
 public class IntegersManager : SingletonBehaviour<IntegersManager>
 {
-    //[Dropdown("vcp_AnimationList")]
-    [SerializeField,ShowDetail] private List<IntegersObject> integers;
- 
+    [DropdownContext("vcp_AnimationList")]
+    [SerializeField,ShowDetail] private List<IntegersObject> _integersObjectList;
 
     protected override void OnInitializing()
     {

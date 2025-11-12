@@ -25,6 +25,10 @@ public class MicrophoneController : MonoBehaviour
     [SerializeField] protected UnityEvent _recordingStarted;
     [SerializeField] protected UnityEvent _recordingStopped;
     [SerializeField] protected UnityEvent _speechStarted;
+
+    [ContextMenu(nameof(Test_speechStarted))]
+    public void Test_speechStarted() => _speechStarted?.Invoke();
+
     [SerializeField] protected UnityEvent _speechStopped;
     [SerializeField] protected UnityEvent<string> _error;
 

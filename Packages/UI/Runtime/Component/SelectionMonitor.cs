@@ -5,7 +5,7 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using Yu5h1Lib;
 
-public class SelectionAide : SingletonBehaviour<SelectionAide>
+public class SelectionMonitor : SingletonBehaviour<SelectionMonitor>
 {
     public bool checkOnUpdate = true;
 

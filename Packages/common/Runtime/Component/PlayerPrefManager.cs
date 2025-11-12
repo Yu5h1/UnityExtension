@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using Yu5h1Lib;
 
 namespace MyNamespace
@@ -23,5 +24,9 @@ namespace MyNamespace
                 item.data.Init();
             }
         }
+
+        [SerializeField] private UnityEvent _sss;
+
+        public void v3(Vector3Object v3) { }
     } 
 }
