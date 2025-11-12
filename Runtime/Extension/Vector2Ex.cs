@@ -9,7 +9,7 @@ namespace Yu5h1Lib
     public static class Vector2Ex
     {
         public static bool IsNaN(this Vector2 v) => float.IsNaN(v.x) && float.IsNaN(v.y);
-
+        public static bool HasNegative(this Vector2 v) => v.x < 0 || v.y < 0;
         public static Vector2 GetCenter(this IEnumerable<Vector2> values)
         {
             Vector2 total = Vector2.zero;

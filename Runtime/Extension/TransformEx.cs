@@ -7,6 +7,20 @@ namespace Yu5h1Lib
     public static class TransformEx
     {
         #region Modification
+        public static string GetHierarchyPath(this Transform transform)
+        {
+            var path = transform.name.Trim();
+            var current = transform.parent;
+
+            while (current != null)
+            {
+                path = current.name.Trim() + "/" + path;
+                current = current.parent;
+            }
+
+            return path;
+        }
+
         public static void Reset(this Transform transform)
         {
             transform.localPosition = Vector3.zero;
@@ -29,18 +43,23 @@ namespace Yu5h1Lib
         #endregion
 
         #region Find
-        public static Transform Find(this Transform t,string text,StringComparisonStyle style,System.StringComparison comparison = System.StringComparison.OrdinalIgnoreCase)
+        public static Transform Find(this Transform t,string name,StringComparisonStyle style,System.StringComparison comparison = System.StringComparison.OrdinalIgnoreCase)
         {
-            if (t == null || string.IsNullOrEmpty(text))
+            if (t == null || string.IsNullOrEmpty(name))
                 return null;
             foreach (Transform child in t)
             {
-                if (child.name.Compare(text, style, comparison))
+                if (child.name.Compare(name, style, comparison))
                     return child;
             }
             return null;
         }
-        public static bool TryFind(this Transform t, string name, out Transform result) => result = t.Find(name);
+        public static bool TryFind(this Transform t, string name, out Transform result)
+        {
+            result = t.Find(name);
+            return result != null;
+        }
+ 
         #endregion
 
         #region 2D

@@ -5,6 +5,19 @@ namespace Yu5h1Lib
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never), System.ComponentModel.Browsable(false)]
     public static partial class GameObjectEx
     {
+        public static bool ToggleActive(this GameObject obj)
+        {
+            if (obj == null) return false;
+            obj.SetActive(!obj.activeSelf);
+            return true;
+        }
+
+        public static string GetOriginalName(this GameObject obj)
+        {
+            string name = obj.name;
+            int index = name.IndexOf(" ("); 
+            return index >= 0 ? name.Substring(0, index) : obj.GetNameWithOutClone();
+        }
         #region Unorgernized
 
         public static Component GetOrAddComponet(this GameObject gameObject, System.Type type)
@@ -15,7 +28,7 @@ namespace Yu5h1Lib
         public static T GetComponentInChildren<T>(this GameObject gobj, string name) where T : Component
         {
             foreach (var item in gobj.GetComponentsInChildren<T>(true))
-            { if (item.name == name) return item; }
+             if (item.name == name) return item; 
             return null;
         }
         public static T GetComponentInParent<T>(this GameObject gobj, string name) where T : Component

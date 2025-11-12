@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Yu5h1Lib
 {
@@ -18,7 +19,7 @@ namespace Yu5h1Lib
 
         #region Find
         public static bool TryFind<T>(out T result, bool includeInactive = true) where T : Component
-            => (result = GameObject.FindObjectOfType<T>(includeInactive)) != null;
+            => (result = GameObject.FindFirstObjectByType<T>(includeInactive ? FindObjectsInactive.Include : FindObjectsInactive.Exclude)) != null;
 
         public static GameObject FindOrCreate(string name) => GameObject.Find(name) ?? new GameObject(name);
 
@@ -26,7 +27,13 @@ namespace Yu5h1Lib
         {
             GameObject obj = FindOrCreate(name);
             return obj.GetComponent<T>() ?? obj.AddComponent<T>();
-        } 
+        }
+        #endregion
+
+        #region Search
+
+
+
         #endregion
 
     }

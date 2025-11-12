@@ -36,15 +36,6 @@ public static class MonoBehaviourEx
     }
     #endregion
     #region Creation
-    /// <summary>
-    /// get component if null
-    /// </summary>
-    public static T GetComponent<T>(this MonoBehaviour b,ref T component) where T : Component
-    {
-        if (!component)
-            component = b.GetComponent<T>();
-        return component;
-    }
     public static T GetOrCreate<T>(this MonoBehaviour b, string childName, ref T result) where T : Component
     {
         if (result != null)

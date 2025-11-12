@@ -11,16 +11,45 @@ namespace Yu5h1Lib
             return result = component.GetComponentInParent<T>();
         }
 
-		public static bool TryGetComponentInChildren<T>(this Component component, out T result,bool includeInactive, bool IncludeSelf = false) where T : Component
-		{
-            if (IncludeSelf && component.TryGetComponent(out result))
-                return true;
-            return result = component.GetComponentInChildren<T>(includeInactive);
+        public static bool TryGetComponentInChildren<T>(this Component component, out T result, bool includeInactive, bool includeSelf = false) where T : Component
+        {
+            result = null;
+            if (component == null)
+                return false;
+
+            if (includeSelf)
+            {
+                result = component.GetComponentInChildren<T>(includeInactive);
+                return result != null;
+            }
+
+            foreach (Transform child in component.transform)
+            {
+                result = child.GetComponentInChildren<T>(includeInactive);
+                if (result != null)
+                    return true;
+            }
+            return false;
         }
-		public static bool TryGetComponentInChildren<T>(this Component c, string name, out T component) where T : Object
+        public static bool TryGetComponentInChildren<T>(this Component c, string name, out T result,bool searchAllChildren = false, bool includeInactive = true) where T : Component
 		{
-			component = null;
-            return c.transform.TryFind(name, out Transform child) && child.TryGetComponent(out component);
+			result = null;
+			if (c == null)
+				return false;
+			if (searchAllChildren)
+			{
+				foreach (var item in c.GetComponentsInChildren<T>(includeInactive))
+				{
+                    if (item.name.Equals(name))
+					{
+						result = item;
+						return true;
+					}
+                }
+				return false;
+			}
+
+            return c.transform.TryFind(name, out Transform child) && child.TryGetComponent(out result);
 		}
 		public static T GetOrAdd<T>(this Component c, out T componentParam) where T : Component
 		{

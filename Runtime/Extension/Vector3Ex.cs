@@ -31,5 +31,27 @@ namespace Yu5h1Lib
             }
             return true;
         }
+
+        public static Vector3 Set(this Vector3 v, float? x = null, float? y = null, float? z = null)
+        {
+            if (x == null && y == null && z == null)
+            {
+                throw new System.ArgumentException("At least one axis must be set.");
+            }
+            return new Vector3(
+                x.HasValue ? x.Value : v.x,
+                y.HasValue ? y.Value : v.y,
+                z.HasValue ? z.Value : v.z
+            );
+        }
+
+        public static Vector3 Add(this Vector3 v, float? x = null, float? y = null, float? z = null)
+        {
+            return new Vector3(
+                v.x + (x ?? 0f),
+                v.y + (y ?? 0f),
+                v.z + (z ?? 0f)
+            );
+        }
     }
 }

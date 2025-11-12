@@ -1,30 +1,15 @@
 ﻿using UnityEngine;
 
 namespace Yu5h1Lib
-{
-    /// <summary>
-    /// AddComponent<T> if null
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public abstract class ComponentController<T> : MonoBehaviour where T : Component
+{    
+    public abstract class ComponentController<T> : BaseMonoBehaviour where T : Component
     {
         [SerializeField,ReadOnly]
         private T _component;
         public T component => _component;
-
-        protected virtual void CheckComponent()
+        protected override void OnInitializing()
         {
-            if (!_component && !TryGetComponent(out _component))
-                _component = gameObject.AddComponent<T>();
+            this.GetComponent(ref _component);
         }
-        protected virtual void Reset()
-        {
-            CheckComponent();
-        }
-        protected virtual void Start()
-        {
-            CheckComponent();
-        }
-        public void Log(string msg) => msg.print();
     }
 }
