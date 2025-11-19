@@ -13,6 +13,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.yu5h1.internal",
+            "expression": "1.0.0",
+            "define": "Yu5h1Lib_Internal"
+        }
+    ],
     "noEngineReferences": false
 }

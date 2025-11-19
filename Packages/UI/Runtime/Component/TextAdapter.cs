@@ -52,7 +52,5 @@ namespace Yu5h1Lib.UI
         }
         #endregion           
 
-        public void Invoke(InlineEvent inlineEvent)
-            => inlineEvent?.Invoke();
     }
 }

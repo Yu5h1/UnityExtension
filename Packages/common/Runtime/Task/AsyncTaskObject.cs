@@ -5,7 +5,7 @@ using UnityEngine.Events;
 
 namespace Yu5h1Lib
 {
-	public abstract class AsyncTaskObject : InlineScriptableObject
+	public abstract class AsyncTaskObject : InlineComponentObject
 	{
         public object parameter { get; set; }
         public object result { get; set; }

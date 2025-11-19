@@ -15,6 +15,7 @@ namespace Yu5h1Lib.WebSupport
             public bool ctrl;
             public bool alt;
             public bool meta;
+            public bool isComposing;
         }
 
         [System.Serializable]
@@ -25,6 +26,7 @@ namespace Yu5h1Lib.WebSupport
             public bool ctrl;
             public bool alt;
             public bool meta;
+            public bool isComposing;
 
             public bool IsPressed { get; set; }
             [SerializeField] private UnityEvent<KeyMessage> _up;

@@ -28,7 +28,8 @@ mergeInto(LibraryManager.library, {
                 shift: e.shiftKey,
                 ctrl: e.ctrlKey,
                 alt: e.altKey,
-                meta: e.metaKey
+                meta: e.metaKey,
+				isComposing: e.isComposing
             });
             
             SendMessage(objName, "OnKeyDown", keyData);		  
@@ -45,7 +46,8 @@ mergeInto(LibraryManager.library, {
                 shift: e.shiftKey,
                 ctrl: e.ctrlKey,
                 alt: e.altKey,
-                meta: e.metaKey
+                meta: e.metaKey,
+				isComposing: e.isComposing
             });
             
             SendMessage(objName, "OnKeyUp", keyData);

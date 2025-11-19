@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 using UnityEngine.Serialization;
 using Yu5h1Lib;
 
-public class IntegersManager : SingletonBehaviour<IntegersManager>
+[MovedFrom("IntegersManager")]
+public class InlineScriptableObjectManager : SingletonBehaviour<InlineScriptableObjectManager>
 {
     [DropdownContext("vcp_AnimationList")]
     [SerializeField,ShowDetail] private List<IntegersObject> _integersObjectList;
