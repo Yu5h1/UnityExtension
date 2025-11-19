@@ -8,7 +8,7 @@ using Yu5h1Lib;
 public class InlineScriptableObjectManager : SingletonBehaviour<InlineScriptableObjectManager>
 {
     [DropdownContext("vcp_AnimationList")]
-    [SerializeField,ShowDetail] private List<IntegersObject> _integersObjectList;
+    [SerializeField,ShowDetail()] private List<IntegersObject> _integersObjectList;
 
     protected override void OnInitializing()
     {

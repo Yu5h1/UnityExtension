@@ -1,14 +1,15 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 
 namespace Yu5h1Lib
 {
-	public class IntegersObject : InlineScriptableObject
+	public class IntegersObject : InlineParamterObject
     {
 		[Dropdown("")]
-		public int[] integers;
+		public int[] value;
 
-		public int Random() => integers.RandomElement();
+		public int Random() => value.RandomElement();		
     }
 
 }
