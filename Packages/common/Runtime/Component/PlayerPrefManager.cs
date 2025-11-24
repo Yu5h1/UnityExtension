@@ -9,20 +9,8 @@ namespace Yu5h1Lib
     {
 		[SerializeField,ShowDetail] private List<PlayerPrefBoolObject> bools;
 
-    
-        public UnityEvent<int, bool, string, float> qqq;
-        [SerializeField] private UnityEvent<string> _sss;
-
-        public int _____qq;
-
-        public Bounds bbb;
-
-        protected override void OnInstantiated()
-        {
-        }
-        protected override void OnInitializing()
-        {
-        }
+        protected override void OnInstantiated() {}
+        protected override void OnInitializing() {}
         private void Start()
         {
             if (!enabled)
@@ -32,18 +20,5 @@ namespace Yu5h1Lib
                 item.data.Init();
             }
         }
-
-
-
-        public void v3(Vector3Object v3) { }
-
-        public void qq(RectObject val) { }
-        public void qq(Vector2Object val) { }
-
-        public void qq(IntegersObject val) { }
-        public void qq(ColorObject val) { }
-        public void qq(AnimationCurveObject val) { }
-        public void qq(GradientObject val) { }
-        public void qq(BoundsObject val) { }
     } 
 }
