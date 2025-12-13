@@ -1,12 +1,14 @@
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Scripting;
 using UnityEngine.Events;
-using Yu5h1Lib.Common;
 using TMPro;
-using UnityEngine.EventSystems;
+using Yu5h1Lib;
 
+[OpsRegistration(typeof(TMP_InputField), typeof(IInputFieldOps))]
 public sealed class TMP_InputFieldOps : InputFieldOps<TMP_InputField>
 {
+    [Preserve] public TMP_InputFieldOps(TMP_InputField input) : base(input) { }
+
     public override bool interactable { get => c.interactable; set => c.interactable = value; }
 
     public override string text { get => c.text; set => c.text = value; }
@@ -55,18 +57,5 @@ public sealed class TMP_InputFieldOps : InputFieldOps<TMP_InputField>
     {
         add => c.onEndEdit.AddListener(value);
         remove => c.onEndEdit.RemoveListener(value);
-    }
-
-    public TMP_InputFieldOps(TMP_InputField input) : base(input) { }
-
-
-#if UNITY_EDITOR
-    [UnityEditor.InitializeOnLoadMethod]
-#else
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-#endif
-    private static void Register()
-    {
-        OpsFactory.Register<TMP_InputField,IInputFieldOps>(c => new TMP_InputFieldOps(c));
-    }
+    }    
 }

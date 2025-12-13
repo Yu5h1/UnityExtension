@@ -1,9 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using Yu5h1Lib;
 
-namespace Yu5h1Lib.Common
+namespace Yu5h1Lib
 {
     public class ComponentAdapter<TOps> : BaseMonoBehaviour, IOps where TOps : class, IOps
     {

@@ -14,7 +14,6 @@ public class MainThreadDispatcher : MonoBehaviour
     private readonly Queue<Action> executionQueue = new Queue<Action>();
     private static readonly object lockObject = new object();
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static MainThreadDispatcher GetInstance()
     {
         if (instance != null)

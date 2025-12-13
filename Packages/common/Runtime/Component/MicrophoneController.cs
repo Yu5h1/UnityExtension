@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
+using Yu5h1Lib;
 
 /// <summary>
 /// 麥克風控制器基礎版本 - 使用 UnityEvent
@@ -93,6 +94,38 @@ public class MicrophoneController : MonoBehaviour
     public int SampleRate => sampleRate;
     public string SelectedDevice => selectedMicrophone;
 
+
+    public string[] devices
+    {
+        get
+        {
+#if USE_MICROPHONE
+        return Microphone.devices;
+#endif
+            return Array.Empty<string>();
+        }
+    }
+    public AudioClip StartMicrophone(string deviceName,bool loop,int lengthSec,int frequency)
+    {
+#if USE_MICROPHONE
+        return Microphone.Start(deviceName, loop, lengthSec, frequency);
+#endif
+        return null;
+    }
+
+    public void EndMicrophone(string deviceName)
+    {
+#if USE_MICROPHONE
+        Microphone.End(deviceName);
+#endif
+    }
+    public int GetPosition(string deviceName)
+    {
+#if USE_MICROPHONE
+        return Microphone.GetPosition(deviceName);
+#endif
+        return -1;
+    }
     /// <summary>
     /// 開始錄音
     /// </summary>
@@ -104,7 +137,7 @@ public class MicrophoneController : MonoBehaviour
             return;
         }
 
-        if (Microphone.devices.Length == 0)
+        if (devices.Length == 0)
         {
             string error = "No microphone found";
             Debug.LogError($"❌ {error}");
@@ -112,10 +145,10 @@ public class MicrophoneController : MonoBehaviour
             return;
         }
 
-        selectedMicrophone = Microphone.devices[0];
+        selectedMicrophone = devices[0];
         Debug.Log($"🎤 Starting microphone: {selectedMicrophone}");
 
-        microphoneClip = Microphone.Start(selectedMicrophone, true, 10, sampleRate);
+        microphoneClip = StartMicrophone(selectedMicrophone, true, 10, sampleRate);
 
         if (microphoneClip == null)
         {
@@ -145,9 +178,9 @@ public class MicrophoneController : MonoBehaviour
             captureCoroutine = null;
         }
 
-        if (!string.IsNullOrEmpty(selectedMicrophone))
+        if (!selectedMicrophone.IsEmpty())
         {
-            Microphone.End(selectedMicrophone);
+            EndMicrophone(selectedMicrophone);
             Debug.Log("🛑 Microphone stopped");
         }
 
@@ -166,7 +199,7 @@ public class MicrophoneController : MonoBehaviour
 
         while (attempts < maxAttempts)
         {
-            int position = Microphone.GetPosition(selectedMicrophone);
+            int position = GetPosition(selectedMicrophone);
 
             if (position > 0)
             {
@@ -201,10 +234,10 @@ public class MicrophoneController : MonoBehaviour
     protected virtual IEnumerator CaptureAudio()
     {
         float[] buffer = new float[chunkSize];
-
+        
         while (isRecording)
         {
-            micPosition = Microphone.GetPosition(selectedMicrophone);
+            micPosition = GetPosition(selectedMicrophone);
 
             if (micPosition < 0 || micPosition == lastMicPosition)
             {

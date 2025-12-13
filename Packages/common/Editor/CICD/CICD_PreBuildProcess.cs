@@ -9,7 +9,7 @@ using System.ComponentModel;
 namespace Yu5h1Lib.EditorExtension
 {
     [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-    public class CICD_PreBuildProcess : IPreprocessBuildWithReport , IPostprocessBuildWithReport
+    public class CICD_PreBuildProcess : IPreprocessBuildWithReport, IPostprocessBuildWithReport
     {
         public int callbackOrder => 0;
         public static bool Add_version_before_build
@@ -25,10 +25,12 @@ namespace Yu5h1Lib.EditorExtension
         [InitializeOnLoadMethod]
         private static void Register()
         {
-            EditorPreferences.AddDrawer("CI/CD",() => {
+            EditorPreferences.AddDrawer("CI/CD", () =>
+            {
                 Add_version_before_build = EditorGUILayout.ToggleLeft(nameof(Add_version_before_build).Replace("_", " "), Add_version_before_build);
             });
-            EditorPreferences.AddDrawer("Android", () => {
+            EditorPreferences.AddDrawer("Android", () =>
+            {
                 Auto_add_BundleVersionCode = EditorGUILayout.ToggleLeft(nameof(Auto_add_BundleVersionCode).Replace("_", " "), Auto_add_BundleVersionCode);
             });
         }
@@ -67,13 +69,13 @@ namespace Yu5h1Lib.EditorExtension
                 }
                 if (previouse_bundleVersionCode.HasValue)
                 {
-                    PlayerSettings.Android.bundleVersionCode  = previouse_bundleVersionCode.Value;
+                    PlayerSettings.Android.bundleVersionCode = previouse_bundleVersionCode.Value;
                     $"Revert bundleVersionCode:{PlayerSettings.Android.bundleVersionCode} because build {report.summary.result} ".printWarning();
-                    
+
                 }
             }
             previouse_version = null;
-            previouse_bundleVersionCode = null;            
+            previouse_bundleVersionCode = null;
         }
         public static string IncrementVersion(string versionString)
         {

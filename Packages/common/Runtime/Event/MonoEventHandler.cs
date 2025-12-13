@@ -23,6 +23,7 @@ namespace Yu5h1Lib
                 return;
             _Disabled?.Invoke();
         }
+        public void Log( ){ }
     }
 
 }

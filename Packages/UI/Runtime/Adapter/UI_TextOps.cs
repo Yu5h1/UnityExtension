@@ -1,13 +1,14 @@
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.UI;
 using Yu5h1Lib;
-using Yu5h1Lib.Common;
 using Yu5h1Lib.Runtime;
 using Yu5h1Lib.UI;
 
+[OpsRegistration(typeof(Text), typeof(ITextOps))]
 public sealed class UI_TextOps : TextOps<Text>
 {
-    public UI_TextOps(Text t) : base(t) { }
+    [Preserve] public UI_TextOps(Text t) : base(t) { }
 
     public override string text { get => c.text; set => c.text = value; }
     public override float preferredWidth => c.preferredWidth;    
@@ -131,15 +132,6 @@ public sealed class UI_TextOps : TextOps<Text>
         return local ? localPos : c.transform.TransformPoint(localPos);
     }
 
-
-#if UNITY_EDITOR
-    [UnityEditor.InitializeOnLoadMethod]
-#else
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-#endif
-    private static void RegisterTextOpsConstructor()
-    {
-        OpsFactory.Register<Text,ITextOps>(t => new UI_TextOps(t));
-    }
-
+ 
+      
 }

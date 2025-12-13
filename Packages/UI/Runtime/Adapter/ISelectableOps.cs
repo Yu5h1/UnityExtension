@@ -1,5 +1,5 @@
 using UnityEngine;
-using Yu5h1Lib.Common;
+using Yu5h1Lib;
 
 public interface ISelectableOps : IOps
 {

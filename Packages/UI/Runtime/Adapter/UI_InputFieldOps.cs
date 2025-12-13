@@ -1,10 +1,15 @@
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.UI;
 using UnityEngine.Events;
+using Yu5h1Lib;
 using Yu5h1Lib.Common;
 
+[OpsRegistration(typeof(InputField), typeof(IInputFieldOps))]
 public sealed class UIInputFieldOps : InputFieldOps<InputField> , IInputFieldOps
 {
+    [Preserve] public UIInputFieldOps(InputField input) : base(input) { }
+
     public override bool interactable { get => c.interactable; set => c.interactable = value; }
 
     public override string text { get => c.text; set => c.text = value; }
@@ -49,12 +54,9 @@ public sealed class UIInputFieldOps : InputFieldOps<InputField> , IInputFieldOps
         remove => c.onEndEdit.RemoveListener(value);
     }
 
-    public UIInputFieldOps(InputField input) : base(input) { }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void Register()
-    {
-        OpsFactory.Register<InputField,IInputFieldOps>(c => new UIInputFieldOps(c));
-    }
- 
+    //[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    //private static void Register()
+    //{
+    //    OpsFactory.Register<InputField, IInputFieldOps>(c => new UIInputFieldOps(c));
+    //}
 }

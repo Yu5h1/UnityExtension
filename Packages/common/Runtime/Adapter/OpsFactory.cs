@@ -1,17 +1,14 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Expression = System.Linq.Expressions.Expression;
 
-
-namespace Yu5h1Lib.Common
+namespace Yu5h1Lib
 {
     public interface IOps
     {
         Component RawComponent { get; }
 
         //bool IsValid { get; }
-
         //void Refresh();
     }
 
@@ -20,8 +17,8 @@ namespace Yu5h1Lib.Common
         private static readonly Dictionary<Type, Func<Component, IOps>> _constructors = new();
         public static readonly Dictionary<Type,List<Type>> Ops = new();
 
-        public static void Register<T,TGroup>(Func<T, IOps> constructor) where T : Component
-                                                                         where TGroup : IOps
+        public static void Register<T, TGroup>(Func<T, IOps> constructor) where T : Component
+                                                                 where TGroup : IOps
         {
             _constructors[typeof(T)] = comp => constructor((T)comp);
 
@@ -33,15 +30,28 @@ namespace Yu5h1Lib.Common
                 components.Add(typeof(T));
 
         }
-
-        public static Func<TComponent, TOps> CreateConstructor<TComponent, TOps>()
+        public static void Register(Type opsInterface, Type componentType,  Type opsType)
         {
-            var param = Expression.Parameter(typeof(TComponent), "c");
-            var ctor = Expression.New(typeof(TOps).GetConstructor(new[] { typeof(TComponent) }), param);
-            var lambda = Expression.Lambda<Func<TComponent, TOps>>(ctor, param);
-            return lambda.Compile();
-        }
+            _constructors[componentType] = CreateConstructor(componentType,opsType);
 
+            if (!Ops.TryGetValue(opsInterface, out var components))
+                components = Ops[opsInterface] = new List<Type>();
+            if (!components.Contains(componentType))
+                components.Add(componentType);
+        }
+        public static Func<Component, IOps> CreateConstructor(Type componentType, Type opsType)
+        {
+            var ctor = opsType.GetConstructor(new[] { componentType });
+
+            if (ctor == null)
+            {
+                Debug.LogError($"找不到 {opsType.Name}({componentType.Name}) 建構子");
+                return null;
+            }
+
+            // 確認這裡是用 ctor.Invoke
+            return comp => (IOps)ctor.Invoke(new object[] { comp });
+        }
         public static bool TryCreate(Component component, out IOps ops)
         {
             ops = null;
@@ -83,8 +93,13 @@ namespace Yu5h1Lib.Common
 
             return false;
         }
-        public static T Create<T>(Component component) where T : class, IOps
-            => TryCreate(component, out T result) ? result : null;
-    }
+        public static TIOps Create<TIOps>(Component component) where TIOps : class, IOps
+            => TryCreate(component, out TIOps result) ? result : null;
 
+        public static void Clear()
+        {
+            _constructors.Clear();
+            Ops.Clear();
+        }
+    }
 }

@@ -5,7 +5,7 @@ using UnityEngine.Scripting.APIUpdating;
 
 namespace Yu5h1Lib
 {
-    public class InlineComponentObject : InlineScriptableObject
+    public class BehaviourObject : ScriptableObject
     {
         [SerializeField] private bool _enabled = true;
         public bool enabled
@@ -14,7 +14,7 @@ namespace Yu5h1Lib
             set
             {
                 if (_enabled != value)
-                {
+                {                    
                     _enabled = value;
                     if (value)
                         OnEnabled();
@@ -23,10 +23,10 @@ namespace Yu5h1Lib
                 }
             }
         }
-        protected virtual void OnEnabled() { }
-        protected virtual void OnDisabled() { }
+        protected virtual void OnEnabled() {}
+        protected virtual void OnDisabled() {}
     }
-    public abstract class InlineComponentObject<T> : InlineComponentObject
+    public abstract class BehaviourObject<T> : BehaviourObject
     {
         public T Data;
     }

@@ -4,11 +4,11 @@ using UnityEngine;
 using Yu5h1Lib;
 
 public class StringOption : OptionSet<string>, IBindable
-{
+{    
     public OptionSet overrideSet;
 
     [SerializeField,ReadOnly] List<string> _overrideItems;
-
+    
     public override List<string> Items
     { 
         get

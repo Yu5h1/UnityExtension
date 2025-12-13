@@ -87,6 +87,7 @@ namespace Yu5h1Lib.UI
 
         [SerializeField] private ScrollRect scrollRect;
         [SerializeField] private int visibleLineCount = 5;
+        public bool AutoResizeScrollRect = true;
 
         public bool EnableScrollToCaret = true;
 
@@ -110,7 +111,7 @@ namespace Yu5h1Lib.UI
         private void Start()
         {
             ((RectTransform)rectTransform.parent).ForceRebuildLayoutImmediate();
-            if (scrollRect != null)
+            if (AutoResizeScrollRect && scrollRect != null )
                 ResizeScrollRect();
  
         }
@@ -199,7 +200,6 @@ namespace Yu5h1Lib.UI
 
         void UpdateVisibleLineArea(int caretlineIndex)
         {
-
             var lastCaretlineIndex = textAdapter.GetLineIndexByPosition(lastCaretPosition);
 
             var dir = caretlineIndex > lastCaretlineIndex ? 1 : -1;
@@ -250,6 +250,8 @@ namespace Yu5h1Lib.UI
         }
         public void CheckLineCount()
         {
+            if (!AutoResizeScrollRect)
+                return;
             if (lastLineCount != lineCount)
             {
                 OnLineCountChanged(lineCount);
@@ -266,6 +268,9 @@ namespace Yu5h1Lib.UI
             if (scrollRect == null)
                 return;
             var caretlineIndex = textAdapter.GetLineIndexByPosition(selectionFocusPosition);
+
+            if (AutoResizeScrollRect)
+                return;
             UpdateVisibleLineArea(caretlineIndex);
             ResizeScrollRect();
         }
@@ -315,7 +320,16 @@ namespace Yu5h1Lib.UI
             selectionAnchorPosition = caretPos;
             selectionFocusPosition = caretPos;
         }
+        public void AppendNewLine(string content) => Append($"\n{content}");
+        public void ScrollToBottom()
+        {
+            if (scrollRect == null)
+                return;
+            ((RectTransform)scrollRect.transform).ForceRebuildLayoutImmediate();
+            scrollRect.verticalNormalizedPosition = 0;
+        }
 
+        public void Append(string content) => text = text + content;
   
 
         //public bool DisableIMEOnSelect;

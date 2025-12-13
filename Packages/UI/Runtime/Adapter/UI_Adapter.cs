@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Yu5h1Lib;
 using Yu5h1Lib.Common;
 
 public abstract class UI_Adapter<TOps> : ComponentAdapter<TOps>, IOps where TOps : class, IOps

@@ -1,13 +1,14 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
-using Yu5h1Lib.Common;
+using UnityEngine.Scripting;
+using Yu5h1Lib;
 using Yu5h1Lib.Runtime;
 using Yu5h1Lib.UI;
 
+[OpsRegistration(typeof(TMP_Text), typeof(ITextOps))]
 public sealed class TMPTextOps : TextOps<TMP_Text>
 {
-    public TMPTextOps(TMP_Text t) : base(t) {}
+    [Preserve] public TMPTextOps(TMP_Text t) : base(t) {}
 
     public override string text { get => c.text; set => c.text = value; }
     public override float preferredWidth => c.preferredWidth;
@@ -102,17 +103,4 @@ public sealed class TMPTextOps : TextOps<TMP_Text>
         var localPos = new Vector3(0, charInfo.baseLine,0) ;// (charInfo.bottomLeft + charInfo.topLeft) * 0.5f;
         return local ? localPos : c.transform.TransformPoint(localPos);
     }
-
-    
-
-#if UNITY_EDITOR
-    [UnityEditor.InitializeOnLoadMethod]
-#else
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-#endif
-    private static void RegisterTextOpsConstructor()
-    {
-        OpsFactory.Register<TMP_Text,ITextOps>(t => new TMPTextOps(t));
-    }
-
 }

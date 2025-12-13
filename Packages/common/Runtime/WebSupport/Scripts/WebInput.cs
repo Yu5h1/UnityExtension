@@ -11,50 +11,58 @@ namespace Yu5h1Lib.WebSupport
         public class KeyMessage
         {
             public string code;
+
             public bool shift;
             public bool ctrl;
             public bool alt;
             public bool meta;
+            public override string ToString() => $"KeyMessage(code:{code}, shift:{shift}, ctrl:{ctrl}, alt:{alt}, meta:{meta})";
+
+        }
+        [System.Serializable]
+        public class WebKeyMessage : KeyMessage
+        {
+            public string key;
+            public int keyCode;
+
             public bool isComposing;
+            public bool imeActive;
+
+            public override string ToString() 
+                => $"WebKeyMessage(code:{code}, key:{key}, keyCode:{keyCode}, shift:{shift}, ctrl:{ctrl}, alt:{alt}, meta:{meta}, isComposing:{isComposing}, imeActive:{imeActive})";
         }
 
         [System.Serializable]
-        public class KeyBinding
+        public class KeyBinding : KeyMessage
         {
-            public string code;
-            public bool shift;
-            public bool ctrl;
-            public bool alt;
-            public bool meta;
-            public bool isComposing;
-
             public bool IsPressed { get; set; }
-            [SerializeField] private UnityEvent<KeyMessage> _up;
-            public event UnityAction<KeyMessage> up
+            [SerializeField] private UnityEvent<WebKeyMessage> _up;
+            public event UnityAction<WebKeyMessage> up
             {
                 add => _up.AddListener(value);
                 remove => _up.RemoveListener(value);
             }
-            [SerializeField] private UnityEvent<KeyMessage> _down;
-            public event UnityAction<KeyMessage> down
+            [SerializeField] private UnityEvent<WebKeyMessage> _down;
+            public event UnityAction<WebKeyMessage> down
             {
                 add => _down.AddListener(value);
                 remove => _down.RemoveListener(value);
             }
-
-            public void OnKeyDown(KeyMessage msg)
+            public bool Validate(WebKeyMessage msg)
             {
-                if (msg == null)
-                    return;
-                if (msg.shift != shift || msg.ctrl != ctrl || msg.alt != alt || msg.meta != meta)
+                if (msg == null || msg.isComposing || msg.imeActive)
+                    return false;
+                return msg.shift == shift && msg.ctrl == ctrl && msg.alt == alt && msg.meta == meta;
+            }
+            public void OnKeyDown(WebKeyMessage msg)
+            {
+                if (!Validate(msg))
                     return;
                 _down?.Invoke(msg);
             }
-            public void OnKeyUp(KeyMessage msg)
+            public void OnKeyUp(WebKeyMessage msg)
             {
-                if (msg == null)
-                    return;
-                if (msg.shift != shift || msg.ctrl != ctrl || msg.alt != alt || msg.meta != meta)
+                if (!Validate(msg))
                     return;
                 _up?.Invoke(msg);
             }
@@ -151,9 +159,8 @@ namespace Yu5h1Lib.WebSupport
 
             try
             {
-                var keyMsg = JsonUtility.FromJson<KeyMessage>(jsonData);
-
-                if (string.IsNullOrEmpty(keyMsg.code))
+                var keyMsg = JsonUtility.FromJson<WebKeyMessage>(jsonData);                
+                if (keyMsg.code.IsEmpty())
                 {
                     Debug.LogWarning("[WebInput] Key data has no code");
                     return;
@@ -188,16 +195,15 @@ namespace Yu5h1Lib.WebSupport
 
             try
             {
-                var keyMsg = JsonUtility.FromJson<KeyMessage>(jsonKeyMessage);
+                var keyMsg = JsonUtility.FromJson<WebKeyMessage>(jsonKeyMessage);
 
-                if (string.IsNullOrEmpty(keyMsg.code))
+                if (keyMsg.code.IsEmpty())
                 {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     Debug.LogWarning("[WebInput] Key data has no code"); 
 #endif
                     return;
                 }
-
                 if (bindings.ContainsKey(keyMsg.code) && bindings[keyMsg.code].IsPressed)
                 {
                     bindings[keyMsg.code].IsPressed = false;

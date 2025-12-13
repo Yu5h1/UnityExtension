@@ -125,6 +125,10 @@ namespace Yu5h1Lib.UI
 
         public Result result { get; private set; }
 
+        public Image bg;
+        public Transform controlsRoot;
+        public TextAdapter messageText;
+
 
         public bool visible 
         { 
@@ -210,6 +214,8 @@ namespace Yu5h1Lib.UI
 
         public void Show(ILogic Ilogic)
         {
+            controlsRoot.gameObject.SetActive(true);
+            messageText.transform.parent.gameObject.SetActive(false);
             if ("Faild to Show Popup with null Ilogic".printWarningIf(Ilogic == null))
                 return;
             if (!isActiveAndEnabled)
@@ -222,6 +228,15 @@ namespace Yu5h1Lib.UI
             foreach (var btn in buttons) btn.gameObject.SetActive(Ilogic.showButtons);
             BuildWaitResult = Ilogic.BuildRoutine;
             Validator = Ilogic.GetResult;
+            visible = true;
+        }
+        public void Show(string message)
+        {
+            controlsRoot.gameObject.SetActive(false);
+            messageText.transform.parent.gameObject.SetActive(true);
+            messageText.text = message;
+            if (!isActiveAndEnabled)
+                gameObject.SetActive(true);
             visible = true;
         }
         public bool Hide()
