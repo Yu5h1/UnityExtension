@@ -25,7 +25,7 @@ namespace Yu5h1Lib.UI
         public class Logic : ILogic
         {
             [SerializeField] private InputFieldSetting[] _inputFieldAdapterSettings;
-            [SerializeField] private ResultEvent<string> _reported;
+            [SerializeField] private OutcomeEvent<string> _reported;
 
             public InputFieldSetting[] settings => _inputFieldAdapterSettings;
             [SerializeField] private bool _showButtons;
@@ -72,7 +72,7 @@ namespace Yu5h1Lib.UI
         public abstract class LogicObject : ScriptableObject , ILogic
         {
             [SerializeField] private InputFieldSetting[] _inputFieldAdapterSettings;
-            [SerializeField] private ResultEvent<string> _reported;
+            [SerializeField] private OutcomeEvent<string> _reported;
 
             public virtual InputFieldSetting[] settings => _inputFieldAdapterSettings;
             [SerializeField] private bool _showButtons;

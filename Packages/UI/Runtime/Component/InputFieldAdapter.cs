@@ -97,7 +97,6 @@ namespace Yu5h1Lib.UI
         private int lastSelectionEnd = -1;
         private int lastLineCount = -1;
 
-        public bool UseWebKeyboardInput = false;
         protected override void OnInitializing()
         {
             base.OnInitializing();
@@ -269,7 +268,7 @@ namespace Yu5h1Lib.UI
                 return;
             var caretlineIndex = textAdapter.GetLineIndexByPosition(selectionFocusPosition);
 
-            if (AutoResizeScrollRect)
+            if (!AutoResizeScrollRect)
                 return;
             UpdateVisibleLineArea(caretlineIndex);
             ResizeScrollRect();

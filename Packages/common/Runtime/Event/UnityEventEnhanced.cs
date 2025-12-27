@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -16,10 +17,10 @@ namespace Yu5h1Lib
         }
         public new void Invoke(T arg)
         {
-            
             if (enabled)
                 base.Invoke(arg);
         }
+
     }
 
     [System.Serializable]

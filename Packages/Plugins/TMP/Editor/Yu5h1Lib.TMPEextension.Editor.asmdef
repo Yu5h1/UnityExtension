@@ -1,0 +1,20 @@
+{
+    "name": "Yu5h1Lib.TMPEextension.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:15bc4668ef1785848a9c85a0b340b9da",
+        "GUID:0fbdbac25f183a64183851c31e32a211"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

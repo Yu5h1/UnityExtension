@@ -24,10 +24,19 @@ namespace Yu5h1Lib
 
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                // 跳過系統組件加速
-                if (assembly.FullName.StartsWith("System") ||
-                    assembly.FullName.StartsWith("mscorlib") ||
-                    assembly.FullName.StartsWith("Unity."))
+                var name = assembly.FullName;
+
+                // 跳過系統組件
+                if (name.StartsWith("System") ||
+                    name.StartsWith("mscorlib") ||
+                    name.StartsWith("Mono.") ||
+                    name.StartsWith("netstandard") ||
+                    name.StartsWith("Microsoft."))
+                    continue;
+
+                // Unity 引擎組件跳過，但保留 Unity 專案組件
+                if (name.StartsWith("UnityEngine") ||
+                    name.StartsWith("UnityEditor"))
                     continue;
 
                 try

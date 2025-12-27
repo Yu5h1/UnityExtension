@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 using Yu5h1Lib;
 using Yu5h1Lib.Common;
 using Yu5h1Lib.UI;
@@ -29,11 +30,10 @@ public interface IInputFieldOps : ISelectableOps
     event UnityAction<string> endEdit;
 }
 
-public abstract class InputFieldOps<T> : OpsBase<T>, IInputFieldOps where T : Component
+public abstract class InputFieldOps<T> : SelectableOps<T>, IInputFieldOps where T : Selectable
 {
     protected InputFieldOps(T component) : base(component) {}
 
-    public abstract bool interactable { get; set; }
     public abstract string text { get; set; }
     public abstract string placeholder { get; set; }
     public abstract int caretPosition { get; set; }

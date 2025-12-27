@@ -1,0 +1,19 @@
+{
+    "name": "Yu5h1Lib.UI.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:0a2ad6279ef01794b8610804d06308fa",
+        "GUID:15bc4668ef1785848a9c85a0b340b9da"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

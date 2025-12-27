@@ -22,7 +22,7 @@ namespace Yu5h1Lib.UI
         void SetWrappingOverflowMode(bool wrap);
 
     }
-    public interface ITextAttribute : IColorOps
+    public interface ITextAttribute : IColor
     {
         string text { get; set; }
         float fontSize { get; set; }
@@ -45,6 +45,16 @@ namespace Yu5h1Lib.UI
             return preferredWidth;
         }
         public abstract Color color { get; set; }
+        public float alpha
+        {
+            get => color.a;
+            set
+            {
+                var c = color;
+                c.a = value;
+                color = c;
+            }
+        }
         public abstract float fontSize { get; set; }
         public abstract float lineSpacing { get; set; }
         public abstract Alignment alignment { get; set; }

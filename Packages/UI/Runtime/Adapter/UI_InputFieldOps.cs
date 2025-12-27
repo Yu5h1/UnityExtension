@@ -10,8 +10,6 @@ public sealed class UIInputFieldOps : InputFieldOps<InputField> , IInputFieldOps
 {
     [Preserve] public UIInputFieldOps(InputField input) : base(input) { }
 
-    public override bool interactable { get => c.interactable; set => c.interactable = value; }
-
     public override string text { get => c.text; set => c.text = value; }
     public override string placeholder
     {

@@ -50,5 +50,8 @@ namespace Yu5h1Lib
             timer.Repeated -= OnRepeated;
             timer.FinalRepetition -= OnFinalRepetition;            
         }
+
+
+        public void Log(string message) => message.print();
     } 
 }

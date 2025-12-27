@@ -19,7 +19,7 @@ namespace Yu5h1Lib
         public bool enabled => _enabled;
 
         public LifeCycleEvent lifeCycle;
-        public ResultEvent _result;
+        public OutcomeEvent _result;
         public void Begin() => lifeCycle.Begin();
         public void End() => lifeCycle.End();
         public void Report(bool result) => _result.Invoke(result);

@@ -12,7 +12,7 @@ namespace Yu5h1Lib.UI
         
     {
         public Selectable selectable => (Selectable)RawComponent;
-        public bool interactable { get => selectable.interactable; set => selectable.interactable = value; }
+        public bool interactable { get => Ops.interactable; set => selectable.interactable = value; }
 
         [SerializeField] private UnityEvent<BaseEventData> _selected;
         public event UnityAction<BaseEventData> selected

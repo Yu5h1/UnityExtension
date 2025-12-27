@@ -3,15 +3,9 @@ using Yu5h1Lib.Common;
 
 namespace Yu5h1Lib
 {
-    public interface IColorOps : IOps
+    public interface IColor
     {
         Color color { get; set; }
-        float alpha {
-            get => color.a; 
-            set
-            {
-                color = color.SetAlpha(value);
-            }
-        }
+        float alpha { get; set; }
     }
 }

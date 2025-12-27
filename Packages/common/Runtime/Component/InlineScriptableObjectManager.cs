@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
 using UnityEngine.Serialization;
@@ -8,7 +9,7 @@ using Yu5h1Lib;
 public class InlineScriptableObjectManager : SingletonBehaviour<InlineScriptableObjectManager>
 {
     [DropdownContext("vcp_AnimationList")]
-    [SerializeField,ShowDetail()] private List<IntegersObject> _integersObjectList;
+    [SerializeField,ShowDetail()] private List<IntegerArrayObject> _integersObjectList;
 
     protected override void OnInitializing()
     {
@@ -16,5 +17,14 @@ public class InlineScriptableObjectManager : SingletonBehaviour<InlineScriptable
 
     protected override void OnInstantiated()
     {
+    }
+
+    [ContextMenu(nameof(Test))]
+    public void Test()
+    {
+        var foundSObj = Resources.FindObjectsOfTypeAll<StringArrayObject>();
+        $"Count : {foundSObj.Length}\n{foundSObj.Select(dd => dd.name).Join('\n')}".print();
+        var iobjs = Resources.FindObjectsOfTypeAll<IntegerArrayObject>();
+        $"Count : {iobjs.Length} {iobjs.Select(dd => dd.name).Join('\n')}".print();
     }
 }

@@ -1,5 +1,7 @@
+//#define PRINTLOG
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace Yu5h1Lib
@@ -11,11 +13,32 @@ namespace Yu5h1Lib
         //bool IsValid { get; }
         //void Refresh();
     }
-
+    /// <summary>
+    /// Factory for creating component operations (Ops = Operations).
+    /// Uses a registry pattern to map component types to their corresponding operation implementations.
+    /// </summary>
     public static class OpsFactory
     {
         private static readonly Dictionary<Type, Func<Component, IOps>> _constructors = new();
         public static readonly Dictionary<Type,List<Type>> Ops = new();
+
+#if UNITY_EDITOR
+        [UnityEditor.InitializeOnLoadMethod]
+#else
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+#endif
+        private static void RegisterAll()
+        {
+
+            foreach (var OpsType in RuntimeTypeCache.GetTypesWithAttribute<OpsRegistrationAttribute>())
+            {
+                var attrs = OpsType.GetCustomAttributes<OpsRegistrationAttribute>();
+                foreach (var attr in attrs)
+                {
+                    Register(attr.OpsInterface, attr.ComponentType, OpsType);
+                }
+            }
+        }
 
         public static void Register<T, TGroup>(Func<T, IOps> constructor) where T : Component
                                                                  where TGroup : IOps
@@ -54,6 +77,7 @@ namespace Yu5h1Lib
         }
         public static bool TryCreate(Component component, out IOps ops)
         {
+      
             ops = null;
             if (component == null)
                 return false;
@@ -63,6 +87,9 @@ namespace Yu5h1Lib
             if (_constructors.TryGetValue(type, out var creator))
             {
                 ops = creator(component);
+#if UNITY_EDITOR && PRINTLOG
+                $"{type} found ! {ops.GetType()} created!".print();
+#endif
                 return true;
             }
 
@@ -71,9 +98,16 @@ namespace Yu5h1Lib
                 if (kvp.Key.IsAssignableFrom(type))
                 {
                     ops = kvp.Value(component);
+
+#if UNITY_EDITOR && PRINTLOG
+                    $"{type} found ! {ops.GetType()} created!".print();
+#endif
                     return true;
                 }
             }
+#if UNITY_EDITOR && PRINTLOG
+            $"{component.GetType()} create IOps failed".printError();
+#endif
 
             return false;
         }

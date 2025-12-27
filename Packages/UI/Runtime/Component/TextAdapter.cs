@@ -11,6 +11,7 @@ namespace Yu5h1Lib.UI
         public string CharactersToTrim;
         public string text { get => Ops.text.Trim(Regex.Unescape(CharactersToTrim).ToCharArray()); set => Ops.text = value; }
         public Color color { get => Ops.color; set => Ops.color = value; }
+        public float alpha { get => Ops.alpha; set => Ops.alpha = value; }
         public float fontSize { get => Ops.fontSize; set => Ops.fontSize = value; }
         public float lineSpacing { get => Ops.lineSpacing; set => Ops.lineSpacing = value; }
         public Alignment alignment { get => Ops.alignment; set => Ops.alignment = value; }
@@ -40,6 +41,7 @@ namespace Yu5h1Lib.UI
         {
             text = content;
             gameObject.SetActive(true);
+            
         }
         #region IBingable
         public string GetFieldName() => gameObject.name;
@@ -48,9 +50,14 @@ namespace Yu5h1Lib.UI
         public void SetValue(Object bindable)
         {
             if (bindable is IBindable Ibindable)
-                SetValue(Ibindable.GetValue());
+                SetValue(Ibindable.GetValue());            
         }
-        #endregion           
+        #endregion
 
+
+#if UNITY_EDITOR
+        [ContextMenu(nameof(Test))]
+        public void Test() => $"TextAdapter Test: {text}".print();
+#endif
     }
 }

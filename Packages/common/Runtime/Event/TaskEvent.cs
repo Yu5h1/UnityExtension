@@ -1,27 +1,25 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-
-[System.Serializable]
-public class TaskEvent : EventContainer
+namespace Yu5h1Lib
 {
-    public LifeCycleEvent lifeCycle;
-    public ResultEvent _result;
+    [System.Serializable]
+    public class TaskEvent : RouteBase
+    {
+        public LifeCycleEvent lifeCycle;
+        public OutcomeEvent _result;
 
-    public void Begin() => lifeCycle.Begin();
-    public void End() => lifeCycle.End();
-    public void Report(bool result) => _result.Invoke(result);
-}
+        public void Begin() => lifeCycle.Begin();
+        public void End() => lifeCycle.End();
+        public void Report(bool success) => _result.Invoke(success);
+    }
 
-[System.Serializable]
-public class TaskEvent<T> : EventContainer
-{
-    public LifeCycleEvent<T> lifeCycle;
-    public ResultEvent<T> _result;
+    [System.Serializable]
+    public class TaskEvent<T> : RouteBase
+    {
+        public LifeCycleEvent<T> lifeCycle;
+        public OutcomeEvent<T> _result;
 
-    public void Begin(T t) => lifeCycle?.Begin(t);
-    public void End(T t) => lifeCycle?.End(t);
-    public void Report(bool result, T t) => _result?.Invoke(result, t);
+        public void Begin(T t) => lifeCycle?.Begin(t);
+        public void End(T t) => lifeCycle?.End(t);
+        public void Report(bool success, T t) => _result?.Invoke(success, t);
+    } 
 }
 
