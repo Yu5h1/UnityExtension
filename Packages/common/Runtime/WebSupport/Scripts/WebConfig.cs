@@ -35,7 +35,8 @@ namespace Yu5h1Lib.WebSupport
         public static bool TryLoad()
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-            return DataView.TryParseFromJson(GetConfig(), out _Properties);
+            if (DataView.TryParseFromJson(GetConfig(), out _Properties))
+                return true;
             "WebConfig not found".printWarning();
 #endif
             return false;

@@ -1,25 +1,40 @@
+using UnityEngine.Events;
+using UnityEngine.Scripting.APIUpdating;
+using UnityEngine.Serialization;
+
 namespace Yu5h1Lib
 {
     [System.Serializable]
-    public class TaskEvent : RouteBase
+    public class TaskEvent : EventContainer
     {
         public LifeCycleEvent lifeCycle;
-        public OutcomeEvent _result;
+        public BinaryEvent outcome;
+        public UnityEvent<bool> completed;
 
         public void Begin() => lifeCycle.Begin();
         public void End() => lifeCycle.End();
-        public void Report(bool success) => _result.Invoke(success);
+        public void Invoke(bool success) 
+        {
+            outcome?.Invoke(success);
+            completed?.Invoke(success);
+        }
     }
-
+    
     [System.Serializable]
-    public class TaskEvent<T> : RouteBase
+    public class TaskEvent<T> : EventContainer
     {
         public LifeCycleEvent<T> lifeCycle;
-        public OutcomeEvent<T> _result;
+        [FormerlySerializedAs("_outcome")]
+        public BinaryEvent<T> outcome;
+        public UnityEvent<bool> completed;
 
         public void Begin(T t) => lifeCycle?.Begin(t);
         public void End(T t) => lifeCycle?.End(t);
-        public void Report(bool success, T t) => _result?.Invoke(success, t);
+        public void Invoke(bool success, T t)
+        {
+            outcome?.Invoke(success, t);
+            completed?.Invoke(success);
+        }
     } 
 }
 

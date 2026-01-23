@@ -9,6 +9,7 @@ using Yu5h1Lib;
 /// </summary>
 public class MicrophoneController : MonoBehaviour
 {
+    
     [Header("Microphone Settings")]
     [SerializeField] protected int sampleRate = 16000;
     [SerializeField] protected int chunkSize = 512;
@@ -34,43 +35,43 @@ public class MicrophoneController : MonoBehaviour
     [SerializeField] protected UnityEvent<string> _error;
 
     // C# 事件包裝器
-    public event Action<float[]> OnAudioDataAvailable
+    public event Action<float[]> audioDataAvailable
     {
         add => _audioDataAvailable.AddListener(new UnityAction<float[]>(value));
         remove => _audioDataAvailable.RemoveListener(new UnityAction<float[]>(value));
     }
 
-    public event Action<float> OnRMSChanged
+    public event Action<float> RMSChanged
     {
         add => _rmsChanged.AddListener(new UnityAction<float>(value));
         remove => _rmsChanged.RemoveListener(new UnityAction<float>(value));
     }
 
-    public event Action OnRecordingStarted
+    public event Action recordingStarted
     {
         add => _recordingStarted.AddListener(new UnityAction(value));
         remove => _recordingStarted.RemoveListener(new UnityAction(value));
     }
 
-    public event Action OnRecordingStopped
+    public event Action recordingStopped
     {
         add => _recordingStopped.AddListener(new UnityAction(value));
         remove => _recordingStopped.RemoveListener(new UnityAction(value));
     }
 
-    public event Action OnSpeechStarted
+    public event Action speechStarted
     {
         add => _speechStarted.AddListener(new UnityAction(value));
         remove => _speechStarted.RemoveListener(new UnityAction(value));
     }
 
-    public event Action OnSpeechStopped
+    public event Action speechStopped
     {
         add => _speechStopped.AddListener(new UnityAction(value));
         remove => _speechStopped.RemoveListener(new UnityAction(value));
     }
 
-    public event Action<string> OnError
+    public event Action<string> Errored
     {
         add => _error.AddListener(new UnityAction<string>(value));
         remove => _error.RemoveListener(new UnityAction<string>(value));
@@ -82,35 +83,40 @@ public class MicrophoneController : MonoBehaviour
     protected int micPosition = 0;
     protected int lastMicPosition = 0;
     protected bool isRecording = false;
-    protected bool isSpeaking = false;
     protected int silenceFrameCount = 0;
     protected Coroutine captureCoroutine;
 
-    // 公開屬性
+    // Properties
     public bool IsRecording => isRecording;
-    public bool IsSpeaking => isSpeaking;
+    public bool IsSpeaking { get; protected set; } = false;
+    private float speechStartTime;
+    public float SpeechDuration => IsSpeaking ? Time.realtimeSinceStartup - speechStartTime : 0f;
     public float CurrentRMS { get; protected set; }
     public float SmoothedRMS { get; protected set; }
     public int SampleRate => sampleRate;
     public string SelectedDevice => selectedMicrophone;
-
 
     public string[] devices
     {
         get
         {
 #if USE_MICROPHONE
-        return Microphone.devices;
-#endif
+            return Microphone.devices;
+#else
             return Array.Empty<string>();
+#endif
         }
     }
-    public AudioClip StartMicrophone(string deviceName,bool loop,int lengthSec,int frequency)
+
+    #region Microphone Platform Abstraction
+
+    public AudioClip StartMicrophone(string deviceName, bool loop, int lengthSec, int frequency)
     {
 #if USE_MICROPHONE
         return Microphone.Start(deviceName, loop, lengthSec, frequency);
-#endif
+#else
         return null;
+#endif
     }
 
     public void EndMicrophone(string deviceName)
@@ -119,13 +125,99 @@ public class MicrophoneController : MonoBehaviour
         Microphone.End(deviceName);
 #endif
     }
+
     public int GetPosition(string deviceName)
     {
 #if USE_MICROPHONE
         return Microphone.GetPosition(deviceName);
-#endif
+#else
         return -1;
+#endif
     }
+
+    #endregion
+
+    #region Event Triggers (統一事件觸發點)
+
+    /// <summary>
+    /// 錄音開始時呼叫
+    /// </summary>
+    protected virtual void OnRecordingStarted()
+    {
+        isRecording = true;
+        lastMicPosition = 0;
+        micPosition = 0;
+        Debug.Log("🎤 Recording started");
+        _recordingStarted?.Invoke();
+    }
+
+    /// <summary>
+    /// 錄音停止時呼叫
+    /// </summary>
+    protected virtual void OnRecordingStopped()
+    {
+        isRecording = false;
+        IsSpeaking = false;
+        CurrentRMS = 0f;
+        SmoothedRMS = 0f;
+        silenceFrameCount = 0;
+        microphoneClip = null;
+        Debug.Log("🛑 Recording stopped");
+        _recordingStopped?.Invoke();
+    }
+
+    /// <summary>
+    /// 偵測到語音開始時呼叫
+    /// </summary>
+    protected virtual void OnSpeechStarted()
+    {
+        speechStartTime = Time.realtimeSinceStartup;
+        IsSpeaking = true;
+        silenceFrameCount = 0;
+        Debug.Log("🗣️ Speech started");
+        _speechStarted?.Invoke();
+    }
+
+    /// <summary>
+    /// 偵測到語音結束時呼叫
+    /// </summary>
+    protected virtual void OnSpeechStopped()
+    {
+        IsSpeaking = false;
+        silenceFrameCount = 0;
+        Debug.Log("🤐 Speech stopped");
+        _speechStopped?.Invoke();
+    }
+
+    /// <summary>
+    /// 收到音訊資料時呼叫
+    /// </summary>
+    protected virtual void OnAudioDataAvailable(float[] buffer)
+    {
+        _audioDataAvailable?.Invoke(buffer);
+    }
+
+    /// <summary>
+    /// RMS 值更新時呼叫
+    /// </summary>
+    protected virtual void OnRMSChanged(float rms)
+    {
+        _rmsChanged?.Invoke(rms);
+    }
+
+    /// <summary>
+    /// 發生錯誤時呼叫
+    /// </summary>
+    protected virtual void OnError(string error)
+    {
+        Debug.LogError($"❌ {error}");
+        _error?.Invoke(error);
+    }
+
+    #endregion
+
+    #region Recording Control
+
     /// <summary>
     /// 開始錄音
     /// </summary>
@@ -139,9 +231,7 @@ public class MicrophoneController : MonoBehaviour
 
         if (devices.Length == 0)
         {
-            string error = "No microphone found";
-            Debug.LogError($"❌ {error}");
-            _error?.Invoke(error);
+            OnError("No microphone found");
             return;
         }
 
@@ -152,9 +242,7 @@ public class MicrophoneController : MonoBehaviour
 
         if (microphoneClip == null)
         {
-            string error = "Failed to create microphone clip";
-            Debug.LogError($"❌ {error}");
-            _error?.Invoke(error);
+            OnError("Failed to create microphone clip");
             return;
         }
 
@@ -169,9 +257,6 @@ public class MicrophoneController : MonoBehaviour
         if (!isRecording)
             return;
 
-        isRecording = false;
-        isSpeaking = false;
-
         if (captureCoroutine != null)
         {
             StopCoroutine(captureCoroutine);
@@ -181,16 +266,14 @@ public class MicrophoneController : MonoBehaviour
         if (!selectedMicrophone.IsEmpty())
         {
             EndMicrophone(selectedMicrophone);
-            Debug.Log("🛑 Microphone stopped");
         }
 
-        microphoneClip = null;
-        CurrentRMS = 0f;
-        SmoothedRMS = 0f;
-        silenceFrameCount = 0;
-
-        _recordingStopped?.Invoke();
+        OnRecordingStopped();
     }
+
+    #endregion
+
+    #region Audio Processing
 
     protected virtual IEnumerator InitializeAndCapture()
     {
@@ -219,22 +302,18 @@ public class MicrophoneController : MonoBehaviour
 
         if (attempts >= maxAttempts)
         {
-            string error = "Microphone initialization timeout";
-            Debug.LogError($"❌ {error}");
-            _error?.Invoke(error);
+            OnError("Microphone initialization timeout");
             yield break;
         }
 
-        isRecording = true;
-        _recordingStarted?.Invoke();
-
+        OnRecordingStarted();
         captureCoroutine = StartCoroutine(CaptureAudio());
     }
 
     protected virtual IEnumerator CaptureAudio()
     {
         float[] buffer = new float[chunkSize];
-        
+
         while (isRecording)
         {
             micPosition = GetPosition(selectedMicrophone);
@@ -258,7 +337,7 @@ public class MicrophoneController : MonoBehaviour
 
                 float[] bufferCopy = new float[buffer.Length];
                 Array.Copy(buffer, bufferCopy, buffer.Length);
-                _audioDataAvailable?.Invoke(bufferCopy);
+                OnAudioDataAvailable(bufferCopy);
 
                 lastMicPosition = (lastMicPosition + chunkSize) % microphoneClip.samples;
             }
@@ -282,21 +361,17 @@ public class MicrophoneController : MonoBehaviour
         CurrentRMS = (1f - rmsAlpha) * CurrentRMS + rmsAlpha * newRMS;
         SmoothedRMS = Mathf.Max(SmoothedRMS, CurrentRMS);
 
-        _rmsChanged?.Invoke(CurrentRMS);
-
+        OnRMSChanged(CurrentRMS);
         DetectVoiceActivity(CurrentRMS);
     }
 
     protected virtual void DetectVoiceActivity(float rms)
     {
-        if (!isSpeaking)
+        if (!IsSpeaking)
         {
             if (rms > speechThreshold)
             {
-                isSpeaking = true;
-                silenceFrameCount = 0;
-                _speechStarted?.Invoke();
-                Debug.Log("🗣️ Speech started");
+                OnSpeechStarted();
             }
         }
         else
@@ -307,10 +382,7 @@ public class MicrophoneController : MonoBehaviour
 
                 if (silenceFrameCount >= silenceFramesRequired)
                 {
-                    isSpeaking = false;
-                    silenceFrameCount = 0;
-                    _speechStopped?.Invoke();
-                    Debug.Log("🤐 Speech stopped");
+                    OnSpeechStopped();
                 }
             }
             else
@@ -319,6 +391,10 @@ public class MicrophoneController : MonoBehaviour
             }
         }
     }
+
+    #endregion
+
+    #region Unity Lifecycle
 
     protected virtual void Update()
     {
@@ -338,4 +414,6 @@ public class MicrophoneController : MonoBehaviour
     {
         StopRecording();
     }
+
+    #endregion
 }

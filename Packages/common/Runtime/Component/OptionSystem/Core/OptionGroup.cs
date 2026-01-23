@@ -49,7 +49,7 @@ namespace Yu5h1Lib
         }
 
         public override string GetValue() => "";
-        public override void SetValue(string value) { }
+        public override void SetValue(string value,System.StringComparison c) { }
 
         
     } 

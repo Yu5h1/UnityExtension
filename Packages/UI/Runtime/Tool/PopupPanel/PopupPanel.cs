@@ -1,6 +1,8 @@
 using System.Collections;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Yu5h1Lib.UI
@@ -8,24 +10,26 @@ namespace Yu5h1Lib.UI
     [DisallowMultipleComponent,RequireComponent(typeof(CanvasGroup))]
     public class PopupPanel : SingletonBehaviour<PopupPanel>
     {
-        public static string tipComponentPath => "Text Area/tip";
         #region Nested Structures
         public interface ILogic
         {
+            string message { get; }
             InputFieldSetting[] settings { get; }
             bool showButtons { get; }
             IEnumerator waitResult { get; set; }
             IEnumerator BuildRoutine();
             Result GetResult(object sender);
-            void Init(InputFieldAdapter input, int index);
+            void Init(PopupPanel panel,InputFieldAdapter input, int index);
             void Report(Result result);
             public void Close(bool canceled);
         }
         [System.Serializable]
         public class Logic : ILogic
         {
+            [SerializeField] private string _message;
+            public string message { get => _message; private set => _message = value; }
             [SerializeField] private InputFieldSetting[] _inputFieldAdapterSettings;
-            [SerializeField] private OutcomeEvent<string> _reported;
+            [SerializeField] private BinaryEvent<string> _reported;
 
             public InputFieldSetting[] settings => _inputFieldAdapterSettings;
             [SerializeField] private bool _showButtons;
@@ -38,19 +42,17 @@ namespace Yu5h1Lib.UI
             public void Report(Result result)
                => _reported?.Invoke(result ?? false, result == null ? "The result is a null value" : result.Content);
 
-            public virtual void Init(InputFieldAdapter input, int index)
+            public virtual void Init(PopupPanel panel, InputFieldAdapter input, int index)
             {
-      
                 input.gameObject.SetActive(true);
                 input.text = "";
                 input.placeholder = settings[index].placeHolder;
                 input.characterLimit = settings[index].characterLimit;
                 input.showPasswordMaskToggle = settings[index].usePasswordMask;
                 input.MaskPassword = settings[index].usePasswordMask;
-                if (input.transform.TryFind(tipComponentPath, out Transform c))
-                    c.gameObject.SetActive(false);
+                if (input.TryGetTipComponent(out TextAdapter tip))
+                    tip.text = "";
                 settings[index].init?.Invoke(input);
-
             }
 
             public void Close(bool canceled)
@@ -71,8 +73,10 @@ namespace Yu5h1Lib.UI
         //}
         public abstract class LogicObject : ScriptableObject , ILogic
         {
+            [SerializeField] private string _message;
+            public string message { get => _message; private set => _message = value; }
             [SerializeField] private InputFieldSetting[] _inputFieldAdapterSettings;
-            [SerializeField] private OutcomeEvent<string> _reported;
+            [SerializeField] private BinaryEvent<string> _reported;
 
             public virtual InputFieldSetting[] settings => _inputFieldAdapterSettings;
             [SerializeField] private bool _showButtons;
@@ -86,19 +90,18 @@ namespace Yu5h1Lib.UI
                => _reported?.Invoke(result ?? false, result == null ? "The result is a null value" : result.Content);
 
 
-            public virtual void Init(InputFieldAdapter input,int index)
+            public virtual void Init(PopupPanel panel,InputFieldAdapter input,int index)
             {
-       
                 input.gameObject.SetActive(true);
                 input.text = "";
                 input.placeholder = settings[index].placeHolder;
                 input.characterLimit = settings[index].characterLimit;
                 input.showPasswordMaskToggle = settings[index].usePasswordMask;
                 input.MaskPassword = settings[index].usePasswordMask;
-                if (input.transform.TryFind(tipComponentPath, out Transform c))
-                    c.gameObject.SetActive(false);
-                settings[index].init?.Invoke(input);
-
+                if (input.TryGetTipComponent(out TextAdapter tip))
+                    tip.text = "";
+                settings[index].init?.Invoke(input);      
+                
             }
 
             public void Close(bool canceled) {}
@@ -112,22 +115,33 @@ namespace Yu5h1Lib.UI
 
         }
         #endregion
-        [SerializeField] private CanvasGroup canvasGroup;
-        [SerializeField] private InputFieldAdapter[] _fields;
+
+        #region Fields
+
+        [SerializeField] private InputFieldAdapter[] _fields; 
+        [SerializeField] private string[] ignoredMessages;
+        #endregion
         public InputFieldAdapter[] fields { get => _fields; private set => _fields = value; }
 
         public ILogic rule { get; private set; }
         public InputFieldSetting[] settings => rule == null ? null : rule.settings;
 
-        public Selectable[] buttons;
+        public Button confirmButton;
+        public Button cancelButton;
 
-        [SerializeField] private TaskEvent<string> _taskEvent;
+        [FormerlySerializedAs("_taskEvent")]
+        [SerializeField] private TaskEvent<string> _callbacks;
 
         public Result result { get; private set; }
 
-        public Image bg;
-        public Transform controlsRoot;
-        public TextAdapter messageText;
+        [SerializeField] private CanvasGroup canvasGroup;
+        [SerializeField] private Image frameBackground;
+        [SerializeField] private Transform fieldsRoot;
+        [SerializeField] private Transform buttonsRoot;
+        [SerializeField] private Transform messageRoot;
+        [SerializeField] private TextAdapter messageText;
+
+        public Transform[] groups => new Transform[] { frameBackground.transform, fieldsRoot, buttonsRoot, messageRoot };
 
 
         public bool visible 
@@ -156,8 +170,11 @@ namespace Yu5h1Lib.UI
 
         Coroutine WaitResultRoutine;
 
+        #region caches
         public ResultHandler Validator;
-        System.Func<IEnumerator> BuildWaitResult;
+        private System.Func<IEnumerator> BuildWaitResult;
+        private InputFieldAdapter verifedInputField;
+        #endregion
 
         protected override void OnInstantiated() {}
         protected override void OnInitializing()
@@ -183,11 +200,16 @@ namespace Yu5h1Lib.UI
                     }
                 };
             }
+            visible = false;
         }
 
         private void Start()
         {
+            
             TryGetComponent(out canvasGroup);
+
+            confirmButton.onClick.AddListener(Verify);
+            cancelButton.onClick.AddListener(Hide);
             
         }
 
@@ -197,54 +219,82 @@ namespace Yu5h1Lib.UI
         {
             if (inputField.characterLimit > 0 && inputField.text.Length != inputField.characterLimit)
                 return;
+            verifedInputField = inputField;
             Verify();
         }
 
-        IEnumerator BuildWaitResultRoutine(){
-            _taskEvent.Begin("");
+        IEnumerator BuildWaitResultRoutine()
+        {
+            if (BuildWaitResult == null)
+            {
+                "No fields need to be verified.".printWarning();
+                Hide();
+                yield break;
+            }
+            _callbacks.Begin("");
             yield return BuildWaitResult();
-            _taskEvent.End("");
+            _callbacks.End("");
             result = Validator?.Invoke(this);
             yield return null;
             rule.Report(result);
-            _taskEvent.Report(result, result.Content);
+            _callbacks.Invoke(result, result.Content);
+            if (result)
+                Hide();
+            else if (verifedInputField != null && verifedInputField.TryGetTipComponent(out TextAdapter tip))
+                tip.text = result.Content;
+
+#if UNITY_EDITOR
+            $"{result} {result.Content}".print();
+#endif
+            verifedInputField = null;
         }
 
         public void Show(LogicObject logic) => Show((ILogic)logic);
 
-        public void Show(ILogic Ilogic)
+        public void Show(ILogic logic)
         {
-            controlsRoot.gameObject.SetActive(true);
-            messageText.transform.parent.gameObject.SetActive(false);
-            if ("Faild to Show Popup with null Ilogic".printWarningIf(Ilogic == null))
+            Prepare(logic.settings.Length > 0 ? fieldsRoot : null, frameBackground.transform, logic.showButtons ? buttonsRoot : null
+                , logic.message.IsEmpty() ? null : messageRoot);
+
+
+            if (messageText != null)
+                messageText.text = logic.message;
+
+
+            if ("Faild to Show Popup with null Ilogic".printWarningIf(logic == null))
                 return;
             if (!isActiveAndEnabled)
                 gameObject.SetActive(true);
-            rule = Ilogic;
+            rule = logic;
             for (int i = 0; i < Mathf.Min(fields.Length, settings.Length); i++)
-                rule.Init(fields[i], i);
+                rule.Init(this,fields[i], i);
             for (int i = settings.Length; i < fields.Length; i++)
                 fields[i].gameObject.SetActive(false);
-            foreach (var btn in buttons) btn.gameObject.SetActive(Ilogic.showButtons);
-            BuildWaitResult = Ilogic.BuildRoutine;
-            Validator = Ilogic.GetResult;
+            
+            BuildWaitResult = logic.BuildRoutine;
+            Validator = logic.GetResult;
             visible = true;
         }
         public void Show(string message)
         {
-            controlsRoot.gameObject.SetActive(false);
-            messageText.transform.parent.gameObject.SetActive(true);
+            if (ignoredMessages.Any( m => !m.IsEmpty() && message.Contains(m)))
+                return;
+            Prepare(messageRoot,frameBackground.transform);
             messageText.text = message;
             if (!isActiveAndEnabled)
                 gameObject.SetActive(true);
             visible = true;
         }
-        public bool Hide()
+        public void Hide()
         {
             if (!visible)
-                return false;
+                return;
             visible = false;
-            return true;
+        }
+        private void Prepare(params Transform[] ignores)
+        {
+            foreach (var g in groups)
+                g.gameObject.SetActive(ignores.Contains(g));
         }
         private void OnDisable()
         {
@@ -255,6 +305,9 @@ namespace Yu5h1Lib.UI
                 StopCoroutine(WaitResultRoutine);
             
         }
-        
+        [ContextMenu(nameof(Test))]
+        public void Test()
+            => Show("This is a test message.");
+
     }
 }

@@ -23,8 +23,5 @@ public abstract class GameObjectWithComponentOption<T> : GameObjectOption where 
         _ComponentChanged?.Invoke(_Component);
         OnComponentChanged(_Component);
     }
-    protected virtual void OnComponentChanged(T current)
-    {
-
-    }
+    protected virtual void OnComponentChanged(T current) {}
 }

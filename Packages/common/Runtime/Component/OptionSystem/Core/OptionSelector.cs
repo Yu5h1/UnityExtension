@@ -35,7 +35,7 @@ namespace Yu5h1Lib
 
                 optionSet.Select(value);
                 _selectionChanged?.Invoke(value);
-                if (binding is IBindable bindable)
+                if (binding is IValuePort bindable)
                     bindable.SetValue(optionSet.GetValue());
             }
         }

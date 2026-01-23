@@ -5,18 +5,16 @@ using UnityEngine;
 
 namespace Yu5h1Lib
 {
-	public abstract class InlineParamterObject : ScriptableObject { }
+	public abstract class ParamterObject : ScriptableObject { }
 
-    public abstract class InlineParamterObject<T> : InlineParamterObject
+    public abstract class ParamterObject<T> : ParamterObject
     { 
          public T value;
     }
 
-    public abstract class InlineArrayObject : InlineParamterObject {
+    public abstract class ArrayObject : ParamterObject {}
 
-
-    }
-    public abstract class InlineArrayObject<T> : InlineArrayObject
+    public abstract class ArrayObject<T> : ArrayObject
     {
         [Dropdown("")]
         public T[] value;
@@ -25,8 +23,8 @@ namespace Yu5h1Lib
 
         public T GetRandomElement(params T[] excludeElements) => value.RandomElement(excludeElements);
     }
-    public static class InlineArrayObjectUtility {
-        public static InlineArrayObject<TValue> ToArrayObject<TValue>(this IList<TValue> list)
+    public static class ArrayObjectUtility {
+        public static ArrayObject<TValue> ToArrayObject<TValue>(this IList<TValue> list)
         {
             Type arrayObjectType = null;
 
@@ -38,7 +36,7 @@ namespace Yu5h1Lib
                 return null;
 
 
-            var instance = (InlineArrayObject<TValue>)ScriptableObject.CreateInstance(arrayObjectType);
+            var instance = (ArrayObject<TValue>)ScriptableObject.CreateInstance(arrayObjectType);
             instance.value = (TValue[])Array.CreateInstance(typeof(TValue), list.Count);
             list.CopyTo(instance.value, 0);
 

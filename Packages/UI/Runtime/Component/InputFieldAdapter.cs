@@ -9,7 +9,7 @@ using Yu5h1Lib.WebSupport;
 
 namespace Yu5h1Lib.UI
 {
-    public class InputFieldAdapter : SelectableAdapter<IInputFieldOps>, IInputFieldOps,IBindable
+    public class InputFieldAdapter : SelectableAdapter<IInputFieldOps>, IInputFieldOps,IValuePort
         , IScrollHandler
     {
         [SerializeField] private Toggle _PasswordMaskToggle;
@@ -80,7 +80,7 @@ namespace Yu5h1Lib.UI
         public void SetValue(string value) => text = value;
         public void SetValue(Object bindable)
         {
-            if (bindable is IBindable Ibindable)
+            if (bindable is IValuePort Ibindable)
                 SetValue(Ibindable.GetValue());
         }
         #endregion
@@ -245,7 +245,11 @@ namespace Yu5h1Lib.UI
         {
             if (textComponent == null)
                 return;
-            InvokeAfterFrames(CheckLineCount,1);
+
+            if (isActiveAndEnabled)
+                InvokeAfterFrames(CheckLineCount, 1);
+            else
+                CheckLineCount();
         }
         public void CheckLineCount()
         {
@@ -354,5 +358,14 @@ namespace Yu5h1Lib.UI
 
         //    Input.imeCompositionMode = IMECompositionMode.;
         //}
+
+        public bool TryGetTipComponent(out TextAdapter tip)
+        {
+            tip = null;
+            if (transform.TryFind("Text Area/tip", out Transform t))
+                return t.TryGetComponent(out tip);
+            return false;
+        }
+
     }
 }

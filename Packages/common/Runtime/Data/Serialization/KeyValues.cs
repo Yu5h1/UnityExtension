@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Serialization;
 using ArgumentNullException = System.ArgumentNullException;
 
 namespace Yu5h1Lib.Serialization
@@ -10,7 +9,7 @@ namespace Yu5h1Lib.Serialization
     [System.Serializable]
     public class KeyValues<TKey, TValue> : IDictionary<TKey, TValue>, ISerializationCallbackReceiver
     {
-        [SerializeField, HorizontalScope]
+        [SerializeField]
         private List<KeyValue<TKey, TValue>> _entries = new List<KeyValue<TKey, TValue>>();
 
         public IReadOnlyList<KeyValue<TKey, TValue>> Entries => _entries.AsReadOnly();
@@ -54,7 +53,6 @@ namespace Yu5h1Lib.Serialization
         public ICollection<TValue> Values => _entries.Select(entry => entry.Value).ToList();
         public int Count => _entries.Count;
         public bool IsReadOnly => false;
-
 
         public KeyValues()
         {
@@ -235,14 +233,80 @@ namespace Yu5h1Lib.Serialization
 
         #region Unity Serialization
 
-        public void OnBeforeSerialize()
-        {
-            // List 已經是序列化狀態，不需要額外操作
-        }
+        public void OnBeforeSerialize() { }
 
         public void OnAfterDeserialize()
         {
-            // 檢查並移除重複的 key（防止手動編輯 Inspector 造成的問題）
+            // 只移除 null key（reference type 時）
+            // 不移除重複項，讓使用者在 Inspector 中看到警告並手動修正
+            if (typeof(TKey).IsClass)
+            {
+                _entries.RemoveAll(e => e.Key == null);
+            }
+        }
+
+        #endregion
+
+        #region Validation & Utility Methods
+
+        /// <summary>
+        /// 檢查是否有重複的 key
+        /// </summary>
+        public bool HasDuplicateKeys
+        {
+            get
+            {
+                var seen = new HashSet<TKey>();
+                foreach (var entry in _entries)
+                {
+                    if (entry.Key != null && !seen.Add(entry.Key))
+                        return true;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 取得重複的 key 列表
+        /// </summary>
+        public List<TKey> GetDuplicateKeys()
+        {
+            var seen = new HashSet<TKey>();
+            var duplicates = new List<TKey>();
+
+            foreach (var entry in _entries)
+            {
+                if (entry.Key != null && !seen.Add(entry.Key) && !duplicates.Contains(entry.Key))
+                {
+                    duplicates.Add(entry.Key);
+                }
+            }
+            return duplicates;
+        }
+
+        /// <summary>
+        /// 檢查指定索引的 key 是否重複
+        /// </summary>
+        public bool IsKeyDuplicateAt(int index)
+        {
+            if (index < 0 || index >= _entries.Count) return false;
+
+            var targetKey = _entries[index].Key;
+            if (targetKey == null) return false;
+
+            for (int i = 0; i < _entries.Count; i++)
+            {
+                if (i != index && EqualityComparer<TKey>.Default.Equals(_entries[i].Key, targetKey))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 移除重複的 key（保留第一個）
+        /// </summary>
+        public void RemoveDuplicates()
+        {
             var uniqueEntries = new List<KeyValue<TKey, TValue>>();
             var seenKeys = new HashSet<TKey>();
 
@@ -253,17 +317,8 @@ namespace Yu5h1Lib.Serialization
                     uniqueEntries.Add(entry);
                 }
             }
-
-            if (uniqueEntries.Count != _entries.Count)
-            {
-                _entries = uniqueEntries;
-                Debug.LogWarning("KeyValues: Duplicate keys found and removed during deserialization.");
-            }
+            _entries = uniqueEntries;
         }
-
-        #endregion
-
-        #region Additional Utility Methods
 
         /// <summary>
         /// 嘗試添加鍵值對，如果 key 已存在則不添加
@@ -294,6 +349,7 @@ namespace Yu5h1Lib.Serialization
                 _entries.Add(new KeyValue<TKey, TValue>(entry.Key, entry.Value));
             }
         }
+
         public void CopyFrom(IEnumerable<KeyValue<TKey, TValue>> other)
         {
             if (other == null) return;
@@ -301,6 +357,7 @@ namespace Yu5h1Lib.Serialization
             foreach (var kvp in other)
                 this[kvp.Key] = kvp.Value;
         }
+
         /// <summary>
         /// 安全的獲取值方法，如果 key 不存在返回默認值
         /// </summary>
@@ -309,9 +366,25 @@ namespace Yu5h1Lib.Serialization
             return TryGetValue(key, out TValue value) ? value : defaultValue;
         }
 
-        #endregion
+        /// <summary>
+        /// 轉換為標準 Dictionary（自動過濾重複，保留第一個）
+        /// </summary>
+        public Dictionary<TKey, TValue> ToDictionary()
+        {
+            var dict = new Dictionary<TKey, TValue>();
+            foreach (var entry in _entries)
+            {
+                if (entry.Key != null && !dict.ContainsKey(entry.Key))
+                {
+                    dict[entry.Key] = entry.Value;
+                }
+            }
+            return dict;
+        }
 
+        #endregion
     }
+
     [System.Serializable]
     public class KeyValue<TKey, TValue>
     {
@@ -321,18 +394,26 @@ namespace Yu5h1Lib.Serialization
         public TKey Key => key;
         public TValue Value => value;
 
+        // Unity 序列化需要無參數建構子
+        public KeyValue() { }
+
         public KeyValue(TKey key, TValue value)
         {
             this.key = key;
             this.value = value;
         }
+
+        public void SetKey(TKey newKey) => key = newKey;
+        public void SetValue(TValue newValue) => value = newValue;
+
         public void CopyFrom(KeyValue<TKey, TValue> other)
         {
             key = other.key;
             value = other.value;
         }
-        public void SetValue(TValue newValue) => value = newValue;
+
         public override string ToString() => $"{{\"{key}\", {value}}}";
+
         public override bool Equals(object obj)
         {
             if (obj is KeyValue<TKey, TValue> other)
@@ -344,5 +425,5 @@ namespace Yu5h1Lib.Serialization
         }
 
         public override int GetHashCode() => System.HashCode.Combine(key, value);
-    } 
+    }
 }

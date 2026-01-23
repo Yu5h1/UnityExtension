@@ -2,5 +2,5 @@ using UnityEngine;
 
 namespace Yu5h1Lib
 {
-	public class Vector2Object : InlineParamterObject<Vector2> { } 
+	public class Vector2Object : ParamterObject<Vector2> { } 
 }

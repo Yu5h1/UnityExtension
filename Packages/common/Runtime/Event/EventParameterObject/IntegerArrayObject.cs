@@ -1,5 +1,5 @@
 
 namespace Yu5h1Lib
 {
-	public class IntegerArrayObject : InlineArrayObject<int> {}
+	public class IntegerArrayObject : ArrayObject<int> {}
 }

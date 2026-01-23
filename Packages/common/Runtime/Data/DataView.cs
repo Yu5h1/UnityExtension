@@ -12,23 +12,23 @@ namespace Yu5h1Lib.Serialization
         public DataView(IDictionary<string, string> source) : base(source) { }
         public DataView(IEnumerable<KeyValuePair<string, string>> source) : base(source) { }
  
-        public override bool TryGetProperty(Object obj)
-        {
-            if (!(obj is IBindable binding))
+        public override bool TrySetProperty(Object obj)
+        {      
+            if (!(obj is IValuePort port))
             {
                 $"{obj} is unbindable".printWarning();
                 return false;
             }
-            var fieldName = binding.GetFieldName();
+            var fieldName = port.GetFieldName();
             if ($"Field name with [{fieldName}] does not exist.\n{ToString()}".printWarningIf(!ContainsKey(fieldName)))
                 return false;
-            binding.SetValue(this[fieldName]);
+            port.SetValue(this[fieldName]);
             return true;
         }
 
-        public override bool TrySetProperty(Object bindable)
+        public override bool TryLoadProperty(Object bindable)
         {
-            if (!(bindable is IBindable binding))
+            if (!(bindable is IValuePort binding))
             {
                 $"{bindable} is unbindable".printWarning();
                 return false;
@@ -90,10 +90,10 @@ namespace Yu5h1Lib.Serialization
     [System.Serializable]
     public abstract class DataView<TKey, TValue> : KeyValues<TKey, TValue>
     {
-        public abstract bool TryGetProperty(Object bindable);
         public abstract bool TrySetProperty(Object bindable);
-        public void GetProperty(Object bindable) => TryGetProperty(bindable);
-        public void SetProperty(Object bindable) => TrySetProperty(bindable);
+        public abstract bool TryLoadProperty(Object bindable);
+        public void GetProperty(Object bindable) => TrySetProperty(bindable);
+        public void SetProperty(Object bindable) => TryLoadProperty(bindable);
 
         public DataView() : base() { }
         public DataView(IDictionary<TKey, TValue> source) : base(source) { }

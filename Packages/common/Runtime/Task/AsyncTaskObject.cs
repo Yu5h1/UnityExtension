@@ -25,8 +25,8 @@ namespace Yu5h1Lib
             add => _end.AddListener(value);
             remove => _end.RemoveListener(value);
         }
-        [SerializeField] private OutcomeEvent _resultRecived;
-        public OutcomeEvent resultRecivedCallBack => _resultRecived;
+        [SerializeField] private BinaryEvent _resultRecived;
+        public BinaryEvent resultRecivedCallBack => _resultRecived;
 
         public virtual void Init() { }
         protected abstract IEnumerator Processing();

@@ -1,63 +1,84 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
-using Yu5h1Lib;
+using UnityEngine.Events;
 
-/// <summary>
-/// Helper to execute actions on Unity's main thread
-/// WebSocket callbacks run on background threads, need this for Unity API calls
-/// </summary>
-public class MainThreadDispatcher : MonoBehaviour
+
+namespace Yu5h1Lib
 {
-    private static MainThreadDispatcher instance;
-    private readonly Queue<Action> executionQueue = new Queue<Action>();
-    private static readonly object lockObject = new object();
-
-    private static MainThreadDispatcher GetInstance()
+    /// <summary>
+    /// Helper to execute actions on Unity's main thread
+    /// WebSocket callbacks run on background threads, need this for Unity API calls
+    /// </summary>
+    public class MainThreadDispatcher : MonoBehaviour
     {
-        if (instance != null)
-            return instance;
-        var go = new GameObject("MainThreadDispatcher");
-        instance = go.AddComponent<MainThreadDispatcher>();
-        DontDestroyOnLoad(go);
-        Debug.Log("✅ MainThreadDispatcher initialized");
-        return instance;
-    }
+        private static MainThreadDispatcher instance;
+        private readonly Queue<Action> executionQueue = new Queue<Action>();
+        private static readonly object lockObject = new object();
 
-    public static MainThreadDispatcher Instance => GetInstance();
-   
-    void Update()
-    {
-        lock (lockObject)
+        private static MainThreadDispatcher GetInstance()
         {
-            while (executionQueue.Count > 0)
+            if (instance != null)
+                return instance;
+            var go = new GameObject("MainThreadDispatcher");
+            instance = go.AddComponent<MainThreadDispatcher>();
+            DontDestroyOnLoad(go);
+            Debug.Log("✅ MainThreadDispatcher initialized");
+            return instance;
+        }
+
+        public static MainThreadDispatcher Instance => GetInstance();
+
+        void Update()
+        {
+            lock (lockObject)
             {
-                try
+                while (executionQueue.Count > 0)
                 {
-                    executionQueue.Dequeue()?.Invoke();
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"❌ MainThreadDispatcher error: {ex.Message}");
+                    try
+                    {
+                        executionQueue.Dequeue()?.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"❌ MainThreadDispatcher error: {ex.Message}");
+                    }
                 }
             }
         }
-    }
 
-    public static void Enqueue(Action action)
-    {
-        lock (lockObject)
+        public static void Enqueue(Action action)
         {
-            instance.executionQueue.Enqueue(action);
+            lock (lockObject)
+            {
+                instance.executionQueue.Enqueue(action);
+            }
+        }
+
+        void OnDestroy()
+        {
+            if (instance == this)
+            {
+                instance = null;
+            }
         }
     }
-
-    void OnDestroy()
+    [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+    public static class MainThreadDispatcherExtensions
     {
-        if (instance == this)
-        {
-            instance = null;
-        }
+        public static void InvokeOnMainThread(this UnityEvent e)
+            => MainThreadDispatcher.Enqueue(e.Invoke);
+
+        public static void InvokeOnMainThread<T>(this UnityEvent<T> e, T arg)
+            => MainThreadDispatcher.Enqueue(() => e.Invoke(arg));
+
+        public static void InvokeOnMainThread<T1, T2>(this UnityEvent<T1, T2> e, T1 arg1, T2 arg2)
+            => MainThreadDispatcher.Enqueue(() => e.Invoke(arg1, arg2));
+
+        public static void StartCoroutineOnMainThread(this MonoBehaviour mb, System.Collections.IEnumerator coroutine)
+            => MainThreadDispatcher.Enqueue(() => mb.StartCoroutine(coroutine));
+        public static void StopCoroutineOnMainThread(this MonoBehaviour mb, Coroutine coroutine)
+            => MainThreadDispatcher.Enqueue(() => mb.StopCoroutine(coroutine));
     }
 }

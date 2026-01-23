@@ -7,7 +7,7 @@ using UnityEngine.Events;
 namespace Yu5h1Lib
 {
     [System.Serializable]
-    public class LifeCycleEvent : RouteBase
+    public class LifeCycleEvent : EventContainer
     {
         public UnityEvent begin;
         public UnityEvent end;
@@ -15,7 +15,7 @@ namespace Yu5h1Lib
         public void End() => end?.Invoke();
     }
     [System.Serializable]
-    public class LifeCycleEvent<T> : RouteBase
+    public class LifeCycleEvent<T> : EventContainer
     {
         public UnityEvent<T> begin;
         public UnityEvent<T> end;
@@ -23,7 +23,7 @@ namespace Yu5h1Lib
         public void End(T arg) => end?.Invoke(arg);
     }
 
-    public class LifeCycleAction<T> : RouteBase
+    public class LifeCycleAction<T> : EventContainer
     {
         public UnityAction<T> begin;
         public UnityAction<T> end;

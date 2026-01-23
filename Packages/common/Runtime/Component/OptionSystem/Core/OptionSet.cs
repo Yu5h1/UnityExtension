@@ -4,14 +4,15 @@ using UnityEngine.Events;
 
 namespace Yu5h1Lib
 {
-    public abstract class OptionSet : Bindable, IBindable
+    public abstract class OptionSet : ValuePort, IValuePort
     {
+
         [SerializeField] protected OptionSelector selector;
         public abstract int Count { get; }
         public abstract void Select(int index);
         public abstract string GetItemName(int index);
     }
-    public abstract class OptionSet<T> : OptionSet , IBindable
+    public abstract class OptionSet<T> : OptionSet , IValuePort
     {
         public T current
         { 
@@ -60,16 +61,17 @@ namespace Yu5h1Lib
         }
 
         public override string GetValue() => ToString(current);
-        public override void SetValue(string value) 
+
+        public override void SetValue(string value,System.StringComparison comparison)
         {
             if (value.IsEmpty())
                 return;
-            int index = Items.FindIndex(item => ToString(item) == value);
+            int index = Items.FindIndex(item => ToString(item).Equals(value, comparison));
             if (index >= 0)
                 selector.current = index;
             else
                 Debug.LogWarning($"Value '{value}' not found in option set.");
-        }
+        }       
         public override string GetItemName(int index) => ToString(Items[index]);
     } 
 }

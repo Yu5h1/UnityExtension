@@ -49,5 +49,6 @@ public class SelectionMonitor : SingletonBehaviour<SelectionMonitor>
     }
     public void SetSelection(GameObject gobj) => EventSystem.current?.SetSelectedGameObject(gobj);
 
+    public void ClearSelection() => EventSystem.current?.SetSelectedGameObject(null);
 
 }

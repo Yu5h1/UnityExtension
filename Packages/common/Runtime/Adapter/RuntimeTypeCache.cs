@@ -21,7 +21,7 @@ namespace Yu5h1Lib
         private static Dictionary<Type, List<Type>> BuildCache()
         {
             var cache = new Dictionary<Type, List<Type>>();
-
+            
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 var name = assembly.FullName;

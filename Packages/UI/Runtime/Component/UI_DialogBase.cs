@@ -41,10 +41,12 @@ namespace Yu5h1Lib.UI
 
         public float Delay;
         public float Speed = 0.05f;
+        public bool dynamicSpeed = false;
         public int StepIndex { get; private set; }
-        public bool IsPlaying { get; private set; }
-        public bool GetIsPlaying() => IsPlaying;
-        public bool NothingToSay => StepIndex >= lines.Length - 1 && !IsPlaying;
+        public bool isPlaying { get; private set; }
+        public bool isInterrupted { get; private set; }
+        public bool GetIsPlaying() => isPlaying;
+        public bool NothingToSay => StepIndex >= lines.Length - 1 && !isPlaying;
         public bool PerformOnEnable = true;
 
 
@@ -54,6 +56,13 @@ namespace Yu5h1Lib.UI
         {
             add => _Skiped.AddListener(value);
             remove => _Skiped.RemoveListener(value);
+        }
+        [SerializeField]
+        private UnityEvent _Interrupted;
+        public event UnityAction Interrupted
+        {
+            add => _Interrupted.AddListener(value);
+            remove => _Interrupted.RemoveListener(value);
         }
         [SerializeField]
         private UnityEvent _DialogOver;
@@ -148,6 +157,8 @@ namespace Yu5h1Lib.UI
         public IEnumerator BuildPerformRoutine(string text, bool append , float delay = 0, float speed = 0.05f,
             Style style = Style.Verbatim)
         {
+            isInterrupted = false;
+
             if (delay > 0)
                 yield return new WaitForSeconds(delay);
             if (speed == 0 || string.IsNullOrEmpty(text))
@@ -155,7 +166,7 @@ namespace Yu5h1Lib.UI
                 Content = text;
                 yield break;
             }
-            IsPlaying = true;
+            isPlaying = true;
             
             Content = (append ? $"{Content}\n" : "") + (speed > 0 ? "" : text);
             
@@ -171,16 +182,27 @@ namespace Yu5h1Lib.UI
                         for (int i = 0; i < text.Length; i++)
                         {
                             var letter = text[i];
-                            if (!IsPlaying)
+                            if (!isPlaying)
                             {
-                                Content = text;
-                                _Skiped?.Invoke();
+                                if (isInterrupted)
+                                {
+                                    Content += "...";
+                                    _Interrupted?.Invoke();
+                                }
+                                else
+                                {
+                                    Content = (append ? $"{Content}\n" : "") + text;
+                                    _Skiped?.Invoke();
+                                }
                                 _PerformCompleted?.Invoke();
                                 yield break;
                             }
                             Content += letter;
 
                             _PerformBegin?.Invoke();
+                            if (dynamicSpeed)
+                                timer.duration = Speed;
+
                             timer.Start();
                             yield return waiter;
                         }
@@ -201,7 +223,7 @@ namespace Yu5h1Lib.UI
             }
 
             _PerformCompleted?.Invoke();
-            IsPlaying = false;
+            isPlaying = false;
         }
         public void PerformThinking()
         {
@@ -237,11 +259,18 @@ namespace Yu5h1Lib.UI
         {
             if (!gameObject.activeSelf)
                 return;
-            if (IsPlaying)
-                IsPlaying = false;
+            if (isPlaying)
+                isPlaying = false;
             else if (!Next())
                 _DialogOver?.Invoke();
         }
+
+        public void Interrupt()
+        {
+            isInterrupted = true;
+            isPlaying = false;
+        }
+
         public void RefreshLayout(VerticalLayoutGroup verticalLayoutGroup)
         {
 

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Yu5h1Lib;
 
-public class StringOption : OptionSet<string>, IBindable
-{    
+public class StringOption : OptionSet<string>, IValuePort
+{
     public OptionSet overrideSet;
 
     [SerializeField,ReadOnly] List<string> _overrideItems;
@@ -27,5 +27,5 @@ public class StringOption : OptionSet<string>, IBindable
     } 
 
     public override string GetValue() => overrideSet == null ? current : overrideSet.GetItemName(selector.current);
-    public override void SetValue(string value) => selector.current = Items.IndexOf(value);
+  
 }
