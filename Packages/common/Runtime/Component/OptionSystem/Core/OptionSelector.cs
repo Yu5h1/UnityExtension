@@ -65,11 +65,12 @@ namespace Yu5h1Lib
             }
             return false;
         }
-
+        [ContextMenu(nameof(MoveNext))]
         public void MoveNext()
         {
             current++;
         }
+        [ContextMenu(nameof(MovePrevious))]
         public void MovePrevious()
             => current = (current - 1) < 0 ? Count - 1 : current - 1;
 

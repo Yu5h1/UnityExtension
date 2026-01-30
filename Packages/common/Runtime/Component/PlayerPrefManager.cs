@@ -7,7 +7,7 @@ namespace Yu5h1Lib
 {
 	public class PlayerPrefManager : SingletonBehaviour<PlayerPrefManager>
     {
-		[SerializeField,ShowDetail] private List<PlayerPrefBoolObject> bools;
+		[SerializeField, Inline] private List<PlayerPrefBoolObject> bools;
 
         protected override void OnInstantiated() {}
         protected override void OnInitializing() {}

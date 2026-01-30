@@ -1,10 +1,7 @@
 using System.ComponentModel;
-using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-using Yu5h1Lib.Runtime;
+using Yu5h1Lib;
 
-namespace Yu5h1Lib.UI
+namespace UnityEngine.UI
 {
     [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
     public static class RectTransformEx

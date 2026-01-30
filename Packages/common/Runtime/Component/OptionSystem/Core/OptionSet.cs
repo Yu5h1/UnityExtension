@@ -25,8 +25,8 @@ namespace Yu5h1Lib
                 if (Items.IsValid(index))
                     selector.current = index;
             }
-        } 
-        [SerializeField] protected List<T> _Items;
+        }
+        [SerializeField, Inline] protected List<T> _Items;
         public virtual List<T> Items { get => _Items; protected set => _Items = value; }
 
         [SerializeField] private UnityEvent<T> _OptionChanged;

@@ -8,7 +8,7 @@ namespace Yu5h1Lib.Behaviours
     [MovedFrom("TimerBehaviour")]
 	public class Timer : MonoBehaviour
 	{
-        [SerializeField] private CoreTimer timer;
+        [SerializeField,AlwaysExpanded] private CoreTimer timer;
 
         [SerializeField] private UnityEvent<CoreTimer> _Repeated = new UnityEvent<CoreTimer>();
         [SerializeField] private UnityEvent<CoreTimer> _FinalRepetition = new UnityEvent<CoreTimer>();

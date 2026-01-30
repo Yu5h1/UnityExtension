@@ -5,14 +5,16 @@ using UnityEngine;
 
 namespace Yu5h1Lib
 {
-	public abstract class ParamterObject : ScriptableObject { }
+	public abstract class ParameterObject : ScriptableObject { }
 
-    public abstract class ParamterObject<T> : ParamterObject
+    public abstract class ParamterObject<T> : ParameterObject
     { 
          public T value;
+
+        public static implicit operator T(ParamterObject<T> obj) => obj.value;
     }
 
-    public abstract class ArrayObject : ParamterObject {}
+    public abstract class ArrayObject : ParameterObject {}
 
     public abstract class ArrayObject<T> : ArrayObject
     {

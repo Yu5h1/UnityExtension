@@ -40,8 +40,9 @@ public sealed class AlwaysExpandedDrawer : PropertyDrawer
         // 外層 label
         if (attr.ShowLabel)
         {
+            
             var labelRect = new Rect(position.x, y, width, EditorGUIUtility.singleLineHeight);
-            EditorGUI.LabelField(labelRect, label);
+            EditorGUI.LabelField(labelRect, label, EditorStyles.boldLabel);
             y += EditorGUIUtility.singleLineHeight + attr.LabelSpacing;
         }
 
