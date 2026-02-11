@@ -10,39 +10,22 @@ namespace Yu5h1Lib
     [Serializable]
     public class GenericComponentPreset : ComponentPreset<Component>
     {
-        
+        [Tooltip("Override the GameObject active state.")]
+        public Optional<bool> activeSelf;
         public SerializedAssembly targetAssembly;
         public SerializedType targetType;
-        public List<PropertyValue> properties;
+        [Inline(true), StringOptionsContext("ComponentProperties")]
+        public List<ParameterObject> properties;
 
         public override void ApplyTo(Component target)
         {
+            if (activeSelf.TryGetValue(out bool active))
+                target.gameObject.SetActive(active);
             if ($"{targetType} is unassigned.".printWarningIf(targetType.type == null) || $"{targetType.type} not matched {target.GetType()}".printWarningIf(!targetType.type.IsInstanceOfType(target)))
                 return;
 
             foreach (var prop in properties)
                 prop.ApplyTo(target);
-        }
-    }
-    [Serializable]
-    public class PropertyValue
-    {
-
-        [AutoFill("ComponentProperties")] public string propertyName;
-        [Inline] public ParameterObject value;
-
-        public void ApplyTo(Component target)
-        {
-            if (value == null || string.IsNullOrEmpty(propertyName)) return;
-
-            var prop = target.GetType().GetProperty(propertyName,
-                BindingFlags.Public | BindingFlags.Instance);
-            if (prop == null || !prop.CanWrite) return;
-
-            var valueField = value.GetType().GetField("value",
-                BindingFlags.Public | BindingFlags.Instance);
-            if (valueField != null && prop.PropertyType.IsAssignableFrom(valueField.FieldType))
-                prop.SetValue(target, valueField.GetValue(value));
         }
     }
 }

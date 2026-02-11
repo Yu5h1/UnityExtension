@@ -12,9 +12,7 @@ namespace Yu5h1Lib
     public abstract class ParameterObject<T> : ParameterObject
     { 
          public T value;
-
         public static implicit operator T(ParameterObject<T> obj) => obj.value;
-
         public override void ApplyTo(Component target)
         {
             if (name.IsEmpty()) return;
@@ -23,28 +21,15 @@ namespace Yu5h1Lib
                 BindingFlags.Public | BindingFlags.Instance);
             if (prop == null || !prop.CanWrite) return;
 
-            var valueField = GetType().GetField("value",
-                BindingFlags.Public | BindingFlags.Instance);
-            if (valueField != null && prop.PropertyType.IsAssignableFrom(valueField.FieldType))
-                prop.SetValue(target, valueField.GetValue(value));
+            if (prop.PropertyType.IsAssignableFrom(typeof(T)))
+                prop.SetValue(target, value);
         }
     }
-
-    public abstract class ArrayObject : ParameterObject {}
-
-    public abstract class ArrayObject<T> : ArrayObject
+    public abstract class ArrayObject<T> : ParameterObject<T[]>
     {
-        [Dropdown("")]
-        public T[] value;
-
+        //[Dropdown("")]
         public T Random() => value.RandomElement();
-
-        public T GetRandomElement(params T[] excludeElements) => value.RandomElement(excludeElements);
-
-        public override void ApplyTo(Component target)
-        {
-            throw new NotImplementedException();
-        }
+        public T GetRandomElement(params T[] excludeElements) => value.RandomElement(excludeElements); 
     }
     public static class ArrayObjectUtility {
         public static ArrayObject<TValue> ToArrayObject<TValue>(this IList<TValue> list)

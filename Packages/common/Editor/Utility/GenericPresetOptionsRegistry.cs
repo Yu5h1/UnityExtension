@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEditor;
+using UnityEngine;
 
 namespace Yu5h1Lib.EditorExtension
 {
@@ -21,9 +22,7 @@ namespace Yu5h1Lib.EditorExtension
                       {
                           var location = a.Location;
                           // Editor 組件通常在 Editor 資料夾或特定路徑
-                          return !location.Contains("/Editor/") &&
-                                 !location.Contains("\\Editor\\") &&
-                                 !location.Contains("UnityEditor");
+                          return !a.FullName.StartsWith("UnityEditor");
                       })
                       .Select(a => a.GetName().Name)
                       .OrderBy(n => n)

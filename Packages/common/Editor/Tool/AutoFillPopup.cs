@@ -246,7 +246,10 @@ namespace Yu5h1Lib.EditorExtension
             EditorGUI.DrawRect(new Rect(rect.x, rect.y, 1, rect.height), color);
             EditorGUI.DrawRect(new Rect(rect.xMax - 1, rect.y, 1, rect.height), color);
         }
-
+        private void OnDisable()
+        {
+            instance = null;
+        }
         private void OnLostFocus()
         {
             Close();
