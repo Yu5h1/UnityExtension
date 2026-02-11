@@ -8,7 +8,7 @@ using Yu5h1Lib;
 [MovedFrom("IntegersManager")]
 public class InlineScriptableObjectManager : SingletonBehaviour<InlineScriptableObjectManager>
 {
-    [DropdownContext("vcp_AnimationList")]
+    [StringOptionsContext("vcp_AnimationList")]
     [SerializeField,Inline] private List<IntegerArrayObject> _integersObjectList;
 
     protected override void OnInitializing()

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Yu5h1Lib.Runtime
+namespace Yu5h1Lib
 {
     public enum FlagsOptionStyle {
         Mix,

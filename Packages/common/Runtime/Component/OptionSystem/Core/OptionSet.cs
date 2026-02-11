@@ -51,7 +51,7 @@ namespace Yu5h1Lib
         public void InvokeOptionChanged() => Select(selector.current);
 
         public virtual string ToString(T item)
-        {
+        {            
             switch (item)
             {
                 case string str: return str;
@@ -64,6 +64,8 @@ namespace Yu5h1Lib
 
         public override void SetValue(string value,System.StringComparison comparison)
         {
+            if ($"Selector is unassigned.".printWarningIf(selector == null))
+                return;
             if (value.IsEmpty())
                 return;
             int index = Items.FindIndex(item => ToString(item).Equals(value, comparison));

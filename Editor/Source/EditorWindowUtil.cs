@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using System.Linq;
 
 namespace Yu5h1Lib.EditorExtension
 {
@@ -15,9 +16,9 @@ namespace Yu5h1Lib.EditorExtension
             $"Type {type.Name} does not exist.".printWarning();
             return null;
         }
-        public static bool TryGetExistsWindow(System.Predicate<EditorWindow> expression, out EditorWindow? window)
+        public static bool TryGetExistsWindow(System.Func<EditorWindow,bool> expression, out EditorWindow? window)
         {
-            window = GetAllEditorWindows().Find(expression);
+            window = GetAllEditorWindows().FirstOrDefault(expression);
             return window != null;
         }
         public static EditorWindow GetExistsWindow(string text,System.Func<EditorWindow,bool> expression)

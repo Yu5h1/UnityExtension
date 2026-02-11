@@ -42,7 +42,7 @@ namespace Yu5h1Lib
                 yield break;
             for (int i = 0; i < frames; i++)
                 yield return null;            
-            action?.Invoke();
+            action.Invoke();
         }
         public void InvokeAfterFrames(UnityAction action, int frame)
             => StartCoroutine(BuildDelayInvoke(action, frame));

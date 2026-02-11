@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using System;
+using System.Reflection;
 
 namespace Yu5h1Lib.EditorExtension
 {
@@ -8,23 +10,28 @@ namespace Yu5h1Lib.EditorExtension
         public static string SelectedAssetPath => Selection.activeObject != null ?
                                                   AssetDatabase.GetAssetPath(Selection.activeObject) : "";
 
-        public static bool IsMonoBehaviourSelected { get { return IsMonoScriptSubclassOf(typeof(MonoBehaviour)); } }
-        public static bool IsMonoScriptSelected
+        public static bool IsSelectedMonoScriptOfType<T>()
+            => TryGetSelectedMonoScript(out var script) && script.GetClass().IsDerivedFrom<T>();
+
+        public static bool TryGetSelectedMonoScript(out MonoScript script)
         {
-            get
+            script = null;
+            if (Selection.activeObject is MonoScript s)
             {
-                return Selection.activeObject != null &&
-                        Selection.activeObject.GetType() == typeof(MonoScript);
+                script = s;
+                return true;
             }
+            return false;
         }
 
-        public static bool IsScriptableObjectScriptSelected { get { return IsMonoScriptSubclassOf(typeof(ScriptableObject)); } }
+
 
         public static System.Type GetSelectedScriptClass
         {
             get
             {
-                if (IsMonoScriptSelected) return ((MonoScript)Selection.activeObject).GetClass();
+                if (TryGetSelectedMonoScript(out MonoScript ms))
+                    return ms.GetClass();
                 return null;
             }
         }
@@ -39,44 +46,51 @@ namespace Yu5h1Lib.EditorExtension
         }
         public static bool IsMonoScriptSubclassOf(System.Type type)
         {
-            if (IsMonoScriptSelected)
-            {
-                var classtype = ((MonoScript)Selection.activeObject).GetClass();
-                if (classtype != null)
-                {
-                    return ((MonoScript)Selection.activeObject).GetClass().IsSubclassOf(type);
-                }
-            }
-            return false;
+            if (!TryGetSelectedMonoScript(out var nonoScript))
+                return false;
+            return nonoScript.IsSubclassOf(type);
         }
+        public static bool IsMonoScriptSubclassOf<T>() => IsMonoScriptSubclassOf(typeof(T));
 
         private static float _lastMenuCallTimestamp = 0f;
         [MenuItem("GameObject/Group", false, 0)]
-        public static void CreateGameObject()
+        public static void CreateGroup()
         {
 
             if (Time.unscaledTime.Equals(_lastMenuCallTimestamp)) return;
             var gobjs = Selection.gameObjects;
-            if (gobjs.Length > 0)
+            if (gobjs.Length == 0)
             {
-                Transform previouseParent = gobjs[0].transform.parent;
-                Undo.SetCurrentGroupName("Create new Group");
-                int group = Undo.GetCurrentGroup();
-                var newGroup = new GameObject("new Group");
-                newGroup.transform.SetParent(previouseParent);
-                Undo.RegisterCreatedObjectUndo(newGroup, "new Group");
-                foreach (var item in gobjs)
-                {
-                    Undo.SetTransformParent(item.transform, newGroup.transform, "set parent");
-                }
-                Undo.CollapseUndoOperations(group);
-                EditorGUIUtility.PingObject(newGroup);
+                Debug.LogWarning("Please Select at least a gameObject");
+                return;
             }
-            else
+            var previousParent = gobjs[0].transform.parent;
+            Undo.SetCurrentGroupName("Create new Group");
+            int group = Undo.GetCurrentGroup();
+            var newGroup = new GameObject("new Group");
+
+            newGroup.transform.SetParent(previousParent);
+            Undo.RegisterCreatedObjectUndo(newGroup, "new Group");
+            foreach (var item in gobjs)
             {
-                Debug.LogWarning("Please Select atleast a gameObject");
+                Undo.SetTransformParent(item.transform, newGroup.transform, "set parent");
             }
+            Undo.CollapseUndoOperations(group);
+
+            EditorGUIUtility.PingObject(newGroup);
+
             _lastMenuCallTimestamp = Time.unscaledTime;
+        }
+
+        [MenuItem("GameObject/Copy Hierarchy Path", false, 0)]
+        public static void CopyGameObjectHierarchyPath(MenuCommand command)
+        {
+            var go = Selection.activeGameObject;
+            if (go == null)
+                return;
+            string path = go.transform.GetHierarchyPath();
+            EditorGUIUtility.systemCopyBuffer = path;
+            Debug.Log("Copied Path: " + path);
         }
     }
 }

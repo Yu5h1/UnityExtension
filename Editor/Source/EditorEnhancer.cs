@@ -186,10 +186,10 @@ namespace Yu5h1Lib.EditorExtension
 
         #region Static
 
-        public static Editor FindInstance(System.Predicate<Editor> predicate)
-            => Resources.FindObjectsOfTypeAll<Editor>().Find(predicate);
+        public static Editor FindInstance(System.Func<Editor,bool> predicate)
+            => Resources.FindObjectsOfTypeAll<Editor>().FirstOrDefault(predicate);
         public static Type FindFromAssembly(string typeName)
-             => Assembly.GetAssembly(typeof(Editor)).GetTypes().Find(t => t.Name == typeName);
+             => Assembly.GetAssembly(typeof(Editor)).GetTypes().FirstOrDefault(t => t.Name == typeName);
         #endregion
 
     }

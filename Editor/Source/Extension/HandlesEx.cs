@@ -34,5 +34,16 @@ namespace Yu5h1Lib.EditorExtension
             }
             return false;
         }
+        public static bool Slider2D(this Vector2 current, out Vector2 newValue, float sizeMultiplier = 0.1f)
+        {
+            newValue = default;
+            if (((Vector3)current).Slider2D(out Vector3 result))
+            {
+                newValue = result;
+                return true;
+            }
+            return false;
+        }
+        
     } 
 }

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System;
 
-namespace Yu5h1Lib.Runtime
+namespace Yu5h1Lib
 {
     [Flags]
     public enum Alignment

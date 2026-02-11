@@ -51,8 +51,9 @@ namespace Yu5h1Lib.EditorExtension
         [MenuItem("Assets/Create/Editor/Inspector", false, 85)]
         private static void CreateInspector()
         {
-            string className = Selection.activeObject.GetType().Name.ToString();
-            if (SelectionEx.IsMonoBehaviourSelected) 
+            var selectedType = Selection.activeObject.GetType();
+            string className = selectedType.Name.ToString();
+            if (selectedType.IsAssignableFrom<MonoScript>()) 
                 className = Selection.activeObject.name;
 
             var templateFileName = className + "Editor.cs";
@@ -143,6 +144,8 @@ public class #SCRIPTNAME# "+baseClass+@"{
         [MenuItem("Assets/Recompile Scripts _F5", false,40)]
         public static void ForceReCompileAssembly()
         {
+            if ("Script recompilation is not allowed during runtime.".printWarningIf(EditorApplication.isPlaying))
+                return;
             var g = EditorUserBuildSettings.selectedBuildTargetGroup;
             string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(g);
             PlayerSettings.SetScriptingDefineSymbolsForGroup(g, s+ "ForceRecompile");

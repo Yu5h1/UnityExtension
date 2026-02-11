@@ -91,45 +91,6 @@ namespace Yu5h1Lib.EditorExtension
             {
                 //ModelImporter target = assetImporter as ModelImporter;
             }
-            public static void ImportByYu5h1ToolsDefaultSetting(ModelImporter target)
-            {
-                if (target.animationType == ModelImporterAnimationType.Generic || target.animationType == ModelImporterAnimationType.Human)
-                {
-                    if (target.animationType == ModelImporterAnimationType.Generic)
-                    {
-                        if (target.transformPaths.Length > 1)
-                        {
-                            var targetSerializedObject = new SerializedObject(target);
-                            targetSerializedObject.FindProperty("m_HumanDescription.m_RootMotionBoneName").stringValue =
-                                target.transformPaths[1];
-                            targetSerializedObject.ApplyModifiedProperties();
-                        }
-                    }
-                    ModelImporterClipAnimation[] takes = target.defaultClipAnimations;
-                    if (setting.animationImportSetting.RemoveExtraTake001Clip)
-                    {
-                        if (target.defaultClipAnimations.Length > 1)
-                        {
-                            takes = new ModelImporterClipAnimation[takes.Length - 1];
-                            for (int i = 0; i < takes.Length; i++)
-                            {
-                                takes[i] = target.defaultClipAnimations[i + 1];
-                            }
-                        }
-                    }
-                    for (int i = 0; i < takes.Length; i++)
-                    {
-                        takes[i].keepOriginalOrientation = setting.animationImportSetting.keepOriginalOrientation;
-                        takes[i].lockRootRotation = setting.animationImportSetting.BakeInToPoseOrientation;
-                        takes[i].keepOriginalPositionY = setting.animationImportSetting.keepOriginalPositionY;
-                        takes[i].lockRootHeightY = setting.animationImportSetting.BakeInToPoseY;
-                        takes[i].keepOriginalPositionXZ = setting.animationImportSetting.keepOriginalPositionXZ;
-                        takes[i].lockRootPositionXZ = setting.animationImportSetting.BakeInToPoseXZ;
-                    }
-                    target.clipAnimations = takes;
-                    AssetDatabase.ImportAsset(target.assetPath);
-                }
-            }
         }
     }
 

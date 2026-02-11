@@ -16,7 +16,11 @@ namespace Yu5h1Lib
             return true;
         }
         public static T InstantiateFromResourecs<T>(string path, Transform parent = null,bool removeCloneSuffix = false) where T : Object
-            => TryInstantiateFromResources(out T result, path, parent) ? result : null;
+            => TryInstantiateFromResources(out T result, path, parent, removeCloneSuffix) ? result : null;
+
+        public static bool TryInstantiateFromResources<T>(out T result, Transform parent = null) where T : Object
+            => TryInstantiateFromResources(out result, typeof(T).Name, parent);
+
         #endregion
 
         public static bool TryLoad<T>(string path, out T result) where T : Object

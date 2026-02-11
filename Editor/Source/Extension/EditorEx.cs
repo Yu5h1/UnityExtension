@@ -38,22 +38,27 @@ namespace Yu5h1Lib.EditorExtension
             return changed;
         }
 
-        public static void Iterate(this Editor editor,System.Action<SerializedProperty> process)
+        public static void Iterate(this Editor editor,System.Action<SerializedProperty> DrawProperty,
+            System.Action<SerializedProperty> DrawHeader)
         {
             EditorGUI.BeginChangeCheck();
-            var properties = editor.serializedObject.GetIterator();
+            var iterator = editor.serializedObject.GetIterator();
             #region m_Script
-            properties.NextVisible(true);
-            EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.PropertyField(properties);
-            EditorGUI.EndDisabledGroup();
+            iterator.NextVisible(true);
+            if (DrawHeader == null)
+                using (new EditorGUI.DisabledGroupScope(true))
+                {
+                    EditorGUILayout.PropertyField(iterator);
+                }
+            else
+                DrawHeader.Invoke(iterator);
             #endregion
-            while (properties.NextVisible(false))
-                process(properties);
+
+            while (iterator.NextVisible(false))
+                DrawProperty(iterator);
 
             if (EditorGUI.EndChangeCheck())
                 editor.serializedObject.ApplyModifiedProperties();
         }
-
     }
 }

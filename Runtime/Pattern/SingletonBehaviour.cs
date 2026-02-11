@@ -3,12 +3,13 @@ using static Yu5h1Lib.GameObjectUtility;
 
 namespace Yu5h1Lib
 {
-    public abstract class SingletonBehaviour : BaseMonoBehaviour
+    public abstract class SingletonBehaviour : BaseMonoBehaviour 
     {
-
+        public interface IAllowEditMode { }
     }
     public abstract class SingletonBehaviour<T> : SingletonBehaviour where T : SingletonBehaviour<T>
     {
+        static bool AllowEditMode => typeof(IAllowEditMode).IsAssignableFrom(typeof(T));
         protected static T _instance;
         /// <summary>
         /// Check Resources first, and create it from there if it exists; if not, make a new one.;
@@ -24,7 +25,7 @@ namespace Yu5h1Lib
                 {
                     if ($"[Singleton] Prevented creation of {typeof(T).Name} during application quit.".printWarningIf(ApplicationInfo.WantsToQuit))
                         return null;
-                    if ($"Game is not playing Singleton<{typeof(T).Name}> stops creating instance.".printWarningIf(!Application.isPlaying))
+                    if ($"Singleton<{typeof(T).Name}> stops creating instance in Edit Mode.".printWarningIf(!Application.isPlaying && !AllowEditMode))
                         return null;
                     if (!ResourcesUtility.TryInstantiateFromResources(out _instance, typeof(T).Name, null))
                         _instance = Create<T>();

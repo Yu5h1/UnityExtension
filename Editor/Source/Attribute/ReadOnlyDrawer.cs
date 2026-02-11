@@ -21,7 +21,7 @@ public class ReadOnlyDrawer : PropertyDrawer
 
 
         EditorGUI.BeginDisabledGroup(true);
-        EditorGUI.PropertyField(position, property, label);
+        EditorGUI.PropertyField(position, property, label, property.hasVisibleChildren);
         EditorGUI.EndDisabledGroup();
     }
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)

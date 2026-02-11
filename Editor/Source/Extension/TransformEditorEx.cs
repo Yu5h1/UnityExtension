@@ -11,6 +11,16 @@ namespace Yu5h1Lib.EditorExtension
 
         public const string ResetWithoutMovingChildrenLabel = BaseLabel + "more.../Reset without moving children";
         public const string FocusLabel = BaseLabel + "more.../Focus";
+        public const string CopyHierarchyPathLabel = BaseLabel + "Copy/path";
+
+        [MenuItem(CopyHierarchyPathLabel)]
+        public static void CopyHierarchyPath(MenuCommand command)
+        {
+            var transform = (Transform)command.context;
+            var path = transform.GetHierarchyPath();
+            EditorGUIUtility.systemCopyBuffer = path;
+            Debug.Log("Copied Path: " + path);
+        }
 
         [MenuItem(ResetWithoutMovingChildrenLabel)]
         public static void ResetWithoutMovingChildren(MenuCommand command)

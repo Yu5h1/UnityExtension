@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace Yu5h1Lib.EditorExtension
 {
@@ -19,6 +20,24 @@ namespace Yu5h1Lib.EditorExtension
             }
         }
         public static List<EditorAdvanced> editors = new List<EditorAdvanced>();
+
+        public override void OnInspectorGUI()
+        {
+            this.Iterate(DrawProperty, DrawHeader);
+        }
+
+        public virtual void DrawHeader(SerializedProperty property)
+        {
+            using (new EditorGUI.DisabledGroupScope(true))
+            {
+                EditorGUILayout.PropertyField(property);
+            }
+        }
+
+        public virtual void DrawProperty(SerializedProperty property)
+        {
+            EditorGUILayout.PropertyField(property, true);
+        }
 
         public static void RegisterAdvancedMethods(EditorAdvanced editor)
         {
@@ -75,8 +94,10 @@ namespace Yu5h1Lib.EditorExtension
                         break;
                 }
             }
-
+            
         }
+        public Object[] FindObjectsByType(System.Type type)
+            => FindObjectsByType(type, FindObjectsInactive.Include, FindObjectsSortMode.None);
 
     }
     public class Editor<TargetType> : EditorAdvanced where TargetType : Object

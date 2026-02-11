@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 using Yu5h1Lib.Mathematics;
 
 namespace Yu5h1Lib
@@ -7,6 +8,34 @@ namespace Yu5h1Lib
     [System.Serializable]
     public class Timer 
     {
+        public enum TickMode
+        {
+            Cumulative,
+            TimeStamp
+        }
+        public delegate void TickMethod(ISource source, float lastTime,ref float time);
+
+        public static void Cumulative(ISource source, float lastTime,ref float time)
+                  => time += source.deltaTime;
+        public static void TimeStamp(ISource source, float lastTime,ref float time)
+                  => time = source.time - lastTime;
+        public interface ISource
+        {
+            float deltaTime { get; }
+            float time { get; }
+        }
+        public static readonly ISource Scaled = new ScaledTime();
+        public static readonly ISource Unscaled = new UnscaledTime();
+        private class ScaledTime : ISource
+        {
+            public float deltaTime => Time.deltaTime;
+            public float time => Time.time;
+        }
+        private class UnscaledTime : ISource
+        {
+            public float deltaTime => Time.unscaledDeltaTime;
+            public float time => Time.unscaledTime;
+        }
         public enum RepeatType : int {
             Infinite = -1,
             None = 0,
@@ -18,8 +47,10 @@ namespace Yu5h1Lib
         private float Duration = 1;
         [SerializeField]
         private int RepeatCount;
-        [SerializeField]
-        private bool UseUnscaledTime;
+
+        [SerializeField] private TickMode _tickMode = TickMode.TimeStamp;
+        [SerializeField,FormerlySerializedAs("UseUnscaledTime")] private bool _useUnscaledTime;
+  
 
         #region Cache
         public float LastTime { get; protected set; } 
@@ -28,11 +59,51 @@ namespace Yu5h1Lib
         public float delay { get => Delay; set => Delay = value; }
         public float duration { get => Duration; set => Duration = value; }
         public int repeatCount { get => RepeatCount; set => RepeatCount = value; }
-        public bool useUnscaledTime { get => UseUnscaledTime; set => UseUnscaledTime = value; }
+
+        private TickMethod tickMethod;
+        private void CheckTickMethod()
+        {
+            switch (tickMode)
+            {
+                case TickMode.Cumulative:
+                    tickMethod = Cumulative;
+                    break;
+                case TickMode.TimeStamp:
+                    tickMethod = TimeStamp;
+                    break;
+                default:
+                    tickMethod = TimeStamp;
+                    break;
+            }
+        }
+        public TickMode tickMode 
+        { 
+            get => _tickMode; 
+            set
+            { 
+                if (_tickMode == value) return;
+                _tickMode = value;
+                CheckTickMethod();
+            }
+        }
+        public void CheckTimeSource() => source = useUnscaledTime ? Unscaled : Scaled;
+        public bool useUnscaledTime 
+        { 
+            get => _useUnscaledTime; 
+            set
+            { 
+                if (_useUnscaledTime == value) return;
+                _useUnscaledTime = value;
+                CheckTimeSource();
+            }
+        }
         public RepeatType repeatType => (RepeatType)System.Math.Sign(repeatCount);
 
-        protected float GetTime() => UseUnscaledTime ? Time.unscaledTime : Time.time;
-        public float time => GetTime() - LastTime;
+        public ISource source { get; protected set; }
+
+        private float _time;
+        public float time { get => _time; private set => _time = value; }
+
         public float normalized => time.GetNormal(duration);
 
         
@@ -66,21 +137,35 @@ namespace Yu5h1Lib
         public bool IsStart => time > 0;
         public bool TimesUp => time >= duration;
         public bool IsRepeatComplete => repeatType == RepeatType.Infinite ? false : repeatCounter == repeatCount;        
-        public bool IsCompleting => IsRepeatComplete && TimesUp;            
+        public bool IsCompleting => IsRepeatComplete && TimesUp;
 
         public virtual void Start()
-        {            
-            LastTime = GetTime() + delay;
+        {
+            CheckTimeSource(); // 確保初始化
+            CheckTickMethod();
+
+            LastTime = source.time + delay;
+            time = 0;
             repeatCounter = 0;
             IsCompleted = false;
         }
-        public virtual void Stop()
-            => LastTime = time - duration;
+
+        public virtual void Stop(bool notifiy = true)
+        {
+            if (!notifiy)
+                IsCompleted = true;
+            time = duration;
+        }
 
         public virtual void Tick()
         {
             if (IsCompleted)
                 return;
+            if (source.time < LastTime)
+                return;
+            
+            tickMethod(source, LastTime, ref _time);
+
             if (IsCompleting)
             {
                 IsCompleted = true;
@@ -99,7 +184,8 @@ namespace Yu5h1Lib
                     repeatCounter++;
                     OnRepeat();
                     Repeated?.Invoke(this);
-                    LastTime = GetTime();
+                    LastTime = source.time;
+                    time = 0;
                 }
             }
             else
@@ -136,7 +222,7 @@ namespace Yu5h1Lib
                     if (!timer.keepWaiting)
                         return false;
                     timer.Tick();
-                    return !timer.IsCompleted ;
+                    return !timer.IsCompleted;
                 }
             }
             public Wait(T t)

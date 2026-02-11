@@ -44,5 +44,12 @@ namespace Yu5h1Lib
                 Selection.activeObject = obj;
             });
         }
+        public static Object GetMainAsset(Object subAsset)
+        { 
+            if (subAsset == null) return null;
+            var path = AssetDatabase.GetAssetPath(subAsset);
+            var main = AssetDatabase.LoadMainAssetAtPath(path);
+            return main;
+        }
     } 
 }

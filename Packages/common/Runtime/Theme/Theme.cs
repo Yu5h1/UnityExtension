@@ -32,23 +32,34 @@ namespace Yu5h1Lib
                 }
             }
         }
+        public abstract class BindingPreset<TComponent, TPreset> : Binding<TComponent,TPreset>
+            where TComponent : Component
+            where TPreset : ComponentPreset<TComponent>
+        { protected override void SetValue(TComponent c, TPreset preset) => preset.ApplyTo(c); }
 
+        [SerializeField,NotSelf] private Theme _schema;
+        public Theme schema => _schema;
         [SerializeField, Inline(true)] private List<ParameterObject> _items;
         public List<ParameterObject> items => _items;
 
         public bool TryGet<T>(string key, out T value) 
         {
+
             value = default;
             if (_items == null) return false;
 
             foreach (var item in _items)
             {
-                if (item != null && item.name == key && item is ParamterObject<T> param)
+                if (item != null && item.name == key && item is ParameterObject<T> param)
                 {
                     value = param.value;
                     return true;
                 }
             }
+
+            if (_schema?.TryGet(key, out value) == true)
+                return true;
+
             return false;
         }
  

@@ -14,7 +14,7 @@ namespace Yu5h1Lib.EditorExtension
                 if (Enable == value)
                     return;
                 EditorPrefs.SetBool(EnableKey, value);
-                Register();
+                Register();                
             }
         }
         [InitializeOnLoadMethod]

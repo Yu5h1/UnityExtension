@@ -1,6 +1,8 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 
 namespace Yu5h1Lib.EditorExtension
@@ -8,6 +10,28 @@ namespace Yu5h1Lib.EditorExtension
     [EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
     public static class AnimatorEx
     {
+        public static List<StateMachineBehaviour> GetBehavioursFromLayer(Animator animator, int layerIndex)
+        {
+            var results = new List<StateMachineBehaviour>();
+
+            var controller = animator.runtimeAnimatorController as AnimatorController;
+            if (controller == null || layerIndex >= controller.layers.Length)
+                return results;
+
+            AnimatorStateMachine stateMachine = controller.layers[layerIndex].stateMachine;
+
+            foreach (ChildAnimatorState state in stateMachine.states)
+            {
+                foreach (StateMachineBehaviour behaviour in state.state.behaviours)
+                {
+                    results.Add(behaviour);
+                }
+            }
+
+            return results;
+        }
+
+
         static int GetCapsuleColliderDirection(Vector3 vector) {
             if (vector.x != 0) return 0;
             if (vector.y != 0) return 1;

@@ -1,17 +1,33 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace Yu5h1Lib
 {
-	public abstract class ParameterObject : ScriptableObject { }
-
-    public abstract class ParamterObject<T> : ParameterObject
+    public abstract class ParameterObject : ScriptableObject {
+        public abstract void ApplyTo(Component target);
+    }
+    public abstract class ParameterObject<T> : ParameterObject
     { 
          public T value;
 
-        public static implicit operator T(ParamterObject<T> obj) => obj.value;
+        public static implicit operator T(ParameterObject<T> obj) => obj.value;
+
+        public override void ApplyTo(Component target)
+        {
+            if (name.IsEmpty()) return;
+
+            var prop = target.GetType().GetProperty(name,
+                BindingFlags.Public | BindingFlags.Instance);
+            if (prop == null || !prop.CanWrite) return;
+
+            var valueField = GetType().GetField("value",
+                BindingFlags.Public | BindingFlags.Instance);
+            if (valueField != null && prop.PropertyType.IsAssignableFrom(valueField.FieldType))
+                prop.SetValue(target, valueField.GetValue(value));
+        }
     }
 
     public abstract class ArrayObject : ParameterObject {}
@@ -24,6 +40,11 @@ namespace Yu5h1Lib
         public T Random() => value.RandomElement();
 
         public T GetRandomElement(params T[] excludeElements) => value.RandomElement(excludeElements);
+
+        public override void ApplyTo(Component target)
+        {
+            throw new NotImplementedException();
+        }
     }
     public static class ArrayObjectUtility {
         public static ArrayObject<TValue> ToArrayObject<TValue>(this IList<TValue> list)

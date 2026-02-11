@@ -10,6 +10,7 @@ namespace Yu5h1Lib.EditorExtension
         {
             get
             {
+
                 if (instance == null) CreateWindow(typeof(T).Name);
                 return (T)instance;
             }

@@ -8,7 +8,6 @@ namespace Yu5h1Lib.Theming
     /// </summary>
     public class ImageSpriteBinding : Theme.Binding<Image,Sprite>
     {
-        protected override void SetValue(Image c, Sprite value)
-         =>  c.sprite = value;
+        protected override void SetValue(Image c, Sprite value) =>  c.sprite = value;
     }
 }

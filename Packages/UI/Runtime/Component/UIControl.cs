@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace Yu5h1Lib.UI
 {
@@ -17,7 +19,17 @@ namespace Yu5h1Lib.UI
         {
             this.GetComponent(ref _rectTransform);
         }
+    }
 
-    
-    } 
+    public abstract class UIControl<T> : UIControl where T : UIBehaviour
+    {
+        [SerializeField, ReadOnly] private T _ui;
+        public T ui => _ui;
+
+        protected override void OnInitializing()
+        {
+            base.OnInitializing();
+            _ui = this.GetComponent(ref _ui);
+        }
+    }
 }

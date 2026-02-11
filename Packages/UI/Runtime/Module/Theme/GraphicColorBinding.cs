@@ -8,7 +8,6 @@ namespace Yu5h1Lib
     /// </summary>
     public class GraphicColorBinding : Theme.Binding<Graphic, Color>
     {
-        protected override void SetValue(Graphic c, Color value)
-            => c.color = value;
+        protected override void SetValue(Graphic c, Color value) => c.color = value;
     } 
 }

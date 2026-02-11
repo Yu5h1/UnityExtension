@@ -2,5 +2,6 @@ using UnityEngine;
 
 namespace Yu5h1Lib
 {
-	public class GradientObject : ParamterObject<Gradient> { } 
+	[Icon("d_ColorPicker.CycleSlider")]
+	public class GradientObject : ParameterObject<Gradient> { } 
 }
