@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Yu5h1Lib.UI.Effects
 {
@@ -22,6 +23,14 @@ namespace Yu5h1Lib.UI.Effects
             ["Darken"]   = (a, b, w) => Color.Lerp(a, Min(a, b), w),
             ["Lighten"]  = (a, b, w) => Color.Lerp(a, Max(a, b), w),
         };
+
+#if UNITY_EDITOR
+
+        [UnityEditor.InitializeOnLoadMethod]
+        static void RegisterStringOption()
+            => StringOptionsProvider.Register(nameof(ColorBlend), () => _modes.Keys.ToArray());
+
+#endif
 
         public static IReadOnlyDictionary<string, Operator> Modes => _modes;
 

@@ -62,12 +62,13 @@ namespace Yu5h1Lib.EditorExtension
             if (items == null || items.Length == 0)
                 return;
 
+            var formatter = StringOptionsProvider.GetDisplayFormatter(listKey);
             AutoFillPopup.Show(popupRect, items, selected =>
             {
                 property.stringValue = selected;
                 property.serializedObject.ApplyModifiedProperties();
                 EditorUtility.SetDirty(property.serializedObject.targetObject);
-            }, property.stringValue);
+            }, property.stringValue, formatter);
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)

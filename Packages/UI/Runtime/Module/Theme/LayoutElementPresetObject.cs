@@ -16,7 +16,7 @@ namespace Yu5h1Lib.UI
         public Optional<float> flexibleWidth;
         public Optional<float> flexibleHeight;
 
-        public override void ApplyTo(LayoutElement layout)
+        public override bool ApplyTo(LayoutElement layout)
         {
             if (minWidth.TryGetValue(out float minWidthValue))
                 layout.minWidth = minWidthValue;
@@ -30,6 +30,8 @@ namespace Yu5h1Lib.UI
                 layout.flexibleWidth = flexibleWidthValue;
             if (flexibleHeight.TryGetValue(out float flexibleHeightValue))
                 layout.flexibleHeight = flexibleHeightValue;
+
+            return true;
         }
     }
 }

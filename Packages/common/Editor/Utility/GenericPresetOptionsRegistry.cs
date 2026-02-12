@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -29,7 +30,7 @@ namespace Yu5h1Lib.EditorExtension
                       .ToArray();
             });
 
-            // 根據 targetAssembly 過濾型別
+            // 根據 targetAssembly 過濾型別（assembly 為空時列出所有 Component 類型）
             StringOptionsProvider.Register("~AssemblyTypes", (sender, path) =>
             {
                 if (sender == null || string.IsNullOrEmpty(path))
@@ -40,20 +41,42 @@ namespace Yu5h1Lib.EditorExtension
                 var siblingPath = GetSiblingPath(path, "targetAssembly._assemblyName");
                 var assemblyName = GetNestedValue<string>(sender, siblingPath);
 
+                IEnumerable<Type> types;
                 if (string.IsNullOrEmpty(assemblyName))
-                    return Array.Empty<string>();
+                {
+                    // 未選 assembly → 列出所有非 Editor assembly 的 Component
+                    types = AppDomain.CurrentDomain.GetAssemblies()
+                        .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location)
+                                    && !a.FullName.StartsWith("UnityEditor"))
+                        .SelectMany(a =>
+                        {
+                            try { return a.GetTypes(); }
+                            catch (ReflectionTypeLoadException e) { return e.Types.Where(t => t != null); }
+                            catch { return Type.EmptyTypes; }
+                        });
+                }
+                else
+                {
+                    // 已選 assembly → 只列該 assembly（現有行為）
+                    var assembly = AppDomain.CurrentDomain.GetAssemblies()
+                        .FirstOrDefault(a => a.GetName().Name == assemblyName);
+                    if (assembly == null)
+                        return Array.Empty<string>();
+                    types = assembly.GetTypes();
+                }
 
-                var assembly = AppDomain.CurrentDomain.GetAssemblies()
-                    .FirstOrDefault(a => a.GetName().Name == assemblyName);
-
-                if (assembly == null)
-                    return Array.Empty<string>();
-
-                return assembly.GetTypes()
+                return types
                     .Where(t => typeof(UnityEngine.Component).IsAssignableFrom(t) && !t.IsAbstract)
                     .Select(t => t.AssemblyQualifiedName)
                     .OrderBy(n => n)
                     .ToArray();
+            });
+
+            // AssemblyTypes 顯示格式：只顯示類型全名，不顯示 assembly 資訊
+            StringOptionsProvider.RegisterDisplayFormatter("~AssemblyTypes", aqn =>
+            {
+                int comma = aqn.IndexOf(',');
+                return comma > 0 ? aqn.Substring(0, comma) : aqn;
             });
 
             // 根據 targetType 過濾屬性

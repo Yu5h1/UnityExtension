@@ -12,6 +12,7 @@ public class RenamePopup : PopupWindowContent
     private string _previousText;
     private Action<string> _onApply;
     private bool _focusNextFrame = true;
+    private bool _cancelled;
     private float _width;
 
     public static event Action<object> confirmed;
@@ -85,6 +86,7 @@ public class RenamePopup : PopupWindowContent
             case KeyCode.Escape:
                 if (!autoFillActive)
                 {
+                    _cancelled = true;
                     editorWindow.Close();
                     e.Use();
                 }
@@ -99,15 +101,16 @@ public class RenamePopup : PopupWindowContent
     }
     public override void OnClose()
     {
-        Apply();
+        if (!_cancelled)
+            Apply();
         if (AutoFillPopup.instance != null)
             AutoFillPopup.instance.Close();
     }
     private void Apply()
     {
-      
         if (_text == _original)
             return;
+        _original = _text; // 防止 double-apply
         _onApply?.Invoke(_text.Trim());
         confirmed?.Invoke(target);
     }

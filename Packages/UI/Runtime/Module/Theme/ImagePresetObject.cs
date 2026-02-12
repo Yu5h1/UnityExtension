@@ -17,7 +17,7 @@ namespace Yu5h1Lib.UI
         public Optional<bool> useSpriteMesh;
         public Optional<bool> preserveAspect;
 
-        public override void ApplyTo(Image img)
+        public override bool ApplyTo(Image img)
         {
             if (sprite.TryGetValue(out Sprite s))
                 img.sprite = s;
@@ -36,6 +36,7 @@ namespace Yu5h1Lib.UI
             if (preserveAspect.TryGetValue(out bool p))
                 img.preserveAspect = p;
 
+            return true;
         }
     }
 }

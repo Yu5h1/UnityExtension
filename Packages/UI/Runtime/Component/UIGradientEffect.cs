@@ -17,7 +17,7 @@ namespace Yu5h1Lib.UI.Effects
         [SerializeField] protected Gradient _gradient = new Gradient();
         [SerializeField, Range(-180f, 180f)] protected float _angle = 90f;
         [SerializeField, Range(-1f, 1f)] protected float _offset = 0f;
-        [SerializeField] protected string _blendMode = "Multiply";
+        [SerializeField,Dropdown(nameof(ColorBlend))] protected string _blendMode = "Multiply";
         [SerializeField, Range(0f, 1f)] protected float _blendWeight = 1f;
         [SerializeField, Range(2, 32)] protected int _segments = 16;
 

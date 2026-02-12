@@ -15,13 +15,14 @@ namespace Yu5h1Lib.UI
         public Optional<Vector2> sizeDelta;
         public Optional<Vector2> anchoredPosition;
 
-        public override void ApplyTo(RectTransform rect)
+        public override bool ApplyTo(RectTransform rect)
         {
             if (anchorMin.TryGetValue(out var min)) rect.anchorMin = min;
             if (anchorMax.TryGetValue(out var max)) rect.anchorMax = max;
             if (pivot.TryGetValue(out var p)) rect.pivot = p;
             if (sizeDelta.TryGetValue(out var size)) rect.sizeDelta = size;
             if (anchoredPosition.TryGetValue(out var pos)) rect.anchoredPosition = pos;
+            return true;
         }
     } 
 }

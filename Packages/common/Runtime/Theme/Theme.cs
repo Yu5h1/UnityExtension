@@ -34,8 +34,8 @@ namespace Yu5h1Lib
         }
         public abstract class BindingPreset<TComponent, TPreset> : Binding<TComponent,TPreset>
             where TComponent : Component
-            where TPreset : ComponentPreset<TComponent>
-        { protected override void SetValue(TComponent c, TPreset preset) => preset.ApplyTo(c); }
+            where TPreset : ComponentPreset
+        { protected override void SetValue(TComponent c, TPreset preset) => preset.ApplyToComponent(c); }
 
         [SerializeField,NotSelf] private Theme _schema;
         public Theme schema => _schema;

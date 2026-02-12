@@ -17,16 +17,23 @@ namespace Yu5h1Lib.EditorExtension
         private string[] allOptions;
         private List<string> filteredOptions = new List<string>();
         private Action<string> onSelect;
+        private Func<string, string> displayFormatter;
         private Vector2 scrollPosition;
         private int hoverIndex = -1;
         private string searchText = "";
         private bool needsFocus = true;
+        private bool useKeyboardHover; // true 時鍵盤優先，滑鼠不搶 hoverIndex
 
         private const float ITEM_HEIGHT = 20f;
         private const float SEARCH_HEIGHT = 22f;
         private const float MAX_HEIGHT = 200f;
 
-        public static void Show(Rect activatorRect, string[] options, Action<string> onSelect, string filter = "")
+        // 快取 GUIStyle，避免每幀 new
+        private static GUIStyle _itemStyle;
+        private static GUIStyle _itemHoverStyle;
+
+        public static void Show(Rect activatorRect, string[] options, Action<string> onSelect,
+            string filter = "", Func<string, string> displayFormatter = null)
         {
             // 關閉已存在的
             var existing = Resources.FindObjectsOfTypeAll<AutoFillPopup>();
@@ -39,6 +46,7 @@ namespace Yu5h1Lib.EditorExtension
             instance = CreateInstance<AutoFillPopup>();
             instance.allOptions = options;
             instance.onSelect = onSelect;
+            instance.displayFormatter = displayFormatter;
             instance.searchText = filter ?? "";
             instance.ApplyFilter();
 
@@ -57,6 +65,26 @@ namespace Yu5h1Lib.EditorExtension
             wantsMouseMove = true;
         }
 
+        private static void EnsureStyles()
+        {
+            if (_itemStyle == null)
+            {
+                _itemStyle = new GUIStyle(EditorStyles.label)
+                {
+                    padding = new RectOffset(6, 6, 2, 2),
+                    normal = { textColor = Color.gray * 1.5f }
+                };
+            }
+            if (_itemHoverStyle == null)
+            {
+                _itemHoverStyle = new GUIStyle(EditorStyles.label)
+                {
+                    padding = new RectOffset(6, 6, 2, 2),
+                    normal = { textColor = Color.white }
+                };
+            }
+        }
+
         private void OnGUI()
         {
             if (allOptions == null || allOptions.Length == 0)
@@ -64,6 +92,8 @@ namespace Yu5h1Lib.EditorExtension
                 Close();
                 return;
             }
+
+            EnsureStyles();
 
             // 背景
             var bgRect = new Rect(0, 0, position.width, position.height);
@@ -78,6 +108,7 @@ namespace Yu5h1Lib.EditorExtension
                     case KeyCode.DownArrow:
                         if (filteredOptions.Count > 0)
                             hoverIndex = Mathf.Min(hoverIndex + 1, filteredOptions.Count - 1);
+                        useKeyboardHover = true;
                         ScrollToIndex(hoverIndex);
                         Event.current.Use();
                         Repaint();
@@ -85,6 +116,7 @@ namespace Yu5h1Lib.EditorExtension
 
                     case KeyCode.UpArrow:
                         hoverIndex = Mathf.Max(hoverIndex - 1, 0);
+                        useKeyboardHover = true;
                         ScrollToIndex(hoverIndex);
                         Event.current.Use();
                         Repaint();
@@ -105,6 +137,10 @@ namespace Yu5h1Lib.EditorExtension
                         return;
                 }
             }
+
+            // 滑鼠移動時解除鍵盤優先
+            if (Event.current.type == EventType.MouseMove)
+                useKeyboardHover = false;
 
             // 搜尋欄
             var searchRect = new Rect(4, 4, position.width - 8, SEARCH_HEIGHT - 4);
@@ -210,26 +246,27 @@ namespace Yu5h1Lib.EditorExtension
                 scrollPosition.y = targetY + ITEM_HEIGHT - viewHeight;
         }
 
-        private void DrawItem(int index, string text)
+        private void DrawItem(int index, string value)
         {
             var rect = EditorGUILayout.GetControlRect(false, ITEM_HEIGHT);
 
-            bool isHover = rect.Contains(Event.current.mousePosition) || index == hoverIndex;
-            if (isHover)
-            {
+            // 滑鼠 hover 只在非鍵盤模式時更新 hoverIndex
+            bool mouseHover = rect.Contains(Event.current.mousePosition);
+            if (mouseHover && !useKeyboardHover)
                 hoverIndex = index;
+
+            bool isSelected = index == hoverIndex;
+            if (isSelected)
                 EditorGUI.DrawRect(rect, new Color(0.3f, 0.5f, 0.8f, 0.5f));
-            }
 
-            var style = new GUIStyle(EditorStyles.label)
-            {
-                padding = new RectOffset(6, 6, 2, 2),
-                normal = { textColor = isHover ? Color.white : Color.gray * 1.5f }
-            };
+            // 使用 displayFormatter 顯示短名稱，tooltip 顯示完整值
+            string displayText = displayFormatter != null ? displayFormatter(value) : value;
+            string tooltip = displayFormatter != null && displayText != value ? value : "";
+            var content = new GUIContent(displayText, tooltip);
 
-            if (GUI.Button(rect, text, style))
+            if (GUI.Button(rect, content, isSelected ? _itemHoverStyle : _itemStyle))
             {
-                SelectItem(text);
+                SelectItem(value);
             }
         }
 

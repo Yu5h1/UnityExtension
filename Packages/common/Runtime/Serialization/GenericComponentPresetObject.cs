@@ -10,22 +10,22 @@ namespace Yu5h1Lib
     [Serializable]
     public class GenericComponentPreset : ComponentPreset<Component>
     {
-        [Tooltip("Override the GameObject active state.")]
-        public Optional<bool> activeSelf;
         public SerializedAssembly targetAssembly;
         public SerializedType targetType;
         [Inline(true), StringOptionsContext("ComponentProperties")]
         public List<ParameterObject> properties;
 
-        public override void ApplyTo(Component target)
+        public override bool ApplyTo(Component component)
         {
-            if (activeSelf.TryGetValue(out bool active))
-                target.gameObject.SetActive(active);
-            if ($"{targetType} is unassigned.".printWarningIf(targetType.type == null) || $"{targetType.type} not matched {target.GetType()}".printWarningIf(!targetType.type.IsInstanceOfType(target)))
-                return;
-
+            "QQQ".print();
+            if ($"{targetType} is unassigned.".printWarningIf(targetType.type == null) || $"{targetType.type} not matched {component.GetType()}".printWarningIf(!targetType.type.IsInstanceOfType(component)))
+                return false;
             foreach (var prop in properties)
-                prop.ApplyTo(target);
+            {
+                prop.ApplyTo(component);
+                prop.name.print();
+            }
+            return true;
         }
     }
 }
