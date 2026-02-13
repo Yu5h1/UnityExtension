@@ -31,7 +31,6 @@ namespace Yu5h1Lib
                 $"{component.GetType()} {typeof(T)}Type not match".printWarning();
                 return false;
             }
-            $"{typeof(T)}".print();
             return ApplyTo(t);
         }
         public abstract bool ApplyTo(T component);

@@ -13,7 +13,6 @@ public class ThemeEditor : Editor<Theme>
 {
     [InitializeOnLoadMethod]
     static void Initinalize(){
-
         RenamePopup.confirmed += RenamePopup_confirmed;
     }
 
@@ -116,8 +115,7 @@ public class ThemeEditor : Editor<Theme>
         }
     }
     static void OnSchemaChanged(Theme profile)
-    {
-        $"{profile.name}OnSchemaChanged".print();
+    {        
         if (profile.schema == null) return;
 
         var schemaKeys = profile.schema.items

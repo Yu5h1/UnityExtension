@@ -10,14 +10,14 @@ namespace Yu5h1Lib
         public abstract void ApplyTo(Component target);
     }
     public abstract class ParameterObject<T> : ParameterObject
-    { 
-         public T value;
+    {
+        [Decorable] public T value;
         public static implicit operator T(ParameterObject<T> obj) => obj.value;
         public override void ApplyTo(Component target)
         {
             if (name.IsEmpty()) return;
 
-            var prop = target.GetType().GetProperty(name,
+            var prop = target.GetType().GetProperty(name.TrimStart('.'),
                 BindingFlags.Public | BindingFlags.Instance);
             if (prop == null || !prop.CanWrite) return;
 
@@ -27,7 +27,6 @@ namespace Yu5h1Lib
     }
     public abstract class ArrayObject<T> : ParameterObject<T[]>
     {
-        //[Dropdown("")]
         public T Random() => value.RandomElement();
         public T GetRandomElement(params T[] excludeElements) => value.RandomElement(excludeElements); 
     }

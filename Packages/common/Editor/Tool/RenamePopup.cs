@@ -51,11 +51,12 @@ public class RenamePopup : PopupWindowContent
         if (autoFillOptions != null && autoFillOptions.Length > 0 && _text != _previousText)
         {
             _previousText = _text;
-            var screenRect = new Rect(
-                GUIUtility.GUIToScreenPoint(new Vector2(textFieldRect.x, textFieldRect.yMax)),
-                new Vector2(textFieldRect.width, textFieldRect.height)
-            );
-            AutoFillPopup.Show(screenRect, autoFillOptions, OnAutoFillSelected, _text);
+            var r = editorWindow.position;
+            r.y -= editorWindow.position.height;
+            EditorApplication.delayCall += () =>
+            {
+                var autofillPanel = AutoFillPopup.Show(r, autoFillOptions, OnAutoFillSelected, _text,screenSpace:false);
+            };
         }
     }
 

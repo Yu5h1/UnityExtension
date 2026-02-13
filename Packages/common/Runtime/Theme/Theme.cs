@@ -17,7 +17,7 @@ namespace Yu5h1Lib
         public abstract class Binding<TComponent, TValue> : Binding
         {
             public string key => name;
-            [SerializeField] private TComponent[] _targets;
+            [SerializeField,CollectionConstraint(true)] private TComponent[] _targets;
             public TComponent[] targets => _targets;
 
             protected abstract void SetValue(TComponent c, TValue value);

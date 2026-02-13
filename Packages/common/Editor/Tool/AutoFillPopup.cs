@@ -32,8 +32,8 @@ namespace Yu5h1Lib.EditorExtension
         private static GUIStyle _itemStyle;
         private static GUIStyle _itemHoverStyle;
 
-        public static void Show(Rect activatorRect, string[] options, Action<string> onSelect,
-            string filter = "", Func<string, string> displayFormatter = null)
+        public static AutoFillPopup Show(Rect activatorRect, string[] options, Action<string> onSelect,
+            string filter = "", Func<string, string> displayFormatter = null,bool screenSpace = true)
         {
             // 關閉已存在的
             var existing = Resources.FindObjectsOfTypeAll<AutoFillPopup>();
@@ -41,7 +41,7 @@ namespace Yu5h1Lib.EditorExtension
                 w.Close();
 
             if (options == null || options.Length == 0)
-                return;
+                return null;
 
             instance = CreateInstance<AutoFillPopup>();
             instance.allOptions = options;
@@ -55,9 +55,11 @@ namespace Yu5h1Lib.EditorExtension
             int displayCount = instance.filteredOptions.Count;
             float height = Mathf.Min(displayCount * ITEM_HEIGHT + SEARCH_HEIGHT + 8, MAX_HEIGHT);
 
-            var screenPos = GUIUtility.GUIToScreenPoint(new Vector2(activatorRect.x, activatorRect.y));
-            var screenRect = new Rect(screenPos.x, screenPos.y, activatorRect.width, activatorRect.height);
-            instance.ShowAsDropDown(screenRect, new Vector2(width, height));
+            if (screenSpace)
+                activatorRect.position = GUIUtility.GUIToScreenPoint(new Vector2(activatorRect.x, activatorRect.y));
+
+            instance.ShowAsDropDown(activatorRect, new Vector2(width, height));
+            return instance;
         }
 
         private void OnEnable()
@@ -84,9 +86,30 @@ namespace Yu5h1Lib.EditorExtension
                 };
             }
         }
+        //private int _cursorFixFrames;
+        //void FocusWithCursorAtEnd(string controlName)
+        //{
+        //    EditorGUI.FocusTextInControl(controlName);
+        //    _cursorFixFrames = 100; // 連續處理 3 幀
+        //}
 
         private void OnGUI()
         {
+            //if (_cursorFixFrames > 0 && Event.current.type == EventType.Repaint)
+            //{
+            //    var te = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+            //    if (te != null)
+            //    {
+            //        te.SelectNone();
+            //        te.MoveTextEnd();
+            //        te.MoveLineEnd();
+            //        te.selectIndex = searchText.Length + 1;
+            //        //te. = searchText.Length + 1;
+            //        "move cursor".print();
+            //    }
+            //    _cursorFixFrames--;
+            //}
+
             if (allOptions == null || allOptions.Length == 0)
             {
                 Close();
@@ -151,7 +174,8 @@ namespace Yu5h1Lib.EditorExtension
             if (needsFocus)
             {
                 EditorGUI.FocusTextInControl("AutoFillSearch");
-                needsFocus = false;
+                //FocusWithCursorAtEnd("AutoFillSearch");
+                needsFocus = false;           
             }
 
             if (newSearch != searchText)

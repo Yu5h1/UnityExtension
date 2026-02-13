@@ -11,7 +11,7 @@ namespace Yu5h1Lib.EditorExtension
     public class AutoFillDrawer : PropertyDrawer
     {
         AutoFillAttribute autoFillatt => (AutoFillAttribute)attribute;
-
+        
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             if (property.propertyType != SerializedPropertyType.String)
@@ -19,15 +19,22 @@ namespace Yu5h1Lib.EditorExtension
                 EditorGUI.PropertyField(position, property, label, true);
                 return;
             }
-
+            var _previousText = property.stringValue;
+            bool textChanged = false;
             // PropertyField（保留原生右鍵選單、Prefab Override 等功能）
             // 記住 PropertyField 內部產生的 controlID，用來判斷鍵盤焦點
             var idBefore = GUIUtility.GetControlID(FocusType.Passive);
+            EditorGUI.BeginChangeCheck();
             EditorGUI.PropertyField(position, property, label);
+            if (EditorGUI.EndChangeCheck())
+            {
+                textChanged = true;
+            }
             var idAfter = GUIUtility.GetControlID(FocusType.Passive);
 
             // 計算彈出位置
             var popupRect = position;
+            popupRect.y -= EditorGUIUtility.singleLineHeight;
             popupRect.x += EditorGUIUtility.labelWidth;
             popupRect.width -= EditorGUIUtility.labelWidth;
 
@@ -37,15 +44,20 @@ namespace Yu5h1Lib.EditorExtension
             bool hasFocus = focused > idBefore && focused < idAfter;
 
             // 按 ↓ 鍵顯示全部選項（僅在此欄位有焦點時）
-            if (hasFocus && Event.current.type == EventType.KeyDown)
+            if (textChanged)
             {
-
-                if (Event.current.keyCode == KeyCode.DownArrow)
+                ShowPopup(popupRect, property);
+            }
+            else if (hasFocus )
+            {
+                if (Event.current.type == EventType.KeyDown)
                 {
-                    ShowPopup(popupRect, property);
-                    Event.current.Use();
+                    if (Event.current.keyCode == KeyCode.DownArrow)
+                    {
+                        ShowPopup(popupRect, property);
+                        Event.current.Use();
+                    }
                 }
-                
             }
         }
 

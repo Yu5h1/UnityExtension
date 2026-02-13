@@ -17,14 +17,12 @@ namespace Yu5h1Lib
 
         public override bool ApplyTo(Component component)
         {
-            "QQQ".print();
             if ($"{targetType} is unassigned.".printWarningIf(targetType.type == null) || $"{targetType.type} not matched {component.GetType()}".printWarningIf(!targetType.type.IsInstanceOfType(component)))
                 return false;
+
             foreach (var prop in properties)
-            {
                 prop.ApplyTo(component);
-                prop.name.print();
-            }
+
             return true;
         }
     }
