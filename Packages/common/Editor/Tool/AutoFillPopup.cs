@@ -56,7 +56,7 @@ namespace Yu5h1Lib.EditorExtension
             float height = Mathf.Min(displayCount * ITEM_HEIGHT + SEARCH_HEIGHT + 8, MAX_HEIGHT);
 
             if (screenSpace)
-                activatorRect.position = GUIUtility.GUIToScreenPoint(new Vector2(activatorRect.x, activatorRect.y));
+                activatorRect.position = GUIUtility.GUIToScreenPoint(activatorRect.position);
 
             instance.ShowAsDropDown(activatorRect, new Vector2(width, height));
             return instance;

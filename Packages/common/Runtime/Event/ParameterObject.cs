@@ -7,11 +7,13 @@ using UnityEngine;
 namespace Yu5h1Lib
 {
     public abstract class ParameterObject : ScriptableObject {
+        public abstract Type GetValueType();
         public abstract void ApplyTo(Component target);
     }
     public abstract class ParameterObject<T> : ParameterObject
     {
         [Decorable] public T value;
+        override public Type GetValueType() => typeof(T);
         public static implicit operator T(ParameterObject<T> obj) => obj.value;
         public override void ApplyTo(Component target)
         {

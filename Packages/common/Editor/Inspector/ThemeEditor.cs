@@ -13,12 +13,11 @@ public class ThemeEditor : Editor<Theme>
 {
     [InitializeOnLoadMethod]
     static void Initinalize(){
-        RenamePopup.confirmed += RenamePopup_confirmed;
+        InputDialog.confirmed += InputDialog_confirmed;
     }
 
-    private static void RenamePopup_confirmed(object obj)
+    private static void InputDialog_confirmed(object obj)
     {
-        //$"RenamePopup_confirmed {obj}".print();
         if (obj is not Theme theme)
             return;
         OnThemeChanged(theme);
@@ -50,7 +49,7 @@ public class ThemeEditor : Editor<Theme>
             SubAssetTransaction.Remove(pobj);
         }
 
-        // ¥¿½T§R°£ ObjectReference array element
+        // ï¿½ï¿½ï¿½Tï¿½Rï¿½ï¿½ ObjectReference array element
         array.DeleteArrayElementAtIndex(index);
         if (index < array.arraySize && array.GetArrayElementAtIndex(index).objectReferenceValue == null)
         {
@@ -128,15 +127,15 @@ public class ThemeEditor : Editor<Theme>
             .Select(item => item.name)
             .ToHashSet();
 
-        // ¦h¾lªº§R±¼
+        // ï¿½hï¿½lï¿½ï¿½ï¿½Rï¿½ï¿½
         var extras = myKeys.Except(schemaKeys).ToList();
 
-        // ¯Ê¤Öªº
+        // ï¿½Ê¤Öªï¿½
         var missings = schemaKeys.Except(myKeys).ToList();
 
         if (extras.Count > 0 || missings.Count > 0)
         {
-            // ¥ý°t¹ï¡GÃþ«¬¬Û¦Pªº extra ©M missing ¡÷ Rename
+            // ï¿½ï¿½ï¿½tï¿½ï¿½Gï¿½ï¿½ï¿½ï¿½ï¿½Û¦Pï¿½ï¿½ extra ï¿½M missing ï¿½ï¿½ Rename
             var renames = new List<(ParameterObject oldItem, ParameterObject schemaItem)>();
             var extrasToRemove = new List<string>(extras);
             var missingsToAdd = new List<string>(missings);
@@ -145,14 +144,14 @@ public class ThemeEditor : Editor<Theme>
             {
                 var extraItem = profile.items.First(i => i?.name == extraKey);
 
-                // §äÃþ«¬¬Û¦Pªº missing
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Û¦Pï¿½ï¿½ missing
                 foreach (var missingKey in missingsToAdd.ToList())
                 {
                     var schemaItem = profile.schema.items.First(i => i.name == missingKey);
 
                     if (extraItem.GetType() == schemaItem.GetType())
                     {
-                        // °t¹ï¦¨¥\ ¡÷ Rename
+                        // ï¿½tï¿½ï¦¨ï¿½\ ï¿½ï¿½ Rename
                         renames.Add((extraItem, schemaItem));
                         extrasToRemove.Remove(extraKey);
                         missingsToAdd.Remove(missingKey);
@@ -161,13 +160,13 @@ public class ThemeEditor : Editor<Theme>
                 }
             }
 
-            // ³B²z Rename¡]«O¯d­È¡A§ï¦W¡^
+            // ï¿½Bï¿½z Renameï¿½]ï¿½Oï¿½dï¿½È¡Aï¿½ï¿½Wï¿½^
             foreach (var (oldItem, schemaItem) in renames)
             {
                 oldItem.name = schemaItem.name;
             }
 
-            // ³B²z§R°£
+            // ï¿½Bï¿½zï¿½Rï¿½ï¿½
             foreach (var extra in extrasToRemove)
             {
                 var item = profile.items.First(i => i.name == extra);
@@ -176,7 +175,7 @@ public class ThemeEditor : Editor<Theme>
                 Object.DestroyImmediate(item, true);
             }
 
-            // ³B²z·s¼W
+            // ï¿½Bï¿½zï¿½sï¿½W
             foreach (var key in missingsToAdd)
             {
                 var schemaItem = profile.schema.items.First(item => item.name == key);

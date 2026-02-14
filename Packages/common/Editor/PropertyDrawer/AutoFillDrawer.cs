@@ -5,7 +5,7 @@ namespace Yu5h1Lib.EditorExtension
 {
     /// <summary>
     /// 為帶有 AutoFillAttribute 的 string 欄位提供自動完成建議
-    /// 按 ↓ 鍵顯示 AutoFillPopup，搜尋篩選由 Popup 內部處理
+    /// 按 ↓ 鍵顯示 InputDialog，搜尋篩選由 Popup 內部處理
     /// </summary>
     [CustomPropertyDrawer(typeof(AutoFillAttribute))]
     public class AutoFillDrawer : PropertyDrawer
@@ -33,11 +33,12 @@ namespace Yu5h1Lib.EditorExtension
             var idAfter = GUIUtility.GetControlID(FocusType.Passive);
 
             // 計算彈出位置
+            
             var popupRect = position;
             popupRect.y -= EditorGUIUtility.singleLineHeight;
             popupRect.x += EditorGUIUtility.labelWidth;
             popupRect.width -= EditorGUIUtility.labelWidth;
-
+            
             // 檢查鍵盤焦點是否在這個 PropertyField 上
             // Unity 的 TextField controlID 會介於 idBefore 和 idAfter 之間
             var focused = GUIUtility.keyboardControl;
@@ -47,6 +48,7 @@ namespace Yu5h1Lib.EditorExtension
             if (textChanged)
             {
                 ShowPopup(popupRect, property);
+               
             }
             else if (hasFocus )
             {
@@ -75,12 +77,16 @@ namespace Yu5h1Lib.EditorExtension
                 return;
 
             var formatter = StringOptionsProvider.GetDisplayFormatter(listKey);
-            AutoFillPopup.Show(popupRect, items, selected =>
+
+            InputDialog.Show(popupRect, selected =>
             {
                 property.stringValue = selected;
                 property.serializedObject.ApplyModifiedProperties();
                 EditorUtility.SetDirty(property.serializedObject.targetObject);
-            }, property.stringValue, formatter);
+            },
+            initialText: property.stringValue,
+            options: items,
+            displayFormatter: formatter, ToScreenSpace: false,SetWindowPosition:false);
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
