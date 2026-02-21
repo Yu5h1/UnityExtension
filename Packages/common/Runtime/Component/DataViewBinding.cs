@@ -20,12 +20,7 @@ namespace Yu5h1Lib
             => string.IsNullOrEmpty(key) ? base.GetFieldName() : key;
 
         public override string GetValue()
-        {
-
-            var val = _provider?.DataView.TryGetValue(key, out var value) == true ? value : string.Empty;
-            val.print();
-            return val;
-        }
+         => _provider?.DataView.TryGetValue(key, out var value) == true ? value : string.Empty;
 
         public override void SetValue(string value, System.StringComparison comparison)
             => _provider.DataView[key, comparison] = value;

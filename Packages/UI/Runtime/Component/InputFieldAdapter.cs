@@ -127,7 +127,7 @@ namespace Yu5h1Lib.UI
 #if UNITY_STANDALONE || UNITY_PLATFORM_STANDALONE_WIN || UNITY_EDITOR
             if ( lineType == 2 &&
              !Application.isMobilePlatform && Application.platform != RuntimePlatform.WebGLPlayer &&
-             (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+             (InputHandler.GetKeyDown(KeyCode.Return) || InputHandler.GetKeyDown(KeyCode.KeypadEnter)))
                 HandleEnterKey(true);
 #endif
         }
@@ -218,7 +218,7 @@ namespace Yu5h1Lib.UI
         {
             if (Application.isMobilePlatform )
                 return false;
-            bool result = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            bool result = InputHandler.GetKey(KeyCode.LeftShift) || InputHandler.GetKey(KeyCode.RightShift);
  
             return result;
         }

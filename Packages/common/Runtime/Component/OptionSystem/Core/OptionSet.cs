@@ -44,8 +44,8 @@ namespace Yu5h1Lib
         {
             if (!Items.IsValid(index))
                 return;
-            _OptionChanged?.Invoke(Items[index]);
             OnSelected(Items[index]);
+            _OptionChanged?.Invoke(Items[index]);
         }
         protected virtual void OnSelected(T current) {}
         public void InvokeOptionChanged() => Select(selector.current);

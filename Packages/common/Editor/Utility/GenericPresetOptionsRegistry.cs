@@ -66,7 +66,7 @@ namespace Yu5h1Lib.EditorExtension
                 }
 
                 return types
-                    .Where(t => typeof(UnityEngine.Component).IsAssignableFrom(t) && !t.IsAbstract)
+                    .Where(t => typeof(UnityEngine.Object).IsAssignableFrom(t) && !t.IsAbstract)
                     .Select(t => t.AssemblyQualifiedName)
                     .OrderBy(n => n)
                     .ToArray();
@@ -80,7 +80,7 @@ namespace Yu5h1Lib.EditorExtension
             });
 
             // 根據 targetType 過濾屬性
-            StringOptionsProvider.Register("~ComponentProperties", (sender, path) =>
+            StringOptionsProvider.Register("~Properties", (sender, path) =>
             {
                 if (sender == null || string.IsNullOrEmpty(path))
                     return Array.Empty<string>();

@@ -8,7 +8,7 @@ namespace Yu5h1Lib
     /// a PropertyDrawer slot and can coexist with [Inline] on the same field.
     /// </summary>
     /// <example>
-    /// [Inline(true), Decorator(typeof(DropdownAttribute)), StringOptionsContext("ComponentProperties")]
+    /// [Inline(true), Decorator(typeof(DropdownAttribute)), StringOptionsContext("Properties")]
     /// public List&lt;ParameterObject&gt; properties;
     /// </example>
     [AttributeUsage(AttributeTargets.Field)]

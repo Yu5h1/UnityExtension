@@ -8,8 +8,8 @@ namespace Yu5h1Lib.Theming
     /// </summary>
     public class ThemeOptionSet : OptionSet<Theme>
     {
-        [SerializeField,Inline(true)] private List<Theme.Binding> _bindings;
-        public List<Theme.Binding> bindings => _bindings;
+        [SerializeField,Inline(true)] private List<Theme.BindingObject> _bindings;
+        public List<Theme.BindingObject> bindings => _bindings;
 
         protected override void OnSelected(Theme profile)
         {

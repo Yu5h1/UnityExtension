@@ -4,8 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using Yu5h1Lib;
-
-
+using static Yu5h1Lib.InputHandler;
 
 public class KeyCodeEventHandler : MonoBehaviour
 {
@@ -26,13 +25,13 @@ public class KeyCodeEventHandler : MonoBehaviour
 
         if (!isActiveAndEnabled)
             return;
-        if (Evaluate(keyCode) || extras.Any( k => Evaluate(k)))
+        if (Evaluate(keyCode) || extras.Any(k => Evaluate(k)))
             Event?.Invoke();
     }
     public bool Evaluate(KeyCode key) =>
-             State == KeyState.Down && Input.GetKeyDown(key) ||
-             State == KeyState.Hold && Input.GetKey(key) ||
-             State == KeyState.Up && Input.GetKeyUp(key);
+             State == KeyState.Down && GetKeyDown(key) ||
+             State == KeyState.Hold && GetKey(key) ||
+             State == KeyState.Up && GetKeyUp(key);
 
     private void OnDisable()
     {

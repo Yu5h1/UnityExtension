@@ -7,7 +7,7 @@ using UnityEngine.UI;
 using Yu5h1Lib;
 using Yu5h1Lib.UI;
 
-public class UI_SelectionOverlay : UIControl
+public class UI_SelectionOverlay : UI_Addon
 {
     public SelectableHandler[] handlers;
     public RectTransform overlay;
@@ -35,10 +35,10 @@ public class UI_SelectionOverlay : UIControl
     {
         if (!allowKeyboardNavigation || handlers.IsEmpty() )
             return;
-        if (Input.GetKeyDown(KeyCode.UpArrow) ||
-            Input.GetKeyDown(KeyCode.DownArrow) ||
-            Input.GetKeyDown(KeyCode.LeftArrow) ||
-            Input.GetKeyDown(KeyCode.RightArrow))
+        if (InputHandler.GetKeyDown(KeyCode.UpArrow) ||
+            InputHandler.GetKeyDown(KeyCode.DownArrow) ||
+            InputHandler.GetKeyDown(KeyCode.LeftArrow) ||
+            InputHandler.GetKeyDown(KeyCode.RightArrow))
         {
             if (EventSystem.current.currentSelectedGameObject == null)
                     handlers[0].Select();

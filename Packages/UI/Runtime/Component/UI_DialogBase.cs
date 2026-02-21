@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace Yu5h1Lib.UI
 {
-    public abstract class UI_DialogBase : UIControl
+    public abstract class UI_DialogBase : UI_Addon
     {
         [Flags]
         public enum Style {

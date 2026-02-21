@@ -219,10 +219,12 @@ namespace Yu5h1Lib.EditorExtension
             if (needsFocus)
             {
                 EditorGUI.FocusTextInControl("InputDialogField");
-                // Select all text for rename convenience
-                var editor = (TextEditor)GUIUtility.GetStateObject(
-                    typeof(TextEditor), GUIUtility.keyboardControl);
-                editor?.SelectAll();
+///Sad but works
+                EditorApplication.delayCall += () =>
+                {
+                    editorWindow.SendEvent(Event.KeyboardEvent("right"));
+                };
+
                 needsFocus = false;
             }
 
@@ -380,6 +382,7 @@ namespace Yu5h1Lib.EditorExtension
             else
                 result = searchText.Trim();
 
+            //$"{result} {hoverIndex} {searchText}".print();
             if (result == _original)
                 return;
 

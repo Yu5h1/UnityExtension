@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 using Yu5h1Lib.UI;
 using Yu5h1Lib;
 
-public abstract class UI_Helper<T> : UIControl<T> where T : UIBehaviour
+public abstract class UI_Helper<T> : UI_Addon<T> where T : UIBehaviour
 {
 
 }

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using Yu5h1Lib;
 using Yu5h1Lib.UI;
 
-public class SelectableHandler : UIControl, ISelectHandler, IDeselectHandler//, IPointerEnterHandler, IPointerExitHandler
+public class SelectableHandler : UI_Addon, ISelectHandler, IDeselectHandler//, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField,ReadOnly]
     private Selectable _selectable;

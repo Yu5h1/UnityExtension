@@ -40,10 +40,7 @@ namespace Yu5h1Lib
             }
         }
         public int[] skipIndices;
-        protected override void OnInitializing()
-        {
-            
-        }
+        protected override void OnInitializing() {}
 
         [SerializeField] private UnityEvent<int> _selectionChanged;
         public event UnityAction<int> selectionChanged
@@ -65,14 +62,12 @@ namespace Yu5h1Lib
             }
             return false;
         }
+        public void Select(bool value) => current = value ? 1 : 0;
+        public void Select(int index) => current = index;
         [ContextMenu(nameof(MoveNext))]
-        public void MoveNext()
-        {
-            current++;
-        }
+        public void MoveNext() => current++;
         [ContextMenu(nameof(MovePrevious))]
-        public void MovePrevious()
-            => current = (current - 1) < 0 ? Count - 1 : current - 1;
+        public void MovePrevious() => current = (current - 1) < 0 ? Count - 1 : current - 1;
 
     }
 

@@ -4,5 +4,5 @@ using Yu5h1Lib.UI.Effects;
 
 namespace Yu5h1Lib.UI
 {
-    public class RectTransformBinding : Theme.BindingPreset<RectTransform, RectTransformPreset> { }
+    public class RectTransformBinding : Theme.BindingComponentPresetObject<RectTransform, RectTransformPreset> { }
 }

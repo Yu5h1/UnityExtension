@@ -14,14 +14,14 @@ using System.Linq;
 public class InspectorEnhancer : EditorWindow
 {
 
-    public static List<int[]> m_ObjectsRecorder;
-    public static List<int[]> ObjectsRecorder
+    public static List<EntityId[]> m_ObjectsRecorder;
+    public static List<EntityId[]> ObjectsRecorder
     {
         get
         {
             if (m_ObjectsRecorder == null)
             {
-                m_ObjectsRecorder = new List<int[]>();
+                m_ObjectsRecorder = new List<EntityId[]>();
                 var load = EditorPrefs.GetString("InspectorEnhancer_SelectionHistory");
                 if (load == "")
                 {
@@ -35,7 +35,7 @@ public class InspectorEnhancer : EditorWindow
                         if (ele != "")
                         {
                             var sobjs = ele.Split(',');
-                            int[] objs = new int[sobjs.Length];
+                            var objs = new EntityId[sobjs.Length];
                             for (int i = 0; i < sobjs.Length; i++)
                             {
                                 if (sobjs[i] != "")
@@ -224,7 +224,7 @@ public class InspectorEnhancer : EditorWindow
 
     static void Record()
     {
-        ObjectsRecorder.Add(Selection.instanceIDs);
+        ObjectsRecorder.Add(Selection.entityIds);
         string save = "";
         foreach (var item in ObjectsRecorder)
         {
@@ -285,7 +285,7 @@ public class InspectorEnhancer : EditorWindow
         Object[] objs = new Object[ObjectsRecorder[current].Length];
         for (int i = 0; i < ObjectsRecorder[current].Length; i++)
         {
-            objs[i] = EditorUtility.InstanceIDToObject(ObjectsRecorder[current][i]);
+            objs[i] = EditorUtility.EntityIdToObject(ObjectsRecorder[current][i]);
         }
         Selection.objects = objs;
     }

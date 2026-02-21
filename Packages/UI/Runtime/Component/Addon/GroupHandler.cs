@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace Yu5h1Lib.UI
 {
-    public abstract class BaseGroupHandler : UIControl {}
+    public abstract class BaseGroupHandler : UI_Addon {}
 
     [DisallowMultipleComponent]
     public abstract class GroupHandler<T> : BaseGroupHandler where T : Selectable

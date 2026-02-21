@@ -39,7 +39,7 @@ namespace Yu5h1Lib.Serialization
         }
 
 
-        public override bool TrySetProperty(Object obj)
+        public override bool TryWriteTo(Object obj)
         {      
             if (!(obj is IValuePort port))
             {
@@ -53,7 +53,7 @@ namespace Yu5h1Lib.Serialization
             return true;
         }
 
-        public override bool TryLoadProperty(Object bindable)
+        public override bool TryReadFrom(Object bindable)
         {
             if (!(bindable is IValuePort binding))
             {
@@ -117,10 +117,10 @@ namespace Yu5h1Lib.Serialization
     [System.Serializable]
     public abstract class DataView<TKey, TValue> : KeyValues<TKey, TValue>
     {
-        public abstract bool TrySetProperty(Object bindable);
-        public abstract bool TryLoadProperty(Object bindable);
-        public void GetProperty(Object bindable) => TrySetProperty(bindable);
-        public void SetProperty(Object bindable) => TryLoadProperty(bindable);
+        public abstract bool TryWriteTo(Object bindable);
+        public abstract bool TryReadFrom(Object bindable);
+        public void WriteTo(Object bindable) => TryWriteTo(bindable);
+        public void ReadFrom(Object bindable) => TryReadFrom(bindable);
 
         public DataView() : base() { }
         public DataView(IDictionary<TKey, TValue> source) : base(source) { }
