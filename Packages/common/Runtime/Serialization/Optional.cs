@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Yu5h1Lib
 {
@@ -7,14 +8,10 @@ namespace Yu5h1Lib
     public struct Optional<T>
     {        
         public bool enabled;
-        [SerializeField] private T _value;
-
-        public T value => _value;
-        public bool hasValue => enabled;
-
+        [FormerlySerializedAs("_value")] public T value;
         public bool TryGetValue(out T result)
         {
-            result = _value;
+            result = value;
             return enabled;
         }
     }

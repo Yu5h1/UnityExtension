@@ -12,7 +12,7 @@ using System.Linq;
 public class ThemeEditor : Editor<Theme>
 {
     [InitializeOnLoadMethod]
-    static void Initinalize(){
+    static void Initialize(){
         InputDialog.confirmed += InputDialog_confirmed;
     }
 
@@ -29,6 +29,7 @@ public class ThemeEditor : Editor<Theme>
         ReorderableListEnhanced.TryCreate(serializedObject, "_items", out itemsList);
         itemsList.added += ItemsList_added;
         itemsList.removed += ItemsList_removed;
+        reorderableLists["_items"] = itemsList;
     }
 
     private void ItemsList_removed(ReorderableList list)
@@ -36,25 +37,33 @@ public class ThemeEditor : Editor<Theme>
         if (list.index < 0)
             return;
 
-        Undo.RegisterCompleteObjectUndo(targetObject, "Remove Item");
+        Undo.RegisterCompleteObjectUndo(targetObject, "Remove Items");
 
         var array = itemsList.serializedProperty;
-        int index = list.index;
 
-        var element = array.GetArrayElementAtIndex(index);
-        var obj = element.objectReferenceValue;
+        // 取得所有選取的 index，從大到小排序，避免刪除時 index 偏移
+        var selectedIndices = list.selectedIndices.Count > 0
+            ? new List<int>(list.selectedIndices)
+            : new List<int> { list.index };
 
-        if (obj is ParameterObject pobj && AssetDatabase.IsSubAsset(pobj))
+        selectedIndices.Sort((a, b) => b.CompareTo(a)); // 由大到小
+
+        foreach (int index in selectedIndices)
         {
-            SubAssetTransaction.Remove(pobj);
-        }
+            if (index < 0 || index >= array.arraySize)
+                continue;
 
-        // ���T�R�� ObjectReference array element
-        array.DeleteArrayElementAtIndex(index);
-        if (index < array.arraySize && array.GetArrayElementAtIndex(index).objectReferenceValue == null)
-        {
+            var element = array.GetArrayElementAtIndex(index);
+            var obj = element.objectReferenceValue;
+
+            if (obj is ParameterObject pobj && AssetDatabase.IsSubAsset(pobj))
+            {
+                SubAssetTransaction.Remove(pobj);
+            }
+
             array.DeleteArrayElementAtIndex(index);
         }
+
         serializedObject.ApplyModifiedProperties();
         NotifyThemeChanged();
     }
@@ -73,33 +82,6 @@ public class ThemeEditor : Editor<Theme>
         menu.ShowAsContext();
     }
     void NotifyThemeChanged() { OnThemeChanged(targetObject); }
-
-    //public override void OnInspectorGUI()
-    //{
-    //    serializedObject.TryDrawScriptField();
-
-    //    EditorGUI.BeginChangeCheck();
-    //    itemsList.DoLayoutList();
-    //    if (EditorGUI.EndChangeCheck())
-    //    {
-    //        serializedObject.ApplyModifiedProperties();
-    //    }
-
-
-    //}
-    public override void DrawProperty(SerializedProperty property)
-    {
-        if (property.displayName == "Items")
-        {
-            EditorGUI.BeginChangeCheck();
-            itemsList.DoLayoutList();
-            if (EditorGUI.EndChangeCheck())
-            {
-                serializedObject.ApplyModifiedProperties();
-            }
-        }
-        else base.DrawProperty(property);
-    }
 
     static void OnThemeChanged(Theme source) 
     {

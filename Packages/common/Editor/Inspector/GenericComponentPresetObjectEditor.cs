@@ -101,8 +101,7 @@ namespace Yu5h1Lib.EditorExtension
             var presetName = Target.name;
             var subAssetName = $"{presetName}.{propInfo.Name}";
 
-            var existing = FindExistingParameterObject(subAssetName);
-            var isEnabled = existing != null;
+            var isEnabled = TryFindExistingParameterObject(subAssetName, out SerializedProperty existingProp, out ParameterObject existing);
 
             EditorGUILayout.BeginHorizontal();
 
@@ -129,7 +128,7 @@ namespace Yu5h1Lib.EditorExtension
             // Disabled: greyed out label with type hint
             if (isEnabled && existing != null)
             {
-                EditorGUILayout.ObjectField(existing, typeof(ParameterObject), false);
+                EditorGUILayout.PropertyField(existingProp);
             }
             else
             {
@@ -141,16 +140,22 @@ namespace Yu5h1Lib.EditorExtension
             EditorGUILayout.EndHorizontal();
         }
 
-        ParameterObject FindExistingParameterObject(string name)
+        private bool TryFindExistingParameterObject(string name, out SerializedProperty prop, out ParameterObject obj)
         {
             for (int i = 0; i < propertiesProp.arraySize; i++)
             {
                 var element = propertiesProp.GetArrayElementAtIndex(i);
                 var po = element.objectReferenceValue as ParameterObject;
                 if (po != null && po.name == name)
-                    return po;
+                {
+                    obj = po;
+                    prop = element;
+                    return true;
+                }
             }
-            return null;
+            prop = null;
+            obj = null;
+            return false;
         }
 
         void AddToProperties(ParameterObject po)

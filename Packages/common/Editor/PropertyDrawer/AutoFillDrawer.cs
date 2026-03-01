@@ -86,7 +86,7 @@ namespace Yu5h1Lib.EditorExtension
             },
             initialText: property.stringValue,
             options: items,
-            displayFormatter: formatter, ToScreenSpace: false,SetWindowPosition:false);
+            displayFormatter: formatter, ToScreenSpace: false,SetWindowPosition:false,initialSelection:InputDialog.SelectionType.End);
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)

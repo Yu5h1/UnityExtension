@@ -66,7 +66,7 @@ namespace Yu5h1Lib.EditorExtension
                 }
 
                 return types
-                    .Where(t => typeof(UnityEngine.Object).IsAssignableFrom(t) && !t.IsAbstract)
+                    .Where(t => typeof(UnityEngine.Object).IsAssignableFrom(t) )
                     .Select(t => t.AssemblyQualifiedName)
                     .OrderBy(n => n)
                     .ToArray();

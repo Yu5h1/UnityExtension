@@ -20,6 +20,18 @@ namespace Yu5h1Lib.UI
 
         public Toggle[] toggles { get; private set; }
 
+        [SerializeField] private Optional<BinaryStateColor> _stateColor;
+
+
+
+        public Color activeColor 
+        { 
+            get => _stateColor.value.active; 
+            private set => _stateColor.value.active = value;
+        }
+        public Color inactiveColor { get => _stateColor.value.inactive; private set => _stateColor.value.inactive = value; }
+
+        //private bool _dirty;
         public void FindToggles()
         {
             if ("Toggle Group is unassigned".printWarningIf(ui == null))
@@ -36,12 +48,22 @@ namespace Yu5h1Lib.UI
                 t.onValueChanged.AddListener((isOn) => OnToggleValueChanged(t, isOn));
             }
         }
+ 
         private void OnToggleValueChanged(Toggle sender, bool isOn)
         {
             if (!isActiveAndEnabled)
                 return;
             if (isOn)
                 _selectedChanged?.Invoke(sender);
+
+            CheckStateColor();
+        }
+        public void CheckStateColor()
+        {
+            if (_stateColor.enabled)
+                foreach (var t in toggles)
+                    if (t.targetGraphic != null)
+                        t.targetGraphic.color = _stateColor.value.Evaluate(t.isOn);
         }
         public void SetIsOnWithoutNotify(int index)
         {

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Rendering;
 using Yu5h1Lib.Serialization;
 
@@ -17,6 +18,7 @@ namespace Yu5h1Lib
         [SerializeField, ReadOnly] private DataView _current = new DataView();
         public DataView current => _current;
 
+        [SerializeField] private UnityEvent _DataUpdated;
 
         public bool TryGetValueFromBindings(string key,out string value)
         {
@@ -73,10 +75,14 @@ namespace Yu5h1Lib
 
 
         public void WriteTo(Object obj) => current.WriteTo(obj);
-        public void ReadFrom(Object obj) => current.ReadFrom(obj);
+        public void ReadFrom(Object obj)
+        {
+            if (current.TryReadFrom(obj))
+                _DataUpdated?.Invoke();
+        }
 
-        public void GetProperty(Object obj) => current.WriteTo(obj);
-        public void SetProperty(Object obj) => current.ReadFrom(obj);
+        public void GetProperty(Object obj) => WriteTo(obj);
+        public void SetProperty(Object obj) => ReadFrom(obj);
 
         /// <summary>
         /// Determines whether the current instance is in a ready state.

@@ -11,6 +11,16 @@ namespace Yu5h1Lib.EditorExtension
             return AssetDatabase.LoadMainAssetAtPath(path);
         }
 
+
+        public static ParameterObject AddToMainAsset(Object mainAsset, ParameterObject instance)
+        {
+            Undo.RegisterCreatedObjectUndo(instance, "Create ParameterObject SubAsset");
+            AssetDatabase.AddObjectToAsset(instance, mainAsset);
+            EditorUtility.SetDirty(mainAsset);
+            AssetDatabase.SaveAssets();
+            return instance;
+        }
+
         public static ParameterObject CreateParameterSubAsset(System.Type valueType, Object mainAsset, string name)
         {
             var poType = ParameterObjectUtility.GetParameterObjectType(valueType);
@@ -18,11 +28,7 @@ namespace Yu5h1Lib.EditorExtension
 
             var instance = (ParameterObject)ScriptableObject.CreateInstance(poType);
             instance.name = name;
-            Undo.RegisterCreatedObjectUndo(instance, "Create ParameterObject SubAsset");
-            AssetDatabase.AddObjectToAsset(instance, mainAsset);
-            EditorUtility.SetDirty(mainAsset);
-            AssetDatabase.SaveAssets();
-            return instance;
+            return AddToMainAsset(mainAsset, instance);
         }
 
         public static void RemoveSubAsset(ScriptableObject subAsset)

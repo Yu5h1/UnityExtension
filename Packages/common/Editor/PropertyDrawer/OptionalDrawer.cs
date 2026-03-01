@@ -11,7 +11,7 @@ namespace Yu5h1Lib.EditorExtension
             EditorGUI.BeginProperty(position, label, property);
 
             var enabledProp = property.FindPropertyRelative("enabled");
-            var valueProp = property.FindPropertyRelative("_value");
+            var valueProp = property.FindPropertyRelative("value");
 
             float singleLineHeight = EditorGUIUtility.singleLineHeight;
 
@@ -38,7 +38,7 @@ namespace Yu5h1Lib.EditorExtension
         }
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return EditorGUI.GetPropertyHeight(property.FindPropertyRelative("_value"), true);
+            return EditorGUI.GetPropertyHeight(property.FindPropertyRelative("value"), true);
         }
     }
 }

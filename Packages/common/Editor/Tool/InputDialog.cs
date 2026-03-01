@@ -56,6 +56,14 @@ namespace Yu5h1Lib.EditorExtension
         public void Repaint() => editorWindow.Repaint();
         #endregion
 
+        public enum SelectionType
+        { 
+            All = 0,
+            Start = 1,
+            End = 2,
+        }
+        private SelectionType initialSelection = SelectionType.All;
+
         /// <summary>
         /// Show the InputDialog.
         /// </summary>
@@ -76,7 +84,8 @@ namespace Yu5h1Lib.EditorExtension
             object target = null,
             bool applyOnLostFocus = false,
             bool ToScreenSpace = true,
-            bool SetWindowPosition = true)
+            bool SetWindowPosition = true,
+            SelectionType initialSelection = SelectionType.All)
         {            
             // Close existing instance
             //var existing = Resources.FindObjectsOfTypeAll<InputDialog>();
@@ -88,7 +97,7 @@ namespace Yu5h1Lib.EditorExtension
 
             //instance = CreateInstance<InputDialog>();
 
-            instance = new InputDialog();
+            instance = new InputDialog();            
             instance.onApply = onApply;
             instance.displayFormatter = displayFormatter;
             instance.target = target;
@@ -105,7 +114,7 @@ namespace Yu5h1Lib.EditorExtension
                 instance.ApplyFilter();
                 instance.hoverIndex = -1;
             }
-
+            instance.initialSelection = initialSelection;
             // Calculate window size
             //width = Mathf.Max(activatorRect.width, 200);
             width = activatorRect.width;
@@ -123,6 +132,7 @@ namespace Yu5h1Lib.EditorExtension
             wantsMouseMove = true;
         }
         bool _initialized = false;
+        bool _initialfocused = false;
         private static void EnsureStyles()
         {
             if (_itemStyle == null)
@@ -219,12 +229,25 @@ namespace Yu5h1Lib.EditorExtension
             if (needsFocus)
             {
                 EditorGUI.FocusTextInControl("InputDialogField");
-///Sad but works
-                EditorApplication.delayCall += () =>
-                {
-                    editorWindow.SendEvent(Event.KeyboardEvent("right"));
-                };
 
+                if (!_initialfocused)
+                {
+                    ///Sad but works
+                    EditorApplication.delayCall += () =>
+                    {
+                        
+                        switch (initialSelection)
+                        {
+                            case SelectionType.Start:
+                                editorWindow.SendEvent(Event.KeyboardEvent("left"));
+                                break;
+                            case SelectionType.End:
+                                editorWindow.SendEvent(Event.KeyboardEvent("right"));
+                                break;
+                        }
+                    };
+                    _initialfocused = true;
+                }
                 needsFocus = false;
             }
 

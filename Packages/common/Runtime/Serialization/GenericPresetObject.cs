@@ -5,7 +5,14 @@ using UnityEngine;
 namespace Yu5h1Lib
 {
     [Icon("d_Preset.Context")]
-    public class GenericPresetObject : ParameterObject<GenericObjectPreset> { }
+    public class GenericPresetObject : ParameterObject<GenericObjectPreset> {
+
+        public override void ApplyTo(Object target)
+        {
+            foreach (var prop in value.properties)
+                prop.ApplyTo(target);
+        }
+    }
 
     [System.Serializable]
     public class GenericObjectPreset : Preset<Object>

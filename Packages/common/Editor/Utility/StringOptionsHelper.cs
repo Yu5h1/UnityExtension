@@ -178,7 +178,7 @@ namespace Yu5h1Lib.EditorExtension
             return GetFieldRecursive(type.BaseType, fieldName);
         }
 
-        #region Built-in initinalization
+        #region Built-in initialization
         [InitializeOnLoadMethod]
         private static void RegisterBuiltInOptions()
         {

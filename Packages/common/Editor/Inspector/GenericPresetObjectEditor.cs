@@ -28,37 +28,40 @@ namespace Yu5h1Lib.EditorExtension
 
         public override void OnInspectorGUI()
         {
-            if (valueProp == null)
-            {
-                base.OnInspectorGUI();
-                return;
-            }
-            DrawMonoScript();
+            base.OnInspectorGUI();
+            //if (valueProp == null)
+            //{
+            //    base.OnInspectorGUI();
+            //    return;
+            //}
+            //DrawMonoScript();
+            //serializedObject.Update();
+
+            //// 1. Draw targetAssembly
+            //EditorGUILayout.PropertyField(targetAssemblyProp);
+
+            //// 2. Draw targetType (detect change)
+            //EditorGUI.BeginChangeCheck();
+            //EditorGUILayout.PropertyField(targetTypeProp);
+            //if (EditorGUI.EndChangeCheck())
+            //{
+            //    serializedObject.ApplyModifiedProperties();
+            //    if (propertiesProp.arraySize > 0)
+            //    {
+            //        if (EditorUtility.DisplayDialog("Type Changed",
+            //            "Clear existing Properties?", "Clear", "Keep"))
+            //        {
+            //            ClearAllProperties();
+            //        }
+            //    }
+            //}
             serializedObject.Update();
-
-            // 1. Draw targetAssembly
-            EditorGUILayout.PropertyField(targetAssemblyProp);
-
-            // 2. Draw targetType (detect change)
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(targetTypeProp);
-            if (EditorGUI.EndChangeCheck())
-            {
-                serializedObject.ApplyModifiedProperties();
-                if (propertiesProp.arraySize > 0)
-                {
-                    if (EditorUtility.DisplayDialog("Type Changed",
-                        "Clear existing Properties?", "Clear", "Keep"))
-                    {
-                        ClearAllProperties();
-                    }
-                }
-            }
-
             EditorGUILayout.Space();
 
             // 3. Get target type
             var targetType = GetTargetType();
+
+            EditorGUI.BeginChangeCheck();
 
             if (targetType == null)
             {
@@ -69,7 +72,11 @@ namespace Yu5h1Lib.EditorExtension
                 DrawDynamicProperties(targetType);
             }
 
-            serializedObject.ApplyModifiedProperties();
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedObject.ApplyModifiedProperties();
+            }
+                
         }
 
         Type GetTargetType()
@@ -101,8 +108,7 @@ namespace Yu5h1Lib.EditorExtension
             var presetName = targetObject.name;
             var subAssetName = $"{presetName}.{propInfo.Name}";
 
-            var existing = FindExistingParameterObject(subAssetName);
-            var isEnabled = existing != null;
+            var isEnabled = TryFindExistingParameterObject(subAssetName,out SerializedProperty existingProp,out ParameterObject existing );
 
             EditorGUILayout.BeginHorizontal();
 
@@ -113,8 +119,12 @@ namespace Yu5h1Lib.EditorExtension
             {
                 if (newEnabled)
                 {
-                    var po = SubAssetUtility.CreateParameterSubAsset(
-                        propInfo.PropertyType, MainAsset, subAssetName);
+                    var poType = ParameterObjectUtility.GetParameterObjectType(propInfo.PropertyType);
+                    var po = (ParameterObject)ScriptableObject.CreateInstance(poType);
+                    po.name = subAssetName;
+                    if (MainAsset != null)
+                        SubAssetUtility.AddToMainAsset(MainAsset,po);
+                    
                     if (po != null)
                         AddToProperties(po);
                 }
@@ -129,7 +139,8 @@ namespace Yu5h1Lib.EditorExtension
             // Disabled: greyed out label with type hint
             if (isEnabled && existing != null)
             {
-                EditorGUILayout.ObjectField(existing, typeof(ParameterObject), false);
+                EditorGUILayout.PropertyField(existingProp);
+                //EditorGUILayout.ObjectField(existing, typeof(ParameterObject), false);
             }
             else
             {
@@ -141,16 +152,22 @@ namespace Yu5h1Lib.EditorExtension
             EditorGUILayout.EndHorizontal();
         }
 
-        ParameterObject FindExistingParameterObject(string name)
+        private bool TryFindExistingParameterObject(string name, out SerializedProperty prop, out ParameterObject obj)
         {
             for (int i = 0; i < propertiesProp.arraySize; i++)
             {
                 var element = propertiesProp.GetArrayElementAtIndex(i);
                 var po = element.objectReferenceValue as ParameterObject;
                 if (po != null && po.name == name)
-                    return po;
+                {
+                    obj = po;
+                    prop = element;
+                    return true;
+                }
             }
-            return null;
+            prop = null;
+            obj = null;
+            return false;
         }
 
         void AddToProperties(ParameterObject po)

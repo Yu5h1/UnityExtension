@@ -64,8 +64,13 @@ namespace Yu5h1Lib.Serialization
             if (ContainsKey(fieldName) && this[fieldName].Equals(binding.GetValue()))
                 return false;
             this[fieldName] = binding.GetValue();
+            //OnValueChanged(fieldName);
             return true;
         }
+        //protected void OnValueChanged(string key)
+        //{ 
+
+        //}
         public string ToJson()
         {
             var json = JsonUtility.ToJson(this).TrimBefore("[", true).TrimAfter("]", true);

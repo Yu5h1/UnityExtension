@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9382178e047d8444aabc550adf7b81a3, type: 3}
   m_Name: New IntegerArrayObject
   m_EditorClassIdentifier: Yu5h1Lib.Common::Yu5h1Lib.IntegerArrayObject
-  value: 
+  value: 000000000000000000000000000000000000000000000000
