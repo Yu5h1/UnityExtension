@@ -52,16 +52,8 @@ namespace Yu5h1Lib
         protected override void OnInitializing()
         {
             if (current.IsEmpty())
-                current.CopyFrom(DefaultSetting());
-
-            if (IsCacheLoaded())
-            {
-                foreach (var obj in bindings)
-                    WriteTo(obj);
-            }
+                current.CopyFrom(DefaultSetting());     
         }
-
-
         public void WriteToBindings()
         { 
             foreach (var obj in _bindings)
@@ -83,11 +75,6 @@ namespace Yu5h1Lib
 
         public void GetProperty(Object obj) => WriteTo(obj);
         public void SetProperty(Object obj) => ReadFrom(obj);
-
-        /// <summary>
-        /// Determines whether the current instance is in a ready state.
-        /// </summary>
-        /// <returns><see langword="true"/> if the instance is ready; otherwise, <see langword="false"/>.</returns>
-        public virtual bool IsCacheLoaded() => true;
+  
     }
 }

@@ -10,26 +10,18 @@ namespace Yu5h1Lib.EditorExtension
     public class ThemeOptionSetEditor : Editor<ThemeOptionSet>
     {
         private ReorderableListEnhanced itemsList;
-        static string filterText;
+
         private void OnEnable()
         {
-            TryPrepareList(serializedObject.FindProperty("_Items"),out itemsList);
+            TryPrepareList(serializedObject.FindProperty("_Items"), out itemsList);
             itemsList.allowFilter = false;
-            ReorderableListEnhanced.FilterTextProvider.Remove(targetObject.GetInstanceID());
-            ReorderableListEnhanced.FilterTextProvider.Add(targetObject.GetInstanceID(), GetfilterText);
-        }
-        public override void OnInspectorGUI()
-        {
-            base.OnInspectorGUI();
-            if (GUI.changed)
-                filterText = itemsList.GetFilterText();
+            itemsList.MarkAsFilterProvider();
         }
 
-        string GetfilterText() => filterText;
         protected override void OnDisable()
         {
             base.OnDisable();
-            ReorderableListEnhanced.FilterTextProvider.Remove(targetObject.GetInstanceID());
+            itemsList?.UnmarkAsFilterProvider();
         }
     }
 }

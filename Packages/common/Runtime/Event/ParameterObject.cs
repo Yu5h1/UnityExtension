@@ -13,7 +13,7 @@ namespace Yu5h1Lib
     }
     public abstract class ParameterObject<T> : ParameterObject
     {
-        [Decorable] public T value;
+        [Decorable,Inline(true)] public T value;
         override public Type GetValueType() => typeof(T);
         public static implicit operator T(ParameterObject<T> obj) => obj.value;
         public override void ApplyTo(Object target)

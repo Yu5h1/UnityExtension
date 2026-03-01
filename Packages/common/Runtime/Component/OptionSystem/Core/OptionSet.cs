@@ -26,7 +26,7 @@ namespace Yu5h1Lib
                     selector.current = index;
             }
         }
-        [SerializeField, Inline(UseCustomReorderableList = true)] protected List<T> _Items;
+        [SerializeField, Inline(UseEnhancedReorderableList = true)] protected List<T> _Items;
         public virtual List<T> Items { get => _Items; protected set => _Items = value; }
 
         [SerializeField] private UnityEvent<T> _OptionChanged;
