@@ -11,7 +11,7 @@ namespace Yu5h1Lib.Theming
         [SerializeField,Inline(true)] private List<Theme.BindingObject> _bindings;
         public List<Theme.BindingObject> bindings => _bindings;
 
-        protected override void OnSelected(Theme profile)
+        protected override void OnSelected(int index,Theme profile)
         {
             foreach (var group in _bindings)
             {

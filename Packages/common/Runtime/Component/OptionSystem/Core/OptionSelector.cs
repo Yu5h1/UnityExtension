@@ -13,30 +13,45 @@ namespace Yu5h1Lib
         public int Count => optionSet.Count;
         [SerializeField] private int _current = -1;
         [SerializeField] private Object binding;
+
+        private bool _syncing;
         public int current
         {
             get => _current;
             set
             {
-                if (_current == value || Count == 0)
+                if (_syncing || Count == 0)
                     return;
-                value %= Count;
-                if (value < 0)
-                    value = Count - 1;
 
-                if (skipIndices.Contains(value))
+                _syncing = true;
+                try
                 {
-                    var interval = value > _current || value == 0 && _current == Count - 1  ? 1 : -1;
-                    if (!TryFindNextValidIndex(value, out int next, interval))
-                        return;
-                    value = next;
-                }
-                _current = value;
+                    value %= Count;
+                    if (value < 0)
+                        value = Count - 1;
 
-                optionSet.Select(value);
-                _selectionChanged?.Invoke(value);
-                if (binding is IValuePort bindable)
-                    bindable.SetValue(optionSet.GetValue());
+                    if (skipIndices.Contains(value))
+                    {
+                        var interval = value > _current || (value == 0 && _current == Count - 1) ? 1 : -1;
+                        if (!TryFindNextValidIndex(value, out int next, interval))
+                            return;
+                        value = next;
+                    }
+
+                    if (_current == value)
+                        return;
+
+                    _current = value;
+
+                    optionSet.Select(value);
+                    _selectionChanged?.Invoke(value);
+                    if (binding is IValuePort bindable)
+                        bindable.SetValue(optionSet.GetValue());
+                }
+                finally
+                {
+                    _syncing = false;
+                }
             }
         }
         public int[] skipIndices;
@@ -53,7 +68,9 @@ namespace Yu5h1Lib
             result = startIndex;
             for (int i = 0; i < Count; i++)
             {
-                int index = (startIndex + i + interval) % Count;
+                int index = (startIndex + interval + i) % Count;
+                if (index < 0) index += Count;
+
                 if (!skipIndices.Contains(index))
                 {
                     result = index;

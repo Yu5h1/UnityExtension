@@ -4,16 +4,21 @@ using UnityEngine;
 
 namespace Yu5h1Lib
 {
+
     public class Theme : ScriptableObject
     {
         public interface IBinding
         {
             string key { get; }
             void Apply(Theme profile);
-        }
+        }        
         public abstract class BindingObject : ScriptableObject , IBinding
         {
-            public abstract string key { get; }
+            [SerializeField] private ParameterObject _keyRef;
+            public ParameterObject keyRef { get => _keyRef; internal set => _keyRef = value; }
+
+            public string key => _keyRef?.name ?? name;
+
             public abstract void Apply(Theme profile);
         }
         /// <summary>
@@ -23,7 +28,6 @@ namespace Yu5h1Lib
         public abstract class BindingObject<TUnityObject, TValue> : BindingObject
              where TUnityObject : UnityEngine.Object
         {
-            public override string key => name;
             [SerializeField,CollectionConstraint(true)] private TUnityObject[] _targets;
             public TUnityObject[] targets => _targets;
 

@@ -23,8 +23,8 @@ namespace Yu5h1Lib
             if (value is not IComparable a || referenceValue == null)
                 return false;
 
-            var b = referenceValue.GetValueType().IsValueType
-                ? Convert.ChangeType(referenceValue, referenceValue.GetValueType())
+            var b = referenceValue.DeclaredType.IsValueType
+                ? Convert.ChangeType(referenceValue, referenceValue.DeclaredType)
                 : (object)referenceValue;
 
             if (b is not IComparable comparable)

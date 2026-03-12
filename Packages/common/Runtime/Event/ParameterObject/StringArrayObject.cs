@@ -5,5 +5,5 @@ using UnityEngine.Serialization;
 
 namespace Yu5h1Lib
 {
-    public class StringArrayObject : CollectionObject<string>{}
+    public class StringArrayObject : ParameterCollection<string>{}
 }

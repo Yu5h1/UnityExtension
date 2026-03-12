@@ -296,30 +296,9 @@ namespace Yu5h1Lib.EditorExtension
                 return;
             }
 
-            var tokens = searchText.ToLower().Split(
-                new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (tokens.Length == 0)
-            {
-                filteredOptions.AddRange(allOptions);
-                return;
-            }
-
             foreach (var option in allOptions)
             {
-                var lowerOption = option.ToLower();
-                bool allMatch = true;
-
-                foreach (var token in tokens)
-                {
-                    if (!lowerOption.Contains(token))
-                    {
-                        allMatch = false;
-                        break;
-                    }
-                }
-
-                if (allMatch)
+                if (option.MatchesTokens(searchText))
                     filteredOptions.Add(option);
             }
         }

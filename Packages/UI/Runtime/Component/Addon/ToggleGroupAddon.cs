@@ -27,9 +27,9 @@ namespace Yu5h1Lib.UI
         public Color activeColor 
         { 
             get => _stateColor.value.active; 
-            private set => _stateColor.value.active = value;
+            set => _stateColor.value.active = value;
         }
-        public Color inactiveColor { get => _stateColor.value.inactive; private set => _stateColor.value.inactive = value; }
+        public Color inactiveColor { get => _stateColor.value.inactive; set => _stateColor.value.inactive = value; }
 
         //private bool _dirty;
         public void FindToggles()
@@ -60,7 +60,7 @@ namespace Yu5h1Lib.UI
         }
         public void CheckStateColor()
         {
-            if (_stateColor.enabled)
+            if (_stateColor.enabled && !toggles.IsEmpty())
                 foreach (var t in toggles)
                     if (t.targetGraphic != null)
                         t.targetGraphic.color = _stateColor.value.Evaluate(t.isOn);

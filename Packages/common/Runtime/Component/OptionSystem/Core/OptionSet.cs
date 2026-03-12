@@ -16,10 +16,10 @@ namespace Yu5h1Lib
     {
         public T current
         { 
-            get => Items.IsValid(selector.current) ? Items[selector.current] : default(T);
+            get => Items.IsValid(selector.current) ? Items[selector.current] : default;
             set
             {
-                if (current.Equals(value))
+                if (EqualityComparer<T>.Default.Equals(current, value)) 
                     return;
                 int index = Items.IndexOf(value);
                 if (Items.IsValid(index))
@@ -39,15 +39,15 @@ namespace Yu5h1Lib
         public override int Count => Items.Count;
 
         protected override void OnInitializing() { }
-
+        
         public override void Select(int index)
         {
             if (!Items.IsValid(index))
                 return;
-            OnSelected(Items[index]);
+            OnSelected(index,Items[index]);
             _OptionChanged?.Invoke(Items[index]);
         }
-        protected virtual void OnSelected(T current) {}
+        protected virtual void OnSelected(int index,T current) { }
         public void InvokeOptionChanged() => Select(selector.current);
 
         public virtual string ToString(T item)

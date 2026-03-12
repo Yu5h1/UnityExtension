@@ -5,7 +5,7 @@ namespace Yu5h1Lib.UI
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(RectTransform))]
-    public class LayoutGroupAide : MonoBehaviour
+    public class LayoutGroupAddon : MonoBehaviour
     {
         [Range(0f, 0.5f)] public float left;
         [Range(0f, 0.5f)] public float right;

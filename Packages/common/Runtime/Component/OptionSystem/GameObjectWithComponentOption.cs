@@ -16,9 +16,9 @@ public abstract class GameObjectWithComponentOption<T> : GameObjectOption where 
         remove => _ComponentChanged.RemoveListener(value);
     }
 
-    protected override void OnSelected(GameObject current)
+    protected override void OnSelected(int index, GameObject current)
     {
-        base.OnSelected(current);
+        base.OnSelected(index,current);
         _Component = current.GetComponent<T>();
         _ComponentChanged?.Invoke(_Component);
         OnComponentChanged(_Component);

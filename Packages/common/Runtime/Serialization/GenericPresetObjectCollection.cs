@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Yu5h1Lib
 {
-	public class GenericPresetObjectCollection : CollectionObject<GenericObjectPreset> 
+	public class GenericPresetObjectCollection : ParameterCollection<GenericObjectPreset> 
 	{
         public override void ApplyTo(Object target)
         {

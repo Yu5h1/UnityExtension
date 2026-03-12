@@ -28,17 +28,17 @@ namespace UnityEngine.UI
         {
             switch (alignment)
             {
-                case Alignment.TopLeft: rt.SetFixed(new Vector2(0, 1)); break;
-                case Alignment.Top: SetFixed(rt, new Vector2(0.5f, 1)); break;
-                case Alignment.TopRight: SetFixed(rt, new Vector2(1, 1)); break;
+                case Alignment.TopLeft: rt.SetFixed(0, 1); break;
+                case Alignment.Top: rt.SetFixed(0.5f, 1); break;
+                case Alignment.TopRight: rt.SetFixed(1, 1); break;
                 case Alignment.Left: break;
-                case Alignment.VerticalLeft: SetFixed(rt, new Vector2(0, 0.5f)); break;
-                case Alignment.Center: SetFixed(rt, new Vector2(0.5f, 0.5f)); break;
+                case Alignment.VerticalLeft: rt.SetFixed(0, 0.5f); break;
+                case Alignment.Center: rt.SetFixed(0.5f, 0.5f); break;
                 case Alignment.Right: break;
-                case Alignment.VerticalRight: SetFixed(rt, new Vector2(1, 0.5f)); break;
-                case Alignment.BottomLeft: SetFixed(rt, new Vector2(0, 0)); break;
-                case Alignment.Bottom: SetFixed(rt, new Vector2(0.5f, 0)); break;
-                case Alignment.BottomRight: SetFixed(rt, new Vector2(1, 0)); break;
+                case Alignment.VerticalRight: rt.SetFixed(1, 0.5f); break;
+                case Alignment.BottomLeft: rt.SetFixed(0, 0); break;
+                case Alignment.Bottom: rt.SetFixed(0.5f, 0); break;
+                case Alignment.BottomRight: rt.SetFixed(1, 0); break;
                 case Alignment.HorizontalTop: SetStretchHorizontal(rt, 1); break;
                 case Alignment.Horizontal: SetStretchHorizontal(rt, 0.5f); break;
                 case Alignment.HorizontalBottom: SetStretchHorizontal(rt, 0); break;
@@ -68,8 +68,9 @@ namespace UnityEngine.UI
 
         #region Private
 
-        private static void SetFixed(this RectTransform rect, Vector2 point)
+        public static void SetFixed(this RectTransform rect, float x, float y)
         {
+            var point = new Vector2(x, y);
             rect.anchorMin = point;
             rect.anchorMax = point;
             rect.pivot = point;
