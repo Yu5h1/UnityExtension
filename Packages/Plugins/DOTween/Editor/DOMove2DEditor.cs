@@ -10,9 +10,9 @@ using UnityEditor.SceneManagement;
 namespace Yu5h1Lib
 {
     [CustomEditor(typeof(DOMove2D)),CanEditMultipleObjects]
-    public class DOMove2DInspector : Editor<DOMove2D>
+    public class DOMove2DEditor : Editor<DOMove2D>
     {
-        public static string ShowAllHandlesKey => typeof(DOMove2DInspector).FullName + "_ShowAllHandles";
+        public static string ShowAllHandlesKey => typeof(DOMove2DEditor).FullName + "_ShowAllHandles";
         public static bool ShowAllHandles
         {
             get => EditorPrefs.GetBool(ShowAllHandlesKey,false);
@@ -32,7 +32,7 @@ namespace Yu5h1Lib
 
         private static void OnSceneGUI(SceneView view)
         {
-            foreach (var obj in GameObject.FindObjectsOfType<DOMove2D>())
+            foreach (var obj in GameObject.FindObjectsByType<DOMove2D>(FindObjectsInactive.Exclude,FindObjectsSortMode.None))
                 Handle(obj, false);
         }
 
@@ -131,10 +131,6 @@ namespace Yu5h1Lib
                         Handles.matrix = matrix;
                         break;
                 }
-        }
-
-        private void OnDisable()
-        {
         }
     }
 }

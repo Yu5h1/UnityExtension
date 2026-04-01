@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace Yu5h1Lib.UI
 {
     [RequireComponent(typeof(RectTransform))]
-    public abstract class UI_Addon : BaseMonoBehaviour
+    public abstract class UIControl : BaseMonoBehaviour
     {
         [SerializeField, ReadOnly]
         private RectTransform _rectTransform;
@@ -20,8 +20,7 @@ namespace Yu5h1Lib.UI
             this.GetComponent(ref _rectTransform);
         }
     }
-
-    public abstract class UI_Addon<T> : UI_Addon where T : UIBehaviour
+    public abstract class UIControl<T> : UIControl where T : UIBehaviour
     {
         [SerializeField, ReadOnly] private T _ui;
         public T ui => _ui;
@@ -44,7 +43,7 @@ namespace Yu5h1Lib.UI
         }
     }
 
-    public abstract class UI_GrahpicAddon<T> : UI_Addon<T> where T : Graphic
+    public abstract class UI_Grahpic<T> : UIControl<T> where T : Graphic
     {
 
         public void SetColor(ColorObject color)

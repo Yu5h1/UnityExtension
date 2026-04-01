@@ -7,7 +7,7 @@ using UnityEngine.UI;
 using Yu5h1Lib.UI;
 
 [DisallowMultipleComponent,RequireComponent(typeof(Toggle))]
-public class ToggleAddon : UI_Addon<Toggle>
+public class ToggleAddon : UIControl<Toggle>
 {
     public UnityEvent<bool> ValueChangedInverse;
     public UnityEvent checkedEvent;

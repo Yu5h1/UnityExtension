@@ -7,7 +7,7 @@ using UnityEngine.UI;
 using Yu5h1Lib;
 using Yu5h1Lib.UI;
 
-public class UI_SelectionOverlay : UI_Addon
+public class UI_SelectionOverlay : UIControl
 {
     public SelectableHandler[] handlers;
     public RectTransform overlay;

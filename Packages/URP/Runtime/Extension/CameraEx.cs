@@ -35,8 +35,8 @@ namespace UnityEngine.Rendering.Universal
                         mainCamData.cameraStack.Add(cam);
                 }
             }
-            main.Render();
-            Graphics.ExecuteCommandBuffer(new UnityEngine.Rendering.CommandBuffer());
+            //main.Render();
+            //Graphics.ExecuteCommandBuffer(new UnityEngine.Rendering.CommandBuffer());
         }
         public static void SetRenderType(this Camera cam, CameraRenderType renderType)
         {

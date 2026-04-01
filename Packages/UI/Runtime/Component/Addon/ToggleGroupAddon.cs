@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace Yu5h1Lib.UI
 {
     [DisallowMultipleComponent]
-    public class ToggleGroupAddon : UI_Addon<ToggleGroup>
+    public class ToggleGroupAddon : UIControl<ToggleGroup>
     {
         [SerializeField]
         private UnityEvent<Toggle> _selectedChanged;

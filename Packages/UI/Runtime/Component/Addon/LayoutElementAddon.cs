@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace Yu5h1Lib.UI
 {
 	[RequireComponent(typeof(LayoutElement))]
-	public class LayoutElementAddon : UI_Addon<LayoutElement>
+	public class LayoutElementAddon : UIControl<LayoutElement>
 	{
 		[SerializeField] private AspectRatioFitter _aspectRatioFitter;
 

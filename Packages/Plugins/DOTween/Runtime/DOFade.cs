@@ -100,13 +100,13 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
                 c.alpha = alpha;
                 break;
             case Image img:
-                img.color = img.color.ChangeAlpha(alpha);
+                img.color = img.color.SetAlpha(alpha);
                 break;
             case SpriteRenderer renderer:
-                renderer.color = renderer.color.ChangeAlpha(alpha);      
+                renderer.color = renderer.color.SetAlpha(alpha);      
                 break;
             case MeshRenderer mr:
-                SetBlockColor(mr,propblock, GetBlockColor(mr, propblock).ChangeAlpha(alpha));
+                SetBlockColor(mr,propblock, GetBlockColor(mr, propblock).SetAlpha(alpha));
                 break;
 
         }
@@ -115,19 +115,19 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
             if (!(component is CanvasGroup) && !images.IsEmpty())
             {
                 for (int i = 0; i < images.Length; i++)
-                    images[i].color = images[i].color.ChangeAlpha(alpha);
+                    images[i].color = images[i].color.SetAlpha(alpha);
             }
             if (!spriteRenderers.IsEmpty())
             {
                 for (int i = 0; i < spriteRenderers.Length; i++)
-                    spriteRenderers[i].color = spriteRenderers[i].color.ChangeAlpha(alpha);
+                    spriteRenderers[i].color = spriteRenderers[i].color.SetAlpha(alpha);
             }
             if (!meshRenderers.IsEmpty())
             {
                 for (int i = 0; i < meshRenderers.Length; i++)
                 {
                     SetBlockColor(meshRenderers[i], propblocks[i],
-                        GetBlockColor(meshRenderers[i], propblocks[i]).ChangeAlpha(alpha));
+                        GetBlockColor(meshRenderers[i], propblocks[i]).SetAlpha(alpha));
                 }
             }
         }    

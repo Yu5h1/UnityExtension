@@ -5,10 +5,7 @@ using UnityEditor;
 using Yu5h1Lib.EditorExtension;
 using Yu5h1Lib;
 using DG.Tweening;
-using System.Reflection;
-using UnityEngine.UIElements;
 using UnityEngine.UI;
-using Unity.VisualScripting;
 
 public abstract class TweenBehaviourEditor<T> : Editor<T> where T : TweenBehaviour
 {
@@ -42,9 +39,10 @@ public abstract class TweenBehaviourEditor<T> : Editor<T> where T : TweenBehavio
             SceneView.RepaintAll();
         }
     }
-    
-    protected virtual void OnDisable()
+    protected override void OnDisable()
     {
+        base.OnDisable();
         targetObject.Kill();
     }
+ 
 };
