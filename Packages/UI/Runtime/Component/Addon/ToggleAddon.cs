@@ -4,10 +4,11 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Yu5h1Lib;
 using Yu5h1Lib.UI;
 
 [DisallowMultipleComponent,RequireComponent(typeof(Toggle))]
-public class ToggleAddon : UIControl<Toggle>
+public class ToggleAddon : UIControl<Toggle>,IValuePort
 {
     public UnityEvent<bool> ValueChangedInverse;
     public UnityEvent checkedEvent;
@@ -33,5 +34,16 @@ public class ToggleAddon : UIControl<Toggle>
     public void ToggleAlpha(CanvasGroup g)
     { 
         g.alpha = ui.isOn ? 1f : 0f;
+    }
+
+    public string GetFieldName() => gameObject.name;
+
+    public string GetValue() => ui.isOn.ToString();
+    public void SetValue(string value) => ui.isOn = bool.TryParse(value, out bool result) && result;
+
+    public void SetValue(Object Ibindable)
+    {
+        if (Ibindable is IValuePort valuePort)
+            SetValue(valuePort.GetValue());
     }
 }

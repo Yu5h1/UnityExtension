@@ -1,24 +1,24 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Rendering;
 using Yu5h1Lib.Serialization;
 
 namespace Yu5h1Lib
 {
-    public class Preferences : SingletonBehaviour<Preferences>
+    public abstract class Preferences<T> : SingletonBehaviour<T> where T : Preferences<T>
     {
-        [SerializeField] private List<Object> _bindings;
+        [SerializeField,TypeRestriction(typeof(IValuePort))] private List<Object> _bindings;
         public IReadOnlyList<Object> bindings => _bindings;
 
         [SerializeField] protected DataView defaultSetting;
-        public static DataView DefaultSetting() => new DataView(instance.defaultSetting);
 
         [SerializeField, ReadOnly] private DataView _current = new DataView();
         public DataView current => _current;
 
         [SerializeField] private UnityEvent _DataUpdated;
+
+        public bool LoadFromPlayerPrefsOnAwake = false;
+        public bool SaveOnChanged = false;
 
         public bool TryGetValueFromBindings(string key,out string value)
         {
@@ -35,24 +35,16 @@ namespace Yu5h1Lib
             return false;
         }
 
-        public string GetValueFromBindings(string key)
-        {
-            if (TryGetValueFromBindings(key, out string value))
-                return value;
-            else
-            {
-                $"Key [{key}] not found in bindings.".printWarning();
-                return default;
-            }
-
-
-        }
+        public string GetValueFromBindings(string key) => TryGetValueFromBindings(key, out string value) ? value : default;
 
         protected override void OnInstantiated() { }
+
         protected override void OnInitializing()
         {
             if (current.IsEmpty())
-                current.CopyFrom(DefaultSetting());     
+                current.CopyFrom(defaultSetting);
+            if (LoadFromPlayerPrefsOnAwake)
+                LoadFromPlayerPrefs();
         }
         public void WriteToBindings()
         { 
@@ -65,16 +57,56 @@ namespace Yu5h1Lib
                 ReadFrom(obj);
         }
 
+        public virtual void SaveToPlayerPrefs()
+        {
+            PlayerPrefs.SetString(GetType().Name, current.ToJson());
+            PlayerPrefs.Save();
+        }
+        public virtual bool LoadFromPlayerPrefs()
+        {
+            var key = GetType().Name;
+            if (!PlayerPrefs.HasKey(key))
+                return false;
+            if (DataView.TryParseFromJson(PlayerPrefs.GetString(key), out DataView data))
+            { 
+                current.CopyFrom(data);
+                WriteToBindings();
+                return true;
+            }
+            else
+            {
+                $"Failed to parse preferences from PlayerPrefs with key [{key}]".printWarning();
+                return false;
+            }
+        }
+
 
         public void WriteTo(Object obj) => current.WriteTo(obj);
         public void ReadFrom(Object obj)
         {
             if (current.TryReadFrom(obj))
+            {
+                if (SaveOnChanged)
+                    SaveToPlayerPrefs();
                 _DataUpdated?.Invoke();
+
+            }
         }
 
+        [System.Obsolete("Use WriteTo instead")]
         public void GetProperty(Object obj) => WriteTo(obj);
+        [System.Obsolete("Use ReadFrom instead")]
         public void SetProperty(Object obj) => ReadFrom(obj);
   
+
+        public void PrintPlayerPrefs()
+        {
+            var key = GetType().Name;
+            if (PlayerPrefs.HasKey(key))
+                $"PlayerPrefs[{key}] = {PlayerPrefs.GetString(key)}".print();
+            else
+                $"PlayerPrefs does not contain key [{key}]".printWarning();
+
+        }
     }
 }
