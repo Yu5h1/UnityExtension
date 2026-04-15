@@ -7,6 +7,7 @@ namespace Yu5h1Lib
 {
     public abstract class Preferences<T> : SingletonBehaviour<T> where T : Preferences<T>
     {
+        public string KEY => GetType().Name;
         [SerializeField,TypeRestriction(typeof(IValuePort))] private List<Object> _bindings;
         public IReadOnlyList<Object> bindings => _bindings;
 
@@ -64,10 +65,9 @@ namespace Yu5h1Lib
         }
         public virtual bool LoadFromPlayerPrefs()
         {
-            var key = GetType().Name;
-            if (!PlayerPrefs.HasKey(key))
+            if (!PlayerPrefs.HasKey(KEY))
                 return false;
-            if (DataView.TryParseFromJson(PlayerPrefs.GetString(key), out DataView data))
+            if (DataView.TryParseFromJson(PlayerPrefs.GetString(KEY), out DataView data))
             { 
                 current.CopyFrom(data);
                 WriteToBindings();
@@ -75,7 +75,7 @@ namespace Yu5h1Lib
             }
             else
             {
-                $"Failed to parse preferences from PlayerPrefs with key [{key}]".printWarning();
+                $"Failed to parse preferences from PlayerPrefs with key [{KEY}]".printWarning();
                 return false;
             }
         }
@@ -99,14 +99,5 @@ namespace Yu5h1Lib
         public void SetProperty(Object obj) => ReadFrom(obj);
   
 
-        public void PrintPlayerPrefs()
-        {
-            var key = GetType().Name;
-            if (PlayerPrefs.HasKey(key))
-                $"PlayerPrefs[{key}] = {PlayerPrefs.GetString(key)}".print();
-            else
-                $"PlayerPrefs does not contain key [{key}]".printWarning();
-
-        }
     }
 }

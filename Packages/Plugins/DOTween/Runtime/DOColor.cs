@@ -9,17 +9,40 @@ public class DOColor : TweenColorRenderer<Component>
 {
     public override Component OverrideGetComponent()
     {
-        if (transform is RectTransform m)
-            return m.GetComponent<Image>();
-        return GetComponent<SpriteRenderer>();
+        if (TryGetComponent(out Graphic g))
+            return g;
+        if (TryGetComponent(out SpriteRenderer s))
+            return s;
+        
+        return base.OverrideGetComponent();
     }
+
+    protected override void ResetStartValue()
+    {
+        startValue = component switch
+        {
+            SpriteRenderer renderer => renderer.color,
+            Graphic g => g.color,
+            _ => Color.white
+        };
+    }
+    protected override void ResetEndValue()
+    {
+        endValue = component switch
+        {
+            SpriteRenderer renderer => renderer.color,
+            Graphic g => g.color,
+            _ => Color.black
+        };
+    }
+
     protected override TweenerCore<Color, Color, ColorOptions> CreateTweenCore()
     {
         switch (component)
         {
             case SpriteRenderer renderer: return renderer.DOColor(_endValue, Duration);
-            case Image img: return img.DOColor(_endValue, Duration);
-            default:  throw new System.NotSupportedException("DOColor require SpriteRenderer or Image");
+            case Graphic g: return g.DOColor(_endValue, Duration);
+            default:  throw new System.NotSupportedException("DOColor require SpriteRenderer or Graphic");
         }
         
     } 

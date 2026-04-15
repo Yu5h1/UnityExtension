@@ -1,0 +1,11 @@
+{
+    "name": "Yu5h1.Dyu5h1lib.Tests",
+    "references": [
+        "Yu5h1.Dyu5h1lib"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

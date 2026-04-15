@@ -10,7 +10,6 @@ namespace Yu5h1Lib
         [SerializeField] private UnityEvent _Enabled;
         [SerializeField] private UnityEvent _Disabled;
 
-
         private void OnEnable()
         {
             if (!isActiveAndEnabled)
@@ -19,8 +18,8 @@ namespace Yu5h1Lib
         }
         private void OnDisable()
         {
-            if (!isActiveAndEnabled || ApplicationInfo.WantsToQuit)
-                return;
+            if (ApplicationInfo.WantsToQuit)
+                return;   
             _Disabled?.Invoke();
         }
         public void Log( ){ }

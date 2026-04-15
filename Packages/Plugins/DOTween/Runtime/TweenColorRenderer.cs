@@ -2,6 +2,7 @@ using DG.Tweening;
 using DG.Tweening.Plugins.Options;
 using UnityEngine;
 using Yu5h1Lib;
+using UnityEngine.UI;
 
 public abstract class TweenColorRenderer<T> : TweenBehaviour<T,Color,ColorOptions> where T : Component
 {
@@ -9,6 +10,7 @@ public abstract class TweenColorRenderer<T> : TweenBehaviour<T,Color,ColorOption
         get => component switch
         {
             SpriteRenderer spriteRenderer => spriteRenderer.color,
+            Graphic graphic => graphic.color,
             _ => default(Color)
         };
         set
@@ -18,15 +20,16 @@ public abstract class TweenColorRenderer<T> : TweenBehaviour<T,Color,ColorOption
                 case SpriteRenderer spriteRenderer:
                     spriteRenderer.color = value;
                     break;
-                case UnityEngine.UI.Image image:
-                    image.color = value;
+                case Graphic graphic:
+                    graphic.color = value;
                     break;
             }
         }
     }
-    private void Reset()
+    public override void Reset()
     {
-        ChangeStartValue = true;
+        base.Reset();
+        //ChangeStartValue = true;
     }
     public void FadeIn(bool StartwithZeroAlpha = true)
     {

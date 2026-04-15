@@ -1,0 +1,14 @@
+{
+    "name": "Yu5h1.Dyu5h1lib.Editor.Tests",
+    "references": [
+        "Yu5h1.Dyu5h1lib.Editor",
+        "Yu5h1.Dyu5h1lib"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}

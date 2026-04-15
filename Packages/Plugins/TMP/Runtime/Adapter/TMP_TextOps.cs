@@ -27,7 +27,7 @@ namespace Yu5h1Lib.UI
 
 
         public override void SetWrappingOverflowMode(bool wrap)
-        {
+        {            
             if (wrap)
             {
                 c.textWrappingMode = TextWrappingModes.PreserveWhitespace;

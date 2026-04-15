@@ -1,0 +1,20 @@
+{
+  "name": "com.yu5h1.2d",
+  "displayName": "Yu5h1Lib 2D",
+  "version": "0.1.0",
+  "unity": "6000.3",
+  "unityRelease": "9f1",
+  "description": "Yu5h1's library for 2D platform.",
+  "dependencies": {
+    "com.yu5h1.library": "1.0.1",
+    "com.yu5h1.common": "1.0.0"
+  },
+  "author": {
+    "name": "WeiYiJen",
+    "url": "https://github.com/Yu5h1",
+    "email": "jenyu5h10415@gmail.com"
+  },
+  "changelogUrl": "https://example.com/changelog.html",
+  "documentationUrl": "https://example.com/",
+  "licensesUrl": "https://example.com/licensing.html"
+}

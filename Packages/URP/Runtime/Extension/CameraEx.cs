@@ -7,7 +7,7 @@ namespace UnityEngine.Rendering.Universal
     public static class CameraEx
     {
         public static void AddSceneOverlaysAsStacks(this Camera camera)
-           => AddCamerasAsStacks(camera, GameObject.FindObjectsOfType<Camera>(true));
+           => AddCamerasAsStacks(camera, GameObject.FindObjectsByType<Camera>(FindObjectsInactive.Include,FindObjectsSortMode.None));
 
         public static void ClearStacks(this Camera cam)
         {

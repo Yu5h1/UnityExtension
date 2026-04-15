@@ -247,7 +247,7 @@ namespace Yu5h1Lib.UI
                 return;
 
             if (isActiveAndEnabled)
-                InvokeAfterFrames(CheckLineCount, 1);
+                this.DelayInvoke(CheckLineCount, 1);
             else
                 CheckLineCount();
         }
@@ -296,8 +296,8 @@ namespace Yu5h1Lib.UI
                 return;
             _submit?.Invoke(text);        
         }
-        public void InvokeSubmitEventAfterFrames(int frames)
-            => InvokeAfterFrames(InvokeSubmitEvent, frames);
+        public void InvokeSubmitEventAfterFrames(int frames) => this.DelayInvoke(InvokeSubmitEvent, frames);
+
         protected override void OnDisable()
         {
             base.OnDisable();

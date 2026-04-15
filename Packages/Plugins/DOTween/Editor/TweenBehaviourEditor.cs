@@ -26,9 +26,8 @@ public abstract class TweenBehaviourEditor<T> : Editor<T> where T : TweenBehavio
     public override void OnInspectorGUI()
     {
         DrawDefaultInspector();
-        if (this.TrySlider("Simulation:", normalized, 0, 1, out float result))
+        if (this.TrySlide("Simulation:",ref normalized, 0, 1))
         {
-            normalized = result;
             tweener.Goto(normalized * targetObject.Duration, true);
             switch (component)
             {

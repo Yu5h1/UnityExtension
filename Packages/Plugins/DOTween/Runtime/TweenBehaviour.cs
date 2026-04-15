@@ -31,6 +31,8 @@ namespace Yu5h1Lib
         public float normalizedTime => tweener.ElapsedPercentage();
         protected internal abstract Tweener Create();
 
+        public abstract void Reset();
+
         public virtual bool Kill()
         {
             if (!initialized)
@@ -144,6 +146,13 @@ namespace Yu5h1Lib
             TweenerCore.SetAutoKill(false);
             if (EaseType != Ease.Unset)
                 TweenerCore.SetEase(EaseType);
+        }
+
+        public override void Reset()
+        {
+            ResetStartValue();
+            ResetEndValue();
+            component = OverrideGetComponent() ?? GetComponent<TComponent>();
         }
 
         protected virtual void Start()
