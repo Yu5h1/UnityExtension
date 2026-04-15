@@ -14,14 +14,29 @@ public class ToggleAddon : UIControl<Toggle>,IValuePort
     public UnityEvent checkedEvent;
     public UnityEvent uncheckedEvent;
 
-    protected override void OnInitializing()
-    {
-        base.OnInitializing();
-        ui.onValueChanged.AddListener(onValueChangedInverse);
-        //onValueChangedInverse(ui.isOn);
-        //ui.onValueChanged?.Invoke(ui.isOn);
+    public bool isOn
+    { 
+        get
+        {
+            if ("Toggle is null.".printWarningIf(ui == null))
+                return false;
+            return ui.isOn;
+        }
+        set
+        { 
+            if ("Toggle is null.".printWarningIf(ui == null))
+                return;
+            if (ui.isOn == value)
+                return;
+            ui.isOn = value;
+        }
     }
-    
+
+    void Start()
+    {
+        ui.onValueChanged.AddListener(onValueChangedInverse);
+    }
+
 
     private void onValueChangedInverse(bool IsOn)
     {
@@ -33,13 +48,13 @@ public class ToggleAddon : UIControl<Toggle>,IValuePort
     }
     public void ToggleAlpha(CanvasGroup g)
     { 
-        g.alpha = ui.isOn ? 1f : 0f;
+        g.alpha = isOn ? 1f : 0f;
     }
 
     public string GetFieldName() => gameObject.name;
 
-    public string GetValue() => ui.isOn.ToString();
-    public void SetValue(string value) => ui.isOn = bool.TryParse(value, out bool result) && result;
+    public string GetValue() => isOn.ToString();
+    public void SetValue(string value) => isOn = bool.TryParse(value, out bool result) ? result : false;
 
     public void SetValue(Object Ibindable)
     {

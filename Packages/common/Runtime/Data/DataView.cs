@@ -41,6 +41,11 @@ namespace Yu5h1Lib.Serialization
 
         public override bool TryWriteTo(Object obj)
         {      
+            if (obj == null)
+            {
+                "Cannot write to null object".printWarning();
+                return false;
+            }
             if (!(obj is IValuePort port))
             {
                 $"{obj} is unbindable".printWarning();
