@@ -5,6 +5,7 @@ using UnityEngine;
 using Yu5h1Lib;
 using Yu5h1Lib.Mathematics;
 using Yu5h1Lib.Runtime;
+using Yu5h1Lib.Serialization;
 
 namespace Yu5h1Lib
 {
@@ -19,8 +20,8 @@ namespace Yu5h1Lib
         [SerializeField] private MinMax.Option rangeOption;
         public override int Count => rangeOption == MinMax.Option.Min ? MinCount : MaxCount;
 
-        public override string GetItemName(int index)
-            => optionSets.IsEmpty() ? string.Empty : optionSets[0].GetItemName(index);
+        public override string GetItemText(int index)
+            => optionSets.IsEmpty() ? string.Empty : optionSets[0].GetItemText(index);
 
         //[SerializeField] private int _currentSet;
         //public int currentSet
@@ -51,6 +52,5 @@ namespace Yu5h1Lib
         public override string GetValue() => "";
         public override void SetValue(string value,System.StringComparison c) { }
 
-        
     } 
 }

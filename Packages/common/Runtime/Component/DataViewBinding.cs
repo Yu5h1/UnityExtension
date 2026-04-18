@@ -9,12 +9,9 @@ namespace Yu5h1Lib
         [SerializeField,TypeRestriction(typeof(DataView.Provider))] private Object target;  
         [SerializeField, AutoFill("DataView")] private string key;
 
-        private DataView.Provider _provider;
+        private DataView.Provider _provider => target as DataView.Provider;
 
-        protected override void OnInitializing()
-        {
-            _provider = target as DataView.Provider;
-        }
+
 
         public override string GetFieldName()
             => string.IsNullOrEmpty(key) ? base.GetFieldName() : key;

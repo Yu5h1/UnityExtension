@@ -1,7 +1,6 @@
-using System;
 using UnityEngine;
 using Yu5h1Lib.Common;
-using Yu5h1Lib.Runtime;
+using UnityEngine.Events;
 
 namespace Yu5h1Lib.UI
 {
@@ -20,7 +19,6 @@ namespace Yu5h1Lib.UI
         void ForceUpdate();
         void SetLayoutDirty();
         void SetWrappingOverflowMode(bool wrap);
-
     }
     public interface ITextAttribute : IColor
     {

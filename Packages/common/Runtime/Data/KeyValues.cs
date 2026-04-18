@@ -42,13 +42,15 @@ namespace Yu5h1Lib.Serialization
                         if (!ValueEquals(oldValue, value))
                         {
                             _entries[i] = new KeyValue<TKey, TValue>(key, value);
-                            OnValueChanged(key, oldValue, value);
+                            ItemChanged?.Invoke(key, oldValue, value);
+                            Changed?.Invoke();
                         }
                         return;
                     }
                 }
                 _entries.Add(new KeyValue<TKey, TValue>(key, value));
-                OnAdded(key, value);
+                Added?.Invoke(key, value);
+                Changed?.Invoke();
             }
         }
 
@@ -57,6 +59,12 @@ namespace Yu5h1Lib.Serialization
         public ICollection<TValue> Values => _entries.Select(entry => entry.Value).ToList();
         public int Count => _entries.Count;
         public bool IsReadOnly => false;
+
+        public event System.Action<TKey, TValue, TValue> ItemChanged;
+        public event System.Action<TKey, TValue> Added;
+        public event System.Action<TKey, TValue> Removed;
+        public event System.Action Cleared;
+        public event System.Action Changed;
 
         public KeyValues()
         {
@@ -102,7 +110,8 @@ namespace Yu5h1Lib.Serialization
             if (ContainsKey(key)) throw new System.ArgumentException($"Key '{key}' already exists.");
 
             _entries.Add(new KeyValue<TKey, TValue>(key, value));
-            OnAdded(key, value);
+            Added?.Invoke(key, value);
+            Changed?.Invoke();
         }
 
         public void Add(KeyValuePair<TKey, TValue> item) => Add(item.Key, item.Value);
@@ -117,7 +126,8 @@ namespace Yu5h1Lib.Serialization
                 {
                     var value = _entries[i].Value;
                     _entries.RemoveAt(i);
-                    OnRemoved(key, value);
+                    Removed?.Invoke(key, value);
+                    Changed?.Invoke();
                     return true;
                 }
             }
@@ -133,7 +143,8 @@ namespace Yu5h1Lib.Serialization
                     EqualityComparer<TValue>.Default.Equals(entry.Value, item.Value))
                 {
                     _entries.RemoveAt(i);
-                    OnRemoved(item.Key, item.Value);
+                    Removed?.Invoke(item.Key, item.Value);
+                    Changed?.Invoke();
                     return true;
                 }
             }
@@ -149,9 +160,10 @@ namespace Yu5h1Lib.Serialization
 
                 foreach (var item in itemsToRemove)
                 {
-                    OnRemoved(item.Key, item.Value);
+                    Removed?.Invoke(item.Key, item.Value);
                 }
-                OnCleared();
+                Cleared?.Invoke();
+                Changed?.Invoke();
             }
         }
 
@@ -228,10 +240,7 @@ namespace Yu5h1Lib.Serialization
 
         #region Event Callbacks
 
-        protected virtual void OnValueChanged(TKey key, TValue oldValue, TValue newValue) { }
-        protected virtual void OnAdded(TKey key, TValue value) { }
-        protected virtual void OnRemoved(TKey key, TValue value) { }
-        protected virtual void OnCleared() { }
+ 
 
         #endregion
 
@@ -241,8 +250,8 @@ namespace Yu5h1Lib.Serialization
 
         public void OnAfterDeserialize()
         {
-            // ¥u²¾°£ null key¡]reference type ®É¡^
-            // ¤£²¾°£­«½Æ¶µ¡AÅý¨Ï¥ÎªÌ¦b Inspector ¤¤¬Ý¨ìÄµ§i¨Ã¤â°Ê­×¥¿
+            // ï¿½uï¿½ï¿½ï¿½ï¿½ null keyï¿½]reference type ï¿½É¡^
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½Aï¿½ï¿½ï¿½Ï¥ÎªÌ¦b Inspector ï¿½ï¿½ï¿½Ý¨ï¿½Äµï¿½iï¿½Ã¤ï¿½Ê­×¥ï¿½
             if (typeof(TKey).IsClass)
             {
                 _entries.RemoveAll(e => e.Key == null);
@@ -254,7 +263,7 @@ namespace Yu5h1Lib.Serialization
         #region Validation & Utility Methods
 
         /// <summary>
-        /// ÀË¬d¬O§_¦³­«½Æªº key
+        /// ï¿½Ë¬dï¿½Oï¿½_ï¿½ï¿½ï¿½ï¿½ï¿½Æªï¿½ key
         /// </summary>
         public bool HasDuplicateKeys
         {
@@ -271,7 +280,7 @@ namespace Yu5h1Lib.Serialization
         }
 
         /// <summary>
-        /// ¨ú±o­«½Æªº key ¦Cªí
+        /// ï¿½ï¿½ï¿½oï¿½ï¿½ï¿½Æªï¿½ key ï¿½Cï¿½ï¿½
         /// </summary>
         public List<TKey> GetDuplicateKeys()
         {
@@ -289,7 +298,7 @@ namespace Yu5h1Lib.Serialization
         }
 
         /// <summary>
-        /// ÀË¬d«ü©w¯Á¤Þªº key ¬O§_­«½Æ
+        /// ï¿½Ë¬dï¿½ï¿½ï¿½wï¿½ï¿½ï¿½Þªï¿½ key ï¿½Oï¿½_ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public bool IsKeyDuplicateAt(int index)
         {
@@ -307,7 +316,7 @@ namespace Yu5h1Lib.Serialization
         }
 
         /// <summary>
-        /// ²¾°£­«½Æªº key¡]«O¯d²Ä¤@­Ó¡^
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æªï¿½ keyï¿½]ï¿½Oï¿½dï¿½Ä¤@ï¿½Ó¡^
         /// </summary>
         public void RemoveDuplicates()
         {
@@ -325,7 +334,7 @@ namespace Yu5h1Lib.Serialization
         }
 
         /// <summary>
-        /// ¹Á¸Õ²K¥[Áä­È¹ï¡A¦pªG key ¤w¦s¦b«h¤£²K¥[
+        /// ï¿½ï¿½ï¿½Õ²Kï¿½[ï¿½ï¿½È¹ï¿½Aï¿½pï¿½G key ï¿½wï¿½sï¿½bï¿½hï¿½ï¿½ï¿½Kï¿½[
         /// </summary>
         public bool TryAdd(TKey key, TValue value)
         {
@@ -334,14 +343,14 @@ namespace Yu5h1Lib.Serialization
             if (!ContainsKey(key))
             {
                 _entries.Add(new KeyValue<TKey, TValue>(key, value));
-                OnAdded(key, value);
+                Added?.Invoke(key, value);
                 return true;
             }
             return false;
         }
 
         /// <summary>
-        /// ±q¥t¤@­Ó KeyValues ½Æ»s¼Æ¾Ú
+        /// ï¿½qï¿½tï¿½@ï¿½ï¿½ KeyValues ï¿½Æ»sï¿½Æ¾ï¿½
         /// </summary>
         public void CopyFrom(KeyValues<TKey, TValue> other)
         {
@@ -363,7 +372,7 @@ namespace Yu5h1Lib.Serialization
         }
 
         /// <summary>
-        /// ¦w¥þªºÀò¨ú­È¤èªk¡A¦pªG key ¤£¦s¦bªð¦^Àq»{­È
+        /// ï¿½wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¤ï¿½kï¿½Aï¿½pï¿½G key ï¿½ï¿½ï¿½sï¿½bï¿½ï¿½^ï¿½qï¿½{ï¿½ï¿½
         /// </summary>
         public TValue GetValueOrDefault(TKey key, TValue defaultValue = default(TValue))
         {
@@ -371,7 +380,7 @@ namespace Yu5h1Lib.Serialization
         }
 
         /// <summary>
-        /// Âà´«¬°¼Ð·Ç Dictionary¡]¦Û°Ê¹LÂo­«½Æ¡A«O¯d²Ä¤@­Ó¡^
+        /// ï¿½à´«ï¿½ï¿½ï¿½Ð·ï¿½ Dictionaryï¿½]ï¿½Û°Ê¹Lï¿½oï¿½ï¿½ï¿½Æ¡Aï¿½Oï¿½dï¿½Ä¤@ï¿½Ó¡^
         /// </summary>
         public Dictionary<TKey, TValue> ToDictionary()
         {
@@ -398,7 +407,7 @@ namespace Yu5h1Lib.Serialization
         public TKey Key => key;
         public TValue Value => value;
 
-        // Unity §Ç¦C¤Æ»Ý­nµL°Ñ¼Æ«Øºc¤l
+        // Unity ï¿½Ç¦Cï¿½Æ»Ý­nï¿½Lï¿½Ñ¼Æ«Øºcï¿½l
         public KeyValue() { }
 
         public KeyValue(TKey key, TValue value)

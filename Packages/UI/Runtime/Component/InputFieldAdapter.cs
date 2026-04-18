@@ -9,7 +9,7 @@ using Yu5h1Lib.WebSupport;
 
 namespace Yu5h1Lib.UI
 {
-    public class InputFieldAdapter : SelectableAdapter<IInputFieldOps>, IInputFieldOps,IValuePort
+    public class InputFieldAdapter : SelectableAdapter<IInputFieldOps,string>, IInputFieldOps
         , IScrollHandler
     {
         [SerializeField] private Toggle _PasswordMaskToggle;
@@ -46,6 +46,8 @@ namespace Yu5h1Lib.UI
         #endregion
         [SerializeField] private bool _allowSubmit = true;
         public bool allowSubmit { get => _allowSubmit; set => _allowSubmit = value; }
+ 
+
         [SerializeField] private bool autoWrappingOverflowMode;
         [SerializeField] private bool DontSubmitIfIsNullOrWhiteSpace;
 
@@ -73,17 +75,6 @@ namespace Yu5h1Lib.UI
             if (IsAvailable())
                 selectable.Select();
         }
-
-        #region IBingable
-        public string GetFieldName() => gameObject.name;
-        public string GetValue() => text;
-        public void SetValue(string value) => text = value;
-        public void SetValue(Object bindable)
-        {
-            if (bindable is IValuePort Ibindable)
-                SetValue(Ibindable.GetValue());
-        }
-        #endregion
 
         [SerializeField] private ScrollRect scrollRect;
         [SerializeField] private int visibleLineCount = 5;
@@ -367,5 +358,15 @@ namespace Yu5h1Lib.UI
             return false;
         }
 
+        public override string value { get => text; set => text = value; }
+
+        public override bool TryParse(string value, out string result)
+        {
+            result = value;
+            return true;
+        }
+
+        public override void AddListener(UnityAction<string> method) => textChanged += method;
+        public override void RemoveListener(UnityAction<string> method) => textChanged -= method;
     }
 }

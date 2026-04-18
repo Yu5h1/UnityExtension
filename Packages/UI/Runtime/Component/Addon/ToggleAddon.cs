@@ -5,17 +5,18 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Yu5h1Lib;
+using Yu5h1Lib.Serialization;
 using Yu5h1Lib.UI;
 
 [DisallowMultipleComponent,RequireComponent(typeof(Toggle))]
-public class ToggleAddon : UIControl<Toggle>,IValuePort
+public class ToggleAddon : UIControl<Toggle,bool>
 {
     public UnityEvent<bool> ValueChangedInverse;
     public UnityEvent checkedEvent;
     public UnityEvent uncheckedEvent;
 
-    public bool isOn
-    { 
+    public override bool value
+    {
         get
         {
             if ("Toggle is null.".printWarningIf(ui == null))
@@ -23,7 +24,7 @@ public class ToggleAddon : UIControl<Toggle>,IValuePort
             return ui.isOn;
         }
         set
-        { 
+        {
             if ("Toggle is null.".printWarningIf(ui == null))
                 return;
             if (ui.isOn == value)
@@ -31,6 +32,10 @@ public class ToggleAddon : UIControl<Toggle>,IValuePort
             ui.isOn = value;
         }
     }
+    public override void AddListener(UnityAction<bool> method) => ui.onValueChanged.AddListener(method);
+    public override void RemoveListener(UnityAction<bool> method) => ui.onValueChanged.RemoveListener(method);
+
+    public override bool TryParse(string value, out bool result) => bool.TryParse(value, out result);
 
     void Start()
     {
@@ -48,17 +53,7 @@ public class ToggleAddon : UIControl<Toggle>,IValuePort
     }
     public void ToggleAlpha(CanvasGroup g)
     { 
-        g.alpha = isOn ? 1f : 0f;
+        g.alpha = value ? 1f : 0f;
     }
 
-    public string GetFieldName() => gameObject.name;
-
-    public string GetValue() => isOn.ToString();
-    public void SetValue(string value) => isOn = bool.TryParse(value, out bool result) ? result : false;
-
-    public void SetValue(Object Ibindable)
-    {
-        if (Ibindable is IValuePort valuePort)
-            SetValue(valuePort.GetValue());
-    }
 }

@@ -2,14 +2,13 @@
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace Yu5h1Lib.EditorExtension
 {
     public class EditorAdvanced : Editor
     {
         public static string UseAdvancedEventsKey = typeof(EditorAdvanced).FullName + "_UseAdvancedEvents";
-        public static bool UseAdvancedEvents 
+        public static bool UseAdvancedEvents
         {
             get => EditorPrefs.GetBool(UseAdvancedEventsKey, false);
             set {
@@ -21,22 +20,52 @@ namespace Yu5h1Lib.EditorExtension
         }
         public static List<EditorAdvanced> editors = new List<EditorAdvanced>();
 
+        private Dictionary<string, ReorderableListEnhanced> _reorderableLists = new Dictionary<string, ReorderableListEnhanced>();
+        protected Dictionary<string, ReorderableListEnhanced> reorderableLists => _reorderableLists;
+
         public override void OnInspectorGUI()
         {
-            this.Iterate(DrawProperty, DrawHeader);
+            this.Iterate(DrawProperty, DrawMonoScript);
         }
 
-        public virtual void DrawHeader(SerializedProperty property)
+        public virtual void DrawMonoScript()
+        {
+            var iterator = serializedObject.GetIterator();
+            iterator.NextVisible(true);
+            using (new EditorGUI.DisabledGroupScope(true))
+            {
+                EditorGUILayout.PropertyField(iterator);
+            }
+        }
+        public virtual void DrawMonoScript(SerializedProperty property)
         {
             using (new EditorGUI.DisabledGroupScope(true))
             {
                 EditorGUILayout.PropertyField(property);
             }
         }
-
         public virtual void DrawProperty(SerializedProperty property)
         {
-            EditorGUILayout.PropertyField(property, true);
+            if (TryPrepareList(property,out var list))
+                list.DoLayoutList();
+            else
+                EditorGUILayout.PropertyField(property, true);
+        }
+        public bool TryPrepareList(SerializedProperty property,out ReorderableListEnhanced list)
+        {
+            list = null;
+            if (!property.isArray || property.propertyType == SerializedPropertyType.String)
+                return false;
+            if (reorderableLists.TryGetValue(property.propertyPath, out list))
+                return true;
+            var prop = serializedObject.FindProperty(property.propertyPath);
+            list = new ReorderableListEnhanced(serializedObject, prop, true, false);
+            reorderableLists[property.propertyPath] = list;
+            return true;
+        }
+        protected virtual void OnDisable()
+        {
+            _reorderableLists.Clear();
         }
 
         public static void RegisterAdvancedMethods(EditorAdvanced editor)

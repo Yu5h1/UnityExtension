@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
+using Yu5h1Lib.Serialization;
 
 namespace  Yu5h1Lib
 {
-    public class StringOption : OptionSet<string>, IValuePort
+    public class StringOption : OptionSetValue<string>
     {
         public OptionSet overrideSet;
 
@@ -20,13 +22,21 @@ namespace  Yu5h1Lib
                 {
                     _overrideItems = new List<string>();
                     for (int i = 0; i < overrideSet.Count; i++)
-                        _overrideItems.Add(overrideSet.GetItemName(i));
+                        _overrideItems.Add(overrideSet.GetItemText(i));
                 }
                 return _overrideItems;
             }
         }
-
-        public override string GetValue() => overrideSet == null ? current : overrideSet.GetItemName(selector.current);
-
+        public override bool TryParse(string value, out string result)
+        {
+            result = current;
+            if (overrideSet != null)
+            {
+                result = overrideSet.GetItemText(selector.current);
+                return true;
+            }
+            return true;
+        }
+        public override string GetValue() => overrideSet == null ? current : overrideSet.GetItemText(selector.current);
     } 
 }

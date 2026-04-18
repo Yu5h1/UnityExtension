@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using Yu5h1Lib.Serialization;
+using UnityEngine.Events;
 
 namespace Yu5h1Lib.Serialization
 {
@@ -66,16 +65,14 @@ namespace Yu5h1Lib.Serialization
                 return false;
             }
             var fieldName = binding.GetFieldName();
-            if (ContainsKey(fieldName) && this[fieldName].Equals(binding.GetValue()))
+            var bindingValue = binding.GetValue();
+
+            if (ContainsKey(fieldName) && this[fieldName].Equals(bindingValue))
                 return false;
-            this[fieldName] = binding.GetValue();
-            //OnValueChanged(fieldName);
+
+            this[fieldName] = bindingValue;
             return true;
         }
-        //protected void OnValueChanged(string key)
-        //{ 
-
-        //}
         public string ToJson()
         {
             var json = JsonUtility.ToJson(this).TrimBefore("[", true).TrimAfter("]", true);
@@ -127,15 +124,23 @@ namespace Yu5h1Lib.Serialization
     [System.Serializable]
     public abstract class DataView<TKey, TValue> : KeyValues<TKey, TValue>
     {
-        public abstract bool TryWriteTo(Object bindable);
-        public abstract bool TryReadFrom(Object bindable);
-        public void WriteTo(Object bindable) => TryWriteTo(bindable);
-        public void ReadFrom(Object bindable) => TryReadFrom(bindable);
+        public abstract bool TryWriteTo(Object valueport);
+        public abstract bool TryReadFrom(Object valueport);
+        public void WriteTo(Object valueport) => TryWriteTo(valueport);
+        public void ReadFrom(Object valueport)
+        { 
+            if (valueport == null)
+            {
+                "Cannot read from null object".printWarning();
+                return;
+            }
+
+            TryReadFrom(valueport);
+        }
 
         public DataView() : base() { }
         public DataView(IDictionary<TKey, TValue> source) : base(source) { }
         public DataView(IEnumerable<KeyValuePair<TKey, TValue>> source) : base(source) { }
-
     }
 
 }

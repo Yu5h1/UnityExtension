@@ -18,20 +18,7 @@ namespace Yu5h1Lib
         {
             get
             {
-             
-                if (_instance != null)
-                    return _instance;
-                if (!TryFind(out _instance, true))
-                {
-                    if ($"[Singleton] Prevented creation of {typeof(T).Name} during application quit.".printWarningIf(ApplicationInfo.WantsToQuit))
-                        return null;
-                    if ($"Singleton<{typeof(T).Name}> stops creating instance in Edit Mode.".printWarningIf(!Application.isPlaying && !AllowEditMode))
-                        return null;
-                    if (!ResourcesUtility.TryInstantiateFromResources(out _instance, typeof(T).Name, null))
-                        _instance = Create<T>();
-
-                    _instance.OnInstantiated();
-                }
+                EnsureInstance(ref _instance, i => i.OnInstantiated());
                 return _instance;
             }
         }
@@ -42,6 +29,24 @@ namespace Yu5h1Lib
         public static void RemoveInstanceCache()
         {
             _instance = null;
+        }
+
+        public static bool EnsureInstance<T>(ref T instance,System.Action<T> instantiated) where T : Component
+        {
+            if (instance != null)
+                return true;
+            if (!TryFind(out instance, includeInactive: true))
+            {
+                if ($"[Singleton] Prevented creation of {typeof(T).Name} during application quit.".printWarningIf(ApplicationInfo.WantsToQuit))
+                    return false;
+                if ($"Singleton<{typeof(T).Name}> stops creating instance in Edit Mode.".printWarningIf(!Application.isPlaying && !AllowEditMode))
+                    return false;
+                if (!ResourcesUtility.TryInstantiateFromResources(out instance, typeof(T).Name, null))
+                    instance = Create<T>();
+                if (instance != null)
+                    instantiated?.Invoke(instance);
+            }
+            return instance != null;
         }
     }
 

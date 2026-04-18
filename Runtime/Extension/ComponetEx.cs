@@ -2,7 +2,8 @@
 
 namespace Yu5h1Lib
 {
-	public static class ComponentEx
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never), System.ComponentModel.Browsable(false)]
+    public static class ComponentEx
 	{
         public static bool TryGetComponentInParent<T>(this Component component, out T result, bool IncludeSelf = false) where T : Component
 		{

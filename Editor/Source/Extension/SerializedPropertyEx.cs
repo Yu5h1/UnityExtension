@@ -480,12 +480,12 @@ namespace Yu5h1Lib.EditorExtension
             instance = ScriptableObject.CreateInstance(type);
             prop.objectReferenceValue = instance;
 
-            var parent = FindNearestAssetParent(prop);
-            if (parent != null)
+            var mainAsset = prop.serializedObject.targetObject;
+            if (AssetDatabase.Contains(mainAsset))
             {
                 Undo.RegisterCreatedObjectUndo(instance, "Create Inline SubAsset");
-                AssetDatabase.AddObjectToAsset(instance, parent);
-                EditorUtility.SetDirty(parent);
+                AssetDatabase.AddObjectToAsset(instance, mainAsset);
+                EditorUtility.SetDirty(mainAsset);
                 AssetDatabase.SaveAssets();
             }
             prop.objectReferenceValue = instance;
@@ -493,38 +493,6 @@ namespace Yu5h1Lib.EditorExtension
             return true;
         }
 
-        /// <summary>
-        /// 從 property path 往上找最近的已存在於 AssetDatabase 的 ObjectReference，
-        /// 作為 SubAsset 的 parent。
-        ///
-        /// 例如：Theme → GenericComponentPresetObject → ParameterObject
-        /// 對 ParameterObject 而言，最近的 Asset parent 是 GenericComponentPresetObject（SubAsset），
-        /// 而非最頂層的 Theme。
-        ///
-        /// 若找不到任何中間層的 Asset，fallback 到 serializedObject.targetObject。
-        /// </summary>
-        private static UnityEngine.Object FindNearestAssetParent(SerializedProperty prop)
-        {
-            // 從當前 property 往上走，找最近的 ObjectReference 且已在 AssetDatabase 中
-            var current = prop;
-            while (current.GetParentProperty(out var parentProp))
-            {
-                current = parentProp;
-                if (current.propertyType == SerializedPropertyType.ObjectReference
-                    && current.objectReferenceValue != null
-                    && AssetDatabase.Contains(current.objectReferenceValue))
-                {
-                    return current.objectReferenceValue;
-                }
-            }
-
-            // Fallback: 最頂層的 targetObject
-            var root = prop.serializedObject.targetObject;
-            if (AssetDatabase.Contains(root))
-                return root;
-
-            return null;
-        }
 
         public static bool IsArrayElement(this SerializedProperty prop) => prop.propertyPath.Contains("Array.data[");
 

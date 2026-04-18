@@ -7,7 +7,15 @@ namespace Yu5h1Lib
 {
     public abstract class Preferences<T> : SingletonBehaviour<T> where T : Preferences<T>
     {
-        public string KEY => GetType().Name;
+        public enum InitializeTiming
+        {
+            None,
+            Awake,
+            Start,
+            Enabled
+        }
+
+        public virtual string KEY => GetType().Name;
         [SerializeField,TypeRestriction(typeof(IValuePort))] private List<Object> _bindings;
         public IReadOnlyList<Object> bindings => _bindings;
 
@@ -18,7 +26,8 @@ namespace Yu5h1Lib
 
         [SerializeField] private UnityEvent _DataUpdated;
 
-        public bool LoadFromPlayerPrefsOnAwake = false;
+        public InitializeTiming loadStyle = InitializeTiming.None;
+
         public bool SaveOnChanged = false;
 
         public bool TryGetValueFromBindings(string key,out string value)
@@ -42,11 +51,46 @@ namespace Yu5h1Lib
 
         protected override void OnInitializing()
         {
+            current.CopyFrom(defaultSetting);
             if (current.IsEmpty())
                 current.CopyFrom(defaultSetting);
-            if (LoadFromPlayerPrefsOnAwake)
+            if (loadStyle == InitializeTiming.Awake)
                 LoadFromPlayerPrefs();
         }
+        public void Start()
+        {
+            if (loadStyle == InitializeTiming.Start)
+                LoadFromPlayerPrefs();
+            BindAll();
+            current.Changed += Current_Changed;
+        }
+        private void OnEnable()
+        {
+            if (loadStyle == InitializeTiming.Enabled)
+                LoadFromPlayerPrefs();
+        }
+        private void Current_Changed()
+        {
+            _DataUpdated?.Invoke();
+            if (SaveOnChanged)
+                SaveToPlayerPrefs();
+        }
+
+        public void BindAll()
+        { 
+            foreach (IBindable port in _bindings)
+            {
+                port.BindTo(current);
+                if (!current.ContainsKey(port.GetFieldName()))
+                    current[port.GetFieldName()] = port.GetValue();
+            }
+        }
+        public void UnbindAll()
+        {
+            foreach (IBindable port in _bindings)
+                port.Unbind();
+        }
+
         public void WriteToBindings()
         { 
             foreach (var obj in _bindings)
@@ -58,40 +102,35 @@ namespace Yu5h1Lib
                 ReadFrom(obj);
         }
 
+        public virtual bool IsValidToSave() => true;
+
         public virtual void SaveToPlayerPrefs()
         {
-            PlayerPrefs.SetString(GetType().Name, current.ToJson());
+            PlayerPrefs.SetString(KEY, current.ToJson());
             PlayerPrefs.Save();
         }
-        public virtual bool LoadFromPlayerPrefs()
+        public virtual bool TryLoadCurrent(out DataView output)
         {
+            output = default;
             if (!PlayerPrefs.HasKey(KEY))
                 return false;
-            if (DataView.TryParseFromJson(PlayerPrefs.GetString(KEY), out DataView data))
-            { 
-                current.CopyFrom(data);
-                WriteToBindings();
-                return true;
-            }
-            else
+            DataView.TryParseFromJson(PlayerPrefs.GetString(KEY), out output);
+            return true;
+        }
+        public void LoadFromPlayerPrefs()
+        {
+            if (!TryLoadCurrent(out DataView data))
             {
                 $"Failed to parse preferences from PlayerPrefs with key [{KEY}]".printWarning();
-                return false;
-            }
+                return;
+            }            
+            current.CopyFrom(data);
+            WriteToBindings();
         }
 
 
         public void WriteTo(Object obj) => current.WriteTo(obj);
-        public void ReadFrom(Object obj)
-        {
-            if (current.TryReadFrom(obj))
-            {
-                if (SaveOnChanged)
-                    SaveToPlayerPrefs();
-                _DataUpdated?.Invoke();
-
-            }
-        }
+        public void ReadFrom(Object obj) => current.ReadFrom(obj);
 
         [System.Obsolete("Use WriteTo instead")]
         public void GetProperty(Object obj) => WriteTo(obj);

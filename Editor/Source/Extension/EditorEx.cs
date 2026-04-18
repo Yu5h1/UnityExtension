@@ -39,19 +39,19 @@ namespace Yu5h1Lib.EditorExtension
         }
 
         public static void Iterate(this Editor editor,System.Action<SerializedProperty> DrawProperty,
-            System.Action<SerializedProperty> DrawHeader)
+            System.Action<SerializedProperty> DrawMonoScript)
         {
             EditorGUI.BeginChangeCheck();
             var iterator = editor.serializedObject.GetIterator();
             #region m_Script
             iterator.NextVisible(true);
-            if (DrawHeader == null)
+            if (DrawMonoScript == null)
                 using (new EditorGUI.DisabledGroupScope(true))
                 {
                     EditorGUILayout.PropertyField(iterator);
                 }
             else
-                DrawHeader.Invoke(iterator);
+                DrawMonoScript.Invoke(iterator);
             #endregion
 
             while (iterator.NextVisible(false))

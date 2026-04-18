@@ -10,6 +10,7 @@ namespace Yu5h1Lib
 	{
 		public bool Minimize = false;
         public bool ShowLabel = true;
+        public bool UseEnhancedReorderableList = false;
 
 		public InlineAttribute() {}
 

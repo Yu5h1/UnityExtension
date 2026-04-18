@@ -19,7 +19,6 @@ public interface IInputFieldOps : ISelectableOps
     int characterLimit { get; set; }
     bool MaskPassword { get; set; }
     bool isFocused { get;}
-    
 
     void SetTextWithoutNotify(string value);
     void DeactivateInputField();

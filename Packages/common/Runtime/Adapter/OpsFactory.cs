@@ -135,5 +135,28 @@ namespace Yu5h1Lib
             _constructors.Clear();
             Ops.Clear();
         }
+
+        public static bool TryGetRawComponent<TOps,TComponnent>(this MonoBehaviour behaviour, ref TComponnent _component) where TOps : class, IOps
+            where TComponnent : Component
+        {
+            if (_component != null)
+                return true;
+            foreach (var type in Ops[typeof(TOps)])
+                if (behaviour.TryGetComponent(type, out Component found))
+                {
+                    try
+                    {
+                        _component = (TComponnent)found;
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError(e);
+                        throw e;
+                    }
+                    return true;
+                }
+                    
+            return false;
+        }
     }
 }

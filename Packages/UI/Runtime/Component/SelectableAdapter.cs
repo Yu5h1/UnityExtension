@@ -69,5 +69,38 @@ namespace Yu5h1Lib.UI
         }
 
      
-    } 
+    }
+    public abstract class SelectableAdapter<TOps, TValue> : SelectableAdapter<TOps>, IValuePort, IValuePort<TValue>
+    where TOps : class, ISelectableOps
+    {
+        public abstract TValue value { get; set; }
+        public string GetFieldName() => gameObject.name;
+        public string GetValue() => value?.ToString() ?? string.Empty;
+        public void SetValue(string text) => value = TryParse(text, out TValue result) ? result : default;
+
+        public abstract bool TryParse(string value, out TValue result);
+
+        public void SetValue(Object Ibindable)
+        {
+            if (Ibindable is IValuePort port)
+                SetValue(port.GetValue());
+        }
+
+        public abstract void AddListener(UnityAction<TValue> method);
+        public abstract void RemoveListener(UnityAction<TValue> method);
+
+        private UnityAction<TValue> ReadFromThis;
+        public void BindTo(Serialization.DataView dataview)
+        {
+            Unbind();
+            ReadFromThis = _ => dataview.ReadFrom(this);
+            AddListener(ReadFromThis);
+        }
+        public void Unbind()
+        {
+            if (ReadFromThis == null) return;
+            RemoveListener(ReadFromThis);
+            ReadFromThis = null;
+        }
+    }
 }

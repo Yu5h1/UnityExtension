@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.CartesianCoordinate;
+using System.Runtime.CompilerServices;
 
 namespace Yu5h1Lib
 {
@@ -40,6 +41,15 @@ namespace Yu5h1Lib
             }
             "Why are you use this methods ?".printWarningIf(pos == rot == scale == false);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Scale(this Transform t,float? x = null, float? y = null, float? z = null)
+        {
+            var s = t.localScale;
+            if (x.HasValue) s.x = x.Value;
+            if (y.HasValue) s.y = y.Value;
+            if (z.HasValue) s.z = z.Value;
+            t.localScale = s;
+        }
         #endregion
 
         #region Find
@@ -65,11 +75,6 @@ namespace Yu5h1Lib
         #region 2D
         public static Vector3 TransformPoint(this Transform t,float x,float y) => t.TransformPoint(new Vector3(x, y));
         #endregion
-
-
-
-
-
 
         public static Vector3 GetDirection(this Transform transform, Direction directdironType)
         {

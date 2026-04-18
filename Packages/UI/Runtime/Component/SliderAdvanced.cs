@@ -1,32 +1,13 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Yu5h1Lib.Serialization;
 
 namespace Yu5h1Lib.UI
 {
-    public class SliderAdvanced : Slider, IValuePort
+    public class SliderAdvanced : Slider 
     {
         [SerializeField] private bool wrap;
-
-        #region ValuePort
-        public string GetFieldName() => gameObject.name;
-        public string GetValue() => value.ToString();
-        public void SetValue(string valueText) 
-        {
-            if (float.TryParse(valueText, out float result))
-                value = result;
-            else
-                $"Failed to parse '{valueText}' as a float for {gameObject.name}".printWarning();
-        }
-
-        public void SetValue(Object Ibindable)
-        {
-            if (Ibindable is IValuePort valuePort)
-                SetValue(valuePort.GetValue());
-            else
-                $"Object {Ibindable.name} does not implement IValuePort".printWarning();
-        } 
-        #endregion
 
         public override void OnDrag(PointerEventData eventData)
         {
@@ -54,8 +35,6 @@ namespace Yu5h1Lib.UI
             float valueDelta = (delta / pixelLength) * range;
             value = minValue + Mathf.Repeat(value - minValue + valueDelta, range);
         }
-
-    
 
         public void UpdateText(Text text)
         {

@@ -1,13 +1,34 @@
 using UnityEngine;
 using UnityEngine.Events;
+using Yu5h1Lib.Serialization;
 
 namespace Yu5h1Lib
 {
-
+    public interface IValuePort
+    {
+        string GetFieldName();
+        string GetValue();
+        void SetValue(string value);
+        void SetValue(Object Ibindable);
+    }
+    public interface IValuePort<TValue> : IBindable
+    {
+        TValue value { get; set; }
+        bool TryParse(string value, out TValue result);
+        void AddListener(UnityAction<TValue> method);
+        void RemoveListener(UnityAction<TValue> method);
+    }
+    public interface IBindable : IValuePort
+    {
+        void BindTo(DataView other);
+        void Unbind();
+    }
     public abstract class ValuePort : BaseMonoBehaviour, IValuePort
     {
         [SerializeField] private System.StringComparison _searchComparison = System.StringComparison.OrdinalIgnoreCase;
         public System.StringComparison searchComparison { get => _searchComparison; protected set => _searchComparison = value; }
+
+        protected override void OnInitializing() {}
 
         public virtual string GetFieldName() => gameObject.name;
         public abstract string GetValue();
@@ -28,12 +49,5 @@ namespace Yu5h1Lib
             add { _ValueChanged.AddListener(value); }
             remove { _ValueChanged.RemoveListener(value); }
         }
-    }
-    public interface IValuePort
-    {
-        string GetFieldName();
-        string GetValue();
-        void SetValue(string value);
-        void SetValue(Object Ibindable);
     }
 }

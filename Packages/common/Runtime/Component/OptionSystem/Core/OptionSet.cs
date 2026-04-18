@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using Yu5h1Lib.Serialization;
 
 namespace Yu5h1Lib
 {
@@ -10,10 +11,12 @@ namespace Yu5h1Lib
         [SerializeField] protected OptionSelector selector;
         public abstract int Count { get; }
         public abstract void Select(int index);
-        public abstract string GetItemName(int index);
+        public abstract string GetItemText(int index);
+        public void print(ValuePort port) => $"OptionSet: {gameObject.name} Value: {port.GetValue()}".print();
     }
     public abstract class OptionSet<T> : OptionSet , IValuePort
     {
+        [ReadOnly]public string CurrentItemDisplayName;
         public T current
         { 
             get => Items.IsValid(selector.current) ? Items[selector.current] : default;
@@ -22,8 +25,9 @@ namespace Yu5h1Lib
                 if (EqualityComparer<T>.Default.Equals(current, value)) 
                     return;
                 int index = Items.IndexOf(value);
-                if (Items.IsValid(index))
-                    selector.current = index;
+                if (!Items.IsValid(index))
+                    return;
+                selector.current = index;
             }
         }
         [SerializeField, Inline(UseEnhancedReorderableList = true)] protected List<T> _Items;
@@ -46,6 +50,7 @@ namespace Yu5h1Lib
                 return;
             OnSelected(index,Items[index]);
             _OptionChanged?.Invoke(Items[index]);
+            CurrentItemDisplayName = GetItemText(index);
         }
         protected virtual void OnSelected(int index,T current) { }
         public void InvokeOptionChanged() => Select(selector.current);
@@ -66,14 +71,36 @@ namespace Yu5h1Lib
         {
             if ($"Selector is unassigned.".printWarningIf(selector == null))
                 return;
-            if (value.IsEmpty())
+            if ($"{gameObject.name} set empty Value  ".printWarningIf(value.IsEmpty()))
                 return;
             int index = Items.FindIndex(item => ToString(item).Equals(value, comparison));
             if (index >= 0)
-                selector.current = index;
+                current = Items[index];
             else
                 Debug.LogWarning($"Value '{value}' not found in option set.");
         }       
-        public override string GetItemName(int index) => ToString(Items[index]);
-    } 
+        public override string GetItemText(int index) => ToString(Items[index]);
+    }
+    public abstract class OptionSetValue<TValue> : OptionSet<TValue>, IValuePort<TValue>
+    {
+        public TValue value { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+
+        public void AddListener(UnityAction<TValue> method) => optionChanged += method;
+        public void RemoveListener(UnityAction<TValue> method) => optionChanged -= method;
+        public abstract bool TryParse(string value, out TValue result);
+
+        private UnityAction<TValue> ReadFromThis;
+        public void BindTo(DataView dataview)
+        {
+            Unbind();
+            ReadFromThis = _ => dataview.ReadFrom(this);
+            AddListener(ReadFromThis);
+        }
+        public void Unbind()
+        {
+            if (ReadFromThis == null) return;
+            RemoveListener(ReadFromThis);
+            ReadFromThis = null;
+        }
+    }
 }

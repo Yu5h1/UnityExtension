@@ -20,8 +20,9 @@ public abstract class GameObjectWithComponentOption<T> : GameObjectOption where 
     {
         base.OnSelected(index,current);
         _Component = current.GetComponent<T>();
-        _ComponentChanged?.Invoke(_Component);
         OnComponentChanged(_Component);
+        _ComponentChanged?.Invoke(_Component);
+        
     }
     protected virtual void OnComponentChanged(T current) {}
 }

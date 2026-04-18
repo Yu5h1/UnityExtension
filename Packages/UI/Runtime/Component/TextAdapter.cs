@@ -6,7 +6,7 @@ using Yu5h1Lib.Runtime;
 namespace Yu5h1Lib.UI
 {
     [DisallowMultipleComponent]
-    public class TextAdapter : UI_Adapter<ITextOps>, ITextOps, ITextAttribute,IValuePort
+    public class TextAdapter : UI_Adapter<ITextOps>, ITextOps, ITextAttribute
     {
         public string CharactersToTrim;
         public string text { get => Ops.text.Trim(Regex.Unescape(CharactersToTrim).ToCharArray()); set => Ops.text = value; }
@@ -17,8 +17,6 @@ namespace Yu5h1Lib.UI
         public Alignment alignment { get => Ops.alignment; set => Ops.alignment = value; }
 
         public CanvasRenderer canvasRenderer => Ops.canvasRenderer;
-
-        
 
         public void CrossFadeAlpha(float alpha, float duration, bool ignoreTimeScale) => Ops.CrossFadeAlpha(alpha, duration, ignoreTimeScale);
 
@@ -43,18 +41,6 @@ namespace Yu5h1Lib.UI
             gameObject.SetActive(true);
             
         }
-        #region IBingable
-        public string GetFieldName() => gameObject.name;
-        public string GetValue() => text;
-        public void SetValue(string value) => text = value;
-        public void SetValue(Object bindable)
-        {
-            if (bindable is IValuePort Ibindable)
-                SetValue(Ibindable.GetValue());            
-        }
-        #endregion
-
-
 #if UNITY_EDITOR
         [ContextMenu(nameof(Test))]
         public void Test() => $"TextAdapter Test: {text}".print();

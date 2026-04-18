@@ -1,38 +1,30 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using Yu5h1Lib;
-using Yu5h1Lib.Common;
 
-public abstract class UI_Adapter<TOps> : ComponentAdapter<TOps>, IOps where TOps : class, IOps
+namespace Yu5h1Lib.UI
 {
-    private RectTransform _rectTransform;
-    public RectTransform rectTransform
+    public abstract class UI_Adapter<TOps> : UIControl<UIBehaviour>, IUIControl, IOps where TOps : class, IOps
     {
-        get
+        public Component RawComponent => ui;
+        private TOps _Ops;
+        public TOps Ops => _Ops ??= OpsFactory.Create<TOps>(RawComponent);
+
+        public override void Get_UIComponent()
         {
-            if (Object.ReferenceEquals(_rectTransform, null) && RawComponent != null)
-            {
-                if (RawComponent is Graphic graphic)
-                    _rectTransform = graphic.rectTransform;
-                else
-                    RawComponent.TryGetComponent(out _rectTransform);
-            }
-            return _rectTransform;
+            this.TryGetRawComponent<TOps,UIBehaviour>(ref _ui);
         }
     }
-    public bool TriggerEvent<TEventHandler>(ExecuteEvents.EventFunction<TEventHandler> function) where TEventHandler : IEventSystemHandler
+    public abstract class UI_Adapter<TOps,TValue> : UIControl<UIBehaviour,TValue>, IValuePort where TOps : class, IOps
     {
-        if (RawComponent == null)
-            return false;
-        ExecuteEvents.Execute(
-            RawComponent.gameObject,
-            new BaseEventData(EventSystem.current),
-            function
-        );
-        return true;
-    }
+        public Component RawComponent => ui;
+        private TOps _Ops;
+        public TOps Ops => _Ops ??= OpsFactory.Create<TOps>(RawComponent);
+
+        public override void Get_UIComponent()
+        {
+            this.TryGetRawComponent<TOps, UIBehaviour>(ref _ui);
+        }
+    }    
 }

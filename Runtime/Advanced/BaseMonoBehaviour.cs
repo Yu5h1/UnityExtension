@@ -7,6 +7,7 @@ namespace Yu5h1Lib
     public abstract class BaseMonoBehaviour : MonoBehaviour
     {
         public bool initialized { get; private set;}
+
         private void InitializeAutomatically()
         {
             if (initialized)
@@ -30,21 +31,10 @@ namespace Yu5h1Lib
 
         public bool IsAvailable() => BehaviourEx.IsAvailable(this);
 
-
         public void ToggleActivate(GameObject obj) => obj.ToggleActive();
+
         public void ToggleActivate() => gameObject.ToggleActive();
 
         public virtual void Log(string msg) => msg.print();
-
-        private IEnumerator BuildDelayInvoke(UnityAction action,int frames)
-        {
-            if (action == null)
-                yield break;
-            for (int i = 0; i < frames; i++)
-                yield return null;            
-            action.Invoke();
-        }
-        public void InvokeAfterFrames(UnityAction action, int frame)
-            => StartCoroutine(BuildDelayInvoke(action, frame));
     }
 }

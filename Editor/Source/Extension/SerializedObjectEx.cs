@@ -46,24 +46,37 @@ namespace Yu5h1Lib.EditorExtension
             }
 
             return results;
-        }
-        public static SerializedProperty FindFirst( this SerializedObject serializedObject, 
-            Predicate predicate,bool enterChildren = true)
+        }  
+        public static bool TryFindFirst(this SerializedObject serializedObject, Predicate predicate, out SerializedProperty prop, bool enterChildren = true)
         {
             var iterator = serializedObject.GetIterator();
-
             if (iterator.NextVisible(true))
             {
                 do
                 {
                     if (predicate(iterator))
-                        return iterator.Copy();
+                    {
+                        prop = iterator.Copy();
+                        return true;
+                    }
                 }
                 while (iterator.NextVisible(enterChildren));
             }
-
-            return null;
+            prop = null;
+            return false;
         }
+        public static SerializedProperty FindFirst(this SerializedObject serializedObject, Predicate predicate, bool enterChildren = true)
+        {
+            TryFindFirst(serializedObject, predicate, out var prop, enterChildren);
+            return prop;
+        }
+
+        public static SerializedProperty GetFirstProperty(this SerializedObject serializedObject, params string[] excludes)
+        {
+            var excludeSet = new HashSet<string>(excludes);
+            return serializedObject.FindFirst(p => !excludeSet.Contains(p.name));
+        }
+
         #region EditorGUI
         public static bool TryDrawScriptField(this SerializedObject so)
         {

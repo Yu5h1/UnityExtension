@@ -7,10 +7,11 @@ namespace Yu5h1Lib.EditorExtension
     [EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
     public static class PopupWindowContentEx
     {
-        public static void Show(this PopupWindowContent content,Rect rect)
+        public static void Show(this PopupWindowContent content,Rect rect,bool setWindowPosition = true)
         {
-            PopupWindow.Show(Rect.zero, content);
-            content.editorWindow.position = rect;
+            PopupWindow.Show(rect, content);
+            if (setWindowPosition)
+                content.editorWindow.position = rect;
         }
     }
 }
