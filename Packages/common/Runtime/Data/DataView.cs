@@ -51,7 +51,7 @@ namespace Yu5h1Lib.Serialization
                 return false;
             }
             var fieldName = port.GetFieldName();
-            if ($"Field name with [{fieldName}] does not exist.\n{ToString()}".printWarningIf(!ContainsKey(fieldName)))
+            if (!ContainsKey(fieldName))
                 return false;
             port.SetValue(this[fieldName]);
             return true;

@@ -20,8 +20,23 @@ namespace Yu5h1Lib
         [SerializeField] private MinMax.Option rangeOption;
         public override int Count => rangeOption == MinMax.Option.Min ? MinCount : MaxCount;
 
-        public override string GetItemText(int index)
-            => optionSets.IsEmpty() ? string.Empty : optionSets[0].GetItemText(index);
+        public override bool TryGetItemText(int index, out string text)
+        {
+            text = "";
+            if (optionSets.IsEmpty())
+                return false;
+            List<string> texts = new List<string>();
+            foreach (var set in optionSets)
+            {
+                if (set != null && set.TryGetItemText(index, out string itemText))
+                    texts.Add(itemText);
+            }
+            if (texts.IsEmpty())
+                return false;
+            text = texts.Join(", ");
+            return true;
+        }
+
 
         //[SerializeField] private int _currentSet;
         //public int currentSet

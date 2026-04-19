@@ -8,7 +8,7 @@ using Yu5h1Lib;
 using Yu5h1Lib.Serialization;
 using Yu5h1Lib.UI;
 
-[DisallowMultipleComponent,RequireComponent(typeof(Toggle))]
+[DisallowMultipleComponent,RequireComponent(typeof(Toggle)),AddonFor(typeof(Toggle))]
 public class ToggleAddon : UIControl<Toggle,bool>
 {
     public UnityEvent<bool> ValueChangedInverse;
@@ -41,7 +41,6 @@ public class ToggleAddon : UIControl<Toggle,bool>
     {
         ui.onValueChanged.AddListener(onValueChangedInverse);
     }
-
 
     private void onValueChangedInverse(bool IsOn)
     {

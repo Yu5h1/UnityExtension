@@ -4,7 +4,6 @@ namespace Yu5h1Lib
 {
 	public class PlayerPreferences : Preferences<PlayerPreferences>
     {
-    
         [ContextMenu(nameof(PrintPlayerPrefs))]
         public void PrintPlayerPrefs()
         {
@@ -25,5 +24,7 @@ namespace Yu5h1Lib
                 $"PlayerPrefs does not contain key [{KEY}]".printWarning();
 
         }
+
+    
     }
 }

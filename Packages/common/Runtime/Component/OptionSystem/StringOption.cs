@@ -22,7 +22,10 @@ namespace  Yu5h1Lib
                 {
                     _overrideItems = new List<string>();
                     for (int i = 0; i < overrideSet.Count; i++)
-                        _overrideItems.Add(overrideSet.GetItemText(i));
+                    { 
+                        if (overrideSet.TryGetItemText(i, out string text))
+                            _overrideItems.Add(text);
+                    }
                 }
                 return _overrideItems;
             }
@@ -30,13 +33,13 @@ namespace  Yu5h1Lib
         public override bool TryParse(string value, out string result)
         {
             result = current;
-            if (overrideSet != null)
+            if (overrideSet != null && overrideSet.TryGetItemText(selector.current, out string text))
             {
-                result = overrideSet.GetItemText(selector.current);
+                result = text;
                 return true;
             }
-            return true;
+            return false;
         }
-        public override string GetValue() => overrideSet == null ? current : overrideSet.GetItemText(selector.current);
+        public override string GetValue() => overrideSet == null ? current : overrideSet.TryGetItemText(selector.current, out string text) ? text : current;
     } 
 }

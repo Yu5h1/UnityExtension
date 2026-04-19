@@ -11,7 +11,7 @@ namespace Yu5h1Lib
         [SerializeField] protected OptionSelector selector;
         public abstract int Count { get; }
         public abstract void Select(int index);
-        public abstract string GetItemText(int index);
+        public abstract bool TryGetItemText(int index,out string text);
         public void print(ValuePort port) => $"OptionSet: {gameObject.name} Value: {port.GetValue()}".print();
     }
     public abstract class OptionSet<T> : OptionSet , IValuePort
@@ -50,7 +50,8 @@ namespace Yu5h1Lib
                 return;
             OnSelected(index,Items[index]);
             _OptionChanged?.Invoke(Items[index]);
-            CurrentItemDisplayName = GetItemText(index);
+            if (TryGetItemText(index, out string text))
+                CurrentItemDisplayName = text;
         }
         protected virtual void OnSelected(int index,T current) { }
         public void InvokeOptionChanged() => Select(selector.current);
@@ -79,7 +80,15 @@ namespace Yu5h1Lib
             else
                 Debug.LogWarning($"Value '{value}' not found in option set.");
         }       
-        public override string GetItemText(int index) => ToString(Items[index]);
+        public override bool TryGetItemText(int index, out string text)
+        {
+            text = string.Empty;
+            if ($"{gameObject.name} index ({index}) is invalid.".printWarningIf(!Items.IsValid(index)))
+                return false;
+
+            text = ToString(Items[index]);
+            return true;
+        }
     }
     public abstract class OptionSetValue<TValue> : OptionSet<TValue>, IValuePort<TValue>
     {
