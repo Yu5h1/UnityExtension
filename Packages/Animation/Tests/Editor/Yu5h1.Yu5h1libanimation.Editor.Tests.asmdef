@@ -1,0 +1,14 @@
+{
+    "name": "Yu5h1.Yu5h1libanimation.Editor.Tests",
+    "references": [
+        "Yu5h1.Yu5h1libanimation.Editor",
+        "Yu5h1.Yu5h1libanimation"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}

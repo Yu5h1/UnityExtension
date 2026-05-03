@@ -1,0 +1,20 @@
+{
+    "name": "Yu5h1Lib.DOExtension.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:a56a310aea0e44a458b588c3f9831dad",
+        "GUID:0a2ad6279ef01794b8610804d06308fa",
+        "GUID:cae5769eb7ff32f469085a442d48acbe"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

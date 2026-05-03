@@ -48,7 +48,7 @@ namespace Yu5h1Lib.Serialization
                         return;
                     }
                 }
-                _entries.Add(new KeyValue<TKey, TValue>(key, value));
+                _entries.Add(new KeyValue<TKey, TValue>(key, value));                
                 Added?.Invoke(key, value);
                 Changed?.Invoke();
             }

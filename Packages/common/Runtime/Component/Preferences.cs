@@ -15,24 +15,23 @@ namespace Yu5h1Lib
         [SerializeField] protected DataView defaultSetting;
 
         [SerializeField, ReadOnly] private DataView _current = null;
+        private bool isCurrentLoaded = false;
         public DataView current
-        { 
+        {
             get
             {
-                if (_current.IsEmpty())
+                if (isCurrentLoaded)
+                    return _current;
+                isCurrentLoaded = true;
+                if (TryLoadCurrent(out DataView data))
+                    _current = new DataView(data);
+                else
                 {
-                    if (TryLoadCurrent(out DataView data))
-                    {
-                        _current = new DataView(data);
-                    }
-                    else
-                    {
-                        $"Failed to parse preferences from PlayerPrefs with key [{KEY}]".printWarning();
-                        _current = defaultSetting == null ? new DataView() : new DataView(defaultSetting);
-                    }
-                    WriteToBindings();
-                    _current.Changed += Current_Changed;
+                    $"Failed to parse preferences from PlayerPrefs with key [{KEY}]".printWarning();
+                    _current = defaultSetting == null ? new DataView() : new DataView(defaultSetting);
                 }
+                WriteToBindings();
+                _current.Changed += Current_Changed;
                 return _current;
             }
         }
@@ -115,8 +114,7 @@ namespace Yu5h1Lib
             output = default;
             if (!PlayerPrefs.HasKey(KEY))
                 return false;
-            DataView.TryParseFromJson(PlayerPrefs.GetString(KEY), out output);
-            return true;
+            return DataView.TryParseFromJson(PlayerPrefs.GetString(KEY), out output);
         }
         public void WriteTo(Object obj) => current.WriteTo(obj);
         public void ReadFrom(Object obj) => current.ReadFrom(obj);

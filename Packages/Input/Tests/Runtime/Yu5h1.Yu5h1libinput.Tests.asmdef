@@ -1,0 +1,11 @@
+{
+    "name": "Yu5h1.Yu5h1libinput.Tests",
+    "references": [
+        "Yu5h1.Yu5h1libinput"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

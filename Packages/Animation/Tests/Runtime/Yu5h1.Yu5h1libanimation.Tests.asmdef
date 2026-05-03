@@ -1,0 +1,11 @@
+{
+    "name": "Yu5h1.Yu5h1libanimation.Tests",
+    "references": [
+        "Yu5h1.Yu5h1libanimation"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

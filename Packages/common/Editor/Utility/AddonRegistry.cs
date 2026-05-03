@@ -123,9 +123,12 @@ namespace Yu5h1Lib.EditorExtension
         #endregion
 
         #region Menu
+        public const string baseGOLabel = "GameObject/Addons/";
+        public const string PrintMapPath = baseGOLabel + nameof(Print_Map);
+        public const string RebuildPath = baseGOLabel + nameof(Rebuild);
 
-        [MenuItem("Yu5h1Lib/Addon Registry/Print Map")]
-        private static void PrintMap()
+        [MenuItem(PrintMapPath)]
+        private static void Print_Map()
         {
             var map = Map;
             if (map.Count == 0)
@@ -138,8 +141,8 @@ namespace Yu5h1Lib.EditorExtension
             Debug.Log($"[AddonRegistry] {map.Count} entries:\n{string.Join("\n", lines)}");
         }
 
-        [MenuItem("Yu5h1Lib/Addon Registry/Rebuild")]
-        private static void RebuildMenu()
+        [MenuItem(RebuildPath)]
+        private static void Rebuild()
         {
             _dirty = true;
             Debug.Log($"[AddonRegistry] Rebuilt, {Map.Count} entries.");
@@ -182,12 +185,12 @@ namespace Yu5h1Lib.EditorExtension
             //Debug.Log($"[AddonRegistry] Processed {targets.Length} GameObject(s), added {totalAfter - totalBefore} addon(s).");
         }
 
-        public const string baseMenuPath = "GameObject/Add Missing Addons";
+        public const string AddMissingPath = baseGOLabel + "Add Missing";
 
         // 對選中的所有 GameObject 批次執行 AddMissingAddons
-        [MenuItem(baseMenuPath, false)]
+        [MenuItem(AddMissingPath, false)]
         private static void AddMissingAddonsToSelection() => AddMissingAddons(Selection.gameObjects);
-        [MenuItem(baseMenuPath, true)]
+        [MenuItem(AddMissingPath, true)]
         private static bool ValidateAddMissingAddonsToSelection() => Selection.gameObjects != null && Selection.gameObjects.Length > 0;
 
 
