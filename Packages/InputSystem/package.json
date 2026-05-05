@@ -1,14 +1,10 @@
 {
-  "name": "com.yu5h1.animation",
-  "displayName": "Yu5h1Lib.Animation",
-  "version": "0.0.0",
+  "name": "com.yu5h1.inputsystem",
+  "displayName": "Yu5h1Lib.InputSystem",
+  "version": "0.1.0",
   "unity": "6000.3",
   "unityRelease": "9f1",
-  "description": "Animation solution from Yu5h1",
-  "dependencies": {
-    "com.unity.test-framework": "1.6.0",
-    "com.yu5h1.library": "0.1.0"
-  },
+  "description": "The Input System workaround from yu5h1",
   "author": {
     "name": "Yu5h1",
     "url": "http://www.example.com",

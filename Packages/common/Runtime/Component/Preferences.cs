@@ -78,11 +78,17 @@ namespace Yu5h1Lib
 
         public void BindAll()
         {
-            foreach (IBindable port in _bindings)
+            for (int i = 0; i < _bindings.Count; i++)
             {
-                if (!current.ContainsKey(port.GetFieldName()))
-                    current[port.GetFieldName()] = port.GetValue();
-                port.BindTo(current);
+                var obj = _bindings[i];
+                if (obj == null)
+                    continue;
+                if (obj is IBindable port)
+                {
+                    if (!current.ContainsKey(port.GetFieldName()))
+                        current[port.GetFieldName()] = port.GetValue();
+                    port.BindTo(current);
+                }
             }
         }
         public void UnbindAll()

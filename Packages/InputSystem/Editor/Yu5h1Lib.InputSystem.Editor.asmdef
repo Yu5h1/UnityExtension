@@ -1,8 +1,8 @@
 {
-    "name": "Yu5h1Lib.Input.Editor",
+    "name": "Yu5h1Lib.InputSystem.Editor",
     "rootNamespace": "",
     "references": [
-        "Yu5h1.Yu5h1libinput"
+        "GUID:babc5524efc6940458820662da4ba361"
     ],
     "includePlatforms": [
         "Editor"
