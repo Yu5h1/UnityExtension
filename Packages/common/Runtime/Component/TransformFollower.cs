@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using System.CartesianCoordinate;
 namespace Yu5h1Lib
 {
     /// <summary>
@@ -17,15 +17,20 @@ namespace Yu5h1Lib
         public enum UpdateMode { Update, LateUpdate, FixedUpdate }
 
         [Header("Target")]
-        [SerializeField] private Transform target;
+        [SerializeField] public Transform target;
 
-        [Tooltip("Local-space offset applied in the target's coordinate frame. Useful when the anchor isn't exactly where the follower should be.")]
-        [SerializeField] private Vector3 localOffset = Vector3.zero;
+        [SerializeField] private Optional<float> PositionX;
+        [SerializeField] private Optional<float> PositionY;
+        [SerializeField] private Optional<float> PositionZ;
 
-        [Header("Position")]
-        [SerializeField] private bool followPositionX = true;
-        [SerializeField] private bool followPositionY = true;
-        [SerializeField] private bool followPositionZ = true;
+        [Header("Look At")]
+        [Tooltip("Which face of this object points toward the look target. none = disabled.")]
+        public Direction lookatDirection = Direction.none;
+        [Tooltip("Offset along the axis from LookTarget toward this object. Positive = move away from LookTarget (larger on screen if LookTarget is camera).")]
+        [SerializeField] private float lookatDepthOffset = 0f;
+        [Tooltip("The transform to look at. Falls back to target if null.")]
+        [SerializeField] private Transform lookTarget;
+        public Transform LookTarget => lookTarget != null ? lookTarget : target;
 
         [Header("Rotation")]
         [Tooltip("Inherit yaw (Y axis) — typical for 'facing direction'.")]
@@ -54,19 +59,20 @@ namespace Yu5h1Lib
         {
             if (target == null) return;
 
-            // --- Position ---
-            Vector3 targetPos = target.TransformPoint(localOffset);
+            var offset = new Vector3(
+                PositionX.enabled ? PositionX.value : 0,
+                PositionY.enabled ? PositionY.value : 0,
+                PositionZ.enabled ? PositionZ.value : 0);
+            
+            Vector3 targetPos = target.TransformPoint(offset);
             Vector3 current = transform.position;
-            Vector3 desired = new Vector3(
-                followPositionX ? targetPos.x : current.x,
-                followPositionY ? targetPos.y : current.y,
-                followPositionZ ? targetPos.z : current.z);
 
-            transform.position = positionLerpSpeed <= 0f
-                ? desired
-                : Vector3.Lerp(current, desired, 1f - Mathf.Exp(-positionLerpSpeed * dt));
+            transform.position = targetPos;
+            //positionLerpSpeed <= 0f
+                //? targetPos
+                //: Vector3.Lerp(current, targetPos, 1f - Mathf.Exp(-positionLerpSpeed * dt));
 
-            // --- Rotation ---
+            // --- Rotation: follow target axes ---
             if (followYaw || followPitch || followRoll)
             {
                 Vector3 targetEuler = target.rotation.eulerAngles;
@@ -80,6 +86,27 @@ namespace Yu5h1Lib
                 transform.rotation = rotationLerpSpeed <= 0f
                     ? desiredRot
                     : Quaternion.Slerp(transform.rotation, desiredRot, 1f - Mathf.Exp(-rotationLerpSpeed * dt));
+            }
+
+            // --- Rotation: look at LookTarget with specified face ---
+            if (lookatDirection != Direction.none)
+            {
+                var lt = LookTarget;
+                if (lt != null)
+                {
+                    Vector3 toTarget = lt.position - transform.position;
+                    if (toTarget.sqrMagnitude > 0.0001f)
+                    {
+                        Quaternion desired = Quaternion.LookRotation(toTarget).LookAt(lookatDirection);
+                        transform.rotation = rotationLerpSpeed <= 0f
+                            ? desired
+                            : Quaternion.Slerp(transform.rotation, desired, 1f - Mathf.Exp(-rotationLerpSpeed * dt));
+
+                        // depth offset: move along the axis from LookTarget toward self
+                        if (lookatDepthOffset != 0f)
+                            transform.position += toTarget.normalized * -lookatDepthOffset;
+                    }
+                }
             }
         }
     }

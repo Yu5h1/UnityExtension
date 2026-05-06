@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
-using Yu5h1Lib;
 
 /// <summary>
 /// KeyCode 到 Input System Key 的轉換工具
@@ -17,22 +16,7 @@ public static class InputSystemCompat
         InitializeKeyCodeCache();
 
     }
-    [RuntimeInitializeOnLoadMethod]
-    static void OnRuntimeMethodLoad()
-    {
-        InputHandler.GetKeyDownCallback = InputHelper.GetKeyDown;
-        InputHandler.GetKeyCallback = InputHelper.GetKey;
-        InputHandler.GetKeyUpCallback = InputHelper.GetKeyUp;
-        InputHandler.GetMouseButtonDownCallback = InputHelper.GetMouseButtonDown;
-        InputHandler.GetMouseButtonUpCallback = InputHelper.GetMouseButtonUp;
-        InputHandler.GetMousePosition = () => InputHelper.MousePosition;
-        InputHandler.GetAxis = InputHelper.GetAxis;
-        InputHandler.GetAxisRaw = InputHelper.GetAxis;
-        InputHandler.GetButtonDown = InputHelper.GetButtonDown;
-        InputHandler.GetButtonUp = InputHelper.GetButtonUp;
-        InputHandler.GetButton = InputHelper.GetButton;
-        InputHandler.GetTouchCallback = InputHelper.GetTouch;
-    }
+
 
     private static void InitializeKeyCodeCache()
     {
