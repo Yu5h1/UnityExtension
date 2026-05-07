@@ -5,7 +5,7 @@ using Yu5h1Lib;
 using Yu5h1Lib.Common;
 using Yu5h1Lib.UI;
 
-public interface IInputFieldOps : ISelectableOps
+public interface IInputFieldOps : IValuePortAdapter<string>
 {
     string text { get; set; }
     string placeholder { get; set; }
@@ -29,7 +29,7 @@ public interface IInputFieldOps : ISelectableOps
     event UnityAction<string> endEdit;
 }
 
-public abstract class InputFieldOps<T> : SelectableOps<T>, IInputFieldOps where T : Selectable
+public abstract class InputFieldOps<T> : ValuePortAdapter<T,string>, IInputFieldOps where T : Selectable
 {
     protected InputFieldOps(T component) : base(component) {}
 
@@ -51,6 +51,18 @@ public abstract class InputFieldOps<T> : SelectableOps<T>, IInputFieldOps where 
     public abstract event UnityAction<string> submit;
     public abstract event UnityAction<string> textChanged;
     public abstract event UnityAction<string> endEdit;
+    #region ValuePort
+    public override string value { get => text; set => text = value; }
+    public override void SetValue(string value) => text = value;
+    public override string GetValue() => text;
+    public override event UnityAction<string> ChangedCallback
+    {
+        add => textChanged += value;
+        remove => textChanged -= value;
+    } 
+    #endregion
+
+
 
     [SerializeField, ReadOnly] private TextAdapter _textAdapter;
     public TextAdapter textAdapter 

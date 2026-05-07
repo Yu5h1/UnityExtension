@@ -15,7 +15,7 @@ namespace Yu5h1Lib.EditorExtension
     /// </summary>
     public class OpsGenericResolver : AddonRegistry.IAddonResolver
     {
-        private static readonly Type _opsInterfaceType = typeof(IOps);
+        private static readonly Type _opsInterfaceType = typeof(IAdapter<Component>);
 
         public IEnumerable<Type> GetTargetComponents(Type addonType)
         {
@@ -28,7 +28,7 @@ namespace Yu5h1Lib.EditorExtension
                     if (!arg.IsInterface) continue;
                     if (!_opsInterfaceType.IsAssignableFrom(arg)) continue;
 
-                    if (OpsFactory.Ops.TryGetValue(arg, out var componentTypes))
+                    if (AdapterFactory<Component>.Adapters.TryGetValue(arg, out var componentTypes))
                         foreach (var componentType in componentTypes)
                             yield return componentType;
                 }

@@ -9,37 +9,16 @@ using Yu5h1Lib.Serialization;
 using Yu5h1Lib.UI;
 
 [DisallowMultipleComponent,RequireComponent(typeof(Toggle)),AddonFor(typeof(Toggle))]
-public class ToggleAddon : UIControl<Toggle,bool>
+public class ToggleAddon : UI_Adapter<IValuePortAdapter<bool>> 
 {
     public UnityEvent<bool> ValueChangedInverse;
     public UnityEvent checkedEvent;
     public UnityEvent uncheckedEvent;
 
-    public override bool value
-    {
-        get
-        {
-            if ("Toggle is null.".printWarningIf(ui == null))
-                return false;
-            return ui.isOn;
-        }
-        set
-        {
-            if ("Toggle is null.".printWarningIf(ui == null))
-                return;
-            if (ui.isOn == value)
-                return;
-            ui.isOn = value;
-        }
-    }
-    public override void AddListener(UnityAction<bool> method) => ui.onValueChanged.AddListener(method);
-    public override void RemoveListener(UnityAction<bool> method) => ui.onValueChanged.RemoveListener(method);
-
-    public override bool TryParse(string value, out bool result) => bool.TryParse(value, out result);
-
     void Start()
     {
-        ui.onValueChanged.AddListener(onValueChangedInverse);
+        adapter.ChangedCallback += onValueChangedInverse;
+        //ui.onValueChanged.AddListener(onValueChangedInverse);
     }
 
     private void onValueChangedInverse(bool IsOn)
@@ -52,7 +31,7 @@ public class ToggleAddon : UIControl<Toggle,bool>
     }
     public void ToggleAlpha(CanvasGroup g)
     { 
-        g.alpha = value ? 1f : 0f;
+        g.alpha = adapter?.value == true ? 1f : 0f;
     }
 
 }

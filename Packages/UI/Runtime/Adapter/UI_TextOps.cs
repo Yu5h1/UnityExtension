@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace Yu5h1Lib.UI
 {
-    [OpsRegistration(typeof(Text), typeof(ITextOps))]
+    [AdapterRegistration(typeof(Text), typeof(ITextOps))]
     public sealed class UI_TextOps : TextOps<Text>
     {
         [Preserve] public UI_TextOps(Text t) : base(t) { }
@@ -77,7 +77,7 @@ namespace Yu5h1Lib.UI
         public override int GetLineCount() => c.cachedTextGenerator.lineCount;
         public override int GetLineIndexByPosition(int position)
         {
-            if (RawComponent == null || text.IsEmpty())
+            if (Raw == null || text.IsEmpty())
                 return 0;
 
             var textGen = c.cachedTextGenerator;

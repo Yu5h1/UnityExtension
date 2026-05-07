@@ -5,7 +5,7 @@ using static Yu5h1Lib.InputHandler;
 
 namespace Yu5h1Lib
 {
-    public class InputKeyEvent : MonoBehaviour
+    public class KeyCodeEvent : MonoBehaviour
     {
         [FormerlySerializedAs("keyCode")]
         public KeyCode key;

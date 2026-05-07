@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace Yu5h1Lib.UI
 {
-    [OpsRegistration(typeof(Dropdown), typeof(IDropDownOps))]
+    [AdapterRegistration(typeof(Dropdown), typeof(IDropDownOps))]
     public class UI_DropDownOps : DropDownOps<Dropdown,Dropdown.OptionData>, IDropDownOps
     {
         [Preserve] public UI_DropDownOps(Dropdown d) : base(d) {}

@@ -1,44 +1,56 @@
 using UnityEngine;
 using UnityEngine.Events;
-using Yu5h1Lib.Serialization;
+using Yu5h1Lib.MVVM;
 
 namespace Yu5h1Lib
 {
-    public interface IValuePort
+    public interface UValuePort<TValue> : IValuePort<TValue>
     {
-        string GetFieldName();
-        string GetValue();
-        void SetValue(string value);
-        void SetValue(Object Ibindable);
+        event UnityAction<TValue> ChangedCallback;
     }
-    public interface IValuePort<TValue> : IBindable
-    {
-        TValue value { get; set; }
-        bool TryParse(string value, out TValue result);
-        void AddListener(UnityAction<TValue> method);
-        void RemoveListener(UnityAction<TValue> method);
-    }
-    public interface IBindable : IValuePort
-    {
-        void BindTo(DataView other);
-        void Unbind();
-    }
+
     public abstract class ValuePort : BaseMonoBehaviour, IValuePort
     {
         [SerializeField] private System.StringComparison _searchComparison = System.StringComparison.OrdinalIgnoreCase;
+
         public System.StringComparison searchComparison { get => _searchComparison; protected set => _searchComparison = value; }
+        public object Value { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
 
         protected override void OnInitializing() {}
 
         public virtual string GetFieldName() => gameObject.name;
+        public void SetValue(string value) => SetValue(value, searchComparison);
+
         public abstract string GetValue();
         public abstract void SetValue(string value, System.StringComparison comparision);
-        public void SetValue(string value) => SetValue(value, searchComparison);
+
         public void SetValue(Object bindable)
         { 
             if (bindable is IValuePort Ibindable)
-                SetValue(Ibindable.GetValue());
+                SetValue(Ibindable);
         }
+        public void SetValue(IValuePort Ibindable)
+        {
+            Ibindable.GetValue().print();
+            SetValue(Ibindable.GetValue());
+        }
+
+
+        public abstract event UnityAction ChangedCallback;
+        private UnityAction ReadFromThis;
+        public void BindTo(IDataView dataview)
+        {
+            Unbind();
+            ReadFromThis = () => dataview.ReadFrom(this);
+            ChangedCallback += ReadFromThis;
+        }
+        public void Unbind()
+        {
+            if (ReadFromThis == null) return;
+            ChangedCallback -= ReadFromThis;
+            ReadFromThis = null;
+        }
+        protected virtual void OnDestroy() => Unbind();
     }
     public abstract class ValuePort<T> : ValuePort
     {
@@ -49,5 +61,6 @@ namespace Yu5h1Lib
             add { _ValueChanged.AddListener(value); }
             remove { _ValueChanged.RemoveListener(value); }
         }
+
     }
 }

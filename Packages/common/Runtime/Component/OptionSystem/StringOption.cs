@@ -5,7 +5,7 @@ using Yu5h1Lib.Serialization;
 
 namespace  Yu5h1Lib
 {
-    public class StringOption : OptionSetValue<string>
+    public class StringOption : OptionSet<string>
     {
         public OptionSet overrideSet;
 
@@ -30,16 +30,16 @@ namespace  Yu5h1Lib
                 return _overrideItems;
             }
         }
-        public override bool TryParse(string value, out string result)
-        {
-            result = current;
-            if (overrideSet != null && overrideSet.TryGetItemText(selector.current, out string text))
-            {
-                result = text;
-                return true;
-            }
-            return false;
-        }
+        //public override bool TryParse(string value, out string result)
+        //{
+        //    result = current;
+        //    if (overrideSet != null && overrideSet.TryGetItemText(selector.current, out string text))
+        //    {
+        //        result = text;
+        //        return true;
+        //    }
+        //    return false;
+        //}
         public override string GetValue() => overrideSet == null ? current : overrideSet.TryGetItemText(selector.current, out string text) ? text : current;
     } 
 }

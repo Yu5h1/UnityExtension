@@ -1,28 +1,37 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using Yu5h1Lib.MVVM;
 using Yu5h1Lib.Serialization;
 
 namespace Yu5h1Lib
 {
-    public abstract class OptionSet : ValuePort, IValuePort
+    public abstract class OptionSet : ValuePort
     {
-
         [SerializeField] protected OptionSelector selector;
         public abstract int Count { get; }
-        public abstract void Select(int index);
+        public void Select(int index) => TrySelect(index);
+        public bool TrySelect(int index)
+        {
+            if (!CanSelect(index))
+                return false;
+            OnSelected(index);
+            return true;
+        }
+        protected abstract void OnSelected(int index);
+        public abstract bool CanSelect(int index);
         public abstract bool TryGetItemText(int index,out string text);
         public void print(ValuePort port) => $"OptionSet: {gameObject.name} Value: {port.GetValue()}".print();
     }
-    public abstract class OptionSet<T> : OptionSet , IValuePort
+    public abstract class OptionSet<TValue> : OptionSet , IValuePort<TValue>
     {
         [ReadOnly]public string CurrentItemDisplayName;
-        public T current
+        public TValue current
         { 
             get => Items.IsValid(selector.current) ? Items[selector.current] : default;
             set
             {
-                if (EqualityComparer<T>.Default.Equals(current, value)) 
+                if (EqualityComparer<TValue>.Default.Equals(current, value)) 
                     return;
                 int index = Items.IndexOf(value);
                 if (!Items.IsValid(index))
@@ -30,33 +39,44 @@ namespace Yu5h1Lib
                 selector.current = index;
             }
         }
-        [SerializeField, Inline(UseEnhancedReorderableList = true)] protected List<T> _Items;
-        public virtual List<T> Items { get => _Items; protected set => _Items = value; }
+        [SerializeField, Inline(UseEnhancedReorderableList = true)] protected List<TValue> _Items;
+        public virtual List<TValue> Items { get => _Items; protected set => _Items = value; }
 
-        [SerializeField] private UnityEvent<T> _OptionChanged;
-        public event UnityAction<T> optionChanged
+        [SerializeField] private UnityEvent<TValue> _OptionChanged;
+        private UnityAction _optionChanged;
+        public event UnityAction<TValue> optionChanged
         {
             add => _OptionChanged.AddListener(value);
             remove => _OptionChanged.RemoveListener(value);
         }
 
+        public override event UnityAction ChangedCallback
+        {
+            add => _optionChanged += value;
+            remove => _optionChanged -= value;
+        }
         public override int Count => Items.Count;
 
+        #region ValuePort
+        public TValue value { get => current; set => current = value; }
+        TValue IGetter<TValue>.Get() => current;
+        public void Set(TValue value) => this.value = value;
+        public override string GetValue() => ToString(current);
+        #endregion
         protected override void OnInitializing() { }
-        
-        public override void Select(int index)
+
+        public override bool CanSelect(int index) => Items.IsValid(index);
+
+        protected override void OnSelected(int index)
         {
-            if (!Items.IsValid(index))
-                return;
-            OnSelected(index,Items[index]);
             _OptionChanged?.Invoke(Items[index]);
+            _optionChanged?.Invoke();
             if (TryGetItemText(index, out string text))
                 CurrentItemDisplayName = text;
         }
-        protected virtual void OnSelected(int index,T current) { }
         public void InvokeOptionChanged() => Select(selector.current);
 
-        public virtual string ToString(T item)
+        public virtual string ToString(TValue item)
         {            
             switch (item)
             {
@@ -65,9 +85,6 @@ namespace Yu5h1Lib
             }
             return item?.ToString() ?? string.Empty;
         }
-
-        public override string GetValue() => ToString(current);
-
         public override void SetValue(string value,System.StringComparison comparison)
         {
             if ($"Selector is unassigned.".printWarningIf(selector == null))
@@ -89,27 +106,6 @@ namespace Yu5h1Lib
             text = ToString(Items[index]);
             return true;
         }
-    }
-    public abstract class OptionSetValue<TValue> : OptionSet<TValue>, IValuePort<TValue>
-    {
-        public TValue value { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
 
-        public void AddListener(UnityAction<TValue> method) => optionChanged += method;
-        public void RemoveListener(UnityAction<TValue> method) => optionChanged -= method;
-        public abstract bool TryParse(string value, out TValue result);
-
-        private UnityAction<TValue> ReadFromThis;
-        public void BindTo(DataView dataview)
-        {
-            Unbind();
-            ReadFromThis = _ => dataview.ReadFrom(this);
-            AddListener(ReadFromThis);
-        }
-        public void Unbind()
-        {
-            if (ReadFromThis == null) return;
-            RemoveListener(ReadFromThis);
-            ReadFromThis = null;
-        }
     }
 }

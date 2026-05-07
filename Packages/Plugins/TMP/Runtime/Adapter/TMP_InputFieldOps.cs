@@ -5,7 +5,7 @@ using TMPro;
 
 namespace Yu5h1Lib.UI
 {
-    [OpsRegistration(typeof(TMP_InputField), typeof(IInputFieldOps))]
+    [AdapterRegistration(typeof(TMP_InputField), typeof(IInputFieldOps))]
     public sealed class TMP_InputFieldOps : InputFieldOps<TMP_InputField>
     {
         [Preserve] public TMP_InputFieldOps(TMP_InputField input) : base(input) { }

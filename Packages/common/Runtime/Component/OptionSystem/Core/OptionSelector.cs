@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
+using Yu5h1Lib.MVVM;
 using Yu5h1Lib.Runtime;
 
 namespace Yu5h1Lib
@@ -45,8 +46,8 @@ namespace Yu5h1Lib
 
                     optionSet.Select(value);
                     _selectionChanged?.Invoke(value);
-                    if (binding is IValuePort bindable)
-                        bindable.SetValue(optionSet.GetValue());
+                    if (binding is IValuePort port)
+                        port.SetValue(optionSet.GetValue());
                 }
                 finally
                 {

@@ -4,7 +4,7 @@ using UnityEngine.Events;
 
 namespace Yu5h1Lib.UI
 {
-    public interface ITextOps : ITextAttribute, IOps
+    public interface ITextOps : ITextAttribute , IAdapter<Component>
     {
         float preferredWidth { get; }
         float preferredHeight { get; }

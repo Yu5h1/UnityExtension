@@ -1,9 +1,12 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 using Yu5h1Lib;
 using Yu5h1Lib.Mathematics;
+using Yu5h1Lib.MVVM;
 using Yu5h1Lib.Runtime;
 using Yu5h1Lib.Serialization;
 
@@ -18,7 +21,12 @@ namespace Yu5h1Lib
         public int MinCount => _OptionSets.IsEmpty() ? 0 : optionSets.Min(s => s.Count);
 
         [SerializeField] private MinMax.Option rangeOption;
+
+        public override event UnityAction ChangedCallback;
+
         public override int Count => rangeOption == MinMax.Option.Min ? MinCount : MaxCount;
+
+
 
         public override bool TryGetItemText(int index, out string text)
         {
@@ -36,36 +44,31 @@ namespace Yu5h1Lib
             text = texts.Join(", ");
             return true;
         }
-
-
-        //[SerializeField] private int _currentSet;
-        //public int currentSet
-        //{
-        //    get => _currentSet;
-        //    set
-        //    {
-        //        if (_currentSet == value)
-        //            return;
-        //        value %= Count;
-        //        if (value < 0)
-        //            value = Count - 1;
-        //        _currentSet = value;
-        //    }
-        //}
-
         protected override void OnInitializing() { }
 
-        public override void Select(int index)
+        public override bool CanSelect(int index)
         {
+            bool result = false;
             foreach (var set in optionSets)
             {
                 if (set != null)
-                    set.Select(index);
+                    result |= set.TrySelect(index);
             }
+            return result;
+        }
+        protected override void OnSelected(int index)
+        {
+            
         }
 
-        public override string GetValue() => "";
-        public override void SetValue(string value,System.StringComparison c) { }
+        public override string GetValue()
+        {
+            throw new NotImplementedException();
+        }
 
+        public override void SetValue(string value, StringComparison comparision)
+        {
+            throw new NotImplementedException();
+        }
     } 
 }

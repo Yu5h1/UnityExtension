@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
+using Yu5h1Lib.MVVM;
 using Yu5h1Lib.Serialization;
 
 namespace Yu5h1Lib
@@ -9,7 +10,7 @@ namespace Yu5h1Lib
     public abstract class Preferences<T> : SingletonBehaviour<T> where T : Preferences<T>
     {
         public virtual string KEY => GetType().Name;
-        [SerializeField,TypeRestriction(typeof(IBindable))] private List<Object> _bindings;
+        [SerializeField,TypeRestriction(typeof(Component))] private List<Object> _bindings;
         public IReadOnlyList<Object> bindings => _bindings;
 
         [SerializeField] protected DataView defaultSetting;
@@ -30,7 +31,6 @@ namespace Yu5h1Lib
                     $"Failed to parse preferences from PlayerPrefs with key [{KEY}]".printWarning();
                     _current = defaultSetting == null ? new DataView() : new DataView(defaultSetting);
                 }
-                WriteToBindings();
                 _current.Changed += Current_Changed;
                 return _current;
             }
@@ -43,15 +43,28 @@ namespace Yu5h1Lib
             remove => _changed.RemoveListener(value);
         }
 
-
         public bool SaveOnChanged = true;
 
-        public bool TryGetValueFromBindings(string key,out string value)
+        /// <summary>Resolved map from each binding Object to its IValuePort. Built during BindAll.</summary>
+        private readonly Dictionary<Object, IValuePort> _portMap = new Dictionary<Object, IValuePort>();
+
+        IValuePort ResolvePort(Object obj)
+        {
+            if (obj is IValuePort port) return port;
+            if (obj is IAdapterShell shell && shell.adapter is IValuePort shellPort) return shellPort;
+            if (obj is Component c &&
+                AdapterFactory<Component>.TryCreate(c, out IAdapter<Component> adapter) &&
+                adapter is IValuePort adapterPort)
+                return adapterPort;
+            return null;
+        }
+
+        public bool TryGetValueFromBindings(string key, out string value)
         {
             value = default;
-            foreach (var obj in bindings)
+            foreach (var port in _portMap.Values)
             {
-                if (obj is IValuePort port && port.GetFieldName() == key)
+                if (port.GetFieldName() == key)
                 {
                     value = port.GetValue();
                     return true;
@@ -69,6 +82,8 @@ namespace Yu5h1Lib
         {
             BindAll();
         }
+        protected virtual void OnDestroy() => UnbindAll();
+
         private void Current_Changed()
         {
             _changed?.Invoke();
@@ -78,35 +93,42 @@ namespace Yu5h1Lib
 
         public void BindAll()
         {
+            _portMap.Clear();
             for (int i = 0; i < _bindings.Count; i++)
             {
                 var obj = _bindings[i];
-                if (obj == null)
-                    continue;
-                if (obj is IBindable port)
-                {
-                    if (!current.ContainsKey(port.GetFieldName()))
-                        current[port.GetFieldName()] = port.GetValue();
-                    port.BindTo(current);
-                }
+                if (obj == null) continue;
+                var port = ResolvePort(obj);
+                if (port == null) continue;
+                _portMap[obj] = port;
+                if (!current.ContainsKey(port.GetFieldName()))
+                    current[port.GetFieldName()] = port.GetValue();
             }
+            WriteToBindings();
+            foreach (var port in _portMap.Values)
+                port.BindTo(current);
         }
+
         public void UnbindAll()
         {
-            foreach (IBindable port in _bindings)
+            foreach (var port in _portMap.Values)
                 port.Unbind();
+            _portMap.Clear();
         }
 
         public void WriteToBindings()
-        { 
-            foreach (var obj in _bindings)
-                WriteTo(obj);
+        {
+            foreach (var port in _portMap.Values)
+                current.WriteTo(port);
         }
+
         public void ReadFromBindings()
         {
-            foreach (var obj in _bindings)
-                ReadFrom(obj);
+            foreach (var port in _portMap.Values)
+                current.ReadFrom(port);
         }
+
+
 
         public virtual bool IsValidToSave() => true;
 
@@ -122,9 +144,7 @@ namespace Yu5h1Lib
                 return false;
             return DataView.TryParseFromJson(PlayerPrefs.GetString(KEY), out output);
         }
-        public void WriteTo(Object obj) => current.WriteTo(obj);
-        public void ReadFrom(Object obj) => current.ReadFrom(obj);
-
+        
         protected virtual void Print()
             => $"Preferences: {KEY}\n{current.Select(d => $"  {d.Key}: {d.Value}").Join('\n')}".print();
     }

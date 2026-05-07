@@ -1,5 +1,7 @@
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
+using Yu5h1Lib.MVVM;
 using Yu5h1Lib.Serialization;
 
 namespace Yu5h1Lib
@@ -9,9 +11,9 @@ namespace Yu5h1Lib
         [SerializeField,TypeRestriction(typeof(DataView.Provider))] private Object target;  
         [SerializeField, AutoFill("DataView")] private string key;
 
+        public override event UnityAction ChangedCallback;
+
         private DataView.Provider _provider => target as DataView.Provider;
-
-
 
         public override string GetFieldName()
             => string.IsNullOrEmpty(key) ? base.GetFieldName() : key;
@@ -38,7 +40,6 @@ namespace Yu5h1Lib
                 return provider.DataView.Keys.ToArray();
             });
         }
-  
 #endif
 
     }

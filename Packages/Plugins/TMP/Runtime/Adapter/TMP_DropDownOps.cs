@@ -7,7 +7,7 @@ using UnityEngine.Events;
 
 namespace Yu5h1Lib.UI
 {
-    [OpsRegistration(typeof(TMP_Dropdown), typeof(IDropDownOps))]
+    [Preserve,AdapterRegistration(typeof(TMP_Dropdown), typeof(IDropDownOps))]
     public class TMP_DropDownOps : DropDownOps<TMP_Dropdown, TMP_Dropdown.OptionData>, IDropDownOps
     {
         [Preserve] public TMP_DropDownOps(TMP_Dropdown dropdown) : base(dropdown) { }

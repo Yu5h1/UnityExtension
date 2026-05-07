@@ -2,21 +2,20 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Serialization;
 
 namespace Yu5h1Lib.UI
 {
-    public class DropdownAdapter : SelectableAdapter<IDropDownOps>, IDropDownOps
+    public class DropdownAdapter : UI_Adapter<IDropDownOps>, IDropDownOps
     {
         #region Ops
-        public string currentItem { get => Ops.currentItem; set => Ops.currentItem = value; }
-        public void Add(IList<string> options) => Ops.Add(options);
-        public void Sync(IList<string> options) => Ops.Sync(options);
-        public void InvokeChangedCallback() => Ops.InvokeChangedCallback();
+        public string currentItem { get => adapter.currentItem; set => adapter.currentItem = value; }
+        public void Add(IList<string> options) => adapter.Add(options);
+        public void Sync(IList<string> options) => adapter.Sync(options);
+        public void InvokeChangedCallback() => adapter.InvokeChangedCallback();
         public event UnityAction<int> valueChanged
         {
-            add => Ops.valueChanged += value;
-            remove => Ops.valueChanged -= value;
+            add => adapter.valueChanged += value;
+            remove => adapter.valueChanged -= value;
         }
         #endregion
 
@@ -24,7 +23,7 @@ namespace Yu5h1Lib.UI
 
         
 
-        public string this[int index] { get => Ops[index]; set => Ops[index] = value; }
+        public string this[int index] { get => adapter[index]; set => adapter[index] = value; }
 
 
         public event UnityAction<string> valueTextChanged
@@ -37,7 +36,7 @@ namespace Yu5h1Lib.UI
 
         private void Start()
         {
-            Ops.valueChanged += OnValueChanged;
+            adapter.valueChanged += OnValueChanged;
         }
 
         private void OnValueChanged(int index) => _valueTextChanged?.Invoke(this[index]);

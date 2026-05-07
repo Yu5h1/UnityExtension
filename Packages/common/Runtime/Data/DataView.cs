@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using Yu5h1Lib.MVVM;
 
 namespace Yu5h1Lib.Serialization
 {
     [System.Serializable]
-    public class DataView : DataView<string, string>
+    public class DataView : DataView<string, string>,IDataView
     {
         public interface Provider
         {
@@ -38,6 +39,25 @@ namespace Yu5h1Lib.Serialization
         }
 
 
+        public void ReadFrom(IValuePort port)
+        {
+            var fieldName = port.GetFieldName();
+            var bindingValue = port.GetValue();
+
+            if (ContainsKey(fieldName) && this[fieldName].Equals(bindingValue))
+                return;
+
+            this[fieldName] = bindingValue;
+        }
+
+        public void WriteTo(IValuePort port)
+        {
+            var fieldName = port.GetFieldName();
+            if (!ContainsKey(fieldName))
+                return;
+            port.SetValue(this[fieldName]);
+        }
+
         public override bool TryWriteTo(Object obj)
         {      
             if (obj == null)
@@ -59,13 +79,13 @@ namespace Yu5h1Lib.Serialization
 
         public override bool TryReadFrom(Object bindable)
         {
-            if (!(bindable is IValuePort binding))
+            if (!(bindable is IValuePort port))
             {
                 $"{bindable} is unbindable".printWarning();
                 return false;
             }
-            var fieldName = binding.GetFieldName();
-            var bindingValue = binding.GetValue();
+            var fieldName = port.GetFieldName();
+            var bindingValue = port.GetValue();
 
             if (ContainsKey(fieldName) && this[fieldName].Equals(bindingValue))
                 return false;
@@ -120,6 +140,8 @@ namespace Yu5h1Lib.Serialization
             return result.Entries.Count > 0;
         }
         public override string ToString() => ToJson();
+
+
     }
     [System.Serializable]
     public abstract class DataView<TKey, TValue> : KeyValues<TKey, TValue>

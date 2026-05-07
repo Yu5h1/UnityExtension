@@ -5,7 +5,7 @@ using UnityEngine.Events;
 using Yu5h1Lib;
 using Yu5h1Lib.Common;
 
-[OpsRegistration(typeof(InputField), typeof(IInputFieldOps))]
+[AdapterRegistration(typeof(InputField), typeof(IInputFieldOps))]
 public sealed class UIInputFieldOps : InputFieldOps<InputField> , IInputFieldOps
 {
     [Preserve] public UIInputFieldOps(InputField input) : base(input) { }

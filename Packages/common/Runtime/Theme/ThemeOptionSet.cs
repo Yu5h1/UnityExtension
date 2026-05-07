@@ -10,14 +10,16 @@ namespace Yu5h1Lib.Theming
     {
         [SerializeField,Inline(true)] private List<Theme.BindingObject> _bindings;
         public List<Theme.BindingObject> bindings => _bindings;
-
-        protected override void OnSelected(int index,Theme profile)
+ 
+        protected override void OnSelected(int index)
         {
+            var profile = Items[index];
             foreach (var group in _bindings)
             {
                 if (group != null)
                     group.Apply(profile);
             }
+            base.OnSelected(index);
         }
 
         public override string ToString(Theme item)

@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using Yu5h1Lib.Common;
 
 namespace Yu5h1Lib.UI
 {
-    public interface IDropDownOps : ISelectableOps
+    public interface IDropDownOps : IAdapter<Component>
     {
         string currentItem { get; set; }
         string this[int index] { get; set; }
@@ -14,9 +16,8 @@ namespace Yu5h1Lib.UI
         void Add(IList<string> options);
         void Sync(IList<string> options);
         void InvokeChangedCallback();
-    }
-    public abstract class DropDownOps<TDropDown, TOptionData> :
-        SelectableOps<TDropDown>, IDropDownOps, IList<string> where TDropDown : Selectable
+    }    
+    public abstract class DropDownOps<TDropDown, TOptionData> : OpsBase<TDropDown>, IDropDownOps, IList<string> where TDropDown : Selectable
     {
         protected DropDownOps(TDropDown component) : base(component) { }
 

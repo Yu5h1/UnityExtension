@@ -1,15 +1,12 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
-using Yu5h1Lib.Runtime;
-using Yu5h1Lib.WebSupport;
+using Yu5h1Lib.MVVM;
 
 namespace Yu5h1Lib.UI
 {
-    public class InputFieldAdapter : SelectableAdapter<IInputFieldOps,string>, IInputFieldOps
+    public class InputFieldAdapter : UI_Adapter<IInputFieldOps>, IInputFieldOps
         , IScrollHandler
     {
         [SerializeField] private Toggle _PasswordMaskToggle;
@@ -18,24 +15,38 @@ namespace Yu5h1Lib.UI
             get => _PasswordMaskToggle?.gameObject?.activeInHierarchy == true;
             set => _PasswordMaskToggle?.gameObject?.SetActive(value);
         }
-
+        #region ValuePort
+        public event UnityAction<string> ChangedCallback
+        {
+            add => adapter.ChangedCallback += value;
+            remove => adapter.ChangedCallback -= value;
+        }
+        public string GetFieldName() => adapter.GetFieldName();
+        public string GetValue() => adapter.GetValue();
+        public void SetValue(string value) => adapter.SetValue(value);
+        public void SetValue(IValuePort Ibindable) => adapter.SetValue(Ibindable);
+        public void BindTo(IDataView other) => adapter.BindTo(other);
+        public void Unbind() => adapter.Unbind();
+        public string Get() => adapter.Get();
+        public void Set(string value) => adapter.Set(value);
+        #endregion
         #region Ops 
-        public string text { get => Ops.text; set => Ops.text = value; }
-        public string placeholder { get => Ops.placeholder; set => Ops.placeholder = value; }
-        public Component textComponent => Ops.textComponent;
-        public TextAdapter textAdapter => Ops.textAdapter;
-        public int lineCount => Ops.lineCount;
-        public int lineType { get => Ops.lineType; set => Ops.lineType = value; } 
-        public bool MaskPassword { get => Ops.MaskPassword; set => Ops.MaskPassword = value; }
-        public bool isFocused => Ops.isFocused;
-        public int characterLimit { get => Ops.characterLimit; set => Ops.characterLimit = value; }
-        public void SetTextWithoutNotify(string value) => Ops.SetTextWithoutNotify(value);
-        public void DeactivateInputField() => Ops.DeactivateInputField();        
-        public int caretPosition { get => Ops.caretPosition; set => Ops.caretPosition = value; }
-        public int selectionAnchorPosition { get => Ops.selectionAnchorPosition; set => Ops.selectionAnchorPosition = value; }
-        public int selectionFocusPosition { get => Ops.selectionFocusPosition; set => Ops.selectionFocusPosition = value; }
+        public string text { get => adapter.text; set => adapter.text = value; }
+        public string placeholder { get => adapter.placeholder; set => adapter.placeholder = value; }
+        public Component textComponent => adapter.textComponent;
+        public TextAdapter textAdapter => adapter.textAdapter;
+        public int lineCount => adapter.lineCount;
+        public int lineType { get => adapter.lineType; set => adapter.lineType = value; } 
+        public bool MaskPassword { get => adapter.MaskPassword; set => adapter.MaskPassword = value; }
+        public bool isFocused => adapter.isFocused;
+        public int characterLimit { get => adapter.characterLimit; set => adapter.characterLimit = value; }
+        public void SetTextWithoutNotify(string value) => adapter.SetTextWithoutNotify(value);
+        public void DeactivateInputField() => adapter.DeactivateInputField();        
+        public int caretPosition { get => adapter.caretPosition; set => adapter.caretPosition = value; }
+        public int selectionAnchorPosition { get => adapter.selectionAnchorPosition; set => adapter.selectionAnchorPosition = value; }
+        public int selectionFocusPosition { get => adapter.selectionFocusPosition; set => adapter.selectionFocusPosition = value; }
 
-        public void ActivateInputField() => Ops.ActivateInputField();
+        public void ActivateInputField() => adapter.ActivateInputField();
         public void ActivateInputField(int caret)
         {
             ActivateInputField();
@@ -43,10 +54,11 @@ namespace Yu5h1Lib.UI
             selectionAnchorPosition = caret;
             selectionFocusPosition = caret;
         }
+        
         #endregion
         [SerializeField] private bool _allowSubmit = true;
         public bool allowSubmit { get => _allowSubmit; set => _allowSubmit = value; }
- 
+        public string value { get => adapter.value; set => adapter.value = value; }
 
         [SerializeField] private bool autoWrappingOverflowMode;
         [SerializeField] private bool DontSubmitIfIsNullOrWhiteSpace;
@@ -54,21 +66,23 @@ namespace Yu5h1Lib.UI
         public UnityEvent<string> _submit;
         public event UnityAction<string> submit
         {
-            add => Ops.submit += value;
-            remove => Ops.submit -= value;
+            add => adapter.submit += value;
+            remove => adapter.submit -= value;
         }
 
         public event UnityAction<string> textChanged
         {
-            add => Ops.textChanged += value;
-            remove => Ops.textChanged -= value;
+            add => adapter.textChanged += value;
+            remove => adapter.textChanged -= value;
         }
 
         public event UnityAction<string> endEdit
         {
-            add => Ops.endEdit += value;
-            remove => Ops.endEdit -= value;
+            add => adapter.endEdit += value;
+            remove => adapter.endEdit -= value;
         }
+
+ 
 
         public void Select()
         { 
@@ -151,7 +165,7 @@ namespace Yu5h1Lib.UI
         //}
         void CheckCaretPositionChange()
         {
-            if ( scrollRect == null || RawComponent == null || lineType == 0)
+            if ( scrollRect == null || Raw == null || lineType == 0)
                 return;
 
             int currentCaret = caretPosition;
@@ -242,6 +256,7 @@ namespace Yu5h1Lib.UI
             else
                 CheckLineCount();
         }
+
         public void CheckLineCount()
         {
             if (!AutoResizeScrollRect)
@@ -288,11 +303,6 @@ namespace Yu5h1Lib.UI
             _submit?.Invoke(text);        
         }
         public void InvokeSubmitEventAfterFrames(int frames) => this.DelayInvoke(InvokeSubmitEvent, frames);
-
-        protected override void OnDisable()
-        {
-            base.OnDisable();
-        }
 
         public void OnScroll(PointerEventData eventData)
         {
@@ -358,15 +368,7 @@ namespace Yu5h1Lib.UI
             return false;
         }
 
-        public override string value { get => text; set => text = value; }
+ 
 
-        public override bool TryParse(string value, out string result)
-        {
-            result = value;
-            return true;
-        }
-
-        public override void AddListener(UnityAction<string> method) => textChanged += method;
-        public override void RemoveListener(UnityAction<string> method) => textChanged -= method;
     }
 }

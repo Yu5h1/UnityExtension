@@ -67,10 +67,10 @@ namespace Yu5h1Lib
             Vector3 targetPos = target.TransformPoint(offset);
             Vector3 current = transform.position;
 
-            transform.position = targetPos;
-            //positionLerpSpeed <= 0f
-                //? targetPos
-                //: Vector3.Lerp(current, targetPos, 1f - Mathf.Exp(-positionLerpSpeed * dt));
+            //transform.position = targetPos;
+            transform.position = positionLerpSpeed <= 0f
+                ? targetPos
+                : Vector3.Lerp(current, targetPos, 1f - Mathf.Exp(-positionLerpSpeed * dt));
 
             // --- Rotation: follow target axes ---
             if (followYaw || followPitch || followRoll)

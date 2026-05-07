@@ -4,7 +4,7 @@ using UnityEngine.Scripting;
 
 namespace Yu5h1Lib.UI
 {
-    [OpsRegistration(typeof(TMP_Text), typeof(ITextOps))]
+    [AdapterRegistration(typeof(TMP_Text), typeof(ITextOps))]
     public sealed class TMPTextOps : TextOps<TMP_Text>
     {
         [Preserve] public TMPTextOps(TMP_Text t) : base(t) { }

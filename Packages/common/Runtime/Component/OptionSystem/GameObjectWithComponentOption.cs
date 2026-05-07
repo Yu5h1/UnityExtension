@@ -16,13 +16,17 @@ public abstract class GameObjectWithComponentOption<T> : GameObjectOption where 
         remove => _ComponentChanged.RemoveListener(value);
     }
 
-    protected override void OnSelected(int index, GameObject current)
+    protected override void OnSelected(int index)
     {
-        base.OnSelected(index,current);
-        _Component = current.GetComponent<T>();
-        OnComponentChanged(_Component);
-        _ComponentChanged?.Invoke(_Component);
-        
+        base.OnSelected(index);
+        if (Items[index].TryGetComponent(out T component))
+        {
+            _Component = component;
+            _ComponentChanged?.Invoke(_Component);
+            OnComponentChanged(component);
+        }
+        else
+            $"{gameObject.name} {typeof(T)} not found".printWarning();
     }
-    protected virtual void OnComponentChanged(T current) {}
+    protected abstract void OnComponentChanged(T newItem);
 }
