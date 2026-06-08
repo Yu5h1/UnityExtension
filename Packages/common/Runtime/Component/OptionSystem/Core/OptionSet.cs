@@ -50,11 +50,11 @@ namespace Yu5h1Lib
             remove => _OptionChanged.RemoveListener(value);
         }
 
-        public override event UnityAction ChangedCallback
-        {
-            add => _optionChanged += value;
-            remove => _optionChanged -= value;
-        }
+        //public override event UnityAction ChangedCallback
+        //{
+        //    add => _optionChanged += value;
+        //    remove => _optionChanged -= value;
+        //}
         public override int Count => Items.Count;
 
         #region ValuePort

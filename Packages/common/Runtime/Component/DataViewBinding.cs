@@ -11,7 +11,7 @@ namespace Yu5h1Lib
         [SerializeField,TypeRestriction(typeof(DataView.Provider))] private Object target;  
         [SerializeField, AutoFill("DataView")] private string key;
 
-        public override event UnityAction ChangedCallback;
+        //public override event UnityAction ChangedCallback;
 
         private DataView.Provider _provider => target as DataView.Provider;
 

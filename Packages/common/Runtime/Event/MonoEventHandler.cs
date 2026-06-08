@@ -22,7 +22,15 @@ namespace Yu5h1Lib
                 return;   
             _Disabled?.Invoke();
         }
-        public void Log( ){ }
+        public void Log(string message) => message.print();
+        public void DelayInvoke(IntObject frameObject) => Invoke(frameObject.name, frameObject.value);
+
+        public void DelayInvoke(UnityEventObject e)
+        {
+            if (float.TryParse(e.name, out float s))
+                this.DelayInvoke(e.value.Invoke, s);
+        }
+
     }
 
 }

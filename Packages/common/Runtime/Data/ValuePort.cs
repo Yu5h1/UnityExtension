@@ -36,18 +36,18 @@ namespace Yu5h1Lib
         }
 
 
-        public abstract event UnityAction ChangedCallback;
+        //public abstract event UnityAction ChangedCallback;
         private UnityAction ReadFromThis;
         public void BindTo(IDataView dataview)
         {
             Unbind();
             ReadFromThis = () => dataview.ReadFrom(this);
-            ChangedCallback += ReadFromThis;
+            //ChangedCallback += ReadFromThis;
         }
         public void Unbind()
         {
             if (ReadFromThis == null) return;
-            ChangedCallback -= ReadFromThis;
+            //ChangedCallback -= ReadFromThis;
             ReadFromThis = null;
         }
         protected virtual void OnDestroy() => Unbind();

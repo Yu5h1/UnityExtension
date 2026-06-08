@@ -5,12 +5,12 @@ using static Yu5h1Lib.InputHandler;
 
 namespace Yu5h1Lib
 {
-    public class KeyCodeEvent : MonoBehaviour
+    public class KeyCodeEvent : BaseMonoBehaviour
     {
         [FormerlySerializedAs("keyCode")]
         public KeyCode key;
         [FormerlySerializedAs("State")]
-        public PressPhase phase;
+        public PressPhase phase = PressPhase.Down;
         [FormerlySerializedAs("extras")]
         public KeyCode[] whileHolding;
         [FormerlySerializedAs("Event")]
@@ -20,7 +20,7 @@ namespace Yu5h1Lib
             add => _Event.AddListener(value);
             remove => _Event.RemoveListener(value);
         }
-
+        protected override void OnInitializing() {}
         private void Update()
         {
             if (Evaluate() && WhileHoldingMet())
@@ -42,5 +42,7 @@ namespace Yu5h1Lib
                 if (!GetKey(k)) return false;
             return true;
         }
+
+        
     }
 }

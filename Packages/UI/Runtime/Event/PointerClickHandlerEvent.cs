@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 
 namespace Yu5h1Lib
 {
-    public class PointerClickHandlerEvent : BaseEventHandler, IPointerClickHandler
+    public class PointerClickHandlerEvent : MonoBehaviour, IPointerClickHandler
     {
         [SerializeField,FormerlySerializedAs("doubleClick")]
         private UnityEvent<PointerEventData> _doubleClick;

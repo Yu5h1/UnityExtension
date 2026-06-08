@@ -38,12 +38,13 @@ namespace Yu5h1Lib.UI
         public void Show(string content)
         {
             text = content;
-            gameObject.SetActive(true);
-            
+            gameObject.SetActive(true);            
         }
 #if UNITY_EDITOR
         [ContextMenu(nameof(Test))]
         public void Test() => $"TextAdapter Test: {text}".print();
 #endif
+
+        public void SetText(Object obj) => text = obj?.ToString() ?? string.Empty;
     }
 }

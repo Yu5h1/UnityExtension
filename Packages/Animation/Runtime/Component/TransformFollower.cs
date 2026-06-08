@@ -46,10 +46,30 @@ namespace Yu5h1Lib
         [Tooltip("Rotation lerp speed. 0 = snap. Higher = faster follow.")]
         [SerializeField, Min(0f)] private float rotationLerpSpeed = 0f;
 
+        [Header("Locomotor")]
+        [Tooltip("Optional ILocomotor. When set, position is driven via Drive() instead of setting transform.position directly.")]
+        [SerializeField] private MonoBehaviour locomotorBehaviour;
+        [Tooltip("Speed (m/s) passed to ILocomotor.Drive(). Only used when Locomotor is set.")]
+        [SerializeField, Min(0f)] private float locomotorSpeed = 5f;
+        [Tooltip("Distance within which Drive(Vector3.zero) is sent to stop.")]
+        [SerializeField, Min(0f)] private float locomotorStopDistance = 0.5f;
+        private ILocomotor _locomotor;
+
         [Header("Update")]
         [SerializeField] private UpdateMode updateMode = UpdateMode.LateUpdate;
 
         public Transform Target { get => target; set => target = value; }
+
+        private void Awake() => _locomotor = locomotorBehaviour as ILocomotor;
+
+        private void OnValidate()
+        {
+            if (locomotorBehaviour != null && locomotorBehaviour is not ILocomotor)
+            {
+                Debug.LogWarning($"{nameof(TransformFollower)}: '{locomotorBehaviour.GetType().Name}' does not implement ILocomotor.", this);
+                locomotorBehaviour = null;
+            }
+        }
 
         private void Update()        { if (updateMode == UpdateMode.Update)      Tick(Time.deltaTime); }
         private void LateUpdate()    { if (updateMode == UpdateMode.LateUpdate)  Tick(Time.deltaTime); }
@@ -67,10 +87,21 @@ namespace Yu5h1Lib
             Vector3 targetPos = target.TransformPoint(offset);
             Vector3 current = transform.position;
 
-            //transform.position = targetPos;
-            transform.position = positionLerpSpeed <= 0f
-                ? targetPos
-                : Vector3.Lerp(current, targetPos, 1f - Mathf.Exp(-positionLerpSpeed * dt));
+            if (_locomotor != null)
+            {
+                Vector3 toTarget = targetPos - current;
+                float dist = toTarget.magnitude;
+                _locomotor.Drive(dist > locomotorStopDistance
+                    ? toTarget.normalized * locomotorSpeed
+                    : Vector3.zero);
+                return;
+            }
+            else
+            {
+                transform.position = positionLerpSpeed <= 0f
+                    ? targetPos
+                    : Vector3.Lerp(current, targetPos, 1f - Mathf.Exp(-positionLerpSpeed * dt));
+            }
 
             // --- Rotation: follow target axes ---
             if (followYaw || followPitch || followRoll)

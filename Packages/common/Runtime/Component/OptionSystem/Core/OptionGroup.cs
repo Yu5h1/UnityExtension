@@ -22,7 +22,7 @@ namespace Yu5h1Lib
 
         [SerializeField] private MinMax.Option rangeOption;
 
-        public override event UnityAction ChangedCallback;
+        //public override event UnityAction ChangedCallback;
 
         public override int Count => rangeOption == MinMax.Option.Min ? MinCount : MaxCount;
 

@@ -14,7 +14,10 @@ namespace Yu5h1Lib.Animation
         private Vector3[] _positionCache = System.Array.Empty<Vector3>();
         private Vector3[] _smoothCache = System.Array.Empty<Vector3>();
 
-        private void LateUpdate()
+        private void LateUpdate() => Apply();
+
+        [ContextMenu(nameof(Apply))]
+        public virtual void Apply()
         {
             if (_points == null || _points.Count == 0)
                 return;
@@ -65,8 +68,19 @@ namespace Yu5h1Lib.Animation
 
         public virtual void SetPositions(Vector3[] positions)
         {
-            lineRenderer.positionCount = positions.Length;
-            lineRenderer.SetPositions(positions);
+            var lr = lineRenderer != null ? lineRenderer : GetComponent<LineRenderer>();
+            if (lr == null)
+                return;
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+                UnityEditor.Undo.RecordObject(lr, nameof(Apply));
+#endif
+            lr.positionCount = positions.Length;
+            lr.SetPositions(positions);
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+                UnityEditor.EditorUtility.SetDirty(lr);
+#endif
         }
     }
 }

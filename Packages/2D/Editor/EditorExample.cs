@@ -4,7 +4,7 @@
 //
 // -----------------------------------------------------------------------------
 
-namespace Yu5h1.Dyu5h1lib.Editor
+namespace Yu5h1Lib
 {
     /// <summary>
     /// Provide a general description of the public class.

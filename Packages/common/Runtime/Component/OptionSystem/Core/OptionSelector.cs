@@ -2,18 +2,23 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
+using Yu5h1Lib.Common;
 using Yu5h1Lib.MVVM;
 using Yu5h1Lib.Runtime;
 
 namespace Yu5h1Lib
 {
     [DisallowMultipleComponent]
-    public class OptionSelector : BaseMonoBehaviour {
+    public class OptionSelector : BaseMonoBehaviour
+    {
         [SerializeField] private OptionSet _OptionSet;
         public OptionSet optionSet { get => _OptionSet; set => _OptionSet = value; }
         public int Count => optionSet.Count;
         [SerializeField] private int _current = -1;
         [SerializeField] private Object binding;
+        [SerializeField, FormerlySerializedAs("skipIndices")] private int[] _excludeIndices;
+        public int[] excludeIndices { get => _excludeIndices; private set => _excludeIndices = value; }
 
         private bool _syncing;
         public int current
@@ -31,7 +36,7 @@ namespace Yu5h1Lib
                     if (value < 0)
                         value = Count - 1;
 
-                    if (skipIndices.Contains(value))
+                    if (excludeIndices.Contains(value))
                     {
                         var interval = value > _current || (value == 0 && _current == Count - 1) ? 1 : -1;
                         if (!TryFindNextValidIndex(value, out int next, interval))
@@ -55,7 +60,9 @@ namespace Yu5h1Lib
                 }
             }
         }
-        public int[] skipIndices;
+
+
+
         protected override void OnInitializing() {}
 
         [SerializeField] private UnityEvent<int> _selectionChanged;
@@ -72,7 +79,7 @@ namespace Yu5h1Lib
                 int index = (startIndex + interval + i) % Count;
                 if (index < 0) index += Count;
 
-                if (!skipIndices.Contains(index))
+                if (!excludeIndices.Contains(index))
                 {
                     result = index;
                     return true;
@@ -85,7 +92,21 @@ namespace Yu5h1Lib
         [ContextMenu(nameof(MoveNext))]
         public void MoveNext() => current++;
         [ContextMenu(nameof(MovePrevious))]
-        public void MovePrevious() => current = (current - 1) < 0 ? Count - 1 : current - 1;
+        public void MovePrevious() => current--;
+
+
+        /// <summary>
+        /// Pick a random index excluding the current one and any in <see cref="excludeIndices"/>.
+        /// No-op when there is no valid candidate.
+        /// </summary>
+        [ContextMenu(nameof(RandomCurrent))]
+        public void RandomCurrent()
+        {
+            if (Count == 0) return;
+            // _current = -1 (uninitialized) is harmlessly ignored — out of [0, Count) range.
+            if (RandomEx.TryRandomInt(0, Count, out int idx, excludeIndices, _current))
+                current = idx;
+        }
 
     }
 

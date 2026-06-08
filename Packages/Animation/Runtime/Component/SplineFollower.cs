@@ -1,5 +1,6 @@
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Splines;
 
 namespace Yu5h1Lib
@@ -41,6 +42,17 @@ namespace Yu5h1Lib
     {
         public enum EndBehavior { Stop, Loop, PingPong, Disable }
 
+        /// <summary>Runtime state controlling traversal mode. Defaults to <see cref="Following"/>.</summary>
+        public enum FollowState
+        {
+            /// <summary>Stopped — Drive(zero) every frame.</summary>
+            Idle,
+            /// <summary>Normal forward (or PingPong) traversal via <see cref="EndBehavior"/>.</summary>
+            Following,
+            /// <summary>One-shot reverse traversal toward t=0. Transitions to <see cref="Idle"/> on arrival and fires <see cref="_ReachedStart"/>.</summary>
+            ReturningToStart
+        }
+
         [Header("References")]
         [Tooltip("Spline to follow. Evaluate respects its transform, so it can be a child of a moving platform.")]
         [SerializeField] private SplineContainer spline;
@@ -68,8 +80,16 @@ namespace Yu5h1Lib
         [Tooltip("Distance from end (m) within which speed ramps to 0. Stop mode only.")]
         [SerializeField, Min(0f)] private float arriveDistance = 1.5f;
 
+        [Header("Start position (for ReturnToStart)")]
+        [Tooltip("Knot index used as 'start' when ReturnToStart is called. 0 = first knot. Out-of-range values are clamped.")]
+        [SerializeField, Min(0)] private int startKnotIndex = 0;
+
         [Header("End behaviour")]
         [SerializeField] private EndBehavior endBehavior = EndBehavior.Loop;
+
+        [Header("Events")]
+        [Tooltip("Fires when ReturnToStart has reached t=0 and transitioned to Idle.")]
+        [SerializeField] private UnityEvent _ReachedStart;
 
         [Header("Debug")]
         [SerializeField] private bool drawGizmos = true;
@@ -78,6 +98,8 @@ namespace Yu5h1Lib
         private ILocomotor _locomotor;
         private float _splineLength;
         private int _direction = 1; // for PingPong
+        private FollowState _state = FollowState.Following;
+        private float _startT;      // cached normalized t of startKnotIndex
         private float _lastTNow;
         private float _lastTNear;
         private float _lastTFar;
@@ -90,8 +112,29 @@ namespace Yu5h1Lib
 
         public ILocomotor Locomotor => _locomotor;
 
+        /// <summary>Current traversal state. See <see cref="FollowState"/>.</summary>
+        public FollowState State => _state;
+
         /// <summary>Normalized progress on the spline (last computed). Read-only.</summary>
         public float CurrentT => _lastTNow;
+
+        // ============ State control API ============
+
+        /// <summary>Stop driving immediately. Locomotor receives zero velocity. Call <see cref="Follow"/> to continue.</summary>
+        [ContextMenu(nameof(Standby))]
+        public void Standby() => _state = FollowState.Idle;
+
+        /// <summary>Resume normal forward traversal (per <see cref="EndBehavior"/>). Resets direction to +1.</summary>
+        [ContextMenu(nameof(Follow))]
+        public void Follow()
+        {
+            _state = FollowState.Following;
+            _direction = 1;
+        }
+
+        /// <summary>Drive backward along the spline toward t=0. On arrival, transitions to Idle and fires <see cref="_ReachedStart"/>.</summary>
+        [ContextMenu(nameof(ReturnToStart))]
+        public void ReturnToStart() => _state = FollowState.ReturningToStart;
 
         private void Reset()
         {
@@ -115,6 +158,8 @@ namespace Yu5h1Lib
                     this);
                 locomotorBehaviour = null;
             }
+            // Editor-time cache for gizmos / inspector feedback.
+            if (!Application.isPlaying) CacheStartT();
         }
 
         private void ResolveLocomotor()
@@ -132,22 +177,50 @@ namespace Yu5h1Lib
             _splineLength = (spline != null && spline.Spline != null && spline.Spline.Count > 1)
                 ? spline.CalculateLength()
                 : 0f;
+
+            CacheStartT();
+        }
+
+        private void CacheStartT()
+        {
+            if (spline == null || spline.Spline == null || spline.Spline.Count == 0)
+            {
+                _startT = 0f;
+                return;
+            }
+            int clamped = Mathf.Clamp(startKnotIndex, 0, spline.Spline.Count - 1);
+            _startT = SplineUtility.ConvertIndexUnit(
+                spline.Spline, clamped, PathIndexUnit.Knot, PathIndexUnit.Normalized);
         }
 
         private void Update()
         {
             if (_locomotor == null || spline == null || _splineLength <= 0f) return;
 
+            // Idle state — short-circuit, drive zero.
+            if (_state == FollowState.Idle)
+            {
+                _locomotor.Drive(Vector3.zero);
+                return;
+            }
+
             // 1. Project current world position onto the spline (in spline-local space).
             float3 localPos = spline.transform.InverseTransformPoint(transform.position);
             SplineUtility.GetNearestPoint(spline.Spline, localPos, out _, out float tNow);
             _lastTNow = tNow;
 
+            // Effective direction this frame. ReturningToStart auto-picks shortest direction toward _startT.
+            int dir;
+            if (_state == FollowState.ReturningToStart)
+                dir = tNow > _startT ? -1 : +1;
+            else
+                dir = _direction;
+
             // 2. Compute lookahead t values for near (heading) and far (curvature).
             float dtNear = Mathf.Clamp(lookaheadDistance / _splineLength, 0f, 1f);
             float dtFar  = Mathf.Clamp((lookaheadDistance + curveLookahead) / _splineLength, 0f, 1f);
-            float tNear = AdvanceT(tNow, dtNear * _direction);
-            float tFar  = AdvanceT(tNow, dtFar  * _direction);
+            float tNear = AdvanceT(tNow, dtNear * dir);
+            float tFar  = AdvanceT(tNow, dtFar  * dir);
             _lastTNear = tNear;
             _lastTFar  = tFar;
 
@@ -176,31 +249,49 @@ namespace Yu5h1Lib
             float curveRatio = Mathf.Clamp01(curveAngle / curveAngleThreshold);
             float speed = Mathf.Lerp(cruiseSpeed, minSpeed, curveRatio * curveRatio);
 
-            // 6. End-behaviour adjustments to speed / direction.
-            switch (endBehavior)
+            // 6. State-specific arrival / end-behavior adjustments.
+            if (_state == FollowState.ReturningToStart)
             {
-                case EndBehavior.Stop:
+                // Arrival check at _startT — ramp speed and transition to Idle when there.
+                float remaining = Mathf.Abs(tNow - _startT) * _splineLength;
+                if (arriveDistance > 0f && remaining < arriveDistance)
+                    speed *= Mathf.Clamp01(remaining / arriveDistance);
+                if (remaining <= 0.001f)
                 {
-                    float remainingT = _direction > 0 ? (1f - tNow) : tNow;
-                    float remaining = remainingT * _splineLength;
-                    if (remaining < arriveDistance && arriveDistance > 0f)
-                        speed *= Mathf.Clamp01(remaining / arriveDistance);
-                    if (remaining <= 0.001f) speed = 0f;
-                    break;
+                    _state = FollowState.Idle;
+                    _locomotor.Drive(Vector3.zero);
+                    _ReachedStart?.Invoke();
+                    return;
                 }
-                case EndBehavior.Disable:
-                    if ((_direction > 0 && tNow >= 1f) || (_direction < 0 && tNow <= 0f))
+            }
+            else
+            {
+                // Normal Following — apply configured EndBehavior.
+                switch (endBehavior)
+                {
+                    case EndBehavior.Stop:
                     {
-                        _locomotor.Drive(Vector3.zero);
-                        enabled = false;
-                        return;
+                        float remainingT = _direction > 0 ? (1f - tNow) : tNow;
+                        float remaining = remainingT * _splineLength;
+                        if (remaining < arriveDistance && arriveDistance > 0f)
+                            speed *= Mathf.Clamp01(remaining / arriveDistance);
+                        if (remaining <= 0.001f) speed = 0f;
+                        break;
                     }
-                    break;
-                case EndBehavior.PingPong:
-                    if (tNow >= 0.999f && _direction > 0) _direction = -1;
-                    else if (tNow <= 0.001f && _direction < 0) _direction = 1;
-                    break;
-                // Loop: AdvanceT already wraps.
+                    case EndBehavior.Disable:
+                        if ((_direction > 0 && tNow >= 1f) || (_direction < 0 && tNow <= 0f))
+                        {
+                            _locomotor.Drive(Vector3.zero);
+                            enabled = false;
+                            return;
+                        }
+                        break;
+                    case EndBehavior.PingPong:
+                        if (tNow >= 0.999f && _direction > 0) _direction = -1;
+                        else if (tNow <= 0.001f && _direction < 0) _direction = 1;
+                        break;
+                    // Loop: AdvanceT already wraps.
+                }
             }
 
             // 7. Issue the velocity command.
