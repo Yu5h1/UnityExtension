@@ -7,10 +7,13 @@
   "description": "The Input System workaround from yu5h1",
   "author": {
     "name": "Yu5h1",
-    "url": "http://www.example.com",
+    "url": "https://github.com/Yu5h1",
     "email": "example@email.com"
   },
   "changelogUrl": "https://example.com/changelog.html",
   "documentationUrl": "https://example.com/",
-  "licensesUrl": "https://example.com/licensing.html"
+  "licensesUrl": "https://example.com/licensing.html",
+  "dependencies": {
+    "com.yu5h1.common": "1.0.0"
+  }
 }

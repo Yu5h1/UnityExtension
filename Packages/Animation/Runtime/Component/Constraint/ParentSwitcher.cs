@@ -8,7 +8,7 @@ namespace Yu5h1Lib
         [Tooltip("Transform whose parent will be switched. Null = use this GameObject's transform.")]
         [SerializeField] private Transform target;
 
-        [Tooltip("Available parents. index selects which one becomes the active parent.")]
+        [Tooltip("Available parents. index selects which one becomes the active parent. A null entry logs a warning and unparents to scene root (currentIndex -1).")]
         [SerializeField] private Transform[] parents;
 
         [Tooltip("SetParent behavior. True = keep world pose. False = keep local pose.")]
@@ -18,14 +18,30 @@ namespace Yu5h1Lib
 
         public int CurrentIndex => currentIndex;
 
-        public bool TryApply(int index,bool worldPositionStays)
+        /// <summary>
+        /// Switch the target's parent to <c>parents[index]</c>. A null entry unparents to the
+        /// scene root. Returns false when the index is out of range or the target is already
+        /// parented to the desired transform.
+        /// </summary>
+        public bool TryApply(int index, bool worldPositionStays)
         {
             if (parents.IsEmpty() || !parents.IsValid(index))
                 return false;
 
-            var desiredParent = parents[index];
-            if (desiredParent == null)
-                return false;
+            if (parents[index] == null)
+            {
+                Debug.LogWarning($"[{nameof(ParentSwitcher)}] parents[{index}] is null — unparenting to scene root.", this);
+                return Unparent(worldPositionStays);
+            }
+
+            return SetTargetParent(parents[index], index, worldPositionStays);
+        }
+
+        /// <summary>Detach the target from its parent (move to scene root). currentIndex becomes -1.</summary>
+        public bool Unparent(bool worldPositionStays) => SetTargetParent(null, -1, worldPositionStays);
+
+        private bool SetTargetParent(Transform desiredParent, int index, bool worldPositionStays)
+        {
             var actualTarget = target != null ? target : transform;
 
             if (actualTarget.parent == desiredParent)
@@ -38,7 +54,11 @@ namespace Yu5h1Lib
             currentIndex = index;
             return true;
         }
+
         [ContextMenu(nameof(Apply))]
         public void Apply() => TryApply(currentIndex, worldPositionStays);
+
+        [ContextMenu(nameof(Unparent))]
+        private void Unparent() => Unparent(worldPositionStays);
     }
 }

@@ -1,0 +1,11 @@
+{
+    "name": "Yu5h1.Yu5h1libtimeline.Tests",
+    "references": [
+        "Yu5h1.Yu5h1libtimeline"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

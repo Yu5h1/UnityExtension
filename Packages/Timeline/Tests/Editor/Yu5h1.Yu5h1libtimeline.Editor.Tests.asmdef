@@ -1,0 +1,14 @@
+{
+    "name": "Yu5h1.Yu5h1libtimeline.Editor.Tests",
+    "references": [
+        "Yu5h1.Yu5h1libtimeline.Editor",
+        "Yu5h1.Yu5h1libtimeline"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}

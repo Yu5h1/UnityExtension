@@ -25,6 +25,20 @@ namespace Yu5h1Lib
         }
         protected virtual void OnEnabled() {}
         protected virtual void OnDisabled() {}
+
+        public bool IsInitialized { get; private set; }
+
+        /// <summary>Run <see cref="Initialize"/> once, on first call. Idempotent and safe to call externally.</summary>
+        public void LazyInitialize()
+        {
+            if (IsInitialized)
+                return;
+            IsInitialized = true;
+            Initialize();
+        }
+
+        /// <summary>One-time setup, invoked once by <see cref="LazyInitialize"/>. Override in subclasses.</summary>
+        protected virtual void Initialize() {}
     }
     public abstract class BehaviourObject<T> : BehaviourObject
     {
