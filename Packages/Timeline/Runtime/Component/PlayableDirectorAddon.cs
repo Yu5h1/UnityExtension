@@ -41,7 +41,7 @@ namespace Yu5h1Lib.Animation
         /// ParameterObject named "CanSkip"). Decides *whether* skipping is allowed, not where to.
         /// The destination is the next <see cref="SkipPoint"/> marker — see <see cref="TrySkipToNext"/>.
         /// </summary>
-        public bool CanSkip { get => _canSkip; set => _canSkip = value; }
+        public bool CanSkip { get => _canSkip && director.state == PlayState.Playing; set => _canSkip = value; }
 
         private bool subscribed;
 
