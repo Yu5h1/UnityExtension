@@ -66,10 +66,8 @@ namespace Yu5h1Lib.Serialization.Editor
                     EditorGUI.PropertyField(keyRect, keyProp, GUIContent.none);
                 }
 
-                // 繪製 Value（處理多行情況）
                 if (IsExpandableProperty(valueProp))
                 {
-                    // 複雜類型：顯示 foldout
                     valueRect.height = EditorGUIUtility.singleLineHeight;
                     EditorGUI.PropertyField(valueRect, valueProp, GUIContent.none, true);
                 }
@@ -91,7 +89,7 @@ namespace Yu5h1Lib.Serialization.Editor
         {
             var valueProp = property.FindPropertyRelative("value");
             
-            if (valueProp != null && IsExpandableProperty(valueProp) && valueProp.isExpanded)
+            if (valueProp != null && IsExpandableProperty(valueProp) )
             {
                 return EditorGUI.GetPropertyHeight(valueProp, true);
             }
@@ -104,6 +102,7 @@ namespace Yu5h1Lib.Serialization.Editor
             return property.propertyType == SerializedPropertyType.Generic ||
                    property.propertyType == SerializedPropertyType.ManagedReference ||
                    (property.isArray && property.propertyType != SerializedPropertyType.String);
+                   
         }
 
         /// <summary>

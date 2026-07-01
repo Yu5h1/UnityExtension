@@ -15,7 +15,7 @@ namespace Yu5h1Lib.Timeline
     [ExecuteAlways]
     public class EventSignalReceiver : MonoBehaviour, INotificationReceiver
     {
-        [ReadOnly]
+        //[ReadOnly]
         //[HideInInspector]
         [SerializeField] private KeyValues<EventSignal, UnityEvent> _events = new();
 
