@@ -95,7 +95,7 @@ namespace Yu5h1Lib
         }
 
         [SerializeField]
-        protected bool ChangeStartValue;
+        protected bool ChangeStartValue = true;
 
         [SerializeField]
         [ContextMenuItem("Reset", nameof(ResetEndValue))]

@@ -8,14 +8,16 @@ using Exception = System.Exception;
 
 namespace Yu5h1Lib
 {
-    public abstract class ParameterObject : ScriptableObject {
+    public abstract class ParameterObject : ScriptableObject, IParameter
+    {
+        public abstract object GetValue();
         public abstract Type DeclaredType { get; }
         public abstract void ApplyTo(Object target);
     }
     public abstract class ParameterObject<T> : ParameterObject
     {
         [Decorable,Inline(true)] public T value;
-
+        public override object GetValue() => value;
         public override Type DeclaredType => typeof(T);
         public static implicit operator T(ParameterObject<T> obj) => obj.value;
 
