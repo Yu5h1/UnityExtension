@@ -6,7 +6,7 @@ namespace Yu5h1Lib
     /// Inspector bridge for sending string signals from prefab-authored UnityEvents.
     /// </summary>
     [AddComponentMenu("Yu5h1Lib/Signal Dispatcher Proxy"), DisallowMultipleComponent]
-    public class SignalDispatcherProxy : BaseMonoBehaviour
+    public class BroadcasterProxy : BaseMonoBehaviour
     {
         protected override void OnInitializing() {}
 
@@ -14,12 +14,11 @@ namespace Yu5h1Lib
         {
             if (!(obj is IParameter parameter))
                 return;
-
-            SignalDispatcher.instance.Dispatch(parameter.name, obj);
+            Broadcaster.instance.Dispatch(parameter.memberName, obj);
         }
         public void Dispatch(string signal)
         {
-            SignalDispatcher.instance.Dispatch(signal, null);
+            Broadcaster.instance.Dispatch(signal, null);
         }
     }
 }

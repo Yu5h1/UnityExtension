@@ -5,10 +5,10 @@ using Yu5h1Lib.Serialization;
 namespace Yu5h1Lib
 {
     /// <summary>
-    /// Stores string signal to UnityEvent mappings and registers them with <see cref="SignalDispatcher"/>.
+    /// Stores string signal to UnityEvent mappings and registers them with <see cref="Broadcaster"/>.
     /// </summary>
-    [AddComponentMenu("Yu5h1Lib/Signal Events"), DisallowMultipleComponent]
-    public class SignalEvents : BaseMonoBehaviour
+    [AddComponentMenu("Yu5h1Lib/Message Receiver"), DisallowMultipleComponent]
+    public class MessageReceiver : BaseMonoBehaviour
     {
         [SerializeField] private KeyValues<string, UnityEvent<Object>> _signals = new();
 
@@ -19,21 +19,21 @@ namespace Yu5h1Lib
         private void OnEnable()
         {
             if (Application.isPlaying)
-                SignalDispatcher.instance.Register(this);
+                Broadcaster.instance.Register(this);
         }
 
         private void OnDisable()
         {
-            if (!Application.isPlaying || !SignalDispatcher.Exists() || ApplicationInfo.WantsToQuit)
+            if (!Application.isPlaying || !Broadcaster.Exists() || ApplicationInfo.WantsToQuit)
                 return;
 
-            SignalDispatcher.instance.Unregister(this);
+            Broadcaster.instance.Unregister(this);
         }
 
         public void RefreshRegistration()
         {
             if (Application.isPlaying)
-                SignalDispatcher.instance.Register(this);
+                Broadcaster.instance.Register(this);
         }
 
         public bool TryInvoke(string signal, Object arg)

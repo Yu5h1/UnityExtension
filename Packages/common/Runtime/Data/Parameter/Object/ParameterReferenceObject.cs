@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Yu5h1Lib
 {
-	public class ParameterObjectReference : ParameterObject<ParameterObject>
+	public class ParameterReferenceObject : ParameterObject<ParameterObject>
     {
         public override void ApplyTo(Object target)
         {

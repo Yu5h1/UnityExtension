@@ -4,7 +4,7 @@ namespace Yu5h1Lib
 {
     public interface IParameter 
     {
-        string name { get; }
+        string memberName { get; }
         void ApplyTo(Object target);
         object GetValue();
     }

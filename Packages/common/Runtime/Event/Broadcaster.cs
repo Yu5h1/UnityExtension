@@ -4,20 +4,20 @@ using UnityEngine;
 namespace Yu5h1Lib
 {
     /// <summary>
-    /// Runtime signal hub. Dispatches a string signal to every active <see cref="SignalEvents"/>
+    /// Runtime signal hub. Dispatches a string signal to every active <see cref="MessageReceiver"/>
     /// currently registered for that signal.
     /// </summary>
     [AddComponentMenu("Yu5h1Lib/Signal Dispatcher")]
-    public class SignalDispatcher : SingletonBehaviour<SignalDispatcher>
+    public class Broadcaster : SingletonBehaviour<Broadcaster>
     {
-        private readonly Dictionary<string, List<SignalEvents>> _events = new();
-        private readonly List<SignalEvents> _dispatchBuffer = new();
+        private readonly Dictionary<string, List<MessageReceiver>> _events = new();
+        private readonly List<MessageReceiver> _dispatchBuffer = new();
         private readonly List<string> _emptySignals = new();
 
         protected override void OnInitializing() {}
         protected override void OnInstantiated() {}
 
-        public void Register(SignalEvents events)
+        public void Register(MessageReceiver events)
         {
             if (events == null)
                 return;
@@ -31,7 +31,7 @@ namespace Yu5h1Lib
 
                 if (!_events.TryGetValue(entry.Key, out var signalEvents))
                 {
-                    signalEvents = new List<SignalEvents>();
+                    signalEvents = new List<MessageReceiver>();
                     _events.Add(entry.Key, signalEvents);
                 }
 
@@ -40,7 +40,7 @@ namespace Yu5h1Lib
             }
         }
 
-        public void Unregister(SignalEvents events)
+        public void Unregister(MessageReceiver events)
         {
             if (events == null)
                 return;

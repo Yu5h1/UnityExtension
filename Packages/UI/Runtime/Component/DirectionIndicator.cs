@@ -27,7 +27,7 @@ namespace Yu5h1Lib.UI
         private Vector3 _normal;
 
         public Transform origin { get => _origin; set => _origin = value; }
-        public Transform target 
+        public Transform target
         { 
             get => _target;
             set
