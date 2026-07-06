@@ -5,7 +5,6 @@ namespace Yu5h1Lib
     /// <summary>
     /// Inspector bridge for sending string signals from prefab-authored UnityEvents.
     /// </summary>
-    [AddComponentMenu("Yu5h1Lib/Signal Dispatcher Proxy"), DisallowMultipleComponent]
     public class BroadcasterProxy : BaseMonoBehaviour
     {
         protected override void OnInitializing() {}
