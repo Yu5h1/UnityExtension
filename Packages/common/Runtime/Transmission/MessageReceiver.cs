@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 using Yu5h1Lib.Serialization;
 
 namespace Yu5h1Lib
@@ -10,9 +12,10 @@ namespace Yu5h1Lib
     [AddComponentMenu("Yu5h1Lib/Message Receiver"), DisallowMultipleComponent]
     public class MessageReceiver : BaseMonoBehaviour
     {
-        [SerializeField] private KeyValues<string, UnityEvent<Object>> _signals = new();
+        [FormerlySerializedAs("_signals")]
+        [SerializeField] private KeyValues<string, UnityEvent> _events = new();
 
-        public KeyValues<string, UnityEvent<Object>> Signals => _signals;
+        public KeyValues<string, UnityEvent> events => _events;
 
         protected override void OnInitializing() {}
 
@@ -36,12 +39,24 @@ namespace Yu5h1Lib
                 Broadcaster.instance.Register(this);
         }
 
-        public bool TryInvoke(string signal, Object arg)
+        public bool TryInvoke(string msg)
         {
-            if (string.IsNullOrEmpty(signal) || !_signals.TryGetValue(signal, out var evt) || evt == null)
+            if (string.IsNullOrEmpty(msg) || !_events.TryGetValue(msg, out var evt) || evt == null)
                 return false;
 
-            evt.Invoke(arg);
+            evt.Invoke();
+            return true;
+        }
+
+        public bool TryInvoke(string msg, params ArgumentInfo[] args)
+        {
+            if (msg.IsEmpty() || !_events.TryGetValue(msg, out var evt))
+                return false;
+
+            foreach (var argument in args)
+                evt.LoadArgument(argument);
+
+            evt.Invoke();
             return true;
         }
     }

@@ -9,15 +9,9 @@ namespace Yu5h1Lib
     {
         protected override void OnInitializing() {}
 
-        public void Dispatch(Object obj)
-        {
-            if (!(obj is IParameter parameter))
-                return;
-            Broadcaster.instance.Dispatch(parameter.memberName, obj);
-        }
         public void Dispatch(string signal)
         {
-            Broadcaster.instance.Dispatch(signal, null);
+            Broadcaster.instance.Dispatch(signal);
         }
     }
 }

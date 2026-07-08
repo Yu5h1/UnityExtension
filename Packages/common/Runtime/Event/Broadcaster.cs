@@ -24,7 +24,7 @@ namespace Yu5h1Lib
 
             Unregister(events);
 
-            foreach (var entry in events.Signals.Entries)
+            foreach (var entry in events.events.Entries)
             {
                 if (string.IsNullOrEmpty(entry.Key))
                     continue;
@@ -51,7 +51,7 @@ namespace Yu5h1Lib
             RemoveEmptySignals();
         }
 
-        public bool Dispatch(string signal,Object arg)
+        public bool Dispatch(string signal)
         {
             if (signal.IsEmpty() || !_events.TryGetValue(signal, out var signalEvents))
                 return false;
@@ -65,7 +65,7 @@ namespace Yu5h1Lib
                 if (events == null || !events.isActiveAndEnabled)
                     continue;
 
-                invoked |= events.TryInvoke(signal,arg);
+                invoked |= events.TryInvoke(signal);
             }
 
             _dispatchBuffer.Clear();

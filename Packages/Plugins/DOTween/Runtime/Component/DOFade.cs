@@ -11,13 +11,16 @@ using System.Linq;
 public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
 {
     public bool IncludeChildren;
+    [SerializeField] private string colorPropertyName = "_Color";
 
     [SerializeField, ReadOnly] private Image[] images;
     [SerializeField, ReadOnly] private SpriteRenderer[] spriteRenderers;
     [SerializeField, ReadOnly] private MeshRenderer[] meshRenderers;
     private MaterialPropertyBlock propblock;
     private MaterialPropertyBlock[] propblocks;
+    private IColor[] colors = System.Array.Empty<IColor>();
     private bool TweenFromChildren;
+    private string ColorPropertyName => colorPropertyName.IsEmpty() ? "_Color" : colorPropertyName;
 
     public override Component OverrideGetComponent()
     {
@@ -26,6 +29,7 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
             images = gameObject.GetComponentsInChildren<Image>(true);
             spriteRenderers = gameObject.GetComponentsInChildren<SpriteRenderer>(true);
             meshRenderers = gameObject.GetComponentsInChildren<MeshRenderer>(true);
+            colors = gameObject.GetComponentsInChildren<MonoBehaviour>(true).OfType<IColor>().ToArray();
             propblocks = new MaterialPropertyBlock[meshRenderers.Length];
             for (int i = 0; i < propblocks.Length; i++)
             {
@@ -37,8 +41,11 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
         {
             if (TryGetComponent(out CanvasGroup canvasGroup))
                 return canvasGroup;
-            return m.GetComponent<Image>();
+            if (m.TryGetComponent(out Image image))
+                return image;
         }
+        if (TryGetColorComponent(out Component colorComponent))
+            return colorComponent;
         else if (TryGetComponent(out SpriteRenderer spriteRenderer))
             return spriteRenderer;
         else if (TryGetComponent(out MeshRenderer mr))
@@ -47,7 +54,8 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
             if (IncludeChildren)
                 SetMeshsColor(GetBlockColor(mr, propblock));
             return mr;
-        }else if (IncludeChildren)
+        }
+        else if (IncludeChildren)
         {
             Component result = null;
             if (!images.IsEmpty())
@@ -59,6 +67,8 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
                 propblock = new MaterialPropertyBlock();
                 result = meshRenderers.First();
             }
+            else
+                result = GetFirstColorComponent();
 
             if (TweenFromChildren = result)
                 return result;
@@ -70,12 +80,14 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
         {
             case CanvasGroup g:
                 return g.DOFade(endValue, Duration);
+            case IColor color:
+                return DOTween.To(GetAlpha, SetAlpha, endValue, Duration).SetTarget(component);
             case Image img:
             case SpriteRenderer sr :
             case MeshRenderer mr:
                 return DOTween.To(GetAlpha, SetAlpha, endValue, Duration).SetTarget(component);
             default:
-                throw new System.NullReferenceException($"{component} DOFade require CanvasGroup or SpriteRenderer");
+                throw new System.NullReferenceException($"{component} DOFade require CanvasGroup, IColor, Image, SpriteRenderer or MeshRenderer");
         }
     }
     private float GetAlpha() {
@@ -83,6 +95,8 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
         {
             case CanvasGroup g:
                 return g.alpha;
+            case IColor color:
+                return color.alpha;
             case Image img:
                 return img.color.a;
             case SpriteRenderer sr:
@@ -90,7 +104,7 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
             case MeshRenderer mr:
                 return GetBlockColor(mr, propblock).a; 
         }
-        throw new System.NullReferenceException($"{component} DOFade require CanvasGroup ,Image or SpriteRenderer");
+        throw new System.NullReferenceException($"{component} DOFade require CanvasGroup, IColor, Image, SpriteRenderer or MeshRenderer");
     }
     private void SetAlpha(float alpha)
     {
@@ -98,6 +112,9 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
         {
             case CanvasGroup c:
                 c.alpha = alpha;
+                break;
+            case IColor color:
+                color.alpha = alpha;
                 break;
             case Image img:
                 img.color = img.color.SetAlpha(alpha);
@@ -130,16 +147,23 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
                         GetBlockColor(meshRenderers[i], propblocks[i]).SetAlpha(alpha));
                 }
             }
+            if (colors != null && colors.Length > 0)
+            {
+                for (int i = 0; i < colors.Length; i++)
+                    colors[i].alpha = alpha;
+            }
         }    
     }
-    private Color GetBlockColor(MeshRenderer r,MaterialPropertyBlock block)
+    private Color GetBlockColor(Renderer r,MaterialPropertyBlock block)
     {
         r.GetPropertyBlock(block);
-        return block.GetColor("_Color");
+        if (block.isEmpty)
+            return TryGetMaterialColor(r, out var materialColor) ? materialColor : Color.white;
+        return block.GetColor(ColorPropertyName);
     }
-    private void SetBlockColor(MeshRenderer r, MaterialPropertyBlock block, Color c)
+    private void SetBlockColor(Renderer r, MaterialPropertyBlock block, Color c)
     {
-        block.SetColor("_Color", c);
+        block.SetColor(ColorPropertyName, c);
         r.SetPropertyBlock(block);
     }
     private void SetMeshsColor(Color color)
@@ -148,5 +172,34 @@ public class DOFade : TweenBehaviour<Component,float,float,FloatOptions>
             return;
         for (int i = 0; i < propblocks.Length; i++)
             SetBlockColor(meshRenderers[i], propblocks[i], color);
+    }
+    private bool TryGetMaterialColor(Renderer r, out Color color)
+    {
+        var material = r.sharedMaterial;
+        if (material && material.HasProperty(ColorPropertyName))
+        {
+            color = material.GetColor(ColorPropertyName);
+            return true;
+        }
+
+        color = default;
+        return false;
+    }
+    private bool TryGetColorComponent(out Component colorComponent)
+    {
+        colorComponent = GetComponents<MonoBehaviour>().OfType<IColor>().FirstOrDefault() as Component;
+        return colorComponent != null;
+    }
+    private Component GetFirstColorComponent()
+    {
+        if (colors == null || colors.Length == 0)
+            return null;
+
+        for (int i = 0; i < colors.Length; i++)
+        {
+            if (colors[i] is Component colorComponent)
+                return colorComponent;
+        }
+        return null;
     }
 }
