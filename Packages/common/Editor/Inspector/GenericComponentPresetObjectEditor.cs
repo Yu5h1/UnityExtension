@@ -7,14 +7,13 @@ using Type = System.Type;
 namespace Yu5h1Lib.EditorExtension
 {
     [CustomEditor(typeof(GenericComponentPresetObject))]
-    public class GenericComponentPresetObjectEditor : Editor
+    public class GenericComponentPresetObjectEditor : Editor<GenericComponentPresetObject>
     {
         SerializedProperty valueProp;
         SerializedProperty targetAssemblyProp;
         SerializedProperty targetTypeProp;
         SerializedProperty propertiesProp;
 
-        GenericComponentPresetObject Target => (GenericComponentPresetObject)target;
         Object MainAsset => SubAssetUtility.GetMainAsset(target);
 
         void OnEnable()
@@ -33,6 +32,8 @@ namespace Yu5h1Lib.EditorExtension
                 base.OnInspectorGUI();
                 return;
             }
+
+            DrawMonoScript();
 
             serializedObject.Update();
 
@@ -98,7 +99,7 @@ namespace Yu5h1Lib.EditorExtension
 
         void DrawPropertyToggleField(PropertyInfo propInfo)
         {
-            var presetName = Target.name;
+            var presetName = targetObject.name;
             var subAssetName = $"{presetName}.{propInfo.Name}";
 
             var isEnabled = TryFindExistingParameterObject(subAssetName, out SerializedProperty existingProp, out ParameterObject existing);

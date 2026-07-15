@@ -8,7 +8,7 @@
 //namespace Yu5h1Lib.EditorExtension
 //{
 //    [CustomEditor(typeof(GenericPresetObject))]
-//    public class GenericPresetObjectObjectEditor : Editor<GenericPresetObject>
+//    public class GenericPresetObjectEditor : Editor<GenericPresetObject>
 //    {
 //        SerializedProperty valueProp;
 //        SerializedProperty targetAssemblyProp;
@@ -76,7 +76,7 @@
 //            {
 //                serializedObject.ApplyModifiedProperties();
 //            }
-                
+
 //        }
 
 //        Type GetTargetType()
@@ -124,7 +124,7 @@
 //                    po.name = subAssetName;
 //                    if (MainAsset != null)
 //                        SubAssetUtility.AddToMainAsset(MainAsset,po);
-                    
+
 //                    if (po != null)
 //                        AddToProperties(po);
 //                }
