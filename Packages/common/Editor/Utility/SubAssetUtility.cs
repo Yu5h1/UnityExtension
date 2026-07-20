@@ -28,7 +28,17 @@ namespace Yu5h1Lib.EditorExtension
 
             var instance = (ParameterObject)ScriptableObject.CreateInstance(poType);
             instance.name = name;
-            return AddToMainAsset(mainAsset, instance);
+            if (mainAsset != null)
+                return AddToMainAsset(mainAsset, instance);
+
+            Undo.RegisterCreatedObjectUndo(instance, "Create ParameterObject");
+            return instance;
+        }
+
+        public static ParameterObject CreateParameter(System.Type valueType, Object owner, string name)
+        {
+            var mainAsset = GetMainAsset(owner);
+            return CreateParameterSubAsset(valueType, mainAsset, name);
         }
 
         public static void RemoveSubAsset(ScriptableObject subAsset)

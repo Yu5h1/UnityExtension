@@ -37,12 +37,11 @@ namespace Yu5h1Lib
         {
             if (Application.isPlaying)
                 Broadcaster.instance.Register(this);
-        }        
+        }
 
-        public void Invoke(string msg) => TryInvoke(msg, null);
+        public void Call(string msg) => TryInvoke(msg, null);
 
         public bool TryInvoke(string msg) => TryInvoke(msg, null);
-
         public bool TryInvoke(string msg, params ArgumentInfo[] args)
         {
             if (msg.IsEmpty() || !_events.TryGetValue(msg, out var evt))
@@ -53,7 +52,6 @@ namespace Yu5h1Lib
                 foreach (var argument in args)
                     evt.LoadArgument(argument);
             }
-
             evt.Invoke();
             return true;
         }

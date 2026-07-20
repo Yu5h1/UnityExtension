@@ -51,6 +51,11 @@ namespace Yu5h1Lib
             }
 
             actualTarget.SetParent(desiredParent, worldPositionStays);
+            if (!worldPositionStays)
+            {
+                actualTarget.localPosition = Vector3.zero;
+                actualTarget.localEulerAngles = Vector3.zero;
+            }
             currentIndex = index;
             return true;
         }

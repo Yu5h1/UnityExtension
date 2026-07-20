@@ -85,7 +85,8 @@ namespace Yu5h1Lib.EditorExtension
         void DrawDynamicProperties(Type targetType)
         {
             var properties = targetType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => p.CanRead && p.CanWrite)
+                .Where(p => p.GetIndexParameters().Length == 0)
+                .Where(p => p.SetMethod?.IsPublic == true)
                 .Where(p => ParameterObjectUtility.IsSupported(p.PropertyType))
                 .OrderBy(p => p.Name);
 

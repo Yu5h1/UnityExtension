@@ -11,7 +11,7 @@ namespace Yu5h1Lib.Parameter
 
     public abstract class ParameterBehaviour<T> : ParameterBehaviour
     {
-        [Tooltip("Property / method name on the target to write into. Unlike ParameterObject, this is NOT the GameObject name.")]
+        [Tooltip("Public property name on the target. Unlike ParameterObject, this is NOT the GameObject name.")]
         [SerializeField] private string _memberName;
         [SerializeField] private T _value;
 
@@ -31,6 +31,6 @@ namespace Yu5h1Lib.Parameter
         public override object GetValue() => _value;
 
         public override void ApplyTo(Object target)
-            => ParameterMember.Apply(target, _memberName, _value, typeof(T));
+            => PropertySetter.Set(target, _memberName, _value, typeof(T));
     }
 }

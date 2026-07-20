@@ -4,7 +4,7 @@ using Type = System.Type;
 
 namespace Yu5h1Lib
 {
-    public abstract class ParameterObject : ScriptableObject, IParameter
+    public abstract class ParameterObject : MemberObject, IParameter
     {
         public string memberName { get => name; }
         public abstract object GetValue();
@@ -19,7 +19,7 @@ namespace Yu5h1Lib
         public static implicit operator T(ParameterObject<T> obj) => obj.value;
 
         public override void ApplyTo(Object target)
-            => ParameterMember.Apply(target, memberName, value, DeclaredType);
+            => PropertySetter.Set(target, memberName, value, DeclaredType);
     }
     public abstract class ParameterCollection<T> : ParameterObject<T[]>
     {

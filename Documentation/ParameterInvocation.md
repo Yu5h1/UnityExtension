@@ -2,7 +2,7 @@
 
 ## 狀態
 
-本文件記錄目前已收斂的設計方向與後續實作項目，功能尚未實作完成。
+本文件記錄目前已收斂的設計方向、已完成的初版實作與後續驗證項目。
 
 ## 已決定的方向
 
@@ -13,7 +13,7 @@
 - Property 使用 `ApplyTo(target)`。
 - Method 使用 `Invoke(target)`。
 - 暫時不建立 `IMemberDescriptor`、`MemberKind` 或其他共同介面。
-- Reflection 執行邏輯集中到共用服務，不在各資料類別中重複實作。
+- Reflection 執行邏輯集中到 `PropertySetter` 與 `MethodInvoker`，不在各資料類別中重複實作。
 
 ## 設計原則
 
@@ -70,14 +70,20 @@ ParameterObjectUtility.IsSupported(property.PropertyType)
 ```csharp
 public class MethodObject : ScriptableObject
 {
+    [SerializeField]
+    private SerializedType _targetType;
+
     [SerializeField, Inline(true)]
     private List<ParameterObject> _parameters;
 
     public string methodName => name;
     public IReadOnlyList<ParameterObject> parameters => _parameters;
 
-    public bool Invoke(UnityEngine.Object target)
-        => MethodInvoker.Invoke(target, methodName, _parameters);
+    public void Invoke(UnityEngine.Object target)
+        => TryInvoke(target);
+
+    public bool TryInvoke(UnityEngine.Object target)
+        => MethodInvoker.TryInvoke(target, methodName, _parameters);
 }
 ```
 
@@ -118,8 +124,11 @@ public class MethodObject : ScriptableObject
         public string methodName => _methodName;
         public IReadOnlyList<ParameterObject> parameters => _parameters;
 
-        public bool Invoke(UnityEngine.Object target)
-            => MethodInvoker.Invoke(target, _methodName, _parameters);
+        public void Invoke(UnityEngine.Object target)
+            => TryInvoke(target);
+
+        public bool TryInvoke(UnityEngine.Object target)
+            => MethodInvoker.TryInvoke(target, _methodName, _parameters);
     }
 }
 ```
@@ -156,7 +165,8 @@ public class InvocationObject : ScriptableObject
     [SerializeField]
     private List<MethodObject.Descriptor> _methods;
 
-    public bool Invoke(UnityEngine.Object target);
+    public void Invoke(UnityEngine.Object target);
+    public bool TryInvoke(UnityEngine.Object target);
 }
 ```
 
@@ -234,12 +244,19 @@ Runtime 使用每個 `ParameterObject.DeclaredType` 解析 overload，不將 sig
 ```csharp
 public static class MethodInvoker
 {
-    public static bool Invoke(
+    public static void Invoke(
+        UnityEngine.Object target,
+        string methodName,
+        IReadOnlyList<ParameterObject> parameters);
+
+    public static bool TryInvoke(
         UnityEngine.Object target,
         string methodName,
         IReadOnlyList<ParameterObject> parameters);
 }
 ```
+
+`TryInvoke` 是實際執行主體並回傳成功與否；`Invoke` 是忽略結果的 `void` 包裝。
 
 Resolver/cache key：
 
@@ -254,22 +271,27 @@ Reflection exception 應回報：
 - Parameter types
 - Inner exception
 
-`ParameterMember` 目前同時處理 Property 與 Method fallback。後續預計將新 API 拆成明確的 Property setter 與 Method invoker，但舊 fallback 暫時保留以維持資料相容。
+原本的 `ParameterMember` 已移除。`ParameterObject` 與 `ParameterBehaviour` 改用 `PropertySetter`；Method 呼叫改由 `MethodInvoker` 處理。這是刻意的語意分離：`ApplyTo` 設定 Property，`Invoke` 呼叫 Method。
 
 ## 資料夾與命名
 
-目前的 `Runtime/Data/Parameter` 無法完整表達未來的 `MethodObject` 與 `InvocationObject`。暫定方向：
+目前採用的資料夾結構：
 
 ```text
 Packages/common/Runtime/
 ├─ Data/
-│  └─ Member/
+│  └─ Architecture/
+│     ├─ IParameter.cs
 │     ├─ ParameterObject.cs
-│     ├─ MethodObject.cs
-│     ├─ InvocationObject.cs
-│     └─ Object/
-│        ├─ BooleanObject.cs
-│        ├─ FloatObject.cs
+│     ├─ ParameterBehaviour.cs
+│     ├─ Object/
+│     │  ├─ BooleanObject.cs
+│     │  ├─ FloatObject.cs
+│     │  ├─ MethodObject.cs
+│     │  ├─ InvocationObject.cs
+│     │  └─ ...
+│     └─ Behaviour/
+│        ├─ InvocationBehaviour.cs
 │        └─ ...
 │
 └─ Reflection/
@@ -277,7 +299,7 @@ Packages/common/Runtime/
    └─ PropertySetter.cs
 ```
 
-這個路徑尚未正式決定。資料模型與 Reflection 執行機制應分開，避免只因內部使用 Reflection，就把所有可序列化資料都歸類為 Reflection。
+`Architecture` 保持粗粒度，只使用 `Object` 與 `Behaviour` 分類 Unity 承載形式；Reflection 執行機制獨立放在 `Runtime/Reflection`。
 
 ## Inspector
 
@@ -343,29 +365,27 @@ UnityEvent 只需指定 `InvocationReceiver.Invoke()`。Path、Target Type、Met
 
 原因是目前沒有實際呼叫端需要這些共同抽象，提前介面化只會增加序列化、型別與責任邊界的複雜度。
 
-## 待決項目
+## 待決與驗證項目
 
 1. 有回傳值的 public Method 是否出現在 Inspector。
 2. Invocation 中某個 Method 失敗後，是否繼續後續 Methods。
-3. `MethodObject.Descriptor` 未來是否提升為頂層類別。
-4. `Data/Member` 與 `Reflection` 的最終資料夾名稱。
-5. `ParameterMember.Apply()` Method fallback 的移除時程。
-6. Scene 內 Inline Object 與 Sub-Asset 的實際建立、刪除流程。
+3. `MethodObject.Descriptor` 未來是否需要提升為頂層類別。
+4. Scene 內 Inline Object 與 ParameterObject 的實際建立、刪除流程。
+5. Method 參數建立與刪除的 Undo/Redo 完整驗證。
 
 ## 預定實作順序
 
-1. 確認資料夾與 namespace。
-2. 新增 `MethodInvoker` 與 Reflection cache。
-3. 新增單一任務的 `MethodObject`。
-4. 新增 `MethodObject.Descriptor`。
-5. 新增 `InvocationObject` 與 Target resolution。
-6. 建立 Runtime tests，涵蓋無參數、單參數、多參數及 overload。
-7. 建立 `MethodObject` Drawer。
-8. 建立 `InvocationObject` Drawer。
-9. 修正 `GenericObjectPresetDrawer` 的 public Property 篩選。
-10. 新增明確的 Property setter API，保留舊 fallback 相容。
-11. 新增 UnityEvent Scene 入口。
-12. 執行 Unity Core build 與實際 Scene serialization 測試。
+1. [完成] 搬移至 `Data/Architecture` 並確認 namespace。
+2. [完成] 新增 `PropertySetter`、`MethodInvoker` 與 Reflection cache。
+3. [完成] 新增單一任務的 `MethodObject`。
+4. [完成] 新增 `MethodObject.Descriptor`。
+5. [完成] 新增 `InvocationObject` 與 Target resolution。
+6. [完成] 建立 `MethodObject` Inspector。
+7. [完成] 建立 `InvocationObject` Inspector。
+8. [完成] 新增 `InvocationBehaviour` 作為 UnityEvent Scene 入口。
+9. [待辦] 建立 Runtime tests，涵蓋 Property、無參數、單參數、多參數及 overload。
+10. [待辦] 修正既有 Preset Drawers 的 public Property 篩選。
+11. [待辦] 執行 Unity build 與實際 Scene serialization、Undo/Redo 測試。
 
 ## 驗收條件
 

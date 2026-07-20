@@ -98,7 +98,8 @@ namespace Yu5h1Lib.EditorExtension
                     return Array.Empty<string>();
 
                 return type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(p => p.CanRead && p.CanWrite)
+                    .Where(p => p.GetIndexParameters().Length == 0)
+                    .Where(p => p.SetMethod?.IsPublic == true)
                     .Select(p => p.Name)
                     .OrderBy(n => n)
                     .ToArray();
