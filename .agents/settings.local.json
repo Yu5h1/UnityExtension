@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "mcp__unityMCP__read_console",
+      "mcp__unityMCP__manage_scene",
+      "mcp__unityMCP__find_gameobjects",
+      "mcp__unityMCP__manage_asset",
+      "mcp__unityMCP__execute_code",
+      "mcp__unityMCP__create_script",
+      "mcp__unityMCP__script_apply_edits",
+      "mcp__unityMCP__refresh_unity",
+      "mcp__unityMCP__manage_gameobject",
+      "mcp__unityMCP__manage_graphics",
+      "Read(//c/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Unity/UnityExtension/Packages/common/Editor/**)",
+      "Read(//c/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Unity/UnityExtension/Packages/common/Runtime/**)",
+      "mcp__unityMCP__find_in_file",
+      "mcp__unityMCP__manage_components",
+      "Read(//c/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/DotNet/Source/Recycling/**)",
+      "Read(//c/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/DotNet/Source/**)",
+      "Read(//c/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Unity/UnityExtension/Packages/**)",
+      "Read(//c/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Unity/UnityExtension/Packages/Animation/Runtime/**)",
+      "mcp__unityMCP__unity_reflect",
+      "mcp__unityMCP__manage_packages",
+      "mcp__visualize__show_widget",
+      "Bash(dotnet --version)",
+      "Bash(dotnet --list-sdks)",
+      "Bash(cd \"C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Dandelion Bar\" && echo \"=== contents ===\" && ls -la && echo \"=== recursive ===\" && find . -type f 2>/dev/null | head -50)",
+      "PowerShell($p = \"C:\\\\Users\\\\Yu5h1\\\\Dev\\\\VSProjects\\\\Yu5h1Lib\\\\.claude\\\\Dandelion Bar.md\"; Remove-Item -LiteralPath $p -Confirm:$false; if \\(-not \\(Test-Path -LiteralPath $p\\)\\) { \"DELETED: $p\" } else { \"STILL EXISTS\" })",
+      "Read(//c/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/WPF/**)",
+      "Bash(find Core -maxdepth 1)",
+      "Bash(ls -1 Core/Properties)",
+      "Bash(ls -1 Core/Resources)",
+      "Bash(find Core -iname \"AssemblyInfo.cs\")",
+      "Bash(grep -nE \"IntermediateOutputPath|OutputPath|BaseOutput\" \"Yu5h1Lib.WPF - Drawing.csproj\")",
+      "Bash(echo \"=== 刪除 Core\\\\\\\\obj 殘留 ===\")",
+      "Bash(rm -rf Core/obj)",
+      "Bash(ls -d Core/obj)",
+      "Bash(dotnet build *)"
+    ]
+  }
+}
