@@ -1,0 +1,256 @@
+{
+  "schema_version": "1.0",
+  "report_id": "unified-solver-ice-packing",
+  "scope_id": "unified-solver",
+  "title": "Unified Solver 冰塊裝箱與程序外殼計畫",
+  "updated_at": "2026-07-29T23:54:12+08:00",
+  "tasks": [
+    {
+      "id": "particle-group-contract",
+      "title": "共用 Particle Group 資料契約",
+      "status": "planned",
+      "priority": 0,
+      "summary": "建立魚與冰塊共用的 Group Bake Data，保留 SolverParticleInstance 作為唯一 Runtime Group Instance，讓結構、行為、顯示與生成策略彼此分離。",
+      "pending_items": [
+        {
+          "id": "define-group-bake-data",
+          "title": "定義 Rest Positions、Constraints、Rigid Groups、Controls、Requirements 與 Variant 的可序列化資料",
+          "priority": 0
+        },
+        {
+          "id": "retain-runtime-instance",
+          "title": "保留 SolverParticleInstance 作為唯一 Runtime Group Instance，補上 Shape Variant 對應",
+          "priority": 0
+        },
+        {
+          "id": "derive-requirements-from-group",
+          "title": "讓容量需求由 Group Definition／Bake Data 推導，移除重複硬編碼",
+          "priority": 1
+        },
+        {
+          "id": "version-group-bake-data",
+          "title": "定義 Bake Data 版本與來源 Hash",
+          "priority": 2
+        }
+      ]
+    },
+    {
+      "id": "rigid-group-variants",
+      "title": "4／6／8 點剛體 Group",
+      "status": "planned",
+      "priority": 0,
+      "summary": "建立穩定的四面體、八面體與立方體八角模板，讓不同尺寸冰塊共用通用 Emitter 與 Rigid Body 管線。",
+      "pending_items": [
+        {
+          "id": "extract-group-definition-builder",
+          "title": "從 Emitter 抽出共用 Group Definition Builder",
+          "priority": 0
+        },
+        {
+          "id": "build-rigid-templates",
+          "title": "建立非退化的 4／6／8 Rest Shape 模板",
+          "priority": 0
+        },
+        {
+          "id": "support-variable-rigid-counts",
+          "title": "擴充容量估算、Rigid Particle References 與可重用 Scratch 以支援可變點數",
+          "priority": 1
+        },
+        {
+          "id": "add-spawn-variant-policy",
+          "title": "加入每次 Spawn 隨機選擇 4／6／8 模板的 Variant Policy",
+          "priority": 1
+        },
+        {
+          "id": "verify-rigid-variants",
+          "title": "驗證三種 Group 的落下、旋轉、Shape Matching 與容量拒絕",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "id": "editor-mesh-bake",
+      "title": "Editor 程序 Mesh Bake",
+      "status": "planned",
+      "priority": 0,
+      "summary": "以無參數 ProceduralMeshMethod Attribute 和 UnityEditor.TypeCache 發現生成方法，在 Editor 將 Group Rest Shape Bake 為 SolverRenderProfile 隱藏 Sub-Assets；Player 不執行反射或 Convex Hull。",
+      "pending_items": [
+        {
+          "id": "define-procedural-authoring-contract",
+          "title": "新增 Asset／Procedural Authoring Source、Marker Attribute、Method Interface 與 Build Context",
+          "priority": 0
+        },
+        {
+          "id": "build-editor-method-registry",
+          "title": "建立 Type.FullName 字串到 Method Type 的 Editor Lazy Registry 與 Inspector Popup",
+          "priority": 1
+        },
+        {
+          "id": "implement-particle-convex-hull",
+          "title": "實作 Particle Convex Hull、朝外 Winding、Flat Normals、Bounds 與退化檢查",
+          "priority": 0
+        },
+        {
+          "id": "add-bake-controls",
+          "title": "提供 Bake、Rebuild、Clear Baked Data 與過期 Hash 提示",
+          "priority": 1
+        },
+        {
+          "id": "store-generated-subassets",
+          "title": "將 4／6／8 Generated Mesh 保存為 SolverRenderProfile 隱藏 Sub-Assets",
+          "priority": 0
+        },
+        {
+          "id": "preserve-asset-render-mode",
+          "title": "驗證既有 Asset Mesh 與魚的 Articulated Renderer 行為不變",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "id": "renderer-variant-batching",
+      "title": "4／6／8 Renderer Variant Batching",
+      "status": "planned",
+      "priority": 1,
+      "summary": "Runtime 只讀取已 Bake Mesh，依 Shape Variant 分批繪製，避免每顆冰塊建立 GameObject、Material 或獨立 Mesh。",
+      "pending_items": [
+        {
+          "id": "validate-three-emitter-baseline",
+          "title": "先以三個 Emitter／Profile 驗證 4／6／8 各一個繪製批次",
+          "priority": 1
+        },
+        {
+          "id": "build-instance-index-mapping",
+          "title": "建立 Batch-local 到 Global SolverParticleInstance 的 Index Mapping",
+          "priority": 1
+        },
+        {
+          "id": "support-single-emitter-batches",
+          "title": "支援單一 Emitter 中混合 4／6／8 Variant 分批",
+          "priority": 2
+        },
+        {
+          "id": "verify-draw-counts",
+          "title": "驗證每個 Variant 一次 Draw 且不逐 Instance Draw",
+          "priority": 1
+        }
+      ]
+    },
+    {
+      "id": "ice-fish-container-validation",
+      "title": "冰塊、魚與箱體裝箱驗證",
+      "status": "planned",
+      "priority": 1,
+      "summary": "在同一 SolverManager 中以五面 SolverBoxCollider 建立開口箱，驗證不同尺寸冰塊、魚與箱體的碰撞及堆積。",
+      "pending_items": [
+        {
+          "id": "build-five-wall-container",
+          "title": "建立底板與四面牆的 SolverBoxCollider 測試箱",
+          "priority": 1
+        },
+        {
+          "id": "spawn-mixed-ice-scales",
+          "title": "混合生成不同尺寸及 4／6／8 Variant 冰塊",
+          "priority": 1
+        },
+        {
+          "id": "verify-cross-profile-collisions",
+          "title": "驗證冰塊互撞、魚冰互撞與箱體碰撞的 Phase 設定",
+          "priority": 0
+        },
+        {
+          "id": "tune-container-stability",
+          "title": "調校 Substeps、Friction、Depenetration、牆厚與 Spawn Spacing",
+          "priority": 1
+        },
+        {
+          "id": "measure-capacity-limits",
+          "title": "記錄 Particle、Rigid Body、Rigid Reference 與 Collider 容量邊界",
+          "priority": 2
+        }
+      ]
+    },
+    {
+      "id": "settling-modifier",
+      "title": "冰塊 Settling 穩定器",
+      "status": "planned",
+      "priority": 1,
+      "summary": "以 Instance 為單位加入低速門檻、延遲與喚醒遲滯，先降低裝箱冰塊的可見抖動，不宣稱節省 Solver 核心運算。",
+      "pending_items": [
+        {
+          "id": "add-settling-state-buffer",
+          "title": "建立 Per-instance Settling State 與 Timer",
+          "priority": 1
+        },
+        {
+          "id": "measure-instance-motion",
+          "title": "計算 Group 平均線速度與旋轉殘差",
+          "priority": 1
+        },
+        {
+          "id": "apply-sleep-wake-hysteresis",
+          "title": "加入不同的 Settle 與 Wake Threshold，避免門檻附近反覆切換",
+          "priority": 1
+        },
+        {
+          "id": "exclude-active-fish",
+          "title": "確保啟用 Oscillation 的魚不會被誤判為 Settled",
+          "priority": 0
+        },
+        {
+          "id": "verify-impact-wake",
+          "title": "驗證魚或其他冰塊撞擊能重新推動已穩定冰塊",
+          "priority": 0
+        }
+      ]
+    },
+    {
+      "id": "sleep-wake-decision",
+      "title": "真正 Sleep／Wake 決策",
+      "status": "planned",
+      "priority": 3,
+      "summary": "Settling 壓力測試後才決定是否修改原始 Solver Compute Pipeline；只有需要實際 GPU 節省時才建立完整 Sleep、Contact Wake 與連鎖喚醒。",
+      "pending_items": [
+        {
+          "id": "profile-settling-result",
+          "title": "比較 Settling 啟用前後的視覺穩定度與 GPU 時間",
+          "priority": 2
+        },
+        {
+          "id": "decide-core-sleep-scope",
+          "title": "判斷是否需要修改 Predict、Contact、Rigid Shape Matching 與 Update Velocity",
+          "priority": 3
+        },
+        {
+          "id": "confirm-vendored-core-authority",
+          "title": "若需修改核心，先確認 vendored dependency 或 upstream fork 的維護方式",
+          "priority": 3
+        }
+      ]
+    },
+    {
+      "id": "fracture-baker-evaluation",
+      "title": "任意來源 Mesh 破碎評估",
+      "status": "planned",
+      "priority": 4,
+      "summary": "此項目明確延後；只有產品確定需要 Voronoi／平面切割來源 Mesh 時，才比較第三方專案並規劃獨立 SolverFractureBaker，不阻塞冰塊裝箱。",
+      "pending_items": [
+        {
+          "id": "confirm-fracture-product-need",
+          "title": "確認任意來源 Mesh 破碎是否為實際產品需求",
+          "priority": 4
+        },
+        {
+          "id": "review-fracture-projects",
+          "title": "比較授權、Unity 6 相容性、切面補洞、UV、SubMesh 與 Editor Bake 能力",
+          "priority": 4
+        },
+        {
+          "id": "plan-fracture-render-data",
+          "title": "若採用，另行設計 Combined Fragment Mesh、Fragment ID 與 GPU Renderer",
+          "priority": 4
+        }
+      ]
+    }
+  ]
+}

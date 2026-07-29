@@ -2,9 +2,15 @@
 
 ## Scope
 
-Target: `Assets/Yu5h1Lib/unified-solver`
+Repository: `Unity/UnityExtension`
 
-The original `Assets/unified-solver` repository is a read-only dependency. Its git worktree was verified clean after implementation.
+Target: `Packages/Unified-Solver`
+
+Canonical workspace: `C:\Users\Yu5h1\Dev\VSProjects\Yu5h1Lib\Unity\UnityExtension\Packages\Unified-Solver`
+
+The former standalone Unified Solver workspace is retired and may be deleted. Do not route work or handoffs back to it.
+
+The original `unified-solver` source is vendored as a read-only dependency under `Runtime/Dependencies/unified-solver` and `Editor/Dependencies/unified-solver`. Keep changes scoped to this package without modifying the vendored dependency unless the user explicitly requests it.
 
 ## Implemented
 
