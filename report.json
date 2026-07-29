@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0",
+  "report_id": "unity-extension-progress",
+  "scope_id": "unity-extension",
+  "title": "UnityExtension 開發進度",
+  "updated_at": "2026-07-21T21:01:41+08:00",
+  "tasks": [
+    {
+      "id": "solution-inventory",
+      "title": "Package 責任與可重用能力盤點",
+      "status": "planned",
+      "summary": "UnityExtension 已確立為 Yu5h1Lib 的 Unity 共用能力擁有者；下一階段是盤點現有 packages、依賴方向及應用專案中的可回收能力。",
+      "pending_items": [
+        "盤點現有 package 的責任與依賴方向",
+        "辨識仍留在應用專案中的可重用能力",
+        "規劃共用能力的 package 歸屬",
+        "為重要系統補齊 Documentation 指南"
+      ]
+    },
+    {
+      "id": "recycler-refactor",
+      "title": "Recycler／Pool 系列統合",
+      "status": "in_progress",
+      "summary": "Core Recycler 四個主要檔案已落地；Unity Phase 1.5、Core 單元測試及既有 Pool callsite 遷移仍待完成。",
+      "completed_items": [
+        "完成 IRecyclable、IRecycler、Recycler 與 Recycler<T> Core 實作",
+        "保留現有 SpawnPool、SpawnPoolProxy 與 SpawnPoolRegistry 作為 Unity 端整併來源"
+      ],
+      "pending_items": [
+        "補 Core lazy build、容量通知、discard 與 callback 單元測試",
+        "討論 IRecyclable 最小注入與預設行為",
+        "實作 UnityObjectPoolAdapter、Recyclable、RecyclerEx 與 Unity reset/bootstrap",
+        "規劃 V1、V2、V3 callsite 遷移"
+      ]
+    },
+    {
+      "id": "data-architecture",
+      "title": "ScriptableObject 資料架構",
+      "status": "in_progress",
+      "summary": "ParameterObject 與 ParameterBehaviour 等核心資料型別存在；舊計畫記載的 Parameter Timeline 整合已從目前程式樹移除，現行 Timeline 採 EventSignal/EventSignalReceiver，需同步設計文件與命名決策。",
+      "completed_items": [
+        "建立 ParameterObject 與 ParameterBehaviour 資料模型",
+        "建立 ParameterObject 的 Editor discovery 與相關 Inspector 工具",
+        "現行 Timeline 已提供 EventSignal 與 EventSignalReceiver"
+      ],
+      "pending_items": [
+        "對齊架構計畫與目前 Timeline 實作",
+        "決定是否保留 ParameterObject 歷史命名並補文件說明",
+        "釐清 ParameterObject 與 EventSignal 的現行整合邊界"
+      ]
+    },
+    {
+      "id": "motion-system",
+      "title": "Motion 系統重構",
+      "status": "planned",
+      "summary": "Motion 的抽象方向與遷移階段已有設計，但目前未找到 IHandle、ISettings、IRunner 或 Motion facade 的實作。",
+      "pending_items": [
+        "確認 Phase A 的契約與 Core 放置位置",
+        "實作不綁定引擎的 Motion 抽象殼",
+        "後續以 DOTweenRunner 驗證抽象",
+        "再規劃 MotionBehaviour 與既有組件遷移"
+      ]
+    },
+    {
+      "id": "atomic-components",
+      "title": "Atomic Components／Resolver 家族",
+      "status": "in_progress",
+      "summary": "Resolver 基底、Repeater、可注入 Random backend、RandomResolver 與 Unity ScriptableObject wrappers 已存在；仍待完整重建與 Unity 驗證，再進入 ShuffleResolver。",
+      "completed_items": [
+        "完成 IResolver、Resolver<T> 與 Repeater",
+        "完成 IRandomSource、SystemRandomSource 與 RandomResolver",
+        "完成 UnityRandomSource、ResolverObject、RepeaterObject 與 RandomResolverObject"
+      ],
+      "pending_items": [
+        "執行 Visual Studio rebuild 與 Unity 端驗證",
+        "實作重用 IRandomSource 的 ShuffleResolver",
+        "後續設計 affine Operator 與 SO 組合"
+      ]
+    },
+    {
+      "id": "unity-event-transmission",
+      "title": "UnityEvent 擴充與 Transmission",
+      "status": "done",
+      "summary": "目前以原生 UnityEvent 保存 target、method 與 listener，ArgumentInfo／UnityEventEx 負責持久化參數覆寫，Transmission 僅處理訊息路由與 payload 傳遞。",
+      "completed_items": [
+        "完成 ArgumentInfo 與 UnityEventEx.LoadArgument",
+        "完成 MessageSender 與 MessageReceiver 傳遞流程",
+        "關閉以獨立 Invocation framework 取代 UnityEvent 的設計路線",
+        "補齊 ArgumentInfo 的 Editor menu 與 PropertyDrawer"
+      ]
+    }
+  ]
+}

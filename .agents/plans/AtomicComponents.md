@@ -98,7 +98,7 @@
 **`RandomResolver : Resolver<int>`（2026-06-13）— 含可調換 backend**
 
 - **可調換 backend = 注入式 `IRandomSource`**（[[reference_no_serializereference]] 同理：Core 不能引用 UnityEngine，所以抽象 + 注入）：
-  - Core `DotNet/Source/Resolvers/`：`IRandomSource`（`int Next(min,maxExcl)` + `float NextFloat(min,maxIncl)`）+ `SystemRandomSource`（System.Random 預設，可 seed）。⚠️ **放 Resolvers/ 不放 Random/**：Unity csproj 的 `<Compile Include>` glob 只涵蓋 `Resolvers\**`,新資料夾不會被匯入（見 lib `.claude/build-notes.md`）
+  - Core `DotNet/Source/Resolvers/`：`IRandomSource`（`int Next(min,maxExcl)` + `float NextFloat(min,maxIncl)`）+ `SystemRandomSource`（System.Random 預設，可 seed）。⚠️ **放 Resolvers/ 不放 Random/**：Unity csproj 的 `<Compile Include>` glob 只涵蓋 `Resolvers\**`,新資料夾不會被匯入（見共享 [build-notes.md](../../../../.agents/build-notes.md)）
   - Unity `common/Runtime/Resolver/`：`UnityRandomSource`（UnityEngine.Random，`Default` 單例）
 - **`RandomResolver`（`Resolvers/`）**：欄位 `min`/`max(exclusive)`；`IRandomSource source { get => _source ??= new SystemRandomSource(); set; }`（`_source` 是 `IRandomSource?` 私有、**不序列化** → backend 是 runtime 注入,不是序列化資料）
 - **是無限亂數流**：`IsResolved => false`（永不完成）、`TryResolve` 永遠 true 回 `source.Next(min,max)`。要「N 次抽」就**跟 Repeater 組合**（呼應分責原則,不把 count 焊進來）
@@ -262,9 +262,9 @@ public class ShuffleResolver : IResolver<int> {
 
 ## 跟其他計畫的關聯
 
-- `Recycler_Refactor.md` — Recycler 系列重構，獨立軌道
-- `Motion_System_Refactor.md` — Motion/Tween 重構（前身 Tween_Refactor，已併入），可能受益 `IResolver<float>`（未來）
-- `InputLayer_Refactor.md` — Input 重構，獨立
+- [Recycler_Refactor.md](Recycler_Refactor.md) — Recycler 系列重構，獨立軌道
+- [Motion_System_Refactor.md](Motion_System_Refactor.md) — Motion/Tween 重構（前身 Tween_Refactor，已併入），可能受益 `IResolver<float>`（未來）
+- [InputLayer_Refactor.md](../../../../.agents/plans/InputLayer_Refactor.md) — Input 重構，由共享 Yu5h1Lib agent scope 管理
 - 本計畫 = 為上述計畫之外的「跨領域 primitive」做準備
 
 ---

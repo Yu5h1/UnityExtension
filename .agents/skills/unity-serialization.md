@@ -16,7 +16,7 @@ Use this skill when designing or changing Yu5h1Lib values that cross Unity seria
 - Store stable type or assembly identifiers and resolve them defensively.
 - Treat renamed types, missing assemblies, and unresolved serialized values as expected migration states rather than exceptional editor crashes.
 - Keep the stored value distinct from its Inspector display label.
-- Route generic ScriptableObject ownership and composition to `data-architecture.md`; route drawers and option menus to `editor-tooling.md`.
+- Route generic ScriptableObject ownership and composition to [data-architecture.md](data-architecture.md); route drawers and option menus to [editor-tooling.md](editor-tooling.md).
 
 ## `Optional<T>`
 

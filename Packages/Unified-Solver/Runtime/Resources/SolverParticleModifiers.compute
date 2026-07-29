@@ -1,0 +1,650 @@
+#pragma kernel ApplyOscillation
+#pragma kernel ApplySurfaceImpulse
+
+struct Particle
+{
+    float3 position;
+    float3 velocity;
+    float3 prevPosition;
+    float invMass;
+    int phase;
+    float3 color;
+    uint visible;
+};
+
+struct SolverInstance
+{
+    int particleOffset;
+    int particleCount;
+    int constraintOffset;
+    int constraintCount;
+    int rigidBodyOffset;
+    int rigidBodyCount;
+    int topology;
+    int profileId;
+    float3 scale;
+    float padding;
+    float4 spawnRotation;
+};
+
+RWStructuredBuffer<Particle> _Particles;
+StructuredBuffer<SolverInstance> _Instances;
+
+uint _InstanceCount;
+float _Time;
+float _DeltaTime;
+
+float _OscillationAcceleration;
+float _OscillationFrequency;
+float _OscillationRandomness;
+float _OscillationDirectionAngle;
+float _OscillationDirectionRandomness;
+float _OscillationBendRatio;
+float _OscillationBendRandomness;
+
+float _SurfaceAcceleration;
+float _SurfaceY;
+float _SurfaceContactDistance;
+float _SurfaceFrequency;
+float _SurfaceRandomness;
+float _SurfacePulseThreshold;
+
+static const int TOPOLOGY_CHAIN_3 = 3;
+static const int TOPOLOGY_GUIDE_4 = 4;
+static const int TOPOLOGY_DUAL_RAIL_6 = 6;
+static const int TOPOLOGY_ARTICULATED_12 = 12;
+static const float TWO_PI = 6.28318530718;
+
+float Hash01(uint value)
+{
+    value ^= value >> 16;
+    value *= 0x7feb352du;
+    value ^= value >> 15;
+    value *= 0x846ca68bu;
+    value ^= value >> 16;
+    return
+        (value & 0x00ffffffu) /
+        16777215.0;
+}
+
+float3 RotateByQuaternion(
+    float3 value,
+    float4 rotation)
+{
+    float3 t =
+        2.0 * cross(rotation.xyz, value);
+    return value +
+        rotation.w * t +
+        cross(rotation.xyz, t);
+}
+
+float3 SafePerpendicular(
+    float3 candidate,
+    float3 tangent,
+    float3 fallback)
+{
+    float3 projected =
+        candidate -
+        tangent * dot(candidate, tangent);
+    float projectedLength = length(projected);
+    if (projectedLength > 1e-5)
+        return projected / projectedLength;
+
+    projected =
+        fallback -
+        tangent * dot(fallback, tangent);
+    projectedLength = length(projected);
+    if (projectedLength > 1e-5)
+        return projected / projectedLength;
+
+    float3 axis =
+        abs(tangent.x) < 0.8
+            ? float3(1.0, 0.0, 0.0)
+            : float3(0.0, 0.0, 1.0);
+    return normalize(
+        axis -
+        tangent * dot(axis, tangent));
+}
+
+float3 LimitMagnitude(
+    float3 value,
+    float maximumLength)
+{
+    float valueLength = length(value);
+    if (valueLength <= maximumLength ||
+        valueLength <= 1e-6)
+    {
+        return value;
+    }
+
+    return
+        value *
+        (maximumLength / valueLength);
+}
+
+float3 ControlCenter(
+    SolverInstance instance,
+    uint control)
+{
+    uint particleBase =
+        (uint)instance.particleOffset;
+    if (instance.topology ==
+        TOPOLOGY_DUAL_RAIL_6)
+    {
+        uint pair =
+            particleBase + control * 2u;
+        return (
+            _Particles[pair].position +
+            _Particles[pair + 1u].position) *
+            0.5;
+    }
+
+    if (instance.topology ==
+        TOPOLOGY_ARTICULATED_12)
+    {
+        uint start =
+            particleBase + control * 4u;
+        return (
+            _Particles[start].position +
+            _Particles[start + 1u].position +
+            _Particles[start + 2u].position +
+            _Particles[start + 3u].position) *
+            0.25;
+    }
+
+    return _Particles[
+        particleBase + control].position;
+}
+
+float3 ControlVelocity(
+    SolverInstance instance,
+    uint control)
+{
+    uint particleBase =
+        (uint)instance.particleOffset;
+    if (instance.topology ==
+        TOPOLOGY_DUAL_RAIL_6)
+    {
+        uint pair =
+            particleBase + control * 2u;
+        return (
+            _Particles[pair].velocity +
+            _Particles[pair + 1u].velocity) *
+            0.5;
+    }
+
+    if (instance.topology ==
+        TOPOLOGY_ARTICULATED_12)
+    {
+        uint start =
+            particleBase + control * 4u;
+        return (
+            _Particles[start].velocity +
+            _Particles[start + 1u].velocity +
+            _Particles[start + 2u].velocity +
+            _Particles[start + 3u].velocity) *
+            0.25;
+    }
+
+    return _Particles[
+        particleBase + control].velocity;
+}
+
+float3 SideCandidate(
+    SolverInstance instance,
+    float3 middle)
+{
+    uint particleBase =
+        (uint)instance.particleOffset;
+    if (instance.topology ==
+        TOPOLOGY_GUIDE_4)
+    {
+        return
+            _Particles[
+                particleBase + 3u].position -
+            middle;
+    }
+
+    if (instance.topology ==
+        TOPOLOGY_DUAL_RAIL_6)
+    {
+        return
+            _Particles[
+                particleBase + 2u].position -
+            _Particles[
+                particleBase + 3u].position;
+    }
+
+    if (instance.topology ==
+        TOPOLOGY_ARTICULATED_12)
+    {
+        uint start = particleBase + 4u;
+        return
+            (_Particles[start].position +
+             _Particles[start + 3u].position) -
+            (_Particles[start + 1u].position +
+             _Particles[start + 2u].position);
+    }
+
+    return RotateByQuaternion(
+        float3(1.0, 0.0, 0.0),
+        instance.spawnRotation);
+}
+
+void BodyRanges(
+    SolverInstance instance,
+    out uint headStart,
+    out uint headCount,
+    out uint middleStart,
+    out uint middleCount,
+    out uint tailStart,
+    out uint tailCount)
+{
+    headStart = 0u;
+    headCount = 1u;
+    middleStart = 1u;
+    middleCount = 1u;
+    tailStart = 2u;
+    tailCount = 1u;
+
+    if (instance.topology ==
+        TOPOLOGY_DUAL_RAIL_6)
+    {
+        headCount = 2u;
+        middleStart = 2u;
+        middleCount = 2u;
+        tailStart = 4u;
+        tailCount = 2u;
+    }
+    else if (instance.topology ==
+        TOPOLOGY_ARTICULATED_12)
+    {
+        headCount = 4u;
+        middleStart = 4u;
+        middleCount = 4u;
+        tailStart = 8u;
+        tailCount = 4u;
+    }
+}
+
+[numthreads(64, 1, 1)]
+void ApplyOscillation(
+    uint3 dispatchID : SV_DispatchThreadID)
+{
+    uint instanceIndex = dispatchID.x;
+    if (instanceIndex >= _InstanceCount)
+        return;
+
+    SolverInstance instance =
+        _Instances[instanceIndex];
+    if (instance.topology != TOPOLOGY_CHAIN_3 &&
+        instance.topology != TOPOLOGY_GUIDE_4 &&
+        instance.topology != TOPOLOGY_DUAL_RAIL_6 &&
+        instance.topology != TOPOLOGY_ARTICULATED_12)
+    {
+        return;
+    }
+
+    float phaseRandom =
+        Hash01(instanceIndex * 3u + 1u);
+    float frequencyRandom =
+        Hash01(instanceIndex * 3u + 2u);
+    float directionRandom =
+        Hash01(instanceIndex * 3u + 3u) *
+        2.0 - 1.0;
+    float bendRandom =
+        Hash01(instanceIndex * 5u + 4u);
+    float frequencyScale = lerp(
+        1.0 - _OscillationRandomness,
+        1.0 + _OscillationRandomness,
+        frequencyRandom);
+    float angularFrequency =
+        _OscillationFrequency *
+        frequencyScale *
+        TWO_PI;
+    float phase =
+        _Time *
+        angularFrequency +
+        phaseRandom * TWO_PI;
+    float wave = sin(phase);
+
+    float3 head =
+        ControlCenter(instance, 0u);
+    float3 middle =
+        ControlCenter(instance, 1u);
+    float3 tail =
+        ControlCenter(instance, 2u);
+    float bodyLength =
+        length(head - middle) +
+        length(middle - tail);
+    if (bodyLength <= 1e-5)
+        return;
+
+    float3 baseX =
+        RotateByQuaternion(
+            float3(1.0, 0.0, 0.0),
+            instance.spawnRotation);
+    float3 baseY =
+        RotateByQuaternion(
+            float3(0.0, 1.0, 0.0),
+            instance.spawnRotation);
+    float3 baseZ =
+        RotateByQuaternion(
+            float3(0.0, 0.0, 1.0),
+            instance.spawnRotation);
+    float3 tangentCandidate = head - tail;
+    float tangentLength =
+        length(tangentCandidate);
+    float3 tangent =
+        tangentLength > 1e-5
+            ? tangentCandidate / tangentLength
+            : baseY;
+    float3 side = SafePerpendicular(
+        SideCandidate(instance, middle),
+        tangent,
+        baseX);
+    float3 normal = SafePerpendicular(
+        cross(side, tangent),
+        tangent,
+        baseZ);
+    float angle = radians(
+        _OscillationDirectionAngle +
+        directionRandom *
+        _OscillationDirectionRandomness);
+    float3 direction = normalize(
+        side * cos(angle) +
+        normal * sin(angle));
+
+    float bendScale = lerp(
+        1.0 - _OscillationBendRandomness,
+        1.0 + _OscillationBendRandomness,
+        bendRandom);
+    float bendRatio = clamp(
+        _OscillationBendRatio * bendScale,
+        0.0,
+        0.5);
+    float bendAmplitude =
+        bodyLength * bendRatio;
+    float targetBend =
+        bendAmplitude * wave;
+    float targetBendVelocity =
+        bendAmplitude *
+        cos(phase) *
+        angularFrequency;
+    float3 headVelocity =
+        ControlVelocity(instance, 0u);
+    float3 middleVelocity =
+        ControlVelocity(instance, 1u);
+    float3 tailVelocity =
+        ControlVelocity(instance, 2u);
+
+    uint headStart;
+    uint headCount;
+    uint middleStart;
+    uint middleCount;
+    uint tailStart;
+    uint tailCount;
+    BodyRanges(
+        instance,
+        headStart,
+        headCount,
+        middleStart,
+        middleCount,
+        tailStart,
+        tailCount);
+    uint particleBase =
+        (uint)instance.particleOffset;
+    uint drivenMiddleCount =
+        middleCount +
+        (instance.topology ==
+            TOPOLOGY_GUIDE_4
+            ? 1u
+            : 0u);
+    float totalDrivenCount =
+        (float)(
+            headCount +
+            drivenMiddleCount +
+            tailCount);
+
+    float segmentLength =
+        bodyLength * 0.5;
+    targetBend = clamp(
+        targetBend,
+        -segmentLength * 0.98,
+        segmentLength * 0.98);
+    float halfChord = sqrt(max(
+        0.0,
+        segmentLength * segmentLength -
+        targetBend * targetBend));
+    float3 bodyCenter =
+        (head + middle + tail) /
+        3.0;
+    float3 desiredHead =
+        bodyCenter +
+        tangent * halfChord -
+        direction * (targetBend / 3.0);
+    float3 desiredMiddle =
+        bodyCenter +
+        direction *
+        (targetBend * (2.0 / 3.0));
+    float3 desiredTail =
+        bodyCenter -
+        tangent * halfChord -
+        direction * (targetBend / 3.0);
+    float3 headDeltaPosition =
+        desiredHead - head;
+    float3 middleDeltaPosition =
+        desiredMiddle - middle;
+    float3 tailDeltaPosition =
+        desiredTail - tail;
+    float3 positionMean = (
+        headDeltaPosition * (float)headCount +
+        middleDeltaPosition *
+            (float)drivenMiddleCount +
+        tailDeltaPosition * (float)tailCount) /
+        totalDrivenCount;
+    headDeltaPosition -= positionMean;
+    middleDeltaPosition -= positionMean;
+    tailDeltaPosition -= positionMean;
+
+    float halfChordVelocity =
+        halfChord > 1e-5
+            ? -targetBend *
+                targetBendVelocity /
+                halfChord
+            : 0.0;
+    float3 bodyCenterVelocity =
+        (headVelocity +
+         middleVelocity +
+         tailVelocity) /
+        3.0;
+    float3 desiredHeadVelocity =
+        bodyCenterVelocity +
+        tangent * halfChordVelocity -
+        direction *
+            (targetBendVelocity / 3.0);
+    float3 desiredMiddleVelocity =
+        bodyCenterVelocity +
+        direction *
+            (targetBendVelocity *
+             (2.0 / 3.0));
+    float3 desiredTailVelocity =
+        bodyCenterVelocity -
+        tangent * halfChordVelocity -
+        direction *
+            (targetBendVelocity / 3.0);
+    float maximumVelocityCorrection =
+        max(0.0, _OscillationAcceleration) *
+        _DeltaTime;
+    float3 headDeltaVelocity =
+        LimitMagnitude(
+            desiredHeadVelocity -
+            headVelocity,
+            maximumVelocityCorrection);
+    float3 middleDeltaVelocity =
+        LimitMagnitude(
+            desiredMiddleVelocity -
+            middleVelocity,
+            maximumVelocityCorrection);
+    float3 tailDeltaVelocity =
+        LimitMagnitude(
+            desiredTailVelocity -
+            tailVelocity,
+            maximumVelocityCorrection);
+    float3 velocityMean = (
+        headDeltaVelocity * (float)headCount +
+        middleDeltaVelocity *
+            (float)drivenMiddleCount +
+        tailDeltaVelocity * (float)tailCount) /
+        totalDrivenCount;
+    headDeltaVelocity -= velocityMean;
+    middleDeltaVelocity -= velocityMean;
+    tailDeltaVelocity -= velocityMean;
+
+    for (uint headIndex = 0u;
+         headIndex < headCount;
+         headIndex++)
+    {
+        uint index =
+            particleBase +
+            headStart +
+            headIndex;
+        Particle particle = _Particles[index];
+        if (particle.invMass > 0.0)
+        {
+            particle.position +=
+                headDeltaPosition;
+            particle.prevPosition +=
+                headDeltaPosition;
+            particle.velocity +=
+                headDeltaVelocity;
+        }
+        _Particles[index] = particle;
+    }
+
+    for (uint middleIndex = 0u;
+         middleIndex < middleCount;
+         middleIndex++)
+    {
+        uint index =
+            particleBase +
+            middleStart +
+            middleIndex;
+        Particle particle = _Particles[index];
+        if (particle.invMass > 0.0)
+        {
+            particle.position +=
+                middleDeltaPosition;
+            particle.prevPosition +=
+                middleDeltaPosition;
+            particle.velocity +=
+                middleDeltaVelocity;
+        }
+        _Particles[index] = particle;
+    }
+
+    if (instance.topology == TOPOLOGY_GUIDE_4)
+    {
+        uint guideIndex = particleBase + 3u;
+        Particle guide = _Particles[guideIndex];
+        if (guide.invMass > 0.0)
+        {
+            guide.position +=
+                middleDeltaPosition;
+            guide.prevPosition +=
+                middleDeltaPosition;
+            guide.velocity +=
+                middleDeltaVelocity;
+        }
+        _Particles[guideIndex] = guide;
+    }
+
+    for (uint tailIndex = 0u;
+         tailIndex < tailCount;
+         tailIndex++)
+    {
+        uint index =
+            particleBase +
+            tailStart +
+            tailIndex;
+        Particle particle = _Particles[index];
+        if (particle.invMass > 0.0)
+        {
+            particle.position +=
+                tailDeltaPosition;
+            particle.prevPosition +=
+                tailDeltaPosition;
+            particle.velocity +=
+                tailDeltaVelocity;
+        }
+        _Particles[index] = particle;
+    }
+}
+
+[numthreads(64, 1, 1)]
+void ApplySurfaceImpulse(
+    uint3 dispatchID : SV_DispatchThreadID)
+{
+    uint instanceIndex = dispatchID.x;
+    if (instanceIndex >= _InstanceCount)
+        return;
+
+    SolverInstance instance =
+        _Instances[instanceIndex];
+    uint particleBase =
+        (uint)instance.particleOffset;
+    float minimumY = 3.402823466e+38;
+    for (int minimumIndex = 0;
+         minimumIndex < instance.particleCount;
+         minimumIndex++)
+    {
+        minimumY = min(
+            minimumY,
+            _Particles[
+                particleBase +
+                (uint)minimumIndex].position.y);
+    }
+
+    if (minimumY >
+        _SurfaceY + _SurfaceContactDistance)
+    {
+        return;
+    }
+
+    float random =
+        Hash01(instanceIndex * 2u + 5u);
+    float frequencyScale = lerp(
+        1.0 - _SurfaceRandomness,
+        1.0 + _SurfaceRandomness,
+        random);
+    float wave = sin(
+        _Time *
+        _SurfaceFrequency *
+        frequencyScale *
+        TWO_PI +
+        random * TWO_PI);
+    float denominator = max(
+        0.0001,
+        1.0 - _SurfacePulseThreshold);
+    float pulse = saturate(
+        (wave - _SurfacePulseThreshold) /
+        denominator);
+    float3 deltaVelocity =
+        float3(0.0, 1.0, 0.0) *
+        (_SurfaceAcceleration *
+         pulse *
+         _DeltaTime);
+
+    for (int particleIndex = 0;
+         particleIndex < instance.particleCount;
+         particleIndex++)
+    {
+        uint index =
+            particleBase +
+            (uint)particleIndex;
+        Particle particle = _Particles[index];
+        if (particle.invMass > 0.0)
+            particle.velocity += deltaVelocity;
+        _Particles[index] = particle;
+    }
+}

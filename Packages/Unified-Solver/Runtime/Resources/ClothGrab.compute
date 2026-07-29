@@ -1,0 +1,137 @@
+#pragma kernel BeginGrab
+#pragma kernel ApplyGrab
+#pragma kernel ReleaseGrab
+
+struct Particle
+{
+    float3 position;
+    float3 velocity;
+    float3 prevPosition;
+    float  invMass;
+    int    phase;
+    float3 color;
+    uint   visible;
+};
+
+struct GrabState
+{
+    float3 localOffset;
+    float  originalInvMass;
+    uint   grabbed;
+};
+
+RWStructuredBuffer<Particle>  _Particles;
+RWStructuredBuffer<GrabState> _GrabStates;
+RWStructuredBuffer<uint>      _GrabCount;
+
+int    _ParticleOffset;
+int    _ParticleCount;
+float  _GrabRadius;
+float3 _HandPosition;
+float4 _HandRotation;
+float3 _HandLinearVelocity;
+float3 _HandAngularVelocity;
+
+float3 RotateVector(float3 value, float4 rotation)
+{
+    return value
+        + 2.0 * cross(
+            rotation.xyz,
+            cross(rotation.xyz, value) + rotation.w * value);
+}
+
+float3 InverseRotateVector(float3 value, float4 rotation)
+{
+    return RotateVector(value, float4(-rotation.xyz, rotation.w));
+}
+
+float3 VelocityAtOffset(float3 worldOffset)
+{
+    return _HandLinearVelocity
+        + cross(_HandAngularVelocity, worldOffset);
+}
+
+[numthreads(64, 1, 1)]
+void BeginGrab(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_ParticleCount)
+        return;
+
+    GrabState state = _GrabStates[id.x];
+    if (state.grabbed != 0)
+        return;
+
+    int particleIndex = _ParticleOffset + (int)id.x;
+    Particle particle = _Particles[particleIndex];
+
+    // Ignore permanently fixed nodes and nodes already owned by another grabber.
+    if (particle.invMass <= 0.0)
+        return;
+
+    float3 delta = particle.position - _HandPosition;
+    if (dot(delta, delta) > _GrabRadius * _GrabRadius)
+        return;
+
+    state.localOffset = InverseRotateVector(delta, _HandRotation);
+    state.originalInvMass = particle.invMass;
+    state.grabbed = 1;
+    _GrabStates[id.x] = state;
+
+    particle.prevPosition = particle.position;
+    particle.velocity = VelocityAtOffset(delta);
+    particle.invMass = 0.0;
+    _Particles[particleIndex] = particle;
+
+    uint previousCount;
+    InterlockedAdd(_GrabCount[0], 1u, previousCount);
+}
+
+[numthreads(64, 1, 1)]
+void ApplyGrab(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_ParticleCount)
+        return;
+
+    GrabState state = _GrabStates[id.x];
+    if (state.grabbed == 0)
+        return;
+
+    int particleIndex = _ParticleOffset + (int)id.x;
+    Particle particle = _Particles[particleIndex];
+    float3 worldOffset = RotateVector(state.localOffset, _HandRotation);
+    float3 targetPosition = _HandPosition + worldOffset;
+
+    particle.position = targetPosition;
+    particle.prevPosition = targetPosition;
+    particle.velocity = VelocityAtOffset(worldOffset);
+    particle.invMass = 0.0;
+    _Particles[particleIndex] = particle;
+}
+
+[numthreads(64, 1, 1)]
+void ReleaseGrab(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x == 0)
+        _GrabCount[0] = 0;
+
+    if (id.x >= (uint)_ParticleCount)
+        return;
+
+    GrabState state = _GrabStates[id.x];
+    if (state.grabbed == 0)
+        return;
+
+    int particleIndex = _ParticleOffset + (int)id.x;
+    Particle particle = _Particles[particleIndex];
+    float3 worldOffset = RotateVector(state.localOffset, _HandRotation);
+    float3 targetPosition = _HandPosition + worldOffset;
+
+    particle.position = targetPosition;
+    particle.prevPosition = targetPosition;
+    particle.velocity = VelocityAtOffset(worldOffset);
+    particle.invMass = state.originalInvMass;
+    _Particles[particleIndex] = particle;
+
+    state.grabbed = 0;
+    _GrabStates[id.x] = state;
+}

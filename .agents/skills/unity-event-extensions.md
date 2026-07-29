@@ -143,3 +143,9 @@ The abandoned `UnityExtension-codex` prototype used an abstract `ArgumentPayload
 - explicit `TryInvoke` success/failure semantics and fail-fast sequencing.
 
 When those capabilities are not required, retain native UnityEvent and apply one of the extensions above.
+
+## Related design records
+
+- [Invocation_設計.md](../plans/Invocation_設計.md) — closed design explaining why UnityEvent `ArgumentCache` replaced a separate Invocation framework.
+- [Transmission_設計.md](../plans/Transmission_設計.md) — closed design defining Transmission as message routing and payload delivery only.
+- [整合案例_乙炔桶.md](../plans/整合案例_乙炔桶.md) — historical integration case; consult it only when that project-specific context is relevant.

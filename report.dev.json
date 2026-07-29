@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0",
+  "report_id": "unity-extension-progress",
+  "updated_at": "2026-07-21T21:01:41+08:00",
+  "tasks": [
+    {
+      "id": "solution-inventory",
+      "next_step": "列出 Packages 下各 package 的用途、主要 asmdef、依賴方向與目前 application-only 能力。",
+      "decisions": [
+        {
+          "summary": "可重用的 Unity Runtime、Editor、資料與工作流能力由 UnityExtension 擁有；應用專案只保留領域邏輯。",
+          "reference": "plan.md；handoff.md"
+        }
+      ]
+    },
+    {
+      "id": "recycler-refactor",
+      "next_step": "先決定 issue 13 的 IRecyclable 最小注入方向，再補 Core tests，之後進入 Unity Phase 1.5。",
+      "blockers": [
+        "IRecyclable 是否維持介面、改為 class，或由庫提供預設 callback 組合尚未決定。"
+      ],
+      "decisions": [
+        {
+          "summary": "Core 使用 Recycler facade + object pool；Unity 特有建立、銷毀與 reset 行為留在 UnityExtension。",
+          "reference": ".agents/plans/Recycler_Refactor.md"
+        }
+      ]
+    },
+    {
+      "id": "data-architecture",
+      "next_step": "以 commit 33c67dd 移除 ParameterSignal/ParameterReceiver 的現況為準，更新架構計畫並釐清 EventSignal 與 ParameterObject 的邊界。",
+      "blockers": [
+        "架構計畫仍宣稱 Parameter Timeline 整合完成，但目前程式樹已改採 EventSignal/EventSignalReceiver。"
+      ],
+      "routes": [
+        {
+          "title": "EventSignal／EventSignalReceiver",
+          "state": "selected",
+          "reason": "目前 Timeline package 中存在並由 scene-side UnityEvent 承接事件。"
+        },
+        {
+          "title": "ParameterSignal／ParameterReceiver",
+          "state": "rejected",
+          "reason": "相關檔案已在 commit 33c67dd 從目前程式樹移除。"
+        }
+      ]
+    },
+    {
+      "id": "motion-system",
+      "next_step": "確認 Phase A 只建立 IHandle、IHandle<T>、ISettings、IRunner、LoopMode 與 Motion facade，並選定 Core 子資料夾。",
+      "decisions": [
+        {
+          "summary": "先建立不綁定 tween provider 的抽象殼；DOTween、自製 runner、PrimeTween 與平台 adapter 分階段處理。",
+          "reference": ".agents/plans/Motion_System_Refactor.md#9-遷移階段2026-06-09-改版殼優先"
+        }
+      ]
+    },
+    {
+      "id": "atomic-components",
+      "next_step": "由使用者完成 VS rebuild 與 Unity Resolver 家族驗證；通過後實作 Fisher-Yates ShuffleResolver。",
+      "decisions": [
+        {
+          "summary": "Random backend 使用 IRandomSource 注入：Core 預設 SystemRandomSource，Unity wrapper 注入 UnityRandomSource。",
+          "reference": ".agents/plans/AtomicComponents.md"
+        }
+      ]
+    },
+    {
+      "id": "unity-event-transmission",
+      "routes": [
+        {
+          "title": "擴充原生 UnityEvent",
+          "state": "selected",
+          "reason": "保留 Unity 既有 listener authoring，僅以 ArgumentInfo 覆寫持久化參數。"
+        },
+        {
+          "title": "自訂 Invocation framework",
+          "state": "rejected",
+          "reason": "目前需求可由 UnityEvent PersistentCall、ArgumentCache 與 Transmission payload 滿足。"
+        }
+      ],
+      "decisions": [
+        {
+          "summary": "Transmission 僅負責 message routing 與 payload delivery；實際呼叫由 UnityEvent 執行。",
+          "reference": ".agents/plans/Transmission_設計.md；.agents/plans/Invocation_設計.md"
+        }
+      ]
+    }
+  ]
+}

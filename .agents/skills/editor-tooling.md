@@ -35,7 +35,7 @@ Do not create a convenience command that merely duplicates a discoverable native
 - Add sub-assets to the actual main asset; sub-assets cannot contain nested sub-assets.
 - On removal, update serialized references and destroy owned sub-assets in one Undo-aware operation.
 - Use object references as identity; use names for human readability, not ownership.
-- Route runtime data-model decisions to `data-architecture.md`.
+- Route runtime data-model decisions to [data-architecture.md](data-architecture.md).
 
 ## Option providers
 

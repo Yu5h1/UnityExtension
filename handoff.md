@@ -27,3 +27,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 3. Plan package destinations for those reusable capabilities.
 4. Add focused Documentation guides for important systems as they become clearer.
 
+## Recent Work
+
+- 2026-07-27: Removed the `ParticleSystemRigidbody` implementation and its dedicated documentation. The Particle System C# Job approach remained CPU-bound and did not meet the required collision quality or performance for dense interactions.
+- Decision: use `unified-solver` for large-scale collision, stacking, and container interactions. The retrospective is recorded in [DevelopmentLog.md](Documentation/DevelopmentLog.md).
+

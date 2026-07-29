@@ -1,0 +1,10 @@
+{
+    "name": "Yu5h1.Yu5h1libfxunifiedsolver.Editor",
+    "references": [
+      "Yu5h1.Yu5h1libfxunifiedsolver"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}

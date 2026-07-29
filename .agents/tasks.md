@@ -1,41 +1,35 @@
-# tasks — Unity scope overview
+# tasks — UnityExtension routing index
 
-> Single source of status for Unity-related plans and game projects under `W:\UnityProject`.
-> Role: **routing + progress overview only** — no detail (detail lives in each `plans/*.md`, or a project's `plan.md` / `agent.md`).
-> Status legend: ✅ done / 🔧 has a clear actionable next step / 📐 in design (needs a decision first) / 🧩 mostly done, tail remains / 📦 to archive.
-> Last updated: 2026-07-03 (path re-org; done/not-done status pending reconciliation).
->
-> Note: pure Yu5h1Lib Core refactor track moved to `C:\Users\Yu5h1\Dev\VSProjects\Yu5h1Lib\.agents\tasks.md`.
+> Canonical location: `C:\Users\Yu5h1\Dev\VSProjects\Yu5h1Lib\Unity\UnityExtension\.agents\tasks.md`.
+> Role: canonical entry index for UnityExtension-owned tasks and Unity application validation routes.
+> Use the matching `Task ID` from `report.json` when one exists. Progress belongs in `report.json` / `report.dev.json`; live coordination state belongs in the relevant `handoff.md`.
+> Reusable Unity technique routing starts at [introduction.md](introduction.md).
 
----
+## UnityExtension tasks
 
-## Unity-related refactor / architecture track
+| Task ID | Canonical entry | Scope / routing note |
+|---|---|---|
+| `solution-inventory` | [UnityExtension handoff](../handoff.md) | Solution-level package inventory, ownership, dependency direction, and reusable capability planning |
+| `recycler-refactor` | [Recycler_Refactor](plans/Recycler_Refactor.md) | Core Recycler contracts, Unity adapters, reset behavior, tests, and migration |
+| `data-architecture` | [Yu5h1lib-Unity-ScriptableObject-Architecture](plans/Yu5h1lib-Unity-ScriptableObject-Architecture.md) | ParameterObject, ScriptableObject data architecture, and Timeline integration boundaries |
+| `motion-system` | [Motion_System_Refactor](plans/Motion_System_Refactor.md) | Engine-independent Motion contracts, runners, and Unity migration |
+| `atomic-components` | [AtomicComponents](plans/AtomicComponents.md) | Resolver, Repeater, random and shuffle components, and ScriptableObject wrappers |
+| `unity-event-transmission` | [Transmission design](plans/Transmission_設計.md) | UnityEvent argument persistence, message routing, and the closed Invocation alternative |
 
-| Status | Plan | Next step (smallest actionable unit) |
-|--------|------|--------------------------------------|
-| 🔧 | [Recycler_Refactor](plans/Recycler_Refactor.md) | Core ✅ (2026-05-21). Left: Core unit tests + Unity Phase 1.5 (`UnityObjectPoolAdapter`/`Recyclable`/`RecyclerEx`/`Recycler.Reset()`) + issue 13 (`IRecyclable` hardening — discuss first) |
-| 🧩 | [Yu5h1lib-Unity-ScriptableObject-Architecture](plans/Yu5h1lib-Unity-ScriptableObject-Architecture.md) | ParameterObject core ✅. Left: Timeline integration (`ParameterSignal`/`DirectorController`) + unresolved naming conflict |
-| 📐 | [Motion_System_Refactor](plans/Motion_System_Refactor.md) | interpolation as a Core abstraction + lazy-init injected compute source + TimerRunner fallback. Blocked on **Q-A~Q-J answers**; not started |
-| 🔧 | [AtomicComponents](plans/AtomicComponents.md) | `IResolver`/`Resolver<T>`/`Repeater` ✅ (2026-06-12, try-pattern + event base, replaces Counter). Next: decide Random backend → `RandomResolver` |
+## Unity application validation routes
 
----
+| Task ID | Canonical entry | Scope / routing note |
+|---|---|---|
+| `bonghuo-vr` | `W:\UnityProject\BonghuoVR\handoff.md` | Current application state and validation route for reusable UnityExtension capabilities |
 
-## Game-project track
+## Related scope indexes
 
-### Bonghuo VR (BonghuoVR) — 🔧 ~33%, Act 1 "night-sea fire fishing" (8-min interactive)
-
-| Status | Item | Entry |
-|--------|------|-------|
-| 🔧 | Full project description (original 31-day plan, partly superseded) | `BonghuoVR\plan.md` |
-| 🔧 | Working reference / status cache | `BonghuoVR\agent.md` |
-| 📊 | Human progress report | `docs\pages\bonghuo-vr.html` (for people; user asks Claude to update) |
-
-> Critical path: InteractionController → hover detection ×3 → Timeline marker wiring (IntObject) → fishing action sequence.
-
----
+- Pure Yu5h1Lib Core and package refactors: [Yu5h1Lib task routing index](../../../.agents/tasks.md).
 
 ## Maintenance rules
-- Touch any plan → come back and update its row's status and "next step".
-- New plan → drop it in `plans/` and add a row to the right track.
-- New game project → add a section pointing to its `plan.md` / `agent.md`.
-- Progress detail goes in each project's `agent.md`; this file is routing and overview only.
+
+- Keep one row per routable task or project.
+- Reuse the corresponding TaskProgress task ID when the task is reported.
+- Link to one canonical entry; let that entry route to supporting documents.
+- Record status, progress, next steps, and completion details in the reports or authoritative handoff, not here.
+- Update this index only when a task is added, removed, renamed, transferred, or its canonical entry changes.

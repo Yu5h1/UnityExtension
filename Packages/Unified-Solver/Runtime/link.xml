@@ -1,0 +1,6 @@
+<linker>
+  <assembly fullname="Yu5h1.Yu5h1libfxunifiedsolver">
+    <type fullname="SolverManager" preserve="fields" />
+    <type fullname="ClothGenerator" preserve="fields" />
+  </assembly>
+</linker>

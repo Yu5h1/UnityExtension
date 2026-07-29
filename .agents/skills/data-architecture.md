@@ -7,7 +7,7 @@ Use this skill for Yu5h1Lib Unity data modeling: ScriptableObject architecture, 
 - Treat `Packages/common/Runtime/Data/Architecture/` as the home of reusable ScriptableObject data objects.
 - Treat `Packages/common/Runtime/Data/ValuePort.cs` and `Packages/common/Runtime/Adapter/ValuePortAdapter.cs` as the Unity-facing ValuePort layer.
 - Keep runtime code in `Yu5h1Lib`; use `Yu5h1Lib.EditorExtension` only for Editor code.
-- Read `.agents/plans/Yu5h1lib-Unity-ScriptableObject-Architecture.md` when changing the architecture or Timeline integration. Do not load that plan for routine use of existing types.
+- Read [Yu5h1lib-Unity-ScriptableObject-Architecture.md](../plans/Yu5h1lib-Unity-ScriptableObject-Architecture.md) when changing the architecture or Timeline integration. Do not load that plan for routine use of existing types.
 
 ## Architecture map
 
@@ -27,7 +27,7 @@ Use this skill for Yu5h1Lib Unity data modeling: ScriptableObject architecture, 
 - Preserve the Core MVVM contract: bind through `IValuePort`; do not reintroduce deleted binding abstractions.
 - When adding a concrete `ParameterObject<T>`, place it with the existing architecture objects and ensure Editor discovery can find a non-abstract implementation.
 - Build the complete port map before writing bindings, then bind to the current data source.
-- Keep Theme and preset runtime models here; route their custom Inspector and sub-asset manipulation to `editor-tooling.md`.
+- Keep Theme and preset runtime models here; route their custom Inspector and sub-asset manipulation to [editor-tooling.md](editor-tooling.md).
 
 ## Sub-asset model
 

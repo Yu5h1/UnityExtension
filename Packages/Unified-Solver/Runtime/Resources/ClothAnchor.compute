@@ -1,0 +1,39 @@
+#pragma kernel ApplyAnchors
+
+struct Particle
+{
+    float3 position;
+    float3 velocity;
+    float3 prevPosition;
+    float  invMass;
+    int    phase;
+    float3 color;
+    uint   visible;
+};
+
+struct Anchor
+{
+    int particleIndex;
+    float3 position;
+};
+
+StructuredBuffer<Anchor> _Anchors;
+RWStructuredBuffer<Particle> _Particles;
+int _AnchorCount;
+
+[numthreads(64, 1, 1)]
+void ApplyAnchors(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _AnchorCount)
+        return;
+
+    Anchor anchor = _Anchors[id.x];
+    Particle particle = _Particles[anchor.particleIndex];
+
+    particle.position = anchor.position;
+    particle.prevPosition = anchor.position;
+    particle.velocity = 0.0;
+    particle.invMass = 0.0;
+
+    _Particles[anchor.particleIndex] = particle;
+}
