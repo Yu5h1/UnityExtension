@@ -1,5 +1,7 @@
 # ParticleSystem × Unified Solver 能力互補計畫
 
+> 狀態：長期能力邊界文件，當前優先級最後。現階段先完成 `plan.md` 第 13 節的冰塊碎片物理；除維護既有單向 Bridge 外，本計畫不進入實作排程。
+
 ## 1. 計畫目的
 
 本計畫的目標不是以 Unified Solver 重新製作一套 ParticleSystem，而是：

@@ -9,9 +9,12 @@ namespace Yu5h1.UnifiedSolver
         SolverParticleModifierProfile
     {
         [Header("Drive")]
-        [Tooltip("Maximum acceleration used to match the deformation velocity. Bend Ratio controls the visible bend independently.")]
+        [Tooltip("Caps only the velocity the modifier may add per step, which is the body's follow-through momentum. It does not affect the pose, which is always applied in full, and so has no effect on how high the body bounces. At the default it never engages: compare 0 against 120 to see what it actually does, and if there is no visible difference at 0 it is not earning its place.")]
         [Min(0f)]
-        public float acceleration = 12f;
+        public float acceleration = 120f;
+        [Tooltip("How alive the body looks. 0 reads as dead: it still holds its pose but cannot push off anything. Higher looks fresher and more energetic. Physically it is a ceiling in metres per second on the launch the body gets from pressing into a surface, since the solver converts any downward part of the pose correction into velocity by dividing by the substep rather than the frame. Independent of substeps, so raising substeps for cloth stiffness does not change how lively bodies look.")]
+        [Min(0f)]
+        public float vitality = 3f;
         [Min(0f)]
         public float frequency = 1.8f;
         [Range(0f, 1f)]
@@ -22,7 +25,7 @@ namespace Yu5h1.UnifiedSolver
         public float directionRandomness;
 
         [Header("Body Bend")]
-        [Tooltip("Target C-bend offset as a fraction of body length. 0.5 is the geometric limit of a three-control-point body.")]
+        [Tooltip("Peak lateral offset of head and tail as a fraction of body length, reached by rotating both segments about the middle. 0.5 folds the body in half and is the geometric limit of a three-control-point body.")]
         [Range(0f, 0.5f)]
         public float bendRatio = 0.35f;
         [Tooltip("Per-instance variation applied to Bend Ratio.")]

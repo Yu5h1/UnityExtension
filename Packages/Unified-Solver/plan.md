@@ -506,479 +506,443 @@ SolverParticleInstance Buffer
 
 ---
 
-## 13. 箱裝冰塊、程序化外殼與休眠計畫
+## 13. 冰塊碎片物理 P0 計畫
 
-### 13.1 目標
+### 13.1 產品目標與範圍
 
-在同一個 `SolverManager` 中支援：
+目前最優先的 Solver 應用是「冰塊碎片物理」：
 
-- 不同尺寸的剛體冰塊。
-- 每個冰塊生成時隨機選擇 4、6 或 8 個剛體粒子。
-- 冰塊、魚與箱體三方碰撞。
-- 不需人工指定獨立 Mesh Asset，由 Editor 依粒子 Group 的 Rest Shape 建立程序化凸包 Mesh。
-- 冰塊低速穩定後停止可見抖動。
-- 保留 Asset Mesh 路徑，讓魚繼續使用既有模型與 Articulated Renderer。
+- 在 Editor 將一個來源冰塊 Mesh 切成多個不規則碎片。
+- 每個碎片 Bake 成一個可序列化的剛體 Particle Group。
+- 每個碎片依 Seed 與幾何條件選擇 4、6 或 8 個非退化物理粒子。
+- Runtime 中碎片可與魚、其他碎片及箱體碰撞。
+- 碎片動量接近停止並持續一段時間後必須真正停止抖動。
+- 魚、其他碎片、外力或 Collider 的有效撞擊必須喚醒碎片。
+- 具有持續作用 Modifier 的 Instance 必須保持 Awake。
 
-第一階段只要求有限場景中的穩定裝箱，不將完整 Despawn、Free List 或任意凹面重建納入本計畫。
+這不是一般 ParticleSystem 特效，也不是只把 4／6／8 粒子外面包一層程序凸包。來源 Mesh 切割、碎片資料 Bake、Runtime 剛體群組、碰撞與 Sleep/Wake 是同一條 P0 垂直功能。
 
-### 13.2 已確定的分層
+`Documentation/ParticleSystem x Unified Solver.md` 保留為長期能力邊界文件，但排在本計畫最後，不阻塞冰塊碎片物理。
 
-Mesh 來源只有兩類：
-
-```csharp
-public enum SolverMeshSource
-{
-    Asset,
-    Procedural
-}
-```
-
-`SolverMeshSource` 是 Authoring 選擇；Runtime Renderer 最終一律取得已存在的 `Mesh`：
+### 13.2 系統邊界
 
 ```text
-Asset
-    → 使用人工指定 Mesh
+Editor Authoring
+Source Ice Mesh
+    → Fracture／切割
+    → 封閉切面、材質與 UV
+    → 每片選取 4／6／8 個 Rest Particles
+    → 幾何與粒子契約驗證
+    → SolverFractureBakeData
 
-Procedural
-    → Editor 依 Particle Group Rest Shape 生成 Mesh
-    → 保存為 SolverRenderProfile 的隱藏 Sub-Asset
-    → Runtime 直接讀取已 Bake Mesh
+Runtime
+SolverFractureBakeData
+    → 每片建立一個 SolverParticleInstance
+    → 每片建立一個 Rigid Group
+    → Fragment Renderer 批次繪製
+    → 魚／碎片／箱體碰撞
+    → Awake／Candidate／Sleeping 狀態
 ```
 
-程序 Mesh 方法以無參數 Attribute 標記：
+原始來源 Mesh 不在 Runtime 動態切割。Player 只消費 Editor 已 Bake、版本化且通過驗證的資料，避免執行昂貴幾何運算與不確定的配置。
 
-```csharp
-[ProceduralMeshMethod]
-public sealed class ParticleConvexHullMethod :
-    IProceduralMeshMethod
-{
-}
-```
+### 13.3 碎片序列化資料契約
 
-Render Profile 不序列化 `System.Type`，只保存 Editor Registry Key：
-
-```csharp
-[SerializeField]
-string proceduralMeshMethodType;
-```
-
-第一版以 `Type.FullName` 作為 Registry Key：
+新增單一 Fracture Asset，至少保存：
 
 ```text
-proceduralMeshMethodType
-        ↓
-Editor Registry.TryGet(string, out Type)
-        ↓
-首次顯示 Inspector 或按下 Bake 時初始化
-        ↓
-UnityEditor.TypeCache 掃描 [ProceduralMeshMethod]
+SolverFractureBakeData
+├─ dataVersion
+├─ sourceMeshReference
+├─ sourceMeshHash
+├─ fractureSettingsHash
+├─ seed
+├─ fragments[]
+│  ├─ fragmentId
+│  ├─ mesh / combinedMeshRange
+│  ├─ localPivot
+│  ├─ localCenterOfMass
+│  ├─ localBounds
+│  ├─ volume
+│  ├─ mass
+│  ├─ material / subMesh mapping
+│  ├─ particleVariant（4／6／8）
+│  ├─ restPositions[]
+│  ├─ rigidParticleIndices[]
+│  └─ requirements
+└─ bakeDiagnostics
 ```
 
-不另外要求 Attribute 提供 ID 或 Display Name：
+`SolverParticleInstance` 繼續作為唯一 Runtime Group Instance，不建立冰塊專用的平行 Instance 型別。Fracture Bake Data 負責靜態定義；Instance 負責粒子、Rigid ranges、Fragment ID、Render mapping 與即時 Sleep state。
 
-- 身分來自實作 `Type`。
-- 序列化 Key 來自 `Type.FullName`。
-- Inspector 名稱由 `ObjectNames.NicifyVariableName(type.Name)` 產生。
-- 未來只有在需要分類、本地化或自訂排序時，才擴充 Attribute metadata。
+Bake 必須可重現：
 
-Runtime 不解析 `proceduralMeshMethodType`，也不執行程序 Mesh 方法；Player 只消費已序列化的 Bake 結果。
+- 相同來源 Mesh、設定、Seed 與版本產生相同結果。
+- Source Hash 或 Settings Hash 改變時，Inspector 明確標示 Stale。
+- 提供 `Bake`、`Rebuild`、`Clear Baked Data`。
+- 不在 `OnValidate()` 自動執行切割。
+- Bake 失敗時保留上一份有效資料，不留下半成品。
 
-### 13.3 Particle Group 共用資料
+### 13.4 Editor Mesh Fracture
 
-魚與冰塊共用相同的 Group Definition 與 Instance 管線，不建立 `IceParticleGroup` 或 `FishParticleGroup`：
+第一版只需要可靠的 Editor 工作流，不追求通用 Runtime 破壞系統：
 
-```text
-結構差異 → SolverParticleGroupBakeData
-生成隨機 → Spawn Variant Policy
-行為差異 → Modifier
-顯示差異 → Render Profile
-即時狀態 → SolverParticleInstance
-```
+1. 以固定 Seed 產生切割平面或 Voronoi Sites。
+2. 將來源 Mesh 切成目標數量的封閉碎片。
+3. 為新切面建立朝外 Winding、Normals、UV 與 Interior Material/SubMesh。
+4. 移除零面積 Triangle、極小孤島與非封閉結果。
+5. 計算每片 Pivot、Center of Mass、Bounds、Volume 與 Mass。
+6. 為每片建立物理 Rest Particles。
+7. 驗證後寫入 `SolverFractureBakeData`。
 
-Editor Bake Data 至少包含：
+第一版允許只支援可讀、封閉且拓樸合法的 Mesh。Skinned Mesh、非流形 Mesh、多層破碎、Runtime 再切割可明確拒絕並顯示原因。
 
-```text
-SolverParticleGroupBakeData
-├─ variant
-├─ restPositions[]
-├─ constraints[]
-├─ rigidParticleIndices[]
-├─ rigidGroups[]
-├─ optional controls[]
-└─ requirements
-```
+原有 `ParticleConvexHullMethod` 可保留作為測試或簡單形狀工具，但不再是冰塊碎片的主要 Mesh 來源。
 
-現有 `SolverParticleInstance` 繼續作為 Runtime Group Instance，不建立第二份重複的 Instance 型別。它保存實際的 particle、constraint、rigid offsets/counts，以及對應的 shape variant。
+### 13.5 每片 4／6／8 Particle Group
 
-對應關係：
+「隨機 4／6／8」表示每個碎片在 Bake 時以可重現 Seed 選擇候選點數，再依碎片幾何驗證，不是無限制地在 Bounds 內亂數取點。
 
-| Group | Rest Points | Constraints | Rigid Groups | Modifier | Renderer |
-|---|---:|---:|---:|---|---|
-| Chain3 | 3 | Joint＋Bend | 0 | Oscillation | Asset Articulated |
-| DualRail6 | 6 | Joint＋Bend | 0 | Oscillation | Asset Articulated |
-| Articulated12 | 12 | 關節連接 | 3 | Oscillation | Asset Articulated |
-| Ice4 | 4 | 0 | 全部粒子一組 | Settling | Baked Procedural |
-| Ice6 | 6 | 0 | 全部粒子一組 | Settling | Baked Procedural |
-| Ice8 | 8 | 0 | 全部粒子一組 | Settling | Baked Procedural |
+候選策略：
 
-### 13.4 Editor Method Registry 與 Bake
+- 4 點：適合小型或接近四面體的碎片；四點必須不共平面。
+- 6 點：適合中型、長條或扁平碎片；點需覆蓋主要軸正負方向。
+- 8 點：適合大型或接近盒狀的碎片；點需覆蓋體積與各方向。
 
-Editor Registry 在第一次 Inspector 查詢時使用：
+每片必須通過：
 
-```csharp
-UnityEditor.TypeCache
-    .GetTypesWithAttribute<ProceduralMeshMethodAttribute>()
-```
+- Rest Positions 位於碎片內部或表面容差內。
+- 四面體體積或協方差秩高於退化門檻。
+- 粒子分布覆蓋碎片主要範圍，不集中在單一角落。
+- 粒子間距符合全域 `particleRadius` 與碰撞需求。
+- 視覺 Mesh 相對 Pivot、Center of Mass 與 Rest Pose 對齊。
 
-每個 Type 必須：
+若隨機選定的 4 點或 6 點無法可靠覆蓋碎片，Baker 必須升級到 6 或 8 點，或拒絕該碎片，不可序列化退化剛體。
 
-- 不是 abstract。
-- 實作 `IProceduralMeshMethod`。
-- 可以建立無參數實體，或由 Editor Registry 建立對應 Build Delegate。
+現有 `SolverManager.AddRigidBody()` 支援可變 particle indices；Extension 仍需：
 
-Editor 整合需：
+- 將固定長度 4 的 scratch 擴充為可重用的 8 點容量。
+- 依每片實際 variant 計算 Particle、Rigid Body 與 Rigid Reference requirements。
+- 在 C#、Compute 與 Shader 一致保存 Fragment/Variant mapping。
+- Spawn 容量不足時整片拒絕，不建立半個 Instance。
 
-1. 偵測重複 `Type.FullName`、無效介面與無法建立實體的錯誤。
-2. Inspector 找不到已序列化 Type 時保留原字串並顯示警告，不自動改成清單第一項。
-3. 提供 `Bake`、`Rebuild`、`Clear Baked Data` 操作。
-4. 以輸入 Hash 判斷 Rest Shape 或生成設定是否已改變；過期時顯示需要 Rebuild。
-5. 不在每次 `OnValidate()` 自動執行昂貴幾何重建。
+### 13.6 Runtime 生成與繪製
 
-不需要讓 Runtime asmdef 引用 `Yu5h1Lib.Common`，也不需要 Player 使用 `RuntimeTypeCache`。若未來確定需要 Runtime 動態生成，再另行加入 Runtime Registry 與 IL2CPP preservation。
+初版以整份 Bake Asset 一次生成為基準：
 
-程序 Mesh 契約只存在於 Authoring/Bake 路徑：
+- 每個 Fragment 建立一個 `SolverParticleInstance` 與一個 Rigid Group。
+- 碎片 Mesh 不建立逐片 Material。
+- 可先依 Fragment Mesh/Material 分批，再評估 Combined Fragment Mesh 與 per-vertex Fragment ID。
+- Renderer 必須保留 batch-local → global Instance mapping。
+- Runtime 不執行 Fracture、Convex Hull 或 Type 掃描。
 
-程序 Mesh 方法接收 Rest Shape，不讀取模擬中的即時 GPU Position：
+若冰塊只破碎一次並在場景中保留，可沿用 append-only 容量模型。只有產品需要反覆生成、銷毀與再破碎時，才將 Free List、Despawn 與 slot recycling 升為必要項目。
 
-```csharp
-public interface IProceduralMeshMethod
-{
-    bool Build(
-        in SolverProceduralMeshContext context,
-        Mesh target,
-        out string error);
-}
-```
+### 13.7 魚、碎片與箱體碰撞
 
-Context 至少包含：
-
-```text
-Local Rest Positions
-Topology / Shape Variant
-Base Dimensions
-可選的 Method Settings
-```
-
-Editor Bake 流程：
-
-```text
-Particle Group Rest Points
-        ↓
-Convex Hull 找出外殼 Face
-        ↓
-以 Group Center 修正 Triangle Winding
-        ↓
-計算朝外 Flat Normals
-        ↓
-寫入 Generated Mesh
-        ↓
-加入 SolverRenderProfile Sub-Asset
-        ↓
-保存 Source Hash 與 Variant Mapping
-```
-
-Group Center 只負責判斷已找到 Face 的朝向；哪些點屬於表面、哪些三點形成 Face，仍由 Convex Hull 決定。
-
-第一個內建方法為：
-
-```text
-ParticleConvexHullMethod
-```
-
-Voxel Surface、Marching Cubes、Metaball、任意凹面重建與來源 Mesh 碎片切割不屬於第一階段。
-
-### 13.5 Rest Shape 單一來源
-
-目前 `SolverParticleEmitter.BuildLocalShape()` 同時隱含了物理拓樸定義。實作前應將它抽成共用的 Group Definition Builder：
-
-```text
-SolverParticleGroupDefinitionBuilder
-        ↓ Editor Bake
-SolverParticleGroupBakeData
-        ├─ Runtime Emitter：建立物理粒子與 Rigid Body
-        └─ Editor Mesh Method：建立視覺外殼
-```
-
-不得讓 Emitter 與 Mesh Baker 各自維護不同的 4、6、8 點座標，也不得讓 Runtime 重新推導另一份 Rest Shape。
-
-第一版使用穩定模板，不使用可能退化的任意隨機座標：
-
-- 4 點：不共平面的四面體模板。
-- 6 點：沿正負 X、Y、Z 的八面體模板。
-- 8 點：立方體八角模板。
-
-「隨機 4、6、8」表示每次 Spawn 隨機選擇模板，不表示每顆粒子位置完全隨機。
-
-可見差異優先來自：
-
-- Instance Scale。
-- 非等比長寬高。
-- Spawn Rotation。
-- Color。
-- Shader Random Seed。
-
-若未來加入 Rest Position Jitter，必須先驗證：
-
-- 四點體積大於退化門檻。
-- Hull topology 沒有翻面或零面積 Triangle。
-- 相同 Batch 的頂點／索引契約仍可共用。
-
-### 13.6 4／6／8 剛體生成
-
-原始 `SolverManager.AddRigidBody()` 已能接收可變數量的 particle indices；主要修改集中在 Extension：
-
-- 將固定長度 4 的 rigid index scratch 改為至少 8，或改為可重用陣列。
-- 新增 4、6、8 Rest Shape 定義。
-- 容量預留依實際 variant 計算 particle 與 rigid particle reference 數量。
-- `SolverParticleInstance.particleCount` 保存實際點數。
-- Instance 記錄可辨識 render/shape variant。
-- 不讓每次 Spawn 配置新的 List 或 Array。
-
-需要決定並驗證 Instance 欄位配置：
-
-1. 使用目前未使用的 32-bit padding 保存 `shapeVariant`，維持 64-byte stride。
-2. 或正式擴充 struct 並同步修改所有 C#、Compute 與 Shader layout。
-
-優先選擇不增加 stride、但名稱與型別明確的欄位替換；不得只在 C# 端改 layout。
-
-### 13.7 Editor Bake 儲存與繪製批次
-
-程序 Mesh 不在 Type 掃描期間建立。真正的 `Build()` 只在 Editor 使用者按下 Bake/Rebuild 時發生：
-
-```text
-SolverRenderProfile Custom Editor
-        ↓
-Editor Registry.TryGet(methodType)
-        ↓
-讀取 SolverParticleGroupBakeData
-        ↓
-Build → Validate
-        ↓
-寫入／更新 SolverRenderProfile Sub-Asset
-```
-
-Bake Mapping 至少包含：
-
-```text
-Procedural Method Type
-Shape Variant（4／6／8）
-Source Hash
-會影響幾何的設定版本或 Hash
-Generated Mesh Reference
-```
-
-Instance Scale 不應造成新的 Bake Mesh；尺寸由 GPU Instance Scale 套用。Runtime 不建立或釋放 Generated Mesh，只讀取已序列化的 Mesh reference。
-
-若同一個 Emitter 混合 4、6、8，Renderer 不能用一個 Mesh 對全部 Instance 單次 Draw。第一版採每個 Mesh Variant 一個 Render Batch：
-
-```text
-RigidCluster4 Batch → 一次 Draw
-RigidCluster6 Batch → 一次 Draw
-RigidCluster8 Batch → 一次 Draw
-```
-
-需要建立每批 Instance Index Mapping，讓 Shader 由 batch-local instance ID 找回原始 `SolverParticleInstance`。不得為每顆冰塊建立獨立 GameObject、Material 或 Mesh。
-
-若第一階段希望先降低改動風險，可先使用三個 Emitter／Profile 各自持有 4、6、8 variant，再由 Spawn Controller 隨機分流；完成穩定驗證後才合併為單一 Emitter 多 Batch。
-
-Generated Mesh 優先保存為既有 `SolverRenderProfile` 的隱藏 Sub-Asset，而不是建立散落的獨立 `.asset` 或把大量重複幾何內嵌於每個 Scene。材質仍由 Render Profile 引用；同一組 4／6／8 Mesh 可以共用 Ice Material。
-
-### 13.8 箱體與魚／冰塊碰撞
-
-場景基準：
+基準驗證場景：
 
 ```text
 SolverManager
 ├─ Fish Emitter
-├─ Ice Emitter / Ice Spawn Controller
-└─ 五個 SolverBoxCollider
-   ├─ Bottom
-   ├─ Left
-   ├─ Right
-   ├─ Front
-   └─ Back
+├─ Ice Fracture Runtime
+└─ SolverBoxCollider Container
 ```
 
-必要設定：
+必須驗證：
 
 - `enableParticleCollisions = true`。
 - `cellSize >= 2 * particleRadius`。
-- 冰塊 Instance 之間不得共享會略過互撞的 Phase。
-- 魚與冰塊使用可互相碰撞的不同 Phase。
-- 牆角適度重疊，避免薄牆接縫。
-- 依堆積穩定度調整 `substeps`、friction 與 `maxDepenetrationSpeed`。
+- 碎片之間不使用會排除互撞的 Phase。
+- 魚與碎片可互撞。
+- 碎片與箱體底面、牆面及接縫可穩定碰撞。
+- 大碎片的 Rest Particles 足以代表其體積，不因視覺 Mesh 遠大於粒子覆蓋而穿透。
+- 調校 `substeps`、friction、`maxDepenetrationSpeed`、牆厚與初始 Spawn spacing。
 
-限制：
+視覺 Mesh 不是 Collision Mesh。4／6／8 粒子只是低成本近似；若某碎片無法由最多 8 點形成足夠的碰撞覆蓋，Baker 必須拆得更小、拒絕該片，或未來採用更高點數 Profile。
 
-- 全部 Profile 仍共用全域 `particleRadius`。
-- 4、6 點 Hull 是凸多面體，不是完整 Cube。
-- 8 點模板才直接形成 Cube 八角凸包。
-- 大尺寸 Group 若粒子間距遠大於 `2 * particleRadius`，魚仍可能穿過物理點之間的空隙；視覺 Convex Hull 不會自動成為連續碰撞面。
-- 真正封閉的大型冰塊碰撞需要增加表面／體積粒子，不能只靠 Renderer Mesh 解決。
+### 13.8 Sleep／Wake 是必要功能
 
-### 13.9 Settling 與 Sleep 分級
-
-#### Phase A：Settling Modifier
-
-先實作不修改原始 Solver 核心的低速穩定器：
+冰塊碎片不接受「速度很低但持續抖動」作為完成狀態。Sleep 必須是明確的 per-instance 狀態機：
 
 ```text
-Linear Speed Threshold
-Angular Speed Threshold
-Settle Delay
-Wake Threshold
+Awake
+  └─ 低於 Sleep Threshold
+      → Candidate
+          ├─ 再次運動 → Awake
+          └─ 持續超過 Sleep Delay → Sleeping
+
+Sleeping
+  └─ Impact／Force／Active Modifier／Manual Wake
+      → Awake
 ```
 
-行為：
+判定至少考慮：
 
-1. 以 Instance 為單位計算平均線速度與旋轉殘差。
-2. 低於門檻並持續指定時間後進入 settled 狀態。
-3. settled 時將該 Instance 粒子 velocity 歸零，並同步 `prevPosition = position`。
-4. 碰撞造成速度高於 Wake Threshold 時立即離開 settled。
-5. 使用不同的 sleep/wake threshold，避免門檻附近反覆切換。
+- 平均線速度。
+- 角速度或 Rest Pose 旋轉殘差。
+- 接觸／Constraint 修正量。
+- 低速持續時間。
+- 不同的 Sleep 與 Wake thresholds，形成 hysteresis。
 
-Settling 目標是降低可見抖動，不宣稱節省 Solver 運算；粒子仍存在於 Predict、Contact、Constraint 與 Rigid Body Kernel。
+Sleeping 行為：
 
-建議初始調校範圍：
+- 將 velocity 歸零並同步 `prevPosition = position`。
+- 整個 Rigid Group 一起睡眠或喚醒。
+- 保留為碰撞障礙，不能因睡眠消失。
+- 有效碰撞 impulse、穿透修正、移動 Collider、外力或手動要求能喚醒。
+- 碎片堆疊需驗證連鎖喚醒不會漏掉，也不會因微小接觸噪音整堆反覆醒來。
+
+Modifier 規則：
+
+- 任何會持續寫入 Position、Velocity、Force、Pose 或 Constraint target 的 Modifier 必須宣告 `KeepAwake`。
+- Modifier 啟用時立即喚醒對應 Instance。
+- Modifier 持續作用期間不得進入 Candidate 或 Sleeping。
+- Modifier 停止後重新開始計算 Sleep Delay。
+- 一次性 Modifier 可在完成後釋放 `KeepAwake`，但其施加的有效動量仍會自然保持 Awake。
+
+Extension-only 的 Settling 可先完成視覺停止與狀態機驗證，但它仍會經過原始 Solver kernels，不能宣稱節省 GPU 成本。要做到真正略過 Predict、Rigid Shape Matching 或其他核心運算，需要改動 Compute Pipeline；原始 vendored dependency 目前保持唯讀，因此在實作核心 Sleep 前必須由使用者另行授權受控修改或建立可維護 Fork。這個授權邊界不降低 Sleep/Wake 的產品優先級。
+
+建議初始參數僅作調校起點：
 
 ```text
-Linear Threshold：0.01～0.03 m/s
-Angular Threshold：依尺寸換算後調校
-Settle Delay：0.3～1.0 s
-Wake Threshold：高於 Sleep Threshold
+Linear Sleep Threshold：0.01～0.03 m/s
+Sleep Delay：0.3～1.0 s
+Wake Threshold：明顯高於 Sleep Threshold
 ```
 
-魚的主動 Oscillation Profile 預設禁止 Settling；冰塊 Profile 才啟用。
+### 13.9 實作順序
 
-#### Phase B：真正 Sleep/Wake
+#### Stage 1：Fracture 與 Bake 契約
 
-只有 Phase A 仍無法穩定或 GPU 成本需要下降時才進入：
+- 定義 `SolverFractureBakeData`、Fragment Record、版本、Hash、Seed 與 Requirements。
+- 建立 Editor Fracture API 與可重現測試。
+- 完成切面封閉、Winding、Normals、UV、Interior Material 與錯誤診斷。
 
-- sleeping particle 不執行重力積分。
-- sleeping rigid body 略過 Shape Matching。
-- Contact 將 sleeping body 視為零有效 inverse mass。
-- 撞擊、深度穿透、移動 Collider 或支撐物變化可以喚醒。
-- 一個 Instance 任一粒子被喚醒時，整個剛體一起喚醒。
-- 堆疊接觸需要驗證連鎖喚醒。
+#### Stage 2：Fragment Particle Groups
 
-真正 Sleep/Wake 會修改原始 Solver Compute Pipeline；依目前非侵入式邊界，實作前需要另外確認是否允許修改 vendored dependency，或先建立可維護的 upstream fork。
+- 為每片選擇並驗證 4／6／8 Rest Particles。
+- 建立非退化與覆蓋率驗證。
+- 擴充 variable rigid count、capacity estimate 與 scratch。
+- 保存 Fragment ID、Variant、Pivot、Center of Mass 與 Render mapping。
 
-### 13.10 實作階段
+#### Stage 3：Runtime Spawn 與 Render
 
-#### Stage 1：Particle Group 資料契約
+- 從 Bake Asset 一次建立所有 Fragment Instances。
+- 完成 Mesh/Material batches 與 instance index mapping。
+- 驗證視覺 Mesh、Rest Pose 與剛體運動一致。
 
-- 新增 `SolverParticleGroupBakeData`、constraint、rigid range 與 variant 資料。
-- 保留 `SolverParticleInstance` 作為唯一 Runtime Group Instance。
-- 將硬編碼 Requirements 改由 Group Definition/Bake Data 提供。
-- 定義 Bake Data 版本與 Source Hash。
+#### Stage 4：互動碰撞
 
-#### Stage 2：Rest Shape 與 4／6／8 Rigid Cluster
+- 建立魚、碎片與箱體基準場景。
+- 驗證碎片互撞、魚撞碎片與箱體接觸。
+- 記錄容量、穿透、接縫與不同碎片尺寸的限制。
 
-- 抽出共用 Group Definition Builder。
-- 建立穩定的 4、6、8 模板。
-- 擴充容量估算與可重用 scratch。
-- 讓 Instance 保存實際 particle count 與 shape variant。
-- 驗證三種剛體自由落下、旋轉與地面碰撞。
+#### Stage 5：Sleep／Wake 與 Modifier KeepAwake
 
-#### Stage 3：Editor Mesh Bake
+- 建立 Awake/Candidate/Sleeping state buffer 與 timer。
+- 實作線速度、角運動、接觸修正與 hysteresis 判定。
+- 實作 Impact、Force、Collider、Manual 與 Modifier wake。
+- 驗證無 Modifier 的靜置碎片停止抖動。
+- 驗證持續 Modifier 永不睡眠，停止後可以正常入睡。
+- 分別量測 Extension Settling 與核心 Sleep 的視覺穩定度及 GPU 成本。
 
-- 新增 `SolverMeshSource.Asset/Procedural`。
-- 新增 `[ProceduralMeshMethod]`。
-- 新增 `IProceduralMeshMethod` 與 Build Context。
-- 新增 Editor Lazy Registry 與 Type Popup。
-- 實作 Particle Convex Hull Builder。
-- 自動修正 outward winding，建立 Flat Normals、Bounds 與退化檢查。
-- 提供 Bake、Rebuild、Clear Baked Data。
-- 將 4／6／8 Generated Mesh 保存為 `SolverRenderProfile` Sub-Assets。
-- 保存 Source Hash，偵測過期 Bake。
-- 驗證 Asset 模式完全維持現有行為。
+#### Stage 6：生命週期與效能擴充
 
-#### Stage 4：Renderer Variant Batching
+- 只有反覆生成／銷毀成為需求時才加入 Despawn、Free List 與 slot recycling。
+- 大量碎片時評估 Combined Fragment Mesh、Fragment ID 與更少 Draw Calls。
+- 取得壓力測試數據後再決定更高粒子數的碰撞 Profile。
 
-- Runtime Renderer 只解析 Asset/Baked Mesh reference，不執行 Type 掃描或 Convex Hull。
-- 先以三 Emitter 路徑完成基準驗證。
-- 再加入單 Emitter 4／6／8 Instance 分批。
-- 建立 batch-local → global Instance Index Mapping。
-- 驗證每個 Variant 一次 Draw，不逐 Instance Draw。
+#### Stage 7：ParticleSystem × Unified Solver
 
-#### Stage 5：箱裝互動
+- 保留現有 `ParticleSystemSolverBridge` 的單向轉移用途。
+- `Documentation/ParticleSystem x Unified Solver.md` 暫時只維護能力邊界與長期方向。
+- 不在碎片物理完成前擴充 ParticleSystem 整合、通用 Emission、Lifetime 或 Renderer Proxy。
 
-- 建立五面 SolverBoxCollider 測試箱。
-- 混合生成不同 Scale 的冰塊。
-- 加入魚 Profile。
-- 驗證冰塊互撞、魚冰互撞、箱體碰撞與溢出。
-- 調校 substeps、friction、wall thickness 與 spawn spacing。
+### 13.10 驗收標準
 
-#### Stage 6：Settling Modifier
+#### Authoring
 
-- 建立 per-instance settling state/timer。
-- 加入 sleep/wake hysteresis。
-- 驗證靜置冰塊不抖動。
-- 驗證魚撞擊能重新推動冰塊。
-- 比較啟用前後視覺穩定度與 GPU 時間。
+- 相同 Mesh、設定、Seed 與版本產生相同碎片。
+- 所有輸出碎片封閉、無退化 Triangle，切面 Winding、Normals、UV 與 Material 正確。
+- Source/Settings Hash 過期時能偵測；Bake 失敗不破壞上一份有效資料。
+- 每片皆具有有效的 Pivot、Center of Mass、Mass、Bounds 與序列化 Mesh mapping。
 
-#### Stage 7：後續決策
+#### Particle Groups
 
-- 根據 Stage 6 壓力測試決定是否修改核心加入真正 Sleep/Wake。
-- 若只剩極小視覺抖動且效能足夠，停止於 Settling。
-- 若需要大量靜態堆積的實際 GPU 節省，再另立核心 Sleep/Wake 實作項目。
-- 只有確定需要任意來源 Mesh 破碎時，才研究第三方 Fracture 專案與建立獨立 `SolverFractureBaker` 計畫。
-
-### 13.11 驗收標準
-
-#### Registry
-
-- 新增帶 `[ProceduralMeshMethod]` 的有效 Type 後，不修改 enum 或中央註冊表即可出現在 Inspector。
-- Editor 能由已序列化字串解析相同 Type。
-- Missing Type 不會覆寫 Profile 資料。
-- 重複或無效 Type 產生清楚錯誤。
-- Player 不執行 Type 掃描、Activator 或程序 Mesh Build。
-
-#### Mesh
-
-- Asset 模式行為與目前一致。
-- Procedural 模式不需要人工建立或指定獨立 Mesh Asset。
-- 4、6、8 Rest Shape 都能建立朝外、無零面積 Triangle 的凸包。
-- Mesh 只在明確 Bake/Rebuild 時生成，不在 `OnValidate` 或 Runtime 每幀重建。
-- Generated Mesh 作為 `SolverRenderProfile` Sub-Asset 保存，Prefab、Scene 與 Build 可穩定引用。
-- Source Hash 過期時 Inspector 明確提示 Rebuild。
-- 相同 Variant 與設定共用同一份 Baked Mesh。
+- 每片只使用 4、6 或 8 個 Rest Particles，且通過非退化與覆蓋驗證。
+- Bake 可在候選失敗時升級點數或明確拒絕，不輸出不穩定 Group。
+- Spawn 容量不足時整片拒絕，不留下半生成資料。
 
 #### Physics
 
-- 三種冰塊都保持剛體形狀。
-- 不同 Scale 的物理點與視覺外殼對齊。
-- 冰塊之間、魚與冰塊之間都有碰撞。
-- 箱體靜置後沒有持續可見爆震或大量穿牆。
-- 容量不足時 Spawn 明確拒絕，不留下半生成 Instance。
+- 碎片保持剛體形狀，視覺 Mesh 與物理 Rest Pose 對齊。
+- 碎片之間、魚與碎片、碎片與箱體都有可重現碰撞。
+- 合理尺寸的碎片不因粒子覆蓋不足而明顯穿透。
 
-#### Settling
+#### Sleep／Wake
 
-- 低速冰塊在延遲後穩定。
-- 魚或其他冰塊的有效撞擊可以喚醒／推動已穩定冰塊。
-- 主動 Oscillation 的魚不會被誤判為 settled。
-- Settling 不改變 append-only 與容量語意。
+- 無持續 Modifier 的低動量碎片在延遲後停止可見抖動。
+- Sleeping 碎片仍阻擋其他物體。
+- 魚、其他碎片、外力、移動 Collider 或手動命令可喚醒碎片。
+- 持續 Modifier 作用期間 Instance 不會睡眠；停用後可重新進入 Sleep。
+- Sleep/Wake threshold 附近不會產生快速反覆切換。
 
-### 13.12 明確延後
+### 13.11 明確延後
 
-以下項目不屬於本階段：
+以下項目不阻塞第一個冰塊碎片垂直切片：
 
-- 每粒子不同 radius。
-- 任意凹面 Particle Surface reconstruction。
-- 每顆冰塊完全不同拓樸的獨立 Unity Mesh。
-- 任意來源 Mesh 的 Voronoi／平面切割、切面補洞、切面 UV 與多材質 Fracture Bake。
-- Combined Fragment Mesh、per-vertex Fragment ID 與專用 GPU Fracture Renderer。
+- Runtime 動態 Fracture 與碎片再次破碎。
+- Skinned Mesh、非流形 Mesh 與任意開放 Mesh 的自動修復。
 - MeshCollider／Triangle BVH 碰撞。
 - 粒子對 Unity Rigidbody 的雙向作用力。
-- 完整 Instance Despawn、Free List 與 Constraint/Rigid slot 回收。
-- 生命週期或高度 Fade 後的物理容量回收。
+- 完整 Despawn、Free List 與 Constraint/Rigid slot 回收。
+- ParticleSystem 的通用系統整合與 Soft Body 產品化。
+
+## 14. 身體形變的未來計畫
+
+本節記錄兩項已完成設計評估、但明確延後實作的項目。兩者都不阻塞目前的彎曲表演修正。
+
+### 14.1 Muscle 物理：以 restLength 調變產生真實力道
+
+#### 前提修正（2026-07-31）
+
+本節原本主張「kinematic 驅動永遠產生不了推地反作用力，因此非做 Muscle 不可」。**這個前提已由實測推翻，優先級隨之下降。**
+
+實際情形是：Modifier 的位置瞬移發生在 Solver 之後，該瞬移會把粒子壓進支撐物；下一幀 Solver 的碰撞把它夾回來，而 `UpdateVelocity` 用 `(position - prevPosition) / subDt` 把那段修正換算成速度。於是**外部反作用力一直都在被計算**，身體本來就頂得起來 —— 甚至強到需要另外加上限。詳見第 15 節。
+
+所以 Muscle 的價值不再是「唯一能產生彈跳的路」，而是把目前這個**偶發副作用**轉成**受控的設計特性**：
+
+- 力道由 `compliance` 決定，而不是由「瞬移穿透多深」決定。
+- 消除彈跳力道與 `substeps` 的耦合（見 15.2）。
+- 消除高速瞬移穿過薄物件的風險。
+- 形變與接觸在同一次求解內協商，方向與力矩自然成立，不需要外部再假造。
+
+動量中性本身不是缺陷。魚的肌肉是內部的，本來就不該憑空產生淨動量；增益來自地面，那是正當的外部來源。
+
+#### 可行性（已驗證）
+
+不需要修改唯讀的 vendored 依賴：
+
+- `DistanceConstraintGPU.restLength` 是 GPU buffer 中可寫的 float。
+- 原始 Solver 的 Compute 以 `RWStructuredBuffer<DistanceConstraint> _Constraints` 宣告。
+- `SolverManager.ConstraintBuffer` 是 public 屬性，不需反射，也不需經過 `SolverManagerAccess` 相容橋接。
+
+#### 設計
+
+把彎曲從「事後擺姿勢」改為「每幀調變 restLength」，由 Solver 自己產生彎曲。
+
+DualRail6 的兩條軌即為魚的兩側肌肉：
+
+```text
+rail A (x = +hx)：粒子 0, 2, 4   →  AddJoint(0,2) AddJoint(2,4)
+rail B (x = -hx)：粒子 1, 3, 5   →  AddJoint(1,3) AddJoint(3,5)
+rung（寬度）    ：AddJoint(0,1) (2,3) (4,5)
+```
+
+縮短 rail A 的 restLength 並拉長 rail B，身體即往 +X 彎；週期交替產生 C／反 C。
+
+得到的性質：
+
+- 彎曲與接觸在同一次求解內協商，反作用力自動成立，身體可頂起。
+- 接觸中的實體仍可彎曲，肌肉約束與接觸約束在同一輪公平競爭。
+- `compliance` 天然成為力道上限，是力而非瞬移。
+- 動量守恆天然成立，不需要手動扣除加權平均。
+
+#### 實作需求
+
+- 執行順序必須改到 Solver 之前（`SolverParticleModifierRunner` 目前是 `[DefaultExecutionOrder(50)]`）。
+- Emitter 必須在 Spawn 時記錄每條約束的 baseline restLength，每幀在 baseline 上調變。`SolverParticleInstance` 既有的 `constraintOffset` 與 `constraintCount` 足以定位範圍。
+- `_constraintsDirty` 為真的那一幀，Solver 會從 CPU list 重傳整個 buffer 並覆蓋調變。因為調變是每幀重算，下一幀即恢復，可接受。
+
+### 14.2 Topology 資料化
+
+#### 現況
+
+`Chain3`、`GuideChain4`、`DualRail6`、`ArticulatedCluster12` 四者的脊椎控制點數皆為 **3**。離軸粒子提供的是 Body Frame 與面內剛度，不是額外的彎曲自由度。因此四者皆只能表現 C-bend，無法表現具反曲點的 S-curve。
+
+#### 硬編碼位置
+
+資料化容易的部分：
+
+- `SolverParticleEmitter.BuildLocalShape()` 的 Rest 位置。
+- `SolverParticleEmitter.AddTopologyData()` 的約束接線。
+- `SolverParticleProfile.Requirements` 的數量宣告。
+
+真正的工作量在：
+
+- `SolverParticleModifiers.compute` 的 `ControlCenter(0/1/2)` 與 `BodyRanges()` 的頭／中／尾三段假設。
+- `SolverArticulatedMesh.shader` 的 `DeformVertex()`：目前是以 `longitudinal < 0.5` 分段、在相鄰兩個 Frame 之間混合的三骨骼 Linear Blend Skinning，必須推廣為 N 段迴圈。
+
+#### 觸發條件
+
+當「游動的行進波」成為需求時再實作。行進波需要 4 個以上的脊椎控制點才有意義；在此之前推廣為 N 段，換不到可見的表現力，卻要先重寫 Shader 與 Kernel。
+
+## 15. 身體彎曲與接觸彈跳（已實作）
+
+本節記錄 2026-07-31 完成的彎曲表演與彈跳機制，以及推導過程中確立的幾條物理關係。這些關係不是實作細節，調任何相關參數之前都需要先理解。
+
+### 15.1 彎曲驅動：角度式而非弦長式
+
+早期版本把頭尾投影回「當前頭尾軸」再計算弦長，導致該軸在數學上永遠無法擺動，身體只能中段鼓包。現版本改為兩段身體繞中段各旋轉 ±halfAngle：
+
+```text
+headOffset =  segmentLength × (tangent × cos + direction × sin)
+tailOffset = -segmentLength × (tangent × cos − direction × sin)
+```
+
+- 頭尾側向位移放大為原本的三倍，成為真正的圓弧掃掠。
+- `bendRatio` 語意不變：峰值側向位移仍是 `bendRatio × bodyLength`，透過 `asin(2 × bendRatio)` 等價映射。
+- 姿勢繞**加權質心**建構，權重與動量平衡一致，因此 delta 的加權和天然為零。GuideChain4 先前的 `positionMean = mΔ/4` 系統性側移殘差隨之消失。
+
+對稱 C 彎在幾何上不會旋轉頭尾弦向量，這是正確行為。若日後需要「頭穩、尾大幅掃」那種偏擺，需要的是**非對稱**驅動（只旋轉尾段），不是更多控制點。
+
+### 15.2 彈跳的來源：接觸反作用力，以及它與 substeps 的耦合
+
+彈跳不是任何欄位直接施加的，而是這條鏈的產物：
+
+```text
+Modifier 位置瞬移（無上限）
+  → 粒子被壓進支撐物
+  → Solver 硬夾回表面    p.position.y = minY
+  → UpdateVelocity       v = (position − prevPosition) / subDt
+```
+
+**關鍵是分母為 `subDt` 而非幀時間。** 以 `substeps = 30`、`fixedDeltaTime = 0.02` 計，`subDt = 6.67e-4`，穿透被放大約 1500 倍換算成速度；1 mm 穿透即產生 1.5 m/s。
+
+由此得到兩條必須記住的關係：
+
+- **彈跳力道與 `substeps` 成反比。** 把 `substeps` 從 30 降到 5，彈跳力道降為六分之一。這曾被誤認為「調 substeps 修好了彈跳」，實際上是拿布料剛性去換。
+- **`bendRatio = 0` 仍會彈跳。** 該值為 0 時速度通道寫入完全為零，目標姿勢是「完全筆直」，但 Modifier 仍每幀全力把被重力與接觸弄歪的身體扳正。位置修正的內容是「撤銷 Solver 剛做的事」，不是「推進彎曲動畫」，所以與彎曲振幅無關。
+
+### 15.3 `vitality`（活力）：把彈跳力道從副作用變成可指定值
+
+`SolverOscillationProfile.vitality` 夾限姿勢位移**沿重力軸方向**的分量，上限在 CPU 端由 Solver 自己的 `substeps` 反推：
+
+```csharp
+maxStepRise = vitality × (fixedDeltaTime / substeps)
+```
+
+於是 `彈跳速度 ≈ maxStepRise / subDt = vitality`，`subDt` 被消掉。
+
+欄位以「活力」而非物理量命名，因為那是使用者實際在畫面上判斷的東西：**0 看起來就是死魚 —— 仍會維持姿勢，但推不動任何東西；數值越高越顯得新鮮、有生命力。** 物理意義（公尺／秒的起跳速度上限）保留在 Tooltip。
+
+- 只測量垂直分量，因此貼著表面的橫向擺動不受影響。
+- 三個 delta 共用同一縮放係數，加權和維持為零，身體不會漂移。
+- **`substeps` 可自由調高以換取布料剛性與抗穿透，彈跳高度不變。** 這是 15.2 那條耦合的解法。
+
+### 15.4 已確立的邊界條件
+
+以下關係在調參前必須知道，否則會像本次一樣繞遠路：
+
+- **XPBD 沒有施力 API。** `Predict` 中的重力是唯一的力，且為寫死的 uniform，沒有 `_ExternalForce` buffer。外部只有兩個管道：寫 `velocity` 或寫 `position`。
+- **`Particle` 沒有接觸旗標。** 五個碰撞 kernel 只改 `position`，不寫任何狀態。接觸只能從速度特徵推論。
+- **約束 damping 被 compliance 縮放：** `gamma = compliance × damping / subDt`。**`compliance = 0` 時 gamma 恆為 0，`constraintDamping` 無論設多少都無效。** `ClothGenerator.compliance` 預設即為 0。
+- **全域 damping 是單一 uniform**，`UpdateVelocity` 不讀 `phase`，Solver 本身沒有分組機制。要 per-group damping 只能改 vendored 依賴（見 15.5）。
+- **從 Solver 外部注入的 velocity 幾乎無效。** `UpdateVelocity` 每個 substep 都以位置差覆寫 velocity，外部注入只在下一次 `Predict` 存活一個 substep。位置寫入才有實效 —— 但位置寫入會繞過碰撞偵測，量大時造成穿透。
+
+### 15.5 未採用的方案與原因
+
+- **Per-instance damping 補償（幀尾放大速度）** —— 對自由飛行數學上精確，但對受約束的實體完全失效，因為速度會被約束求解覆寫。damping 必須在 substep 迴圈內作用才有效，從迴圈外複製不出來。已移除。
+- **Fork vendored solver** —— 曾為了 per-group damping 評估。因 `ClothGenerator.compliance` 設為非零後 `constraintDamping` 即可運作，暫不需要。Sleep/Wake 核心仍會迫使這個決定重新浮上檯面（見 13.8）。
+- **`SolverManagerAdvanced` / `UnifiedSolverAdvanced`（在 extension 內複製一份）** —— 評估後否決。`SolverManager` 的 36 個欄位全為 private、0 個 protected，子類別無法存取模擬迴圈所需狀態，實際上等於複製 1558 行去改 4 行。且 handoff 的 SHA-256 保證會在字面成立的同時失去意義（證明的是一個沒在跑的檔案）。若真需修改，原地小改或完整 fork 都優於部分複製。

@@ -1,34 +1,13 @@
 #pragma kernel ApplyOscillation
 #pragma kernel ApplySurfaceImpulse
+#pragma kernel ApplyRollDamping
 
-struct Particle
-{
-    float3 position;
-    float3 velocity;
-    float3 prevPosition;
-    float invMass;
-    int phase;
-    float3 color;
-    uint visible;
-};
-
-struct SolverInstance
-{
-    int particleOffset;
-    int particleCount;
-    int constraintOffset;
-    int constraintCount;
-    int rigidBodyOffset;
-    int rigidBodyCount;
-    int topology;
-    int profileId;
-    float3 scale;
-    float padding;
-    float4 spawnRotation;
-};
+#include "../Shaders/SolverBodyFrameTypes.hlsl"
 
 RWStructuredBuffer<Particle> _Particles;
 StructuredBuffer<SolverInstance> _Instances;
+
+#include "../Shaders/SolverBodyFrame.hlsl"
 
 uint _InstanceCount;
 float _Time;
@@ -41,231 +20,17 @@ float _OscillationDirectionAngle;
 float _OscillationDirectionRandomness;
 float _OscillationBendRatio;
 float _OscillationBendRandomness;
+float _OscillationMaxStepRise;
+float3 _OscillationUpAxis;
 
-float _SurfaceAcceleration;
-float _SurfaceY;
-float _SurfaceContactDistance;
+float _RollDamping;
+
+float _SurfaceImpulseSpeed;
+float _SurfaceSpreadSeconds;
+float _SurfaceDebugTint;
+float _SurfaceContactSpeed;
 float _SurfaceFrequency;
 float _SurfaceRandomness;
-float _SurfacePulseThreshold;
-
-static const int TOPOLOGY_CHAIN_3 = 3;
-static const int TOPOLOGY_GUIDE_4 = 4;
-static const int TOPOLOGY_DUAL_RAIL_6 = 6;
-static const int TOPOLOGY_ARTICULATED_12 = 12;
-static const float TWO_PI = 6.28318530718;
-
-float Hash01(uint value)
-{
-    value ^= value >> 16;
-    value *= 0x7feb352du;
-    value ^= value >> 15;
-    value *= 0x846ca68bu;
-    value ^= value >> 16;
-    return
-        (value & 0x00ffffffu) /
-        16777215.0;
-}
-
-float3 RotateByQuaternion(
-    float3 value,
-    float4 rotation)
-{
-    float3 t =
-        2.0 * cross(rotation.xyz, value);
-    return value +
-        rotation.w * t +
-        cross(rotation.xyz, t);
-}
-
-float3 SafePerpendicular(
-    float3 candidate,
-    float3 tangent,
-    float3 fallback)
-{
-    float3 projected =
-        candidate -
-        tangent * dot(candidate, tangent);
-    float projectedLength = length(projected);
-    if (projectedLength > 1e-5)
-        return projected / projectedLength;
-
-    projected =
-        fallback -
-        tangent * dot(fallback, tangent);
-    projectedLength = length(projected);
-    if (projectedLength > 1e-5)
-        return projected / projectedLength;
-
-    float3 axis =
-        abs(tangent.x) < 0.8
-            ? float3(1.0, 0.0, 0.0)
-            : float3(0.0, 0.0, 1.0);
-    return normalize(
-        axis -
-        tangent * dot(axis, tangent));
-}
-
-float3 LimitMagnitude(
-    float3 value,
-    float maximumLength)
-{
-    float valueLength = length(value);
-    if (valueLength <= maximumLength ||
-        valueLength <= 1e-6)
-    {
-        return value;
-    }
-
-    return
-        value *
-        (maximumLength / valueLength);
-}
-
-float3 ControlCenter(
-    SolverInstance instance,
-    uint control)
-{
-    uint particleBase =
-        (uint)instance.particleOffset;
-    if (instance.topology ==
-        TOPOLOGY_DUAL_RAIL_6)
-    {
-        uint pair =
-            particleBase + control * 2u;
-        return (
-            _Particles[pair].position +
-            _Particles[pair + 1u].position) *
-            0.5;
-    }
-
-    if (instance.topology ==
-        TOPOLOGY_ARTICULATED_12)
-    {
-        uint start =
-            particleBase + control * 4u;
-        return (
-            _Particles[start].position +
-            _Particles[start + 1u].position +
-            _Particles[start + 2u].position +
-            _Particles[start + 3u].position) *
-            0.25;
-    }
-
-    return _Particles[
-        particleBase + control].position;
-}
-
-float3 ControlVelocity(
-    SolverInstance instance,
-    uint control)
-{
-    uint particleBase =
-        (uint)instance.particleOffset;
-    if (instance.topology ==
-        TOPOLOGY_DUAL_RAIL_6)
-    {
-        uint pair =
-            particleBase + control * 2u;
-        return (
-            _Particles[pair].velocity +
-            _Particles[pair + 1u].velocity) *
-            0.5;
-    }
-
-    if (instance.topology ==
-        TOPOLOGY_ARTICULATED_12)
-    {
-        uint start =
-            particleBase + control * 4u;
-        return (
-            _Particles[start].velocity +
-            _Particles[start + 1u].velocity +
-            _Particles[start + 2u].velocity +
-            _Particles[start + 3u].velocity) *
-            0.25;
-    }
-
-    return _Particles[
-        particleBase + control].velocity;
-}
-
-float3 SideCandidate(
-    SolverInstance instance,
-    float3 middle)
-{
-    uint particleBase =
-        (uint)instance.particleOffset;
-    if (instance.topology ==
-        TOPOLOGY_GUIDE_4)
-    {
-        return
-            _Particles[
-                particleBase + 3u].position -
-            middle;
-    }
-
-    if (instance.topology ==
-        TOPOLOGY_DUAL_RAIL_6)
-    {
-        return
-            _Particles[
-                particleBase + 2u].position -
-            _Particles[
-                particleBase + 3u].position;
-    }
-
-    if (instance.topology ==
-        TOPOLOGY_ARTICULATED_12)
-    {
-        uint start = particleBase + 4u;
-        return
-            (_Particles[start].position +
-             _Particles[start + 3u].position) -
-            (_Particles[start + 1u].position +
-             _Particles[start + 2u].position);
-    }
-
-    return RotateByQuaternion(
-        float3(1.0, 0.0, 0.0),
-        instance.spawnRotation);
-}
-
-void BodyRanges(
-    SolverInstance instance,
-    out uint headStart,
-    out uint headCount,
-    out uint middleStart,
-    out uint middleCount,
-    out uint tailStart,
-    out uint tailCount)
-{
-    headStart = 0u;
-    headCount = 1u;
-    middleStart = 1u;
-    middleCount = 1u;
-    tailStart = 2u;
-    tailCount = 1u;
-
-    if (instance.topology ==
-        TOPOLOGY_DUAL_RAIL_6)
-    {
-        headCount = 2u;
-        middleStart = 2u;
-        middleCount = 2u;
-        tailStart = 4u;
-        tailCount = 2u;
-    }
-    else if (instance.topology ==
-        TOPOLOGY_ARTICULATED_12)
-    {
-        headCount = 4u;
-        middleStart = 4u;
-        middleCount = 4u;
-        tailStart = 8u;
-        tailCount = 4u;
-    }
-}
 
 [numthreads(64, 1, 1)]
 void ApplyOscillation(
@@ -320,33 +85,13 @@ void ApplyOscillation(
     if (bodyLength <= 1e-5)
         return;
 
-    float3 baseX =
-        RotateByQuaternion(
-            float3(1.0, 0.0, 0.0),
-            instance.spawnRotation);
-    float3 baseY =
-        RotateByQuaternion(
-            float3(0.0, 1.0, 0.0),
-            instance.spawnRotation);
-    float3 baseZ =
-        RotateByQuaternion(
-            float3(0.0, 0.0, 1.0),
-            instance.spawnRotation);
-    float3 tangentCandidate = head - tail;
-    float tangentLength =
-        length(tangentCandidate);
-    float3 tangent =
-        tangentLength > 1e-5
-            ? tangentCandidate / tangentLength
-            : baseY;
-    float3 side = SafePerpendicular(
-        SideCandidate(instance, middle),
-        tangent,
-        baseX);
-    float3 normal = SafePerpendicular(
-        cross(side, tangent),
-        tangent,
-        baseZ);
+    // Same frame the articulated mesh shader skins with. Physics and visuals
+    // must not build the body frame from two separate implementations.
+    ControlFrame bodyFrame =
+        GetFrame(instance, 1u);
+    float3 tangent = bodyFrame.tangent;
+    float3 side = bodyFrame.side;
+    float3 normal = bodyFrame.normal;
     float angle = radians(
         _OscillationDirectionAngle +
         directionRandom *
@@ -363,21 +108,22 @@ void ApplyOscillation(
         _OscillationBendRatio * bendScale,
         0.0,
         0.5);
-    float bendAmplitude =
-        bodyLength * bendRatio;
-    float targetBend =
-        bendAmplitude * wave;
-    float targetBendVelocity =
-        bendAmplitude *
+    // Amplitude is expressed as an angle, not as a chord offset. The previous
+    // chord form placed head and tail back onto the current head-tail axis, so
+    // that axis could never swing and the body only pulsed its middle sideways.
+    // Rotating both segments about the middle sweeps head and tail through a
+    // real arc, which is what reads as a beat instead of a twitch.
+    //
+    // The mapping keeps the documented meaning of bendRatio: at peak the
+    // lateral offset of head and tail is still bendRatio * bodyLength.
+    float peakHalfAngle =
+        asin(saturate(2.0 * bendRatio));
+    float halfAngle =
+        peakHalfAngle * wave;
+    float halfAngleVelocity =
+        peakHalfAngle *
         cos(phase) *
         angularFrequency;
-    float3 headVelocity =
-        ControlVelocity(instance, 0u);
-    float3 middleVelocity =
-        ControlVelocity(instance, 1u);
-    float3 tailVelocity =
-        ControlVelocity(instance, 2u);
-
     uint headStart;
     uint headCount;
     uint middleStart;
@@ -408,98 +154,158 @@ void ApplyOscillation(
 
     float segmentLength =
         bodyLength * 0.5;
-    targetBend = clamp(
-        targetBend,
-        -segmentLength * 0.98,
-        segmentLength * 0.98);
-    float halfChord = sqrt(max(
-        0.0,
-        segmentLength * segmentLength -
-        targetBend * targetBend));
-    float3 bodyCenter =
-        (head + middle + tail) /
-        3.0;
-    float3 desiredHead =
-        bodyCenter +
-        tangent * halfChord -
-        direction * (targetBend / 3.0);
-    float3 desiredMiddle =
-        bodyCenter +
-        direction *
-        (targetBend * (2.0 / 3.0));
-    float3 desiredTail =
-        bodyCenter -
-        tangent * halfChord -
-        direction * (targetBend / 3.0);
-    float3 headDeltaPosition =
-        desiredHead - head;
-    float3 middleDeltaPosition =
-        desiredMiddle - middle;
-    float3 tailDeltaPosition =
-        desiredTail - tail;
-    float3 positionMean = (
-        headDeltaPosition * (float)headCount +
-        middleDeltaPosition *
-            (float)drivenMiddleCount +
-        tailDeltaPosition * (float)tailCount) /
-        totalDrivenCount;
-    headDeltaPosition -= positionMean;
-    middleDeltaPosition -= positionMean;
-    tailDeltaPosition -= positionMean;
+    float sinHalf = sin(halfAngle);
+    float cosHalf = cos(halfAngle);
 
-    float halfChordVelocity =
-        halfChord > 1e-5
-            ? -targetBend *
-                targetBendVelocity /
-                halfChord
-            : 0.0;
-    float3 bodyCenterVelocity =
-        (headVelocity +
-         middleVelocity +
-         tailVelocity) /
-        3.0;
-    float3 desiredHeadVelocity =
-        bodyCenterVelocity +
-        tangent * halfChordVelocity -
-        direction *
-            (targetBendVelocity / 3.0);
-    float3 desiredMiddleVelocity =
-        bodyCenterVelocity +
-        direction *
-            (targetBendVelocity *
-             (2.0 / 3.0));
-    float3 desiredTailVelocity =
-        bodyCenterVelocity -
-        tangent * halfChordVelocity -
-        direction *
-            (targetBendVelocity / 3.0);
+    // Segment directions, head and tail rotated by +/- halfAngle about middle.
+    // Both ends offset to the same side of the middle, which is the C bend.
+    float3 headDirection =
+        tangent * cosHalf +
+        direction * sinHalf;
+    float3 tailDirection =
+        tangent * cosHalf -
+        direction * sinHalf;
+    float3 headOffset =
+        segmentLength * headDirection;
+    float3 middleOffset =
+        float3(0.0, 0.0, 0.0);
+    float3 tailOffset =
+        -segmentLength * tailDirection;
+
+    // Build the pose around the same weighted centroid the momentum balance
+    // uses. Building on an unweighted centroid and balancing on a weighted one
+    // leaves a residual that translates the whole body sideways every frame,
+    // which GuideChain4 hit because its middle carries the extra guide.
+    float headWeight = (float)headCount;
+    float middleWeight = (float)drivenMiddleCount;
+    float tailWeight = (float)tailCount;
+    float3 weightedCenter = (
+        head * headWeight +
+        middle * middleWeight +
+        tail * tailWeight) /
+        totalDrivenCount;
+    float3 weightedOffsetMean = (
+        headOffset * headWeight +
+        middleOffset * middleWeight +
+        tailOffset * tailWeight) /
+        totalDrivenCount;
+    float3 headDeltaPosition =
+        weightedCenter +
+        headOffset -
+        weightedOffsetMean -
+        head;
+    float3 middleDeltaPosition =
+        weightedCenter +
+        middleOffset -
+        weightedOffsetMean -
+        middle;
+    float3 tailDeltaPosition =
+        weightedCenter +
+        tailOffset -
+        weightedOffsetMean -
+        tail;
+
+    // Cap how far the pose may be driven along the gravity axis in one step.
+    //
+    // This correction is not "advance the animation", it is "undo whatever the
+    // solver just did", so it stays large even at bendRatio 0, where the target
+    // is a perfectly straight body and the velocity channel writes nothing at
+    // all. Any part of it aimed downward becomes penetration, and the solver
+    // turns penetration into velocity by dividing by the substep, not the
+    // frame: at thirty substeps that is a 1500x amplification, which is why a
+    // straight body still launches and why lowering substeps appeared to fix it.
+    //
+    // Only the vertical component is measured, so bending across a surface is
+    // untouched and only motion that can push into one is limited. All three
+    // deltas share one scale so their weighted sum stays zero and the body does
+    // not drift.
+    float largestRise = max(
+        abs(dot(
+            headDeltaPosition,
+            _OscillationUpAxis)),
+        max(
+            abs(dot(
+                middleDeltaPosition,
+                _OscillationUpAxis)),
+            abs(dot(
+                tailDeltaPosition,
+                _OscillationUpAxis))));
+    // Zero vitality has to stop everything, including a correction that happens
+    // to be purely horizontal. Scaling by the vertical component alone leaves
+    // such a correction with nothing to measure against, so it would pass
+    // through at full strength while every other body froze, and a full
+    // strength drive re-enters the roll feedback loop the frame is subject to.
+    float positionScale = 1.0;
+    if (_OscillationMaxStepRise <= 0.0)
+    {
+        positionScale = 0.0;
+    }
+    else if (largestRise > _OscillationMaxStepRise)
+    {
+        positionScale =
+            _OscillationMaxStepRise / largestRise;
+    }
+
+    headDeltaPosition *= positionScale;
+    middleDeltaPosition *= positionScale;
+    tailDeltaPosition *= positionScale;
+
+    // Analytic derivative of the pose above.
+    float3 headDirectionRate =
+        (-tangent * sinHalf +
+          direction * cosHalf) *
+        halfAngleVelocity;
+    float3 tailDirectionRate =
+        (-tangent * sinHalf -
+          direction * cosHalf) *
+        halfAngleVelocity;
+    float3 headOffsetVelocity =
+        segmentLength * headDirectionRate;
+    float3 middleOffsetVelocity =
+        float3(0.0, 0.0, 0.0);
+    float3 tailOffsetVelocity =
+        -segmentLength * tailDirectionRate;
+    // Velocity carries only the pose's own rate of change. It must not try to
+    // cancel the particle's existing velocity: a body resting on a net or hung
+    // under tension has large contact-driven velocity spread, and folding that
+    // into the drive let the clamp below collapse and take the position channel
+    // with it. Bending has to win over contact response, not be throttled by it.
+    float3 weightedOffsetVelocityMean = (
+        headOffsetVelocity * headWeight +
+        middleOffsetVelocity * middleWeight +
+        tailOffsetVelocity * tailWeight) /
+        totalDrivenCount;
+    float3 headDeltaVelocity =
+        headOffsetVelocity -
+        weightedOffsetVelocityMean;
+    float3 middleDeltaVelocity =
+        middleOffsetVelocity -
+        weightedOffsetVelocityMean;
+    float3 tailDeltaVelocity =
+        tailOffsetVelocity -
+        weightedOffsetVelocityMean;
+
+    // The pose is always reached in full. Only the momentum injected on top of
+    // it is limited, so a low acceleration yields a beat with less follow
+    // through rather than a body that cannot bend at all.
     float maximumVelocityCorrection =
         max(0.0, _OscillationAcceleration) *
         _DeltaTime;
-    float3 headDeltaVelocity =
-        LimitMagnitude(
-            desiredHeadVelocity -
-            headVelocity,
-            maximumVelocityCorrection);
-    float3 middleDeltaVelocity =
-        LimitMagnitude(
-            desiredMiddleVelocity -
-            middleVelocity,
-            maximumVelocityCorrection);
-    float3 tailDeltaVelocity =
-        LimitMagnitude(
-            desiredTailVelocity -
-            tailVelocity,
-            maximumVelocityCorrection);
-    float3 velocityMean = (
-        headDeltaVelocity * (float)headCount +
-        middleDeltaVelocity *
-            (float)drivenMiddleCount +
-        tailDeltaVelocity * (float)tailCount) /
-        totalDrivenCount;
-    headDeltaVelocity -= velocityMean;
-    middleDeltaVelocity -= velocityMean;
-    tailDeltaVelocity -= velocityMean;
+    float largestDeltaVelocity = max(
+        length(headDeltaVelocity),
+        max(
+            length(middleDeltaVelocity),
+            length(tailDeltaVelocity)));
+    float velocityScale =
+        (largestDeltaVelocity >
+            maximumVelocityCorrection &&
+         largestDeltaVelocity > 1e-6)
+            ? maximumVelocityCorrection /
+              largestDeltaVelocity
+            : 1.0;
+    headDeltaVelocity *= velocityScale;
+    middleDeltaVelocity *= velocityScale;
+    tailDeltaVelocity *= velocityScale;
 
     for (uint headIndex = 0u;
          headIndex < headCount;
@@ -581,6 +387,180 @@ void ApplyOscillation(
     }
 }
 
+// Removes a fraction of a control group's spin about the body axis.
+//
+// Nothing in the topology resists rotation about the long axis: the distance
+// constraints are indifferent to it, and every driver applies the same delta to
+// every particle in a group, so a group is free to keep rolling once it starts.
+// The result is a bend plane that precesses around the body and reads as a
+// corkscrew. Damping the roll rate leaves genuine tumbling intact while
+// stopping the spiral from accumulating.
+//
+// Equal and opposite impulses about the group centre, so linear momentum is
+// untouched. Groups of one particle carry no roll information and are skipped,
+// which is why Chain3 and GuideChain4 cannot be stabilised this way.
+void DampGroupRoll(
+    uint particleBase,
+    uint start,
+    uint count,
+    float3 axis,
+    float strength)
+{
+    if (count < 2u)
+        return;
+
+    float3 center = float3(0.0, 0.0, 0.0);
+    float3 meanVelocity = float3(0.0, 0.0, 0.0);
+    uint i;
+    for (i = 0u; i < count; i++)
+    {
+        Particle particle =
+            _Particles[particleBase + start + i];
+        center += particle.position;
+        meanVelocity += particle.velocity;
+    }
+    float inverseCount = 1.0 / (float)count;
+    center *= inverseCount;
+    meanVelocity *= inverseCount;
+
+    float angularNumerator = 0.0;
+    float inertia = 0.0;
+    for (i = 0u; i < count; i++)
+    {
+        Particle particle =
+            _Particles[particleBase + start + i];
+        float3 radius =
+            particle.position - center;
+        float3 radialPerpendicular =
+            radius -
+            axis * dot(radius, axis);
+        float3 relativeVelocity =
+            particle.velocity - meanVelocity;
+        angularNumerator += dot(
+            cross(
+                radialPerpendicular,
+                relativeVelocity),
+            axis);
+        inertia += dot(
+            radialPerpendicular,
+            radialPerpendicular);
+    }
+
+    if (inertia <= 1e-8)
+        return;
+
+    float3 deltaAngularVelocity =
+        axis *
+        (-strength *
+         angularNumerator /
+         inertia);
+    for (i = 0u; i < count; i++)
+    {
+        uint index =
+            particleBase + start + i;
+        Particle particle = _Particles[index];
+        if (particle.invMass > 0.0)
+        {
+            float3 radius =
+                particle.position - center;
+            float3 radialPerpendicular =
+                radius -
+                axis * dot(radius, axis);
+            particle.velocity += cross(
+                deltaAngularVelocity,
+                radialPerpendicular);
+        }
+        _Particles[index] = particle;
+    }
+}
+
+[numthreads(64, 1, 1)]
+void ApplyRollDamping(
+    uint3 dispatchID : SV_DispatchThreadID)
+{
+    uint instanceIndex = dispatchID.x;
+    if (instanceIndex >= _InstanceCount)
+        return;
+
+    SolverInstance instance =
+        _Instances[instanceIndex];
+    if (instance.topology != TOPOLOGY_DUAL_RAIL_6 &&
+        instance.topology != TOPOLOGY_ARTICULATED_12)
+    {
+        return;
+    }
+
+    float strength = saturate(_RollDamping);
+    if (strength <= 0.0)
+        return;
+
+    float3 axis =
+        GetFrame(instance, 1u).tangent;
+
+    uint headStart;
+    uint headCount;
+    uint middleStart;
+    uint middleCount;
+    uint tailStart;
+    uint tailCount;
+    BodyRanges(
+        instance,
+        headStart,
+        headCount,
+        middleStart,
+        middleCount,
+        tailStart,
+        tailCount);
+    uint particleBase =
+        (uint)instance.particleOffset;
+
+    DampGroupRoll(
+        particleBase,
+        headStart,
+        headCount,
+        axis,
+        strength);
+    DampGroupRoll(
+        particleBase,
+        middleStart,
+        middleCount,
+        axis,
+        strength);
+    DampGroupRoll(
+        particleBase,
+        tailStart,
+        tailCount,
+        axis,
+        strength);
+}
+
+// Seconds elapsed since this instance's most recent hop started.
+//
+// Solved in closed form from the phase rather than tracked, so spreading a hop
+// across many steps needs no per-instance timer buffer.
+float SurfaceTimeSinceHop(
+    float time,
+    float frequencyScale,
+    float random)
+{
+    float angularFrequency =
+        _SurfaceFrequency *
+        frequencyScale *
+        TWO_PI;
+    if (angularFrequency <= 1e-6)
+        return 3.402823466e+38;
+
+    float phase =
+        time * angularFrequency +
+        random * TWO_PI;
+    // floor rounds toward negative infinity, so this wraps correctly for the
+    // negative phases that occur before the first hop of a run.
+    float sinceHop =
+        phase -
+        TWO_PI * floor(phase / TWO_PI);
+    return sinceHop / angularFrequency;
+}
+
 [numthreads(64, 1, 1)]
 void ApplySurfaceImpulse(
     uint3 dispatchID : SV_DispatchThreadID)
@@ -593,23 +573,62 @@ void ApplySurfaceImpulse(
         _Instances[instanceIndex];
     uint particleBase =
         (uint)instance.particleOffset;
-    float minimumY = 3.402823466e+38;
-    for (int minimumIndex = 0;
-         minimumIndex < instance.particleCount;
-         minimumIndex++)
+    if (instance.particleCount <= 0)
+        return;
+
+    // Momentum gate, in place of a contact flag.
+    //
+    // The solver stores no collision state: Particle carries only position,
+    // velocity, prevPosition, invMass, phase, color and visible, and none of
+    // the collision kernels write anything but position. So contact has to be
+    // inferred, and the reliable signature is that a supported instance stops
+    // while a free one keeps accelerating under gravity.
+    //
+    // The test must use the mean, not individual particles. ApplyOscillation
+    // and ApplyRollDamping both run earlier in the same step and write large
+    // per-particle velocities, but both are constructed so their deltas sum to
+    // zero across the instance. That leaves the centre of mass velocity clean
+    // no matter how hard the body is bending, which no per-particle test would
+    // survive.
+    //
+    // Being agnostic to what is doing the supporting is the point: ground,
+    // colliders, a sagging cloth net or a pile of other bodies all read the
+    // same, where a world-space height plane could only ever describe the first.
+    float3 meanVelocity =
+        float3(0.0, 0.0, 0.0);
+    uint movableCount = 0u;
+    for (int contactIndex = 0;
+         contactIndex < instance.particleCount;
+         contactIndex++)
     {
-        minimumY = min(
-            minimumY,
+        Particle contactParticle =
             _Particles[
                 particleBase +
-                (uint)minimumIndex].position.y);
+                (uint)contactIndex];
+        if (contactParticle.invMass <= 0.0)
+            continue;
+        meanVelocity +=
+            contactParticle.velocity;
+        movableCount++;
     }
 
-    if (minimumY >
-        _SurfaceY + _SurfaceContactDistance)
-    {
+    if (movableCount == 0u)
         return;
-    }
+
+    // Reject only the falling case, not motion in general.
+    //
+    // Testing total speed instead cuts the spread window short: the launch
+    // itself raises the mean speed past any threshold low enough to detect
+    // resting, so the gate closes after a step or two and delivers a fraction
+    // of the intended impulse. The gentler the spread, the sooner it
+    // self-terminates, which defeats the whole point.
+    //
+    // Downward motion is the honest airborne signal. A supported body has its
+    // descent cancelled and sits near zero, a falling one keeps gaining speed
+    // from gravity, and a body already rising under its own launch is left
+    // alone to finish its window. Total stays bounded because the window, not
+    // this test, is what limits it.
+    meanVelocity /= (float)movableCount;
 
     float random =
         Hash01(instanceIndex * 2u + 5u);
@@ -617,24 +636,60 @@ void ApplySurfaceImpulse(
         1.0 - _SurfaceRandomness,
         1.0 + _SurfaceRandomness,
         random);
-    float wave = sin(
-        _Time *
-        _SurfaceFrequency *
-        frequencyScale *
-        TWO_PI +
-        random * TWO_PI);
-    float denominator = max(
-        0.0001,
-        1.0 - _SurfacePulseThreshold);
-    float pulse = saturate(
-        (wave - _SurfacePulseThreshold) /
-        denominator);
-    float3 deltaVelocity =
-        float3(0.0, 1.0, 0.0) *
-        (_SurfaceAcceleration *
-         pulse *
-         _DeltaTime);
+    float timeSinceHop = SurfaceTimeSinceHop(
+        _Time,
+        frequencyScale,
+        random);
 
+    // Resolved as a state rather than early returns so the debug tint can name
+    // which branch was taken. Tinting only the firing path cannot distinguish a
+    // kernel that never ran from one that ran and was gated, which are opposite
+    // problems.
+    //   0 firing      red
+    //   1 falling     yellow
+    //   2 between hops grey
+    int hopState = 0;
+    if (meanVelocity.y < -_SurfaceContactSpeed)
+        hopState = 1;
+    else if (timeSinceHop >=
+             _SurfaceSpreadSeconds)
+        hopState = 2;
+
+    float3 debugColor =
+        hopState == 0
+            ? float3(1.0, 0.2, 0.1)
+            : hopState == 1
+                ? float3(1.0, 0.9, 0.1)
+                : float3(0.25, 0.25, 0.25);
+
+
+    // Spread the launch over a window instead of delivering it in one step.
+    //
+    // Force is momentum over time, so handing the same total speed over a
+    // window ten times longer presses on whatever the body rests against with
+    // a tenth of the force, while the body still ends up at the same speed.
+    // Delivered in a single step it reads to the cloth solver as an impact,
+    // and since a caught body is tangled in the mesh, that impact is what gets
+    // returned: the net gets flung instead of the body.
+    //
+    // This stands in for muscle rebound, so a weak reaction on the support is
+    // the goal, not a compromise. It cannot reach zero. The body is entangled
+    // and the solver's contacts still obey Newton's third law, so only routing
+    // the launch outside contact entirely would, which this kinematic approach
+    // cannot do.
+    //
+    // Launch through velocity only. Never move position here.
+    //
+    // Teleporting position skips collision entirely: the solver resolves
+    // contacts from positions, so a body displaced centimetres in one step
+    // passes straight through a cloth mesh instead of pushing on it, and the
+    // support shows no reaction at all. It also makes the height depend on how
+    // many steps the gate happened to allow, since every skipped step is lift
+    // permanently lost.
+    //
+    // Raising velocity leaves the solver to move the body, so contacts, the
+    // support's reaction and the arc all stay real, and a step lost to the gate
+    // only fails to top the speed up rather than subtracting from the hop.
     for (int particleIndex = 0;
          particleIndex < instance.particleCount;
          particleIndex++)
@@ -643,8 +698,20 @@ void ApplySurfaceImpulse(
             particleBase +
             (uint)particleIndex;
         Particle particle = _Particles[index];
-        if (particle.invMass > 0.0)
-            particle.velocity += deltaVelocity;
+        if (particle.invMass > 0.0 &&
+            hopState == 0)
+        {
+            // Raised to the launch speed rather than accumulated onto it, so a
+            // long window cannot stack into a runaway on a body that never gets
+            // to move, and every hop leaves at the same speed wherever it
+            // started. Holding the floor across the window keeps gravity from
+            // eating the launch before the body is clear.
+            particle.velocity.y = max(
+                particle.velocity.y,
+                _SurfaceImpulseSpeed);
+        }
+        if (_SurfaceDebugTint > 0.5)
+            particle.color = debugColor;
         _Particles[index] = particle;
     }
 }

@@ -1,253 +1,262 @@
 {
   "schema_version": "1.0",
-  "report_id": "unified-solver-ice-packing",
+  "report_id": "unified-solver-ice-fragment-physics",
   "scope_id": "unified-solver",
-  "title": "Unified Solver 冰塊裝箱與程序外殼計畫",
-  "updated_at": "2026-07-29T23:54:12+08:00",
+  "title": "Unified Solver 擴充：身體形變與冰塊碎片物理",
+  "updated_at": "2026-07-31T00:00:00+08:00",
   "tasks": [
     {
-      "id": "particle-group-contract",
-      "title": "共用 Particle Group 資料契約",
-      "status": "planned",
+      "id": "body-bend-performance",
+      "title": "身體彎曲表演與接觸彈跳",
+      "status": "done",
       "priority": 0,
-      "summary": "建立魚與冰塊共用的 Group Bake Data，保留 SolverParticleInstance 作為唯一 Runtime Group Instance，讓結構、行為、顯示與生成策略彼此分離。",
+      "summary": "共用 Body Frame 標頭消除物理與蒙皮的分歧；彎曲改為角度式驅動，產生 C／反 C 交替；Roll 阻尼消除麻花捲；vitality（活力）將接觸彈跳從 substeps 的副作用轉為可指定值。Modifier 具備 enabled 開關，Emitter 會自動補上 Runner。詳見 plan.md 第 15 節。",
       "pending_items": [
         {
-          "id": "define-group-bake-data",
-          "title": "定義 Rest Positions、Constraints、Rigid Groups、Controls、Requirements 與 Variant 的可序列化資料",
-          "priority": 0
+          "id": "decide-acceleration-field",
+          "title": "acceleration 只夾速度通道且預設值下從未生效，待比對 0 與 120 的畫面差異後決定保留或移除",
+          "priority": 2
         },
         {
-          "id": "retain-runtime-instance",
-          "title": "保留 SolverParticleInstance 作為唯一 Runtime Group Instance，補上 Shape Variant 對應",
-          "priority": 0
-        },
-        {
-          "id": "derive-requirements-from-group",
-          "title": "讓容量需求由 Group Definition／Bake Data 推導，移除重複硬編碼",
+          "id": "body-settling-sleep",
+          "title": "低動量實體需要 Settling／Sleep 以消除殘留 glitch，與 fragment-sleep-wake 為同一需求",
           "priority": 1
         },
         {
-          "id": "version-group-bake-data",
-          "title": "定義 Bake Data 版本與來源 Hash",
-          "priority": 2
+          "id": "relocate-roll-damping",
+          "title": "Roll 阻尼是結構屬性卻由 Modifier Runner 派發，應移入 Emitter",
+          "priority": 3
         }
       ]
     },
     {
-      "id": "rigid-group-variants",
-      "title": "4／6／8 點剛體 Group",
+      "id": "fracture-bake-contract",
+      "title": "碎片 Bake 資料契約",
       "status": "planned",
       "priority": 0,
-      "summary": "建立穩定的四面體、八面體與立方體八角模板，讓不同尺寸冰塊共用通用 Emitter 與 Rigid Body 管線。",
+      "summary": "定義可重現且版本化的 SolverFractureBakeData，保存來源 Hash、設定、Seed、碎片幾何、4／6／8 Rest Particles、Rigid Requirements 與 Runtime Mapping。",
       "pending_items": [
         {
-          "id": "extract-group-definition-builder",
-          "title": "從 Emitter 抽出共用 Group Definition Builder",
+          "id": "define-fracture-asset",
+          "title": "定義 Fracture Asset、Fragment Record、版本與 Source／Settings Hash",
           "priority": 0
         },
         {
-          "id": "build-rigid-templates",
-          "title": "建立非退化的 4／6／8 Rest Shape 模板",
+          "id": "define-fragment-physics-data",
+          "title": "保存 Pivot、Center of Mass、Bounds、Volume、Mass、Rest Positions 與 Rigid Particle Indices",
+          "priority": 0
+        },
+        {
+          "id": "define-fragment-render-data",
+          "title": "保存 Fragment Mesh 或 Combined Mesh Range、Material／SubMesh 與 Instance Mapping",
+          "priority": 0
+        },
+        {
+          "id": "make-bake-transactional",
+          "title": "Bake 失敗時保留上一份有效資料，避免留下半成品",
+          "priority": 1
+        }
+      ]
+    },
+    {
+      "id": "editor-ice-fracture",
+      "title": "Editor 冰塊 Mesh 切割",
+      "status": "planned",
+      "priority": 0,
+      "summary": "以固定 Seed 在 Editor 將來源冰塊 Mesh 切為封閉不規則碎片，完成切面補洞、Winding、Normals、UV、Interior Material 與幾何驗證。",
+      "pending_items": [
+        {
+          "id": "implement-deterministic-cutting",
+          "title": "實作可重現的平面或 Voronoi 切割",
+          "priority": 0
+        },
+        {
+          "id": "build-interior-surfaces",
+          "title": "建立封閉切面、朝外 Winding、Normals、UV 與 Interior SubMesh",
+          "priority": 0
+        },
+        {
+          "id": "reject-invalid-fragments",
+          "title": "排除退化 Triangle、極小孤島、非封閉與非流形輸出",
+          "priority": 0
+        },
+        {
+          "id": "add-fracture-inspector",
+          "title": "提供 Bake、Rebuild、Clear 與 Stale Hash 診斷",
+          "priority": 1
+        }
+      ]
+    },
+    {
+      "id": "fragment-rigid-groups",
+      "title": "每片 4／6／8 點剛體 Group",
+      "status": "planned",
+      "priority": 0,
+      "summary": "每個碎片依可重現 Seed 與幾何條件選擇 4、6 或 8 個非退化 Rest Particles；候選覆蓋不足時升級點數或拒絕 Bake。",
+      "pending_items": [
+        {
+          "id": "select-fragment-particles",
+          "title": "建立 4／6／8 候選點選取策略",
+          "priority": 0
+        },
+        {
+          "id": "validate-particle-volume",
+          "title": "驗證非共平面、協方差秩、體積、粒子間距與碎片覆蓋率",
+          "priority": 0
+        },
+        {
+          "id": "upgrade-invalid-variants",
+          "title": "4／6 點候選不足時升級到較高點數或明確拒絕",
           "priority": 0
         },
         {
           "id": "support-variable-rigid-counts",
-          "title": "擴充容量估算、Rigid Particle References 與可重用 Scratch 以支援可變點數",
-          "priority": 1
-        },
-        {
-          "id": "add-spawn-variant-policy",
-          "title": "加入每次 Spawn 隨機選擇 4／6／8 模板的 Variant Policy",
-          "priority": 1
-        },
-        {
-          "id": "verify-rigid-variants",
-          "title": "驗證三種 Group 的落下、旋轉、Shape Matching 與容量拒絕",
+          "title": "擴充 Rigid Scratch、Capacity Requirements 與 Fragment／Variant Mapping",
           "priority": 0
         }
       ]
     },
     {
-      "id": "editor-mesh-bake",
-      "title": "Editor 程序 Mesh Bake",
+      "id": "fragment-runtime-rendering",
+      "title": "碎片 Runtime 生成與批次繪製",
       "status": "planned",
       "priority": 0,
-      "summary": "以無參數 ProceduralMeshMethod Attribute 和 UnityEditor.TypeCache 發現生成方法，在 Editor 將 Group Rest Shape Bake 為 SolverRenderProfile 隱藏 Sub-Assets；Player 不執行反射或 Convex Hull。",
+      "summary": "由 Bake Asset 為每片建立一個 SolverParticleInstance 與 Rigid Group，並以 Mesh／Material Batch 繪製，不在 Runtime 重新切割或建立逐片 Material。",
       "pending_items": [
         {
-          "id": "define-procedural-authoring-contract",
-          "title": "新增 Asset／Procedural Authoring Source、Marker Attribute、Method Interface 與 Build Context",
+          "id": "spawn-fragment-instances",
+          "title": "一次建立全部 Fragment Instances 與 Rigid Groups",
           "priority": 0
         },
         {
-          "id": "build-editor-method-registry",
-          "title": "建立 Type.FullName 字串到 Method Type 的 Editor Lazy Registry 與 Inspector Popup",
+          "id": "build-fragment-batches",
+          "title": "建立 Mesh／Material Batch 與 Batch-local 到 Global Instance Mapping",
           "priority": 1
         },
         {
-          "id": "implement-particle-convex-hull",
-          "title": "實作 Particle Convex Hull、朝外 Winding、Flat Normals、Bounds 與退化檢查",
+          "id": "verify-render-pose",
+          "title": "驗證 Fragment Mesh、Pivot、Center of Mass 與 Rest Pose 對齊",
           "priority": 0
         },
         {
-          "id": "add-bake-controls",
-          "title": "提供 Bake、Rebuild、Clear Baked Data 與過期 Hash 提示",
-          "priority": 1
-        },
-        {
-          "id": "store-generated-subassets",
-          "title": "將 4／6／8 Generated Mesh 保存為 SolverRenderProfile 隱藏 Sub-Assets",
-          "priority": 0
-        },
-        {
-          "id": "preserve-asset-render-mode",
-          "title": "驗證既有 Asset Mesh 與魚的 Articulated Renderer 行為不變",
+          "id": "reject-partial-spawn",
+          "title": "容量不足時整片拒絕，不建立半生成 Instance",
           "priority": 0
         }
       ]
     },
     {
-      "id": "renderer-variant-batching",
-      "title": "4／6／8 Renderer Variant Batching",
+      "id": "fragment-collision-validation",
+      "title": "魚、碎片與箱體碰撞",
       "status": "planned",
-      "priority": 1,
-      "summary": "Runtime 只讀取已 Bake Mesh，依 Shape Variant 分批繪製，避免每顆冰塊建立 GameObject、Material 或獨立 Mesh。",
+      "priority": 0,
+      "summary": "在同一 SolverManager 驗證碎片互撞、魚撞碎片與箱體碰撞，並確認最多 8 點的物理覆蓋足以代表碎片體積。",
       "pending_items": [
         {
-          "id": "validate-three-emitter-baseline",
-          "title": "先以三個 Emitter／Profile 驗證 4／6／8 各一個繪製批次",
-          "priority": 1
-        },
-        {
-          "id": "build-instance-index-mapping",
-          "title": "建立 Batch-local 到 Global SolverParticleInstance 的 Index Mapping",
-          "priority": 1
-        },
-        {
-          "id": "support-single-emitter-batches",
-          "title": "支援單一 Emitter 中混合 4／6／8 Variant 分批",
-          "priority": 2
-        },
-        {
-          "id": "verify-draw-counts",
-          "title": "驗證每個 Variant 一次 Draw 且不逐 Instance Draw",
-          "priority": 1
-        }
-      ]
-    },
-    {
-      "id": "ice-fish-container-validation",
-      "title": "冰塊、魚與箱體裝箱驗證",
-      "status": "planned",
-      "priority": 1,
-      "summary": "在同一 SolverManager 中以五面 SolverBoxCollider 建立開口箱，驗證不同尺寸冰塊、魚與箱體的碰撞及堆積。",
-      "pending_items": [
-        {
-          "id": "build-five-wall-container",
-          "title": "建立底板與四面牆的 SolverBoxCollider 測試箱",
-          "priority": 1
-        },
-        {
-          "id": "spawn-mixed-ice-scales",
-          "title": "混合生成不同尺寸及 4／6／8 Variant 冰塊",
-          "priority": 1
-        },
-        {
-          "id": "verify-cross-profile-collisions",
-          "title": "驗證冰塊互撞、魚冰互撞與箱體碰撞的 Phase 設定",
+          "id": "build-fragment-test-scene",
+          "title": "建立魚、碎片與 SolverBoxCollider 箱體基準場景",
           "priority": 0
         },
         {
-          "id": "tune-container-stability",
+          "id": "verify-phase-collisions",
+          "title": "驗證碎片互撞、魚碎片互撞與箱體碰撞的 Phase 設定",
+          "priority": 0
+        },
+        {
+          "id": "validate-particle-coverage",
+          "title": "找出會因 4／6／8 點覆蓋不足而穿透的碎片並在 Bake 階段拒絕",
+          "priority": 0
+        },
+        {
+          "id": "tune-stacking",
           "title": "調校 Substeps、Friction、Depenetration、牆厚與 Spawn Spacing",
           "priority": 1
-        },
-        {
-          "id": "measure-capacity-limits",
-          "title": "記錄 Particle、Rigid Body、Rigid Reference 與 Collider 容量邊界",
-          "priority": 2
         }
       ]
     },
     {
-      "id": "settling-modifier",
-      "title": "冰塊 Settling 穩定器",
+      "id": "fragment-sleep-wake",
+      "title": "碎片 Sleep／Wake 與 Modifier KeepAwake",
       "status": "planned",
-      "priority": 1,
-      "summary": "以 Instance 為單位加入低速門檻、延遲與喚醒遲滯，先降低裝箱冰塊的可見抖動，不宣稱節省 Solver 核心運算。",
+      "priority": 0,
+      "summary": "建立 Awake／Candidate／Sleeping 狀態機；低動量持續後停止抖動，撞擊、外力、移動 Collider 或 Modifier 可喚醒，持續 Modifier 作用期間禁止睡眠。 身體彎曲工作流同樣需要 Settling／Sleep 來消除殘留 glitch，因此本項不再只服務碎片。",
       "pending_items": [
         {
-          "id": "add-settling-state-buffer",
-          "title": "建立 Per-instance Settling State 與 Timer",
-          "priority": 1
-        },
-        {
-          "id": "measure-instance-motion",
-          "title": "計算 Group 平均線速度與旋轉殘差",
-          "priority": 1
-        },
-        {
-          "id": "apply-sleep-wake-hysteresis",
-          "title": "加入不同的 Settle 與 Wake Threshold，避免門檻附近反覆切換",
-          "priority": 1
-        },
-        {
-          "id": "exclude-active-fish",
-          "title": "確保啟用 Oscillation 的魚不會被誤判為 Settled",
+          "id": "add-sleep-state-buffer",
+          "title": "建立 Per-instance Sleep State、Timer 與 KeepAwake Flag",
           "priority": 0
         },
         {
-          "id": "verify-impact-wake",
-          "title": "驗證魚或其他冰塊撞擊能重新推動已穩定冰塊",
+          "id": "measure-sleep-metrics",
+          "title": "量測平均線速度、角運動、接觸／Constraint 修正量與持續時間",
           "priority": 0
+        },
+        {
+          "id": "add-sleep-hysteresis",
+          "title": "以不同 Sleep／Wake Threshold 與 Delay 避免反覆切換",
+          "priority": 0
+        },
+        {
+          "id": "implement-wake-sources",
+          "title": "支援 Impact、Force、移動 Collider、Manual 與 Modifier Wake",
+          "priority": 0
+        },
+        {
+          "id": "enforce-modifier-keep-awake",
+          "title": "持續寫入狀態的 Modifier 啟用時立即喚醒且持續禁止睡眠",
+          "priority": 0
+        },
+        {
+          "id": "decide-core-sleep-implementation",
+          "title": "先驗證 Extension Settling；若要略過核心 Kernels，取得授權後修改 vendored core 或建立維護 Fork",
+          "priority": 1
         }
       ]
     },
     {
-      "id": "sleep-wake-decision",
-      "title": "真正 Sleep／Wake 決策",
+      "id": "fragment-lifecycle-scaling",
+      "title": "碎片生命週期與大量繪製擴充",
       "status": "planned",
-      "priority": 3,
-      "summary": "Settling 壓力測試後才決定是否修改原始 Solver Compute Pipeline；只有需要實際 GPU 節省時才建立完整 Sleep、Contact Wake 與連鎖喚醒。",
+      "priority": 2,
+      "summary": "只有反覆生成／銷毀或大量碎片成為實際需求時，才加入 Free List、slot recycling、Combined Fragment Mesh 與 Fragment ID Renderer。",
       "pending_items": [
         {
-          "id": "profile-settling-result",
-          "title": "比較 Settling 啟用前後的視覺穩定度與 GPU 時間",
+          "id": "confirm-repeated-fracture-lifecycle",
+          "title": "確認是否需要反覆生成、銷毀與再次破碎",
           "priority": 2
         },
         {
-          "id": "decide-core-sleep-scope",
-          "title": "判斷是否需要修改 Predict、Contact、Rigid Shape Matching 與 Update Velocity",
-          "priority": 3
+          "id": "plan-slot-recycling",
+          "title": "需要時設計 Particle、Constraint、Rigid 與 Reference slot recycling",
+          "priority": 2
         },
         {
-          "id": "confirm-vendored-core-authority",
-          "title": "若需修改核心，先確認 vendored dependency 或 upstream fork 的維護方式",
+          "id": "profile-combined-fragment-renderer",
+          "title": "大量碎片時評估 Combined Mesh、per-vertex Fragment ID 與 Draw Call 收益",
           "priority": 3
         }
       ]
     },
     {
-      "id": "fracture-baker-evaluation",
-      "title": "任意來源 Mesh 破碎評估",
+      "id": "particlesystem-unified-solver",
+      "title": "ParticleSystem × Unified Solver 長期計畫",
       "status": "planned",
       "priority": 4,
-      "summary": "此項目明確延後；只有產品確定需要 Voronoi／平面切割來源 Mesh 時，才比較第三方專案並規劃獨立 SolverFractureBaker，不阻塞冰塊裝箱。",
+      "summary": "保留現有單向 ParticleSystemSolverBridge 與能力邊界文件；在冰塊碎片物理完成前，不擴充通用 ParticleSystem 系統整合。",
       "pending_items": [
         {
-          "id": "confirm-fracture-product-need",
-          "title": "確認任意來源 Mesh 破碎是否為實際產品需求",
+          "id": "keep-bridge-stable",
+          "title": "維持現有 Trigger 後單向轉移 Bridge，不擴大雙向同步",
           "priority": 4
         },
         {
-          "id": "review-fracture-projects",
-          "title": "比較授權、Unity 6 相容性、切面補洞、UV、SubMesh 與 Editor Bake 能力",
+          "id": "maintain-boundary-document",
+          "title": "只維護 ParticleSystem／Solver 所有權與長期 Soft Body 方向",
           "priority": 4
         },
         {
-          "id": "plan-fracture-render-data",
-          "title": "若採用，另行設計 Combined Fragment Mesh、Fragment ID 與 GPU Renderer",
+          "id": "resume-after-fragment-physics",
+          "title": "碎片物理完成後才重新排定 ParticleSystem 整合可行性",
           "priority": 4
         }
       ]

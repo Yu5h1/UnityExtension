@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Yu5h1.UnifiedSolver
 {
@@ -11,14 +12,17 @@ namespace Yu5h1.UnifiedSolver
             "SolverParticleModifiers";
         const int ThreadsPerGroup = 64;
 
-        [Tooltip("Optional override. When empty, loads Resources/SolverParticleModifiers.compute.")]
-        public ComputeShader computeShader;
+        [FormerlySerializedAs("computeShader")]
+        [Tooltip("Leave empty for normal use: the packaged Resources/SolverParticleModifiers.compute is loaded automatically. Assign one only to run a modified copy of that compute instead. It must declare the same kernels and uniforms.")]
+        public ComputeShader overrideCompute;
 
         SolverParticleEmitter _emitter;
         ComputeShader _runtimeCompute;
         int _oscillationKernel = -1;
         int _surfaceImpulseKernel = -1;
+        int _rollDampingKernel = -1;
         bool _reportedMissingCompute;
+        bool _reportedModifiers;
 
         void Awake()
         {
@@ -39,31 +43,89 @@ namespace Yu5h1.UnifiedSolver
                 return;
             }
 
+            SetSharedParameters();
+
+            // Structural, not a modifier: an instance with no modifier attached
+            // still must not corkscrew when something pushes it.
+            DispatchRollDamping();
+
             SolverParticleModifierProfile[] modifiers =
                 _emitter.profile.modifiers;
             if (modifiers == null ||
                 modifiers.Length == 0)
             {
+                ReportModifiersOnce(modifiers, 0);
                 return;
             }
 
-            SetSharedParameters();
+            int dispatched = 0;
             for (int i = 0; i < modifiers.Length; i++)
             {
                 SolverParticleModifierProfile modifier =
                     modifiers[i];
+                if (modifier == null ||
+                    !modifier.enabled)
+                {
+                    continue;
+                }
+
                 if (modifier is SolverOscillationProfile
                     oscillation)
                 {
                     DispatchOscillation(oscillation);
+                    dispatched++;
                 }
                 else if (modifier is
                     SolverSurfaceImpulseProfile
                     surface)
                 {
                     DispatchSurfaceImpulse(surface);
+                    dispatched++;
                 }
             }
+
+            ReportModifiersOnce(modifiers, dispatched);
+        }
+
+        // A modifier that is authored but never referenced by the profile is
+        // indistinguishable in play from one that runs and does nothing, so say
+        // outright what was found. Logged once, on the first step that runs.
+        void ReportModifiersOnce(
+            SolverParticleModifierProfile[] modifiers,
+            int dispatched)
+        {
+            if (_reportedModifiers)
+                return;
+
+            _reportedModifiers = true;
+            var names = new System.Text.StringBuilder();
+            int count = modifiers == null
+                ? 0
+                : modifiers.Length;
+            for (int i = 0; i < count; i++)
+            {
+                names.Append(i == 0 ? "" : ", ");
+                if (modifiers[i] == null)
+                {
+                    names.Append("<null>");
+                    continue;
+                }
+
+                names.Append(
+                    modifiers[i].GetType().Name);
+                if (!modifiers[i].enabled)
+                    names.Append(" (disabled)");
+            }
+            if (count == 0)
+                names.Append("EMPTY");
+
+            Debug.Log(
+                $"SolverParticleModifierRunner on " +
+                $"'{name}': profile " +
+                $"'{_emitter.profile.name}' lists " +
+                $"{count} modifier(s) " +
+                $"[{names}], {dispatched} dispatched.",
+                this);
         }
 
         void SetSharedParameters()
@@ -77,6 +139,20 @@ namespace Yu5h1.UnifiedSolver
             _runtimeCompute.SetFloat(
                 "_DeltaTime",
                 Time.fixedDeltaTime);
+        }
+
+        void DispatchRollDamping()
+        {
+            float rollDamping =
+                _emitter.profile.rollDamping;
+            if (rollDamping <= 0f)
+                return;
+
+            _runtimeCompute.SetFloat(
+                "_RollDamping",
+                rollDamping);
+            BindBuffers(_rollDampingKernel);
+            Dispatch(_rollDampingKernel);
         }
 
         void DispatchOscillation(
@@ -103,6 +179,26 @@ namespace Yu5h1.UnifiedSolver
             _runtimeCompute.SetFloat(
                 "_OscillationBendRandomness",
                 profile.bendRandomness);
+
+            // Vitality is authored as the launch speed a body may reach, but
+            // the kernel can only limit distance, and the solver converts
+            // distance to velocity by dividing by the substep. Converting here
+            // with the solver's own substep count is what keeps bodies looking
+            // equally lively when substeps are raised for cloth stiffness.
+            SolverManager solver = _emitter.Solver;
+            float subDeltaTime =
+                Time.fixedDeltaTime /
+                Mathf.Max(1, solver.substeps);
+            _runtimeCompute.SetFloat(
+                "_OscillationMaxStepRise",
+                profile.vitality * subDeltaTime);
+            Vector3 up =
+                solver.gravity.sqrMagnitude > 1e-8f
+                    ? -solver.gravity.normalized
+                    : Vector3.up;
+            _runtimeCompute.SetVector(
+                "_OscillationUpAxis",
+                up);
             BindBuffers(_oscillationKernel);
             Dispatch(_oscillationKernel);
         }
@@ -110,15 +206,17 @@ namespace Yu5h1.UnifiedSolver
         void DispatchSurfaceImpulse(
             SolverSurfaceImpulseProfile profile)
         {
+            float spreadSeconds =
+                SurfaceSpreadSeconds(profile);
             _runtimeCompute.SetFloat(
-                "_SurfaceAcceleration",
-                profile.acceleration);
+                "_SurfaceSpreadSeconds",
+                spreadSeconds);
             _runtimeCompute.SetFloat(
-                "_SurfaceY",
-                profile.surfaceY);
+                "_SurfaceImpulseSpeed",
+                profile.impulseSpeed);
             _runtimeCompute.SetFloat(
-                "_SurfaceContactDistance",
-                profile.contactDistance);
+                "_SurfaceContactSpeed",
+                profile.fallSpeedLimit);
             _runtimeCompute.SetFloat(
                 "_SurfaceFrequency",
                 profile.frequency);
@@ -126,10 +224,36 @@ namespace Yu5h1.UnifiedSolver
                 "_SurfaceRandomness",
                 profile.frequencyRandomness);
             _runtimeCompute.SetFloat(
-                "_SurfacePulseThreshold",
-                profile.pulseThreshold);
+                "_SurfaceDebugTint",
+                profile.debugTintOnHop ? 1f : 0f);
             BindBuffers(_surfaceImpulseKernel);
             Dispatch(_surfaceImpulseKernel);
+        }
+
+        // Impact Spread is authored in fixed steps because that is the unit the
+        // lift is delivered in: the body rises impulseSpeed * fixedDeltaTime per
+        // step for this many steps, so total lift is impulseSpeed * spread *
+        // fixedDeltaTime before ballistic flight adds to it.
+        //
+        // Capped below the cycle period so a hop always finishes before the
+        // next one starts. Without that, raising Impact Spread past the period
+        // would leave the window permanently open and turn the hop back into
+        // the continuous push this design replaced.
+        static float SurfaceSpreadSeconds(
+            SolverSurfaceImpulseProfile profile)
+        {
+            float step = Mathf.Max(
+                1e-5f,
+                Time.fixedDeltaTime);
+            float spread =
+                Mathf.Max(1f, profile.impactSpread) *
+                step;
+            float period =
+                1f /
+                Mathf.Max(1e-4f, profile.frequency);
+            return Mathf.Max(
+                step,
+                Mathf.Min(spread, period * 0.9f));
         }
 
         void BindBuffers(int kernel)
@@ -160,7 +284,7 @@ namespace Yu5h1.UnifiedSolver
             if (_runtimeCompute != null)
                 return true;
 
-            ComputeShader source = computeShader;
+            ComputeShader source = overrideCompute;
             if (source == null)
             {
                 source =
@@ -188,6 +312,9 @@ namespace Yu5h1.UnifiedSolver
             _surfaceImpulseKernel =
                 _runtimeCompute.FindKernel(
                     "ApplySurfaceImpulse");
+            _rollDampingKernel =
+                _runtimeCompute.FindKernel(
+                    "ApplyRollDamping");
             return true;
         }
 

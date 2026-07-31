@@ -13,43 +13,13 @@ Shader "Yu5h1/UnifiedSolver/ArticulatedMesh"
 
         CGINCLUDE
         #include "UnityCG.cginc"
-
-        struct Particle
-        {
-            float3 position;
-            float3 velocity;
-            float3 prevPosition;
-            float invMass;
-            int phase;
-            float3 color;
-            uint visible;
-        };
-
-        struct SolverInstance
-        {
-            int particleOffset;
-            int particleCount;
-            int constraintOffset;
-            int constraintCount;
-            int rigidBodyOffset;
-            int rigidBodyCount;
-            int topology;
-            int profileId;
-            float3 scale;
-            float padding;
-            float4 spawnRotation;
-        };
-
-        struct ControlFrame
-        {
-            float3 center;
-            float3 tangent;
-            float3 side;
-            float3 normal;
-        };
+        #include "SolverBodyFrameTypes.hlsl"
 
         StructuredBuffer<Particle> _Particles;
         StructuredBuffer<SolverInstance> _Instances;
+
+        #include "SolverBodyFrame.hlsl"
+
         float3 _MeshCenter;
         float3 _BaseVisualScale;
         float3 _BaseDimensions;
@@ -59,23 +29,6 @@ Shader "Yu5h1/UnifiedSolver/ArticulatedMesh"
         sampler2D _BaseMap;
         float4 _BaseMap_ST;
         float4 _Tint;
-
-        static const int TOPOLOGY_SINGLE = 0;
-        static const int TOPOLOGY_CHAIN_3 = 3;
-        static const int TOPOLOGY_GUIDE_4 = 4;
-        static const int TOPOLOGY_DUAL_RAIL_6 = 6;
-        static const int TOPOLOGY_ARTICULATED_12 = 12;
-
-        float3 RotateByQuaternion(
-            float3 value,
-            float4 rotation)
-        {
-            float3 t =
-                2.0 * cross(rotation.xyz, value);
-            return value +
-                rotation.w * t +
-                cross(rotation.xyz, t);
-        }
 
         float AxisCoordinate(float3 value)
         {
@@ -102,180 +55,6 @@ Shader "Yu5h1/UnifiedSolver/ArticulatedMesh"
             if (_MeshForwardAxis == 1)
                 return value;
             return float3(value.x, value.z, value.y);
-        }
-
-        float3 SafePerpendicular(
-            float3 candidate,
-            float3 tangent,
-            float3 fallback)
-        {
-            float3 projected =
-                candidate -
-                tangent * dot(candidate, tangent);
-            float lengthProjected = length(projected);
-            if (lengthProjected > 1e-5)
-                return projected / lengthProjected;
-
-            projected =
-                fallback -
-                tangent * dot(fallback, tangent);
-            lengthProjected = length(projected);
-            if (lengthProjected > 1e-5)
-                return projected / lengthProjected;
-
-            float3 axis =
-                abs(tangent.x) < 0.8
-                    ? float3(1.0, 0.0, 0.0)
-                    : float3(0.0, 0.0, 1.0);
-            return normalize(
-                axis -
-                tangent * dot(axis, tangent));
-        }
-
-        float3 ControlCenter(
-            SolverInstance instance,
-            uint control)
-        {
-            uint particleBase =
-                (uint)instance.particleOffset;
-            if (instance.topology ==
-                TOPOLOGY_SINGLE)
-            {
-                return
-                    _Particles[
-                        particleBase].position;
-            }
-
-            if (instance.topology ==
-                TOPOLOGY_DUAL_RAIL_6)
-            {
-                uint pair =
-                    particleBase + control * 2u;
-                return (
-                    _Particles[pair].position +
-                    _Particles[pair + 1u].position) *
-                    0.5;
-            }
-
-            if (instance.topology ==
-                TOPOLOGY_ARTICULATED_12)
-            {
-                uint start =
-                    particleBase + control * 4u;
-                return (
-                    _Particles[start].position +
-                    _Particles[start + 1u].position +
-                    _Particles[start + 2u].position +
-                    _Particles[start + 3u].position) *
-                    0.25;
-            }
-
-            return _Particles[
-                particleBase + control].position;
-        }
-
-        float3 SideCandidate(
-            SolverInstance instance,
-            uint control,
-            float3 middle)
-        {
-            uint particleBase =
-                (uint)instance.particleOffset;
-            if (instance.topology ==
-                TOPOLOGY_GUIDE_4)
-            {
-                return
-                    _Particles[
-                        particleBase + 3u].position -
-                    middle;
-            }
-
-            if (instance.topology ==
-                TOPOLOGY_DUAL_RAIL_6)
-            {
-                uint pair =
-                    particleBase + control * 2u;
-                return
-                    _Particles[pair].position -
-                    _Particles[pair + 1u].position;
-            }
-
-            if (instance.topology ==
-                TOPOLOGY_ARTICULATED_12)
-            {
-                uint start =
-                    particleBase + control * 4u;
-                return
-                    (_Particles[start].position +
-                     _Particles[start + 3u].position) -
-                    (_Particles[start + 1u].position +
-                     _Particles[start + 2u].position);
-            }
-
-            return RotateByQuaternion(
-                float3(1.0, 0.0, 0.0),
-                instance.spawnRotation);
-        }
-
-        ControlFrame GetFrame(
-            SolverInstance instance,
-            uint control)
-        {
-            float3 head =
-                ControlCenter(instance, 0u);
-            float3 middle =
-                ControlCenter(instance, 1u);
-            float3 tail =
-                ControlCenter(instance, 2u);
-
-            ControlFrame frame;
-            frame.center =
-                control == 0u
-                    ? head
-                    : control == 1u
-                        ? middle
-                        : tail;
-            float3 tangentCandidate =
-                control == 0u
-                    ? head - middle
-                    : control == 1u
-                        ? head - tail
-                        : middle - tail;
-            frame.tangent =
-                instance.topology ==
-                TOPOLOGY_SINGLE
-                    ? RotateByQuaternion(
-                        float3(0.0, 1.0, 0.0),
-                        instance.spawnRotation)
-                    : normalize(tangentCandidate);
-
-            float3 baseX =
-                RotateByQuaternion(
-                    float3(1.0, 0.0, 0.0),
-                    instance.spawnRotation);
-            float3 baseZ =
-                RotateByQuaternion(
-                    float3(0.0, 0.0, 1.0),
-                    instance.spawnRotation);
-            frame.side = SafePerpendicular(
-                SideCandidate(
-                    instance,
-                    control,
-                    middle),
-                frame.tangent,
-                baseX);
-            frame.normal =
-                SafePerpendicular(
-                    cross(
-                        frame.side,
-                        frame.tangent),
-                    frame.tangent,
-                    baseZ);
-            frame.side = normalize(
-                cross(
-                    frame.tangent,
-                    frame.normal));
-            return frame;
         }
 
         float3 FramePosition(

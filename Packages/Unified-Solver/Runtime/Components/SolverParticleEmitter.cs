@@ -57,6 +57,46 @@ namespace Yu5h1.UnifiedSolver
         void Awake()
         {
             CreateInstanceBuffer();
+            EnsureModifierRunner();
+        }
+
+        // Modifiers and roll damping are dispatched by
+        // SolverParticleModifierRunner, and nothing forces that component to
+        // exist: RequireComponent on the runner pulls in an emitter, never the
+        // other way round. An emitter with a fully configured profile and no
+        // runner is therefore silently inert, which is indistinguishable from a
+        // modifier that runs and has no visible effect. Add it rather than warn,
+        // because a populated profile has already stated the intent.
+        void EnsureModifierRunner()
+        {
+            if (profile == null)
+                return;
+
+            bool wantsModifiers =
+                profile.modifiers != null &&
+                profile.modifiers.Length > 0;
+            bool wantsRollDamping =
+                profile.rollDamping > 0f;
+            if (!wantsModifiers && !wantsRollDamping)
+                return;
+
+            if (GetComponent<
+                    SolverParticleModifierRunner>() !=
+                null)
+            {
+                return;
+            }
+
+            gameObject.AddComponent<
+                SolverParticleModifierRunner>();
+            Debug.LogWarning(
+                "SolverParticleEmitter: profile " +
+                $"'{profile.name}' needs a " +
+                "SolverParticleModifierRunner to " +
+                "dispatch its modifiers and roll " +
+                "damping, so one was added. Add it " +
+                "in the scene to silence this.",
+                this);
         }
 
         void Start()

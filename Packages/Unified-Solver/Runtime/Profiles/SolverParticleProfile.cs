@@ -24,6 +24,9 @@ namespace Yu5h1.UnifiedSolver
         public float bendCompliance = 0.0005f;
         [Min(0f)]
         public float jointDamping = 0.15f;
+        [Tooltip("Per-step fraction of spin about the body's long axis to remove. Structural, not a performance: it runs for every instance whether or not a modifier is attached. Needs at least two particles per control group, so it has no effect on Chain3 or GuideChain4.")]
+        [Range(0f, 1f)]
+        public float rollDamping = 0.25f;
         public bool collideWithSameProfile = true;
         public bool showCollisionParticles;
 
@@ -93,6 +96,8 @@ namespace Yu5h1.UnifiedSolver
                 Mathf.Max(0f, bendCompliance);
             jointDamping =
                 Mathf.Max(0f, jointDamping);
+            rollDamping =
+                Mathf.Clamp01(rollDamping);
         }
     }
 }

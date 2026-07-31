@@ -97,10 +97,10 @@ public sealed class ClothGrabber : MonoBehaviour
             GrabbedCount = DispatchBegin();
             IsGrabbing = GrabbedCount > 0;
 
-            Debug.Log(
-                $"ClothGrabber: Grabbed {GrabbedCount} cloth nodes " +
-                $"within radius {grabRadius:F3}.",
-                this);
+            //Debug.Log(
+            //    $"ClothGrabber: Grabbed {GrabbedCount} cloth nodes " +
+            //    $"within radius {grabRadius:F3}.",
+            //    this);
         }
 
         if (IsGrabbing && CanDispatch())
