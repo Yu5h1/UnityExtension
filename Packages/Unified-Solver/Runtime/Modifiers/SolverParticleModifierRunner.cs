@@ -139,18 +139,36 @@ namespace Yu5h1.UnifiedSolver
             _runtimeCompute.SetFloat(
                 "_DeltaTime",
                 Time.fixedDeltaTime);
+
+            // The solver converts a positional correction into velocity by
+            // dividing by the substep, so any budget expressed as a speed has
+            // to be converted with the substep, not the frame.
+            _runtimeCompute.SetFloat(
+                "_SubDeltaTime",
+                Time.fixedDeltaTime /
+                Mathf.Max(1, _emitter.Solver.substeps));
         }
 
         void DispatchRollDamping()
         {
+            SolverParticleProfile profile =
+                _emitter.profile;
             float rollDamping =
-                _emitter.profile.rollDamping;
-            if (rollDamping <= 0f)
+                Mathf.Clamp01(profile.rollDamping);
+            float torsionAlign =
+                Mathf.Clamp01(profile.torsionAlign);
+            if (rollDamping <= 0f &&
+                torsionAlign <= 0f)
+            {
                 return;
+            }
 
             _runtimeCompute.SetFloat(
                 "_RollDamping",
                 rollDamping);
+            _runtimeCompute.SetFloat(
+                "_TorsionAlign",
+                torsionAlign);
             BindBuffers(_rollDampingKernel);
             Dispatch(_rollDampingKernel);
         }
@@ -174,24 +192,22 @@ namespace Yu5h1.UnifiedSolver
                 "_OscillationDirectionRandomness",
                 profile.directionRandomness);
             _runtimeCompute.SetFloat(
-                "_OscillationBendRatio",
-                profile.bendRatio);
+                "_OscillationStiffness",
+                Mathf.Clamp01(profile.stiffness));
+            _runtimeCompute.SetFloat(
+                "_OscillationMuscleTension",
+                Mathf.Clamp01(profile.muscleTension));
             _runtimeCompute.SetFloat(
                 "_OscillationBendRandomness",
                 profile.bendRandomness);
 
-            // Vitality is authored as the launch speed a body may reach, but
-            // the kernel can only limit distance, and the solver converts
-            // distance to velocity by dividing by the substep. Converting here
-            // with the solver's own substep count is what keeps bodies looking
-            // equally lively when substeps are raised for cloth stiffness.
+            // Vitality is the launch speed ceiling, enforced directly on the
+            // body's velocity, so no substep conversion is needed: the kernel
+            // reads the speed the solver already produced.
             SolverManager solver = _emitter.Solver;
-            float subDeltaTime =
-                Time.fixedDeltaTime /
-                Mathf.Max(1, solver.substeps);
             _runtimeCompute.SetFloat(
-                "_OscillationMaxStepRise",
-                profile.vitality * subDeltaTime);
+                "_OscillationVitality",
+                Mathf.Clamp01(profile.vitality));
             Vector3 up =
                 solver.gravity.sqrMagnitude > 1e-8f
                     ? -solver.gravity.normalized

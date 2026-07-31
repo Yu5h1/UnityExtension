@@ -12,11 +12,13 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("Caps only the velocity the modifier may add per step, which is the body's follow-through momentum. It does not affect the pose, which is always applied in full, and so has no effect on how high the body bounces. At the default it never engages: compare 0 against 120 to see what it actually does, and if there is no visible difference at 0 it is not earning its place.")]
         [Min(0f)]
         public float acceleration = 120f;
-        [Tooltip("How alive the body looks. 0 reads as dead: it still holds its pose but cannot push off anything. Higher looks fresher and more energetic. Physically it is a ceiling in metres per second on the launch the body gets from pressing into a surface, since the solver converts any downward part of the pose correction into velocity by dividing by the substep rather than the frame. Independent of substeps, so raising substeps for cloth stiffness does not change how lively bodies look.")]
-        [Min(0f)]
-        public float vitality = 3f;
-        [Min(0f)]
-        public float frequency = 1.8f;
+        [Tooltip("How hard the muscle tries, before Stiffness resists it. 0 stops all self-driven motion: the body still gets pushed around by contact, it just never moves itself. 1 is full effort and looks freshest. Also budgets the bounce the body gets off a surface, since that bounce is feedback from this same effort. Effective drive is Vitality * (1 - Stiffness), so either one at its limit stops both the motion and the bounce.")]
+        [Range(0f, 1f)]
+        public float vitality = 1f;
+        [Tooltip("Bend cycles per second, which sets both how often the body bends and how fast each bend is, since a continuous wave cannot separate the two. The physics step samples this, so anything past half the step rate aliases and the number stops meaning what it says: at a 50 Hz step, 25 is the hard ceiling and around 5 is the most that still reads as smooth. Note that 0 does not hold a body still, it freezes each one at a fixed bend of its own; use Vitality 0 for stillness.")]
+        //[Range(0f, 8f)]
+        public float frequency = 0.8f;
+        [Tooltip("Spread of frequency across instances. At 1 the range is 0x to 2x, so some bodies barely move while others run at double rate.")]
         [Range(0f, 1f)]
         public float frequencyRandomness = 0.35f;
         [Range(-180f, 180f)]
@@ -25,10 +27,13 @@ namespace Yu5h1.UnifiedSolver
         public float directionRandomness;
 
         [Header("Body Bend")]
-        [Tooltip("Peak lateral offset of head and tail as a fraction of body length, reached by rotating both segments about the middle. 0.5 folds the body in half and is the geometric limit of a three-control-point body.")]
-        [Range(0f, 0.5f)]
-        public float bendRatio = 0.35f;
-        [Tooltip("Per-instance variation applied to Bend Ratio.")]
+        [Tooltip("Hardness, as a rate on everything the body does. Reads like a timescale in reverse: 0 runs at full speed, 0.5 halves it, 1 stops it. At 1 the body freezes in whatever shape it currently holds, curled or straight, and keeps only its overall velocity, so it still travels and collides but no longer changes form. It holds no target shape of its own; reaching a straight body is Muscle Tension's job.")]
+        [Range(0f, 1f)]
+        public float stiffness;
+        [Tooltip("How tight the muscle is drawn, which chooses the shape the animation aims for. 0 is released and swings to the fullest the topology allows. 1 is drawn tight and flattens the animation out into the topology's own resting form, so the body straightens as it approaches. Separate from Stiffness, which sets the rate rather than the shape.")]
+        [Range(0f, 1f)]
+        public float muscleTension = 0.3f;
+        [Tooltip("Per-instance variation applied to Muscle Tension.")]
         [Range(0f, 1f)]
         public float bendRandomness = 0.15f;
     }

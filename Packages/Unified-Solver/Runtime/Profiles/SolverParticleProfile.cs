@@ -27,6 +27,9 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("Per-step fraction of spin about the body's long axis to remove. Structural, not a performance: it runs for every instance whether or not a modifier is attached. Needs at least two particles per control group, so it has no effect on Chain3 or GuideChain4.")]
         [Range(0f, 1f)]
         public float rollDamping = 0.25f;
+        [Tooltip("Per-step fraction of accumulated twist to undo, bringing the segments' cross directions back into agreement. Roll Damping only removes the rate of twist, so twist already built up stays, and the mesh takes its frame from each segment separately: a body twisted along its length skins into a contorted shape even when its controls are perfectly collinear. Structural, like Roll Damping, and equally without effect on Chain3 or GuideChain4.")]
+        [Range(0f, 1f)]
+        public float torsionAlign = 0.3f;
         public bool collideWithSameProfile = true;
         public bool showCollisionParticles;
 

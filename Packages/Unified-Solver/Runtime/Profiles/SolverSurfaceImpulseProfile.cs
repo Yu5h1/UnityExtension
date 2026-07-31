@@ -12,8 +12,8 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("Launch speed of one hop, in metres per second. The body leaves at this speed and flies ballistically, so height is roughly speed squared over twice gravity: 2.5 gives about 0.32 m regardless of what it launched from.")]
         [Min(0f)]
         public float impulseSpeed = 2.5f;
-        [Tooltip("Hops per second.")]
-        [Min(0f)]
+        [Tooltip("Hops per second. Sampled by the physics step, so past half the step rate it aliases and the number stops meaning what it says.")]
+        [Range(0f, 8f)]
         public float frequency = 1.2f;
         [Range(0f, 1f)]
         public float frequencyRandomness = 0.134f;

@@ -18,12 +18,20 @@ float _OscillationFrequency;
 float _OscillationRandomness;
 float _OscillationDirectionAngle;
 float _OscillationDirectionRandomness;
-float _OscillationBendRatio;
+float _OscillationMuscleTension;
 float _OscillationBendRandomness;
-float _OscillationMaxStepRise;
+// Launch speed a fully driven body may reach off a surface, in metres per
+// second, which is roughly a 46 cm hop. Scaled by the drive weight, so this is
+// the ceiling rather than the usual value.
+static const float SURFACE_PUSH_SPEED = 3.0;
+
+float _OscillationVitality;
+float _OscillationStiffness;
 float3 _OscillationUpAxis;
+float _SubDeltaTime;
 
 float _RollDamping;
+float _TorsionAlign;
 
 float _SurfaceImpulseSpeed;
 float _SurfaceSpreadSeconds;
@@ -104,20 +112,21 @@ void ApplyOscillation(
         1.0 - _OscillationBendRandomness,
         1.0 + _OscillationBendRandomness,
         bendRandom);
-    float bendRatio = clamp(
-        _OscillationBendRatio * bendScale,
-        0.0,
-        0.5);
+    float muscleTension = saturate(
+        1.0 -
+        (1.0 - _OscillationMuscleTension) *
+        bendScale);
+    // Muscle tension chooses the target shape, running from released to drawn
+    // tight: 0 lets the body swing to its fullest, 1 pulls the target straight
+    // so the animation flattens out into the topology's own resting form.
+    //
     // Amplitude is expressed as an angle, not as a chord offset. The previous
     // chord form placed head and tail back onto the current head-tail axis, so
     // that axis could never swing and the body only pulsed its middle sideways.
     // Rotating both segments about the middle sweeps head and tail through a
     // real arc, which is what reads as a beat instead of a twitch.
-    //
-    // The mapping keeps the documented meaning of bendRatio: at peak the
-    // lateral offset of head and tail is still bendRatio * bodyLength.
     float peakHalfAngle =
-        asin(saturate(2.0 * bendRatio));
+        asin(saturate(1.0 - muscleTension));
     float halfAngle =
         peakHalfAngle * wave;
     float halfAngleVelocity =
@@ -189,66 +198,87 @@ void ApplyOscillation(
         middleOffset * middleWeight +
         tailOffset * tailWeight) /
         totalDrivenCount;
-    float3 headDeltaPosition =
+    // Stiffness is a rate on the drive, nothing more. It holds no target shape
+    // of its own: an earlier version had it pull the body toward a straight
+    // rest pose, which meant full hardness straightened whatever it froze
+    // instead of freezing it. Reaching the straight shape is Muscle Tension's
+    // job, and it gets there through this same animation term.
+    float drive =
+        _OscillationVitality *
+        (1.0 - _OscillationStiffness);
+
+    float3 headDeltaPosition = (
         weightedCenter +
         headOffset -
         weightedOffsetMean -
-        head;
-    float3 middleDeltaPosition =
+        head) * drive;
+    float3 middleDeltaPosition = (
         weightedCenter +
         middleOffset -
         weightedOffsetMean -
-        middle;
-    float3 tailDeltaPosition =
+        middle) * drive;
+    float3 tailDeltaPosition = (
         weightedCenter +
         tailOffset -
         weightedOffsetMean -
-        tail;
+        tail) * drive;
 
-    // Cap how far the pose may be driven along the gravity axis in one step.
+    // Budget how far the pose may reach downward in one step, because the
+    // solver turns whatever ends up below a surface into velocity by dividing
+    // by the substep rather than the frame, so a millimetre becomes metres per
+    // second.
     //
-    // This correction is not "advance the animation", it is "undo whatever the
-    // solver just did", so it stays large even at bendRatio 0, where the target
-    // is a perfectly straight body and the velocity channel writes nothing at
-    // all. Any part of it aimed downward becomes penetration, and the solver
-    // turns penetration into velocity by dividing by the substep, not the
-    // frame: at thirty substeps that is a 1500x amplification, which is why a
-    // straight body still launches and why lowering substeps appeared to fix it.
+    // Trim the downward component itself and leave the rest of the vector
+    // alone. Scaling the whole delta by the overspill instead was throttling
+    // sideways motion by the same factor, and reaching a target shape is mostly
+    // sideways: a correction needing centimetres laterally and slightly more
+    // than the budget downward was being cut to a twentieth in every direction,
+    // which read as the target simply never being approached.
     //
-    // Only the vertical component is measured, so bending across a surface is
-    // untouched and only motion that can push into one is limited. All three
-    // deltas share one scale so their weighted sum stays zero and the body does
-    // not drift.
-    float largestRise = max(
-        abs(dot(
-            headDeltaPosition,
-            _OscillationUpAxis)),
-        max(
-            abs(dot(
-                middleDeltaPosition,
-                _OscillationUpAxis)),
-            abs(dot(
-                tailDeltaPosition,
-                _OscillationUpAxis))));
-    // Zero vitality has to stop everything, including a correction that happens
-    // to be purely horizontal. Scaling by the vertical component alone leaves
-    // such a correction with nothing to measure against, so it would pass
-    // through at full strength while every other body froze, and a full
-    // strength drive re-enters the roll feedback loop the frame is subject to.
-    float positionScale = 1.0;
-    if (_OscillationMaxStepRise <= 0.0)
-    {
-        positionScale = 0.0;
-    }
-    else if (largestRise > _OscillationMaxStepRise)
-    {
-        positionScale =
-            _OscillationMaxStepRise / largestRise;
-    }
+    // Trimming per control breaks the zero weighted sum the deltas start with,
+    // so the mean is taken back out afterwards to stop the body drifting.
+    float maximumDrop =
+        drive *
+        SURFACE_PUSH_SPEED *
+        _SubDeltaTime;
 
-    headDeltaPosition *= positionScale;
-    middleDeltaPosition *= positionScale;
-    tailDeltaPosition *= positionScale;
+    float headRise = dot(
+        headDeltaPosition,
+        _OscillationUpAxis);
+    float middleRise = dot(
+        middleDeltaPosition,
+        _OscillationUpAxis);
+    float tailRise = dot(
+        tailDeltaPosition,
+        _OscillationUpAxis);
+
+    // Scale the vertical components together rather than trimming each one.
+    //
+    // The three rises already sum to zero by weight, and a common factor keeps
+    // it that way, so nothing has to be rebalanced afterwards. Trimming them
+    // individually and then removing the mean does not work: the removal pushes
+    // the trimmed control straight back past the limit, by an order of
+    // magnitude in the ordinary case, which leaves the budget doing nothing.
+    float deepestDrop = -min(
+        headRise,
+        min(middleRise, tailRise));
+
+    if (deepestDrop > maximumDrop &&
+        deepestDrop > 1e-9)
+    {
+        float verticalScale =
+            maximumDrop / deepestDrop;
+        headDeltaPosition +=
+            _OscillationUpAxis *
+            (headRise * verticalScale - headRise);
+        middleDeltaPosition +=
+            _OscillationUpAxis *
+            (middleRise * verticalScale -
+             middleRise);
+        tailDeltaPosition +=
+            _OscillationUpAxis *
+            (tailRise * verticalScale - tailRise);
+    }
 
     // Analytic derivative of the pose above.
     float3 headDirectionRate =
@@ -385,6 +415,132 @@ void ApplyOscillation(
         }
         _Particles[index] = particle;
     }
+
+    // Freeze: converge the particles onto the body's own mean velocity.
+    //
+    // Deformation is what the particles do relative to each other, so removing
+    // that relative motion locks the shape the body currently has, whatever
+    // shape that happens to be. The mean survives untouched, so the body still
+    // travels, falls and collides as a whole; it just stops changing form.
+    //
+    // Nothing here pulls toward any particular shape. Stiffness only refuses
+    // further change, which is why it can freeze a curled body curled.
+    if (_OscillationStiffness > 0.0)
+    {
+        uint frozenIndex;
+        uint frozenCount = 0u;
+        float3 meanVelocity =
+            float3(0.0, 0.0, 0.0);
+        for (frozenIndex = 0u;
+             frozenIndex < (uint)instance.particleCount;
+             frozenIndex++)
+        {
+            Particle sample =
+                _Particles[
+                    particleBase + frozenIndex];
+            if (sample.invMass <= 0.0)
+                continue;
+            meanVelocity += sample.velocity;
+            frozenCount++;
+        }
+
+        if (frozenCount > 0u)
+        {
+            meanVelocity /= (float)frozenCount;
+            for (frozenIndex = 0u;
+                 frozenIndex < (uint)instance.particleCount;
+                 frozenIndex++)
+            {
+                uint index =
+                    particleBase + frozenIndex;
+                Particle particle =
+                    _Particles[index];
+                if (particle.invMass > 0.0)
+                {
+                    particle.velocity = lerp(
+                        particle.velocity,
+                        meanVelocity,
+                        _OscillationStiffness);
+                }
+                _Particles[index] = particle;
+            }
+        }
+    }
+}
+
+// Rotates one control group about the body axis to bring its cross direction
+// back in line with the rest of the body.
+//
+// Nothing else can do this. Every driver moves a whole group by one shared
+// delta, which leaves the group's internal cross vector exactly as it was, and
+// roll damping only removes the rate of twist, never twist already accumulated.
+// The topologies are planar at rest, so their diagonals resist twist only to
+// second order: rotating a rung by phi changes a diagonal's length by about
+// hx^2 * phi^2 / (4 * hy), which vanishes for small angles and leaves almost no
+// restoring force.
+//
+// A twisted body is also why a straightened spine can still be drawn bent. The
+// mesh takes its frame from each segment's own cross vector, so segments that
+// disagree skin into a contorted shape no matter how collinear the controls are.
+//
+// Applied as a rotation about the group's own centre, so the centroid does not
+// move and no net momentum is introduced. prevPosition follows the correction
+// so it does not register as velocity.
+void AlignGroupTorsion(
+    uint particleBase,
+    uint start,
+    uint count,
+    float3 axis,
+    float3 currentSide,
+    float3 referenceSide,
+    float strength)
+{
+    if (count < 2u)
+        return;
+
+    float cosAngle = dot(currentSide, referenceSide);
+    float sinAngle = dot(
+        cross(referenceSide, currentSide),
+        axis);
+    float angle = atan2(sinAngle, cosAngle);
+    float correction = -strength * angle;
+    if (abs(correction) < 1e-6)
+        return;
+
+    float cosCorrection = cos(correction);
+    float sinCorrection = sin(correction);
+
+    float3 center = float3(0.0, 0.0, 0.0);
+    uint i;
+    for (i = 0u; i < count; i++)
+    {
+        center += _Particles[
+            particleBase + start + i].position;
+    }
+    center /= (float)count;
+
+    for (i = 0u; i < count; i++)
+    {
+        uint index = particleBase + start + i;
+        Particle particle = _Particles[index];
+        if (particle.invMass > 0.0)
+        {
+            float3 radius =
+                particle.position - center;
+            float3 along =
+                axis * dot(radius, axis);
+            float3 perpendicular = radius - along;
+            float3 rotated =
+                perpendicular * cosCorrection +
+                cross(axis, perpendicular) *
+                    sinCorrection;
+            float3 delta =
+                (along + rotated) - radius;
+            particle.position += delta;
+            particle.prevPosition += delta;
+        }
+        _Particles[index] = particle;
+    }
 }
 
 // Removes a fraction of a control group's spin about the body axis.
@@ -491,7 +647,8 @@ void ApplyRollDamping(
     }
 
     float strength = saturate(_RollDamping);
-    if (strength <= 0.0)
+    float torsion = saturate(_TorsionAlign);
+    if (strength <= 0.0 && torsion <= 0.0)
         return;
 
     float3 axis =
@@ -514,24 +671,86 @@ void ApplyRollDamping(
     uint particleBase =
         (uint)instance.particleOffset;
 
-    DampGroupRoll(
+    if (strength > 0.0)
+    {
+        DampGroupRoll(
+            particleBase,
+            headStart,
+            headCount,
+            axis,
+            strength);
+        DampGroupRoll(
+            particleBase,
+            middleStart,
+            middleCount,
+            axis,
+            strength);
+        DampGroupRoll(
+            particleBase,
+            tailStart,
+            tailCount,
+            axis,
+            strength);
+    }
+
+    if (torsion <= 0.0)
+        return;
+
+    // Bring the three segments' cross directions back into agreement, using
+    // their own average as the reference so the correction is shared rather
+    // than one segment being treated as correct.
+    float3 middleCenter =
+        ControlCenter(instance, 1u);
+    float3 baseX =
+        RotateByQuaternion(
+            float3(1.0, 0.0, 0.0),
+            instance.spawnRotation);
+    float3 headSide = SafePerpendicular(
+        SideCandidate(instance, 0u, middleCenter),
+        axis,
+        baseX);
+    float3 middleSide = SafePerpendicular(
+        SideCandidate(instance, 1u, middleCenter),
+        axis,
+        baseX);
+    float3 tailSide = SafePerpendicular(
+        SideCandidate(instance, 2u, middleCenter),
+        axis,
+        baseX);
+
+    float3 referenceSum =
+        headSide + middleSide + tailSide;
+    // Segments spread far enough apart to cancel leave no meaningful average,
+    // so take the middle as the reference rather than a direction made of noise.
+    float3 referenceSide =
+        length(referenceSum) > 1e-4
+            ? normalize(referenceSum)
+            : middleSide;
+
+    AlignGroupTorsion(
         particleBase,
         headStart,
         headCount,
         axis,
-        strength);
-    DampGroupRoll(
+        headSide,
+        referenceSide,
+        torsion);
+    AlignGroupTorsion(
         particleBase,
         middleStart,
         middleCount,
         axis,
-        strength);
-    DampGroupRoll(
+        middleSide,
+        referenceSide,
+        torsion);
+    AlignGroupTorsion(
         particleBase,
         tailStart,
         tailCount,
         axis,
-        strength);
+        tailSide,
+        referenceSide,
+        torsion);
 }
 
 // Seconds elapsed since this instance's most recent hop started.
