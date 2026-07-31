@@ -183,6 +183,9 @@ namespace Yu5h1.UnifiedSolver
                 "_OscillationFrequency",
                 profile.frequency);
             _runtimeCompute.SetFloat(
+                "_OscillationDuration",
+                Mathf.Max(0f, profile.duration));
+            _runtimeCompute.SetFloat(
                 "_OscillationRandomness",
                 profile.frequencyRandomness);
             _runtimeCompute.SetFloat(
@@ -198,8 +201,8 @@ namespace Yu5h1.UnifiedSolver
                 "_OscillationMuscleTension",
                 Mathf.Clamp01(profile.muscleTension));
             _runtimeCompute.SetFloat(
-                "_OscillationBendRandomness",
-                profile.bendRandomness);
+                "_OscillationTensionRandomness",
+                profile.tensionRandomness);
 
             // Vitality is the launch speed ceiling, enforced directly on the
             // body's velocity, so no substep conversion is needed: the kernel

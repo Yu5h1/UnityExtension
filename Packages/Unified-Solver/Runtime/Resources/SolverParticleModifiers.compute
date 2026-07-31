@@ -19,7 +19,8 @@ float _OscillationRandomness;
 float _OscillationDirectionAngle;
 float _OscillationDirectionRandomness;
 float _OscillationMuscleTension;
-float _OscillationBendRandomness;
+float _OscillationDuration;
+float _OscillationTensionRandomness;
 // Launch speed a fully driven body may reach off a surface, in metres per
 // second, which is roughly a 46 cm hop. Scaled by the drive weight, so this is
 // the ceiling rather than the usual value.
@@ -71,15 +72,55 @@ void ApplyOscillation(
         1.0 - _OscillationRandomness,
         1.0 + _OscillationRandomness,
         frequencyRandom);
-    float angularFrequency =
-        _OscillationFrequency *
-        frequencyScale *
-        TWO_PI;
-    float phase =
-        _Time *
-        angularFrequency +
-        phaseRandom * TWO_PI;
-    float wave = sin(phase);
+
+    // Muscle tension chooses the target shape, running from released to drawn
+    // tight: 0 lets the body swing to its fullest, 1 pulls the target straight
+    // so the animation flattens out into the topology's own resting form.
+    float tensionScale = lerp(
+        1.0 - _OscillationTensionRandomness,
+        1.0 + _OscillationTensionRandomness,
+        bendRandom);
+    float muscleTension = saturate(
+        1.0 -
+        (1.0 - _OscillationMuscleTension) *
+        tensionScale);
+    float peakHalfAngle =
+        asin(saturate(1.0 - muscleTension));
+
+    // Duration is authored directly: a run set to one second takes one second,
+    // whatever shape it is playing. Frequency only says how often a run begins.
+    //
+    // Between runs the drive is released rather than the wave being zeroed.
+    // Zeroing the wave leaves the target at the resting shape, so the body gets
+    // actively straightened while it is supposed to be doing nothing, and the
+    // lower the frequency the more of the time it spends being held straight.
+    // Releasing the drive instead leaves it limp, exactly as Vitality 0 does.
+    float burstFrequency =
+        _OscillationFrequency * frequencyScale;
+    float burstFraction = saturate(
+        _OscillationDuration * burstFrequency);
+
+    float wave = 0.0;
+    float waveRate = 0.0;
+    float playing = 0.0;
+    if (burstFraction > 1e-5)
+    {
+        float cyclePhase =
+            _Time * burstFrequency + phaseRandom;
+        cyclePhase -= floor(cyclePhase);
+        if (cyclePhase < burstFraction)
+        {
+            float burstPhase =
+                cyclePhase / burstFraction;
+            wave = sin(burstPhase * TWO_PI);
+            waveRate =
+                cos(burstPhase * TWO_PI) *
+                TWO_PI *
+                burstFrequency /
+                burstFraction;
+            playing = 1.0;
+        }
+    }
 
     float3 head =
         ControlCenter(instance, 0u);
@@ -108,31 +149,15 @@ void ApplyOscillation(
         side * cos(angle) +
         normal * sin(angle));
 
-    float bendScale = lerp(
-        1.0 - _OscillationBendRandomness,
-        1.0 + _OscillationBendRandomness,
-        bendRandom);
-    float muscleTension = saturate(
-        1.0 -
-        (1.0 - _OscillationMuscleTension) *
-        bendScale);
-    // Muscle tension chooses the target shape, running from released to drawn
-    // tight: 0 lets the body swing to its fullest, 1 pulls the target straight
-    // so the animation flattens out into the topology's own resting form.
-    //
     // Amplitude is expressed as an angle, not as a chord offset. The previous
     // chord form placed head and tail back onto the current head-tail axis, so
     // that axis could never swing and the body only pulsed its middle sideways.
     // Rotating both segments about the middle sweeps head and tail through a
     // real arc, which is what reads as a beat instead of a twitch.
-    float peakHalfAngle =
-        asin(saturate(1.0 - muscleTension));
     float halfAngle =
         peakHalfAngle * wave;
     float halfAngleVelocity =
-        peakHalfAngle *
-        cos(phase) *
-        angularFrequency;
+        peakHalfAngle * waveRate;
     uint headStart;
     uint headCount;
     uint middleStart;
@@ -205,7 +230,8 @@ void ApplyOscillation(
     // job, and it gets there through this same animation term.
     float drive =
         _OscillationVitality *
-        (1.0 - _OscillationStiffness);
+        (1.0 - _OscillationStiffness) *
+        playing;
 
     float3 headDeltaPosition = (
         weightedCenter +
@@ -222,6 +248,43 @@ void ApplyOscillation(
         tailOffset -
         weightedOffsetMean -
         tail) * drive;
+
+    // Hold the body to the speed the animation implies, instead of letting it
+    // arrive in one step.
+    //
+    // The correction is otherwise applied in full every step, so the body
+    // teleports onto the target rather than travelling to it. That is why a run
+    // read as instant however long its duration was set: duration paced the
+    // target, but nothing paced the body. It is also why a run threw the body
+    // clear, since the first step of one has to cross the whole gap left by the
+    // idle period, and a jump that size buries the body in whatever it is lying
+    // on.
+    //
+    // The ceiling is the peak speed a control point reaches while tracing the
+    // shape over its duration, so a longer duration is both slower and gentler,
+    // and the launch scales down with it.
+    if (_OscillationDuration > 1e-5)
+    {
+        float maximumStep =
+            TWO_PI * segmentLength *
+            peakHalfAngle /
+            _OscillationDuration *
+            _DeltaTime;
+        float longestStep = max(
+            length(headDeltaPosition),
+            max(
+                length(middleDeltaPosition),
+                length(tailDeltaPosition)));
+        if (longestStep > maximumStep &&
+            longestStep > 1e-9)
+        {
+            float paceScale =
+                maximumStep / longestStep;
+            headDeltaPosition *= paceScale;
+            middleDeltaPosition *= paceScale;
+            tailDeltaPosition *= paceScale;
+        }
+    }
 
     // Budget how far the pose may reach downward in one step, because the
     // solver turns whatever ends up below a surface into velocity by dividing

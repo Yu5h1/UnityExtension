@@ -260,7 +260,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5532347384025720171, guid: c455d060e38c8214e92135af7b9f9e75, type: 3}
       propertyPath: spacing
-      value: 0.09
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 5532347384025720171, guid: c455d060e38c8214e92135af7b9f9e75, type: 3}
       propertyPath: pinSpace
@@ -296,6 +296,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5532347384025720171, guid: c455d060e38c8214e92135af7b9f9e75, type: 3}
       propertyPath: showParticleNodes
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5532347384025720171, guid: c455d060e38c8214e92135af7b9f9e75, type: 3}
+      propertyPath: enableSelfCollision
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5532347384025720171, guid: c455d060e38c8214e92135af7b9f9e75, type: 3}

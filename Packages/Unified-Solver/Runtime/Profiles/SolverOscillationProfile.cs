@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Yu5h1.UnifiedSolver
 {
@@ -15,9 +16,12 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("How hard the muscle tries, before Stiffness resists it. 0 stops all self-driven motion: the body still gets pushed around by contact, it just never moves itself. 1 is full effort and looks freshest. Also budgets the bounce the body gets off a surface, since that bounce is feedback from this same effort. Effective drive is Vitality * (1 - Stiffness), so either one at its limit stops both the motion and the bounce.")]
         [Range(0f, 1f)]
         public float vitality = 1f;
-        [Tooltip("Bend cycles per second, which sets both how often the body bends and how fast each bend is, since a continuous wave cannot separate the two. The physics step samples this, so anything past half the step rate aliases and the number stops meaning what it says: at a 50 Hz step, 25 is the hard ceiling and around 5 is the most that still reads as smooth. Note that 0 does not hold a body still, it freezes each one at a fixed bend of its own; use Vitality 0 for stillness.")]
+        [Tooltip("How often a run of the animation begins, in runs per second. Only the timing: it changes neither the shape nor how long a run takes. Between runs the body is left limp exactly as Vitality 0 leaves it, so it keeps whatever shape it had rather than being straightened. 0 means a run never begins.")]
         //[Range(0f, 8f)]
         public float frequency = 0.8f;
+        [Tooltip("Seconds one run of the animation takes, start to finish. Set 1 and it takes 1, whatever shape is playing. If a run is longer than the gap Frequency leaves, runs play back to back with no idle time.")]
+        [Min(0f)]
+        public float duration = 1f;
         [Tooltip("Spread of frequency across instances. At 1 the range is 0x to 2x, so some bodies barely move while others run at double rate.")]
         [Range(0f, 1f)]
         public float frequencyRandomness = 0.35f;
@@ -33,8 +37,9 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("How tight the muscle is drawn, which chooses the shape the animation aims for. 0 is released and swings to the fullest the topology allows. 1 is drawn tight and flattens the animation out into the topology's own resting form, so the body straightens as it approaches. Separate from Stiffness, which sets the rate rather than the shape.")]
         [Range(0f, 1f)]
         public float muscleTension = 0.3f;
-        [Tooltip("Per-instance variation applied to Muscle Tension.")]
+        [FormerlySerializedAs("bendRandomness")]
+        [Tooltip("Per-instance variation applied to Muscle Tension, so bodies do not all hold the same shape.")]
         [Range(0f, 1f)]
-        public float bendRandomness = 0.15f;
+        public float tensionRandomness = 0.15f;
     }
 }

@@ -892,7 +892,7 @@ tailOffset = -segmentLength × (tangent × cos − direction × sin)
 ```
 
 - 頭尾側向位移放大為原本的三倍，成為真正的圓弧掃掠。
-- `bendRatio` 語意不變：峰值側向位移仍是 `bendRatio × bodyLength`，透過 `asin(2 × bendRatio)` 等價映射。
+- 振幅由 `muscleTension` 反向決定（見 15.3），峰值半角為 `asin(1 − muscleTension)`。
 - 姿勢繞**加權質心**建構，權重與動量平衡一致，因此 delta 的加權和天然為零。GuideChain4 先前的 `positionMean = mΔ/4` 系統性側移殘差隨之消失。
 
 對稱 C 彎在幾何上不會旋轉頭尾弦向量，這是正確行為。若日後需要「頭穩、尾大幅掃」那種偏擺，需要的是**非對稱**驅動（只旋轉尾段），不是更多控制點。
@@ -913,25 +913,71 @@ Modifier 位置瞬移（無上限）
 由此得到兩條必須記住的關係：
 
 - **彈跳力道與 `substeps` 成反比。** 把 `substeps` 從 30 降到 5，彈跳力道降為六分之一。這曾被誤認為「調 substeps 修好了彈跳」，實際上是拿布料剛性去換。
-- **`bendRatio = 0` 仍會彈跳。** 該值為 0 時速度通道寫入完全為零，目標姿勢是「完全筆直」，但 Modifier 仍每幀全力把被重力與接觸弄歪的身體扳正。位置修正的內容是「撤銷 Solver 剛做的事」，不是「推進彎曲動畫」，所以與彎曲振幅無關。
+- **目標為筆直時（現在的 `muscleTension = 1`）仍會彈跳。** 此時速度通道寫入完全為零，但 Modifier 仍每幀全力把被重力與接觸弄歪的身體扳正。位置修正的內容是「撤銷 Solver 剛做的事」，不是「推進彎曲動畫」，所以與彎曲振幅無關。這條由實測隔離出來：把振幅歸零之後彈跳依舊存在，證明來源是位置通道。
 
-### 15.3 `vitality`（活力）：把彈跳力道從副作用變成可指定值
+### 15.3 三個表演軸
 
-`SolverOscillationProfile.vitality` 夾限姿勢位移**沿重力軸方向**的分量，上限在 CPU 端由 Solver 自己的 `substeps` 反推：
+彎曲表演由三個互相獨立的軸決定，都在 `SolverOscillationProfile`：
 
-```csharp
-maxStepRise = vitality × (fixedDeltaTime / substeps)
+```text
+stiffness       0~1   硬度。整體速率，語意反轉
+vitality        0~1   活力。願不願意自主動作
+muscleTension   0~1   肌肉張力。目標形狀
+frequency       Hz    播放頻率（第四個，與上述無關）
 ```
 
-於是 `彈跳速度 ≈ maxStepRise / subDt = vitality`，`subDt` 被消掉。
+驅動強度是前兩者的乘積：
 
-欄位以「活力」而非物理量命名，因為那是使用者實際在畫面上判斷的東西：**0 看起來就是死魚 —— 仍會維持姿勢，但推不動任何東西；數值越高越顯得新鮮、有生命力。** 物理意義（公尺／秒的起跳速度上限）保留在 Tooltip。
+```csharp
+drive = vitality × (1 − stiffness)
+delta = (目標姿勢 − 目前位置) × drive
+```
+
+**`stiffness` 有兩個方向相反的作用**，這是它與 `vitality` 真正分開的地方：
+
+- 提高抗變形能力：把粒子速度收斂到實體平均速度，移除相對運動，於是**當下是什麼形狀就凍在什麼形狀**。它不持有任何目標形狀。
+- 降低自主動作：透過 `1 − stiffness` 縮放 drive。
+
+`stiffness = 1` 是凍結；`vitality = 0` 是癱軟。兩者都讓 `drive = 0`，但前者形狀鎖死、後者任由物理擺布，這是兩軸的分界。
+
+**`muscleTension` 決定目標形狀**：
+
+```hlsl
+peakHalfAngle = asin(saturate(1.0 - muscleTension));
+```
+
+- `0` → `asin(1)` = 90°，幾何極限（身體對折）
+- `1` → `asin(0)` = 0°，目標即 topology 的骨架形狀
+
+`1` 對應的是「肌肉抽筋」：身體漸進收斂回預設形狀。**注意 0 是幾何極限而非自然幅度**，自然範圍約在 0.2 ~ 0.4；彎曲角速度是 `peakHalfAngle × ω`，所以振幅與頻率同樣影響觀感速度。
+
+### 15.4 彈跳預算
+
+彈跳是接觸反作用的產物（見 15.2），由 `drive` 編列預算：
+
+```csharp
+maximumDrop = drive × SURFACE_PUSH_SPEED × subDt
+```
+
+`SURFACE_PUSH_SPEED` 是 kernel 內的常數（3 m/s，約 46 cm）。`vitality = 0` 或 `stiffness = 1` 任一成立，彈跳即歸零 —— 對應「沒力氣推不動」與「太硬動不了」。
+
+**只縮放姿勢位移的垂直分量，水平完全不動。** 三個垂直分量的加權和本來為零，乘上同一係數仍為零，不需補償。早期版本等比縮放整個向量，導致「達成目標形狀」這件事（大部分是水平運動）被一併砍到二十分之一，`muscleTension = 1` 因此無法收斂。
+
+### 15.5 扭轉恢復
+
+`SolverParticleProfile.torsionAlign` 把三段控制群組的 rail 方向拉回一致。這是必要的，因為**沒有任何其他機制能修正扭轉**：
+
+- 所有驅動對群組內每顆粒子施加**相同**位移 → rail 向量恆定不變
+- `rollDamping` 只移除角速度，不移除已累積的角度
+- 拓樸在 rest 時共面，對角線對扭轉只有二階恢復力（`Δ長度 ≈ hx²φ²/(4hy)`）
+
+而 Shader 以**每段自己的 rail** 建蒙皮框架，所以扭轉的身體即使脊椎完全共線，畫出來仍是扭曲的。修正以群組質心為軸旋轉，質心不動、不引入淨動量，`prevPosition` 同步以免被讀成速度。
 
 - 只測量垂直分量，因此貼著表面的橫向擺動不受影響。
 - 三個 delta 共用同一縮放係數，加權和維持為零，身體不會漂移。
 - **`substeps` 可自由調高以換取布料剛性與抗穿透，彈跳高度不變。** 這是 15.2 那條耦合的解法。
 
-### 15.4 已確立的邊界條件
+### 15.6 已確立的邊界條件
 
 以下關係在調參前必須知道，否則會像本次一樣繞遠路：
 
@@ -941,8 +987,10 @@ maxStepRise = vitality × (fixedDeltaTime / substeps)
 - **全域 damping 是單一 uniform**，`UpdateVelocity` 不讀 `phase`，Solver 本身沒有分組機制。要 per-group damping 只能改 vendored 依賴（見 15.5）。
 - **從 Solver 外部注入的 velocity 幾乎無效。** `UpdateVelocity` 每個 substep 都以位置差覆寫 velocity，外部注入只在下一次 `Predict` 存活一個 substep。位置寫入才有實效 —— 但位置寫入會繞過碰撞偵測，量大時造成穿透。
 
-### 15.5 未採用的方案與原因
+### 15.7 未採用的方案與原因
 
 - **Per-instance damping 補償（幀尾放大速度）** —— 對自由飛行數學上精確，但對受約束的實體完全失效，因為速度會被約束求解覆寫。damping 必須在 substep 迴圈內作用才有效，從迴圈外複製不出來。已移除。
+- **以速度上限限制彈跳** —— 太晚。位移在 Solver 的 substep 迴圈內就已完成，幀尾夾速度只是把身體停在它已經到達的高度，而下一步又再穿透一次，於是每幀往上棘輪累積。必須在穿透發生前限制位移。已移除。
+- **`burstDuration`（爆發／待機分離）** —— 曾嘗試讓 `frequency` 只管觸發頻率、`burstDuration` 只管單次彎曲時長。實作可行且無狀態，但沒有解決實際問題：觀感速度是 `振幅 × 角頻率`，而連續波裡這兩者已經分別由 `muscleTension` 與 `frequency` 控制，再切一刀只是換個地方表達同一件事。已回退。
 - **Fork vendored solver** —— 曾為了 per-group damping 評估。因 `ClothGenerator.compliance` 設為非零後 `constraintDamping` 即可運作，暫不需要。Sleep/Wake 核心仍會迫使這個決定重新浮上檯面（見 13.8）。
 - **`SolverManagerAdvanced` / `UnifiedSolverAdvanced`（在 extension 內複製一份）** —— 評估後否決。`SolverManager` 的 36 個欄位全為 private、0 個 protected，子類別無法存取模擬迴圈所需狀態，實際上等於複製 1558 行去改 4 行。且 handoff 的 SHA-256 保證會在字面成立的同時失去意義（證明的是一個沒在跑的檔案）。若真需修改，原地小改或完整 fork 都優於部分複製。
