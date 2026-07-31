@@ -26,14 +26,28 @@ float _OscillationTensionRandomness;
 // second, which is roughly a 46 cm hop. Scaled by the drive weight, so this is
 // the ceiling rather than the usual value.
 static const float SURFACE_PUSH_SPEED = 3.0;
+// 70 degrees. Ceiling on the drive's half angle, short of the 90 that folds the
+// head onto the tail.
+static const float MAXIMUM_HALF_ANGLE = 1.2217;
 
 float _OscillationVitality;
 float _OscillationStiffness;
-float3 _OscillationUpAxis;
 float _SubDeltaTime;
 
+// Shared by every kernel, not owned by the oscillation modifier: the structural
+// unfold below needs it whether or not a modifier is attached.
+float3 _UpAxis;
+
 float _RollDamping;
-float _TorsionAlign;
+float _SettleSpeed;
+// Shortest chord the body's two ends may be held at, as a fraction of body
+// length. Below the 34% the drive itself reaches at full tension, so the floor
+// never fights a legitimate beat.
+static const float MINIMUM_CHORD_FRACTION = 0.25;
+// Lateral opening rate, per frame, and the separate ceiling on how far the
+// correction may reach downward in one step.
+static const float UNFOLD_SPEED = 0.3;
+static const float UNFOLD_DROP_SPEED = 0.5;
 
 float _SurfaceImpulseSpeed;
 float _SurfaceSpreadSeconds;
@@ -87,8 +101,20 @@ void ApplyOscillation(
         1.0 -
         (1.0 - _OscillationMuscleTension) *
         tensionScale);
-    float peakHalfAngle =
-        asin(saturate(1.0 - muscleTension));
+    // Stop short of folding the head onto the tail.
+    //
+    // The chord between them is 2 * segmentLength * cos(halfAngle), so a half
+    // angle of 90 degrees, which is what tension 0 asked for, puts the two ends
+    // in the same place. A body in that pose has no axis at all: which end
+    // points forward is genuinely undefined, so the frame the drive measures is
+    // set by noise, and the drive rebuilds its pose from that frame on the next
+    // step. The cap leaves the chord at 34% of the body length at the fullest.
+    //
+    // Above tension 0.06 this changes nothing, so existing tuning is untouched;
+    // it only clips the bottom of the range, which was never a usable amplitude.
+    float peakHalfAngle = min(
+        asin(saturate(1.0 - muscleTension)),
+        MAXIMUM_HALF_ANGLE);
 
     // Duration is authored directly: a run set to one second takes one second,
     // whatever shape it is playing. Frequency only says how often a run begins.
@@ -317,13 +343,13 @@ void ApplyOscillation(
 
     float headRise = dot(
         headDeltaPosition,
-        _OscillationUpAxis);
+        _UpAxis);
     float middleRise = dot(
         middleDeltaPosition,
-        _OscillationUpAxis);
+        _UpAxis);
     float tailRise = dot(
         tailDeltaPosition,
-        _OscillationUpAxis);
+        _UpAxis);
 
     // Scale the vertical components together rather than trimming each one.
     //
@@ -342,14 +368,14 @@ void ApplyOscillation(
         float verticalScale =
             maximumDrop / deepestDrop;
         headDeltaPosition +=
-            _OscillationUpAxis *
+            _UpAxis *
             (headRise * verticalScale - headRise);
         middleDeltaPosition +=
-            _OscillationUpAxis *
+            _UpAxis *
             (middleRise * verticalScale -
              middleRise);
         tailDeltaPosition +=
-            _OscillationUpAxis *
+            _UpAxis *
             (tailRise * verticalScale - tailRise);
     }
 
@@ -378,15 +404,23 @@ void ApplyOscillation(
         middleOffsetVelocity * middleWeight +
         tailOffsetVelocity * tailWeight) /
         totalDrivenCount;
-    float3 headDeltaVelocity =
+    // Gated by the drive, exactly as the pose is.
+    //
+    // Left ungated this kept injecting deformation velocity on every step even
+    // with Vitality at 0 or between runs, when nothing is supposed to be
+    // driving at all. While a body is moving its own motion hides that; once it
+    // settles there is nothing left but the injection, which keeps stirring the
+    // body and turning its frame. Stiffness 1 appeared to cure the problem only
+    // because converging the velocities wipes the injection back out again.
+    float3 headDeltaVelocity = (
         headOffsetVelocity -
-        weightedOffsetVelocityMean;
-    float3 middleDeltaVelocity =
+        weightedOffsetVelocityMean) * drive;
+    float3 middleDeltaVelocity = (
         middleOffsetVelocity -
-        weightedOffsetVelocityMean;
-    float3 tailDeltaVelocity =
+        weightedOffsetVelocityMean) * drive;
+    float3 tailDeltaVelocity = (
         tailOffsetVelocity -
-        weightedOffsetVelocityMean;
+        weightedOffsetVelocityMean) * drive;
 
     // The pose is always reached in full. Only the momentum injected on top of
     // it is limited, so a low acceleration yields a beat with less follow
@@ -541,77 +575,58 @@ void ApplyOscillation(
     }
 }
 
-// Rotates one control group about the body axis to bring its cross direction
-// back in line with the rest of the body.
+// Damps the guide particle's orbit around the spine.
 //
-// Nothing else can do this. Every driver moves a whole group by one shared
-// delta, which leaves the group's internal cross vector exactly as it was, and
-// roll damping only removes the rate of twist, never twist already accumulated.
-// The topologies are planar at rest, so their diagonals resist twist only to
-// second order: rotating a rung by phi changes a diagonal's length by about
-// hx^2 * phi^2 / (4 * hy), which vanishes for small angles and leaves almost no
-// restoring force.
+// GuideChain4 has no resistance to this at all, not merely a weak one. Its
+// three constraints on the guide all reach points on the spine, and the spine
+// is a straight line, so rotating the guide about that line leaves every one of
+// those distances unchanged. The guide is free to drift around the body
+// indefinitely, and it is the sole source of the body's cross direction, so the
+// frame drifts with it and the mesh wrings along its length.
 //
-// A twisted body is also why a straightened spine can still be drawn bent. The
-// mesh takes its frame from each segment's own cross vector, so segments that
-// disagree skin into a contorted shape no matter how collinear the controls are.
-//
-// Applied as a rotation about the group's own centre, so the centroid does not
-// move and no net momentum is introduced. prevPosition follows the correction
-// so it does not register as velocity.
-void AlignGroupTorsion(
+// The counter impulse is spread across the three spine particles so linear
+// momentum is unchanged and no single one of them visibly kicks back.
+void DampGuideOrbit(
     uint particleBase,
-    uint start,
-    uint count,
     float3 axis,
-    float3 currentSide,
-    float3 referenceSide,
     float strength)
 {
-    if (count < 2u)
+    Particle guide =
+        _Particles[particleBase + 3u];
+    if (guide.invMass <= 0.0)
         return;
 
-    float cosAngle = dot(currentSide, referenceSide);
-    float sinAngle = dot(
-        cross(referenceSide, currentSide),
-        axis);
-    float angle = atan2(sinAngle, cosAngle);
-    float correction = -strength * angle;
-    if (abs(correction) < 1e-6)
+    Particle middle =
+        _Particles[particleBase + 1u];
+    float3 radius =
+        guide.position - middle.position;
+    float3 radial =
+        radius - axis * dot(radius, axis);
+    float radialLength = length(radial);
+    if (radialLength <= 1e-6)
         return;
 
-    float cosCorrection = cos(correction);
-    float sinCorrection = sin(correction);
+    float3 orbitDirection =
+        cross(axis, radial / radialLength);
+    float3 relativeVelocity =
+        guide.velocity - middle.velocity;
+    float3 correction =
+        orbitDirection *
+        (-strength *
+         dot(relativeVelocity, orbitDirection));
 
-    float3 center = float3(0.0, 0.0, 0.0);
-    uint i;
-    for (i = 0u; i < count; i++)
-    {
-        center += _Particles[
-            particleBase + start + i].position;
-    }
-    center /= (float)count;
+    guide.velocity += correction;
+    _Particles[particleBase + 3u] = guide;
 
-    for (i = 0u; i < count; i++)
+    float3 share = correction / 3.0;
+    for (uint spineIndex = 0u;
+         spineIndex < 3u;
+         spineIndex++)
     {
-        uint index = particleBase + start + i;
+        uint index = particleBase + spineIndex;
         Particle particle = _Particles[index];
         if (particle.invMass > 0.0)
-        {
-            float3 radius =
-                particle.position - center;
-            float3 along =
-                axis * dot(radius, axis);
-            float3 perpendicular = radius - along;
-            float3 rotated =
-                perpendicular * cosCorrection +
-                cross(axis, perpendicular) *
-                    sinCorrection;
-            float3 delta =
-                (along + rotated) - radius;
-            particle.position += delta;
-            particle.prevPosition += delta;
-        }
+            particle.velocity -= share;
         _Particles[index] = particle;
     }
 }
@@ -703,6 +718,190 @@ void DampGroupRoll(
     }
 }
 
+// Keeps the body's two ends out of each other's place.
+//
+// Nothing in a three-control topology limits how far the two halves may fold
+// onto each other. The head-tail bend constraint is soft and every other
+// constraint is indifferent to the fold, so a body squeezed against its
+// neighbours inside a net can be pressed until the head group and the tail group
+// sit on the same point. Open ground rarely presses hard enough from both sides
+// at once, which is why the fault reads as a net-only one.
+//
+// Once there it stays there, and that is a trap rather than a stable pose. A
+// hairpin has no body axis: which end points forward is genuinely undefined, so
+// the axis every driver measures is decided by whatever asymmetry is left over,
+// it re-rolls every step, and the drive that ought to be prying the ends apart
+// instead throws them around a small neighbourhood in a fresh direction each
+// frame. The sticking and the spinning are one fault, not two.
+//
+// Enforced as a floor on the chord rather than as a force, because the fold is
+// held shut by contact and a force would have to out-push whatever is squeezing.
+//
+// Momentum is untouched. Head and tail groups carry equal particle counts in
+// every topology, so equal and opposite deltas cancel exactly.
+void UnfoldHairpin(
+    SolverInstance instance)
+{
+    float3 head =
+        ControlCenter(instance, 0u);
+    float3 middle =
+        ControlCenter(instance, 1u);
+    float3 tail =
+        ControlCenter(instance, 2u);
+
+    float3 headSegment = head - middle;
+    float3 tailSegment = middle - tail;
+    float headSegmentLength = length(headSegment);
+    float tailSegmentLength = length(tailSegment);
+    float bodyLength =
+        headSegmentLength + tailSegmentLength;
+    if (bodyLength <= 1e-5)
+        return;
+
+    float3 chord = head - tail;
+    float chordLength = length(chord);
+    float minimumChord =
+        bodyLength * MINIMUM_CHORD_FRACTION;
+    if (chordLength >= minimumChord)
+        return;
+
+    // Which way to open.
+    //
+    // Along the chord while the chord still has a length worth trusting.
+    // Separating two points is only defined along the line between them, and
+    // that line is exactly what vanishes here, so hand over to the body's own
+    // cross direction as it goes. That direction is carried by the off-spine
+    // particles, so it is real rather than assumed; it is perpendicular to the
+    // spine, which is the only way the ends can travel without stretching their
+    // own segments; and it does not degenerate at a hairpin, because the guide
+    // or the rails are still where they were. Blended rather than switched, so
+    // the push cannot change direction between one step and the next.
+    float3 headSegmentDirection =
+        headSegmentLength > 1e-6
+            ? headSegment / headSegmentLength
+            : float3(0.0, 0.0, 0.0);
+    float3 tailSegmentDirection =
+        tailSegmentLength > 1e-6
+            ? tailSegment / tailSegmentLength
+            : float3(0.0, 0.0, 0.0);
+    float3 spine = BisectDirections(
+        headSegmentDirection,
+        tailSegmentDirection,
+        headSegmentDirection);
+    float3 baseX =
+        RotateByQuaternion(
+            float3(1.0, 0.0, 0.0),
+            instance.spawnRotation);
+    float3 crossDirection = SafePerpendicular(
+        SideCandidate(instance, 1u, middle),
+        spine,
+        baseX);
+
+    float confidence = saturate(
+        chordLength /
+        (0.25 * minimumChord));
+    float3 chordDirection =
+        chordLength > 1e-9
+            ? chord / chordLength
+            : float3(0.0, 0.0, 0.0);
+    // Take only the part of the cross direction the chord does not already
+    // account for.
+    //
+    // Blending the two raw directions can cancel them outright. Near a hairpin
+    // the chord is itself perpendicular to the spine, so it can sit anti-parallel
+    // to the cross direction, and the mix then vanishes around the halfway
+    // point: the one pose that most needs a push would be left without one.
+    // Made orthogonal, the chord's own share of the result is exactly the blend
+    // weight, so the correction always opens the body rather than displacing it.
+    float3 crossPerpendicular =
+        crossDirection -
+        chordDirection *
+        dot(crossDirection, chordDirection);
+    float3 openCandidate =
+        chordDirection * confidence +
+        crossPerpendicular * (1.0 - confidence);
+    float openLength = length(openCandidate);
+    if (openLength <= 1e-6)
+        return;
+    float3 openDirection =
+        openCandidate / openLength;
+
+    // Half the shortfall to each end, paced so the correction crosses the gap
+    // over several frames rather than teleporting through whatever is holding
+    // the body shut.
+    float3 delta =
+        openDirection *
+        min(
+            (minimumChord - chordLength) * 0.5,
+            UNFOLD_SPEED * _DeltaTime);
+
+    // Separate, much tighter ceiling on how far the correction may reach along
+    // the gravity axis, in substep units.
+    //
+    // The solver turns positional change into velocity by dividing by the
+    // substep rather than the frame, so a step that is harmless sideways
+    // launches the body when it points down, and one of the two ends always
+    // does. Scaled by a common factor so the pair stays equal and opposite;
+    // trimming the downward end alone would leave a net push on the body.
+    float drop = abs(dot(delta, _UpAxis));
+    float maximumDrop =
+        UNFOLD_DROP_SPEED * _SubDeltaTime;
+    if (drop > maximumDrop && drop > 1e-9)
+    {
+        float3 along =
+            _UpAxis * dot(delta, _UpAxis);
+        delta =
+            (delta - along) +
+            along * (maximumDrop / drop);
+    }
+
+    uint headStart;
+    uint headCount;
+    uint middleStart;
+    uint middleCount;
+    uint tailStart;
+    uint tailCount;
+    BodyRanges(
+        instance,
+        headStart,
+        headCount,
+        middleStart,
+        middleCount,
+        tailStart,
+        tailCount);
+    uint particleBase =
+        (uint)instance.particleOffset;
+
+    // prevPosition follows the correction so the solver does not read it as
+    // velocity on the next substep.
+    uint i;
+    for (i = 0u; i < headCount; i++)
+    {
+        uint index =
+            particleBase + headStart + i;
+        Particle particle = _Particles[index];
+        if (particle.invMass > 0.0)
+        {
+            particle.position += delta;
+            particle.prevPosition += delta;
+        }
+        _Particles[index] = particle;
+    }
+
+    for (i = 0u; i < tailCount; i++)
+    {
+        uint index =
+            particleBase + tailStart + i;
+        Particle particle = _Particles[index];
+        if (particle.invMass > 0.0)
+        {
+            particle.position -= delta;
+            particle.prevPosition -= delta;
+        }
+        _Particles[index] = particle;
+    }
+}
+
 [numthreads(64, 1, 1)]
 void ApplyRollDamping(
     uint3 dispatchID : SV_DispatchThreadID)
@@ -713,19 +912,106 @@ void ApplyRollDamping(
 
     SolverInstance instance =
         _Instances[instanceIndex];
-    if (instance.topology != TOPOLOGY_DUAL_RAIL_6 &&
+
+    // Structural, and ahead of the gates below: a body folded onto itself has
+    // no usable axis, and roll damping, settle and the mesh all read that axis.
+    // Chain3 is included here even though it has no roll to damp, because the
+    // fold is a property of having three controls rather than of having
+    // off-spine particles.
+    if (instance.topology == TOPOLOGY_CHAIN_3 ||
+        instance.topology == TOPOLOGY_GUIDE_4 ||
+        instance.topology == TOPOLOGY_DUAL_RAIL_6 ||
+        instance.topology == TOPOLOGY_ARTICULATED_12)
+    {
+        UnfoldHairpin(instance);
+    }
+
+    if (instance.topology != TOPOLOGY_GUIDE_4 &&
+        instance.topology != TOPOLOGY_DUAL_RAIL_6 &&
         instance.topology != TOPOLOGY_ARTICULATED_12)
     {
         return;
     }
 
+    // Settle: once the body is barely deforming, take the last of that motion
+    // out rather than letting it trickle on.
+    //
+    // Rotation about the long axis meets no resistance, so the little that the
+    // solver leaves behind each step is never given back. Damping lowers the
+    // rate but cannot undo what has already turned, so it accumulates until the
+    // cross direction has gone right round and the body reads as mirrored.
+    // Clearing the remainder while it is still small stops it ever reaching
+    // that point, and once cleared it takes a long time to build again.
+    //
+    // Only motion relative to the instance's own mean is removed, so the body
+    // still travels, falls and slides; it just stops changing shape. Faded in
+    // as the body slows rather than switched on at a line, so nothing pops.
+    uint settleCount =
+        (uint)max(0, instance.particleCount);
+    if (_SettleSpeed > 0.0 && settleCount > 0u)
+    {
+        uint particleIndex = (uint)instance.particleOffset;
+        float3 meanVelocity =
+            float3(0.0, 0.0, 0.0);
+        uint i;
+        for (i = 0u; i < settleCount; i++)
+        {
+            meanVelocity +=
+                _Particles[particleIndex + i].velocity;
+        }
+        meanVelocity /= (float)settleCount;
+
+        float fastestRelative = 0.0;
+        for (i = 0u; i < settleCount; i++)
+        {
+            fastestRelative = max(
+                fastestRelative,
+                length(
+                    _Particles[particleIndex + i].velocity -
+                    meanVelocity));
+        }
+
+        float settle = 1.0 - saturate(
+            fastestRelative / _SettleSpeed);
+        if (settle > 0.0)
+        {
+            for (i = 0u; i < settleCount; i++)
+            {
+                uint index = particleIndex + i;
+                Particle particle = _Particles[index];
+                if (particle.invMass > 0.0)
+                {
+                    particle.velocity = lerp(
+                        particle.velocity,
+                        meanVelocity,
+                        settle);
+                }
+                _Particles[index] = particle;
+            }
+        }
+    }
+
     float strength = saturate(_RollDamping);
-    float torsion = saturate(_TorsionAlign);
-    if (strength <= 0.0 && torsion <= 0.0)
+    if (strength <= 0.0)
         return;
 
     float3 axis =
         GetFrame(instance, 1u).tangent;
+
+    // A lone guide has nothing to be aligned against, so only damping applies.
+    // Its control groups are single particles, which the group routines below
+    // skip anyway.
+    if (instance.topology == TOPOLOGY_GUIDE_4)
+    {
+        if (strength > 0.0)
+        {
+            DampGuideOrbit(
+                (uint)instance.particleOffset,
+                axis,
+                strength);
+        }
+        return;
+    }
 
     uint headStart;
     uint headCount;
@@ -766,64 +1052,6 @@ void ApplyRollDamping(
             strength);
     }
 
-    if (torsion <= 0.0)
-        return;
-
-    // Bring the three segments' cross directions back into agreement, using
-    // their own average as the reference so the correction is shared rather
-    // than one segment being treated as correct.
-    float3 middleCenter =
-        ControlCenter(instance, 1u);
-    float3 baseX =
-        RotateByQuaternion(
-            float3(1.0, 0.0, 0.0),
-            instance.spawnRotation);
-    float3 headSide = SafePerpendicular(
-        SideCandidate(instance, 0u, middleCenter),
-        axis,
-        baseX);
-    float3 middleSide = SafePerpendicular(
-        SideCandidate(instance, 1u, middleCenter),
-        axis,
-        baseX);
-    float3 tailSide = SafePerpendicular(
-        SideCandidate(instance, 2u, middleCenter),
-        axis,
-        baseX);
-
-    float3 referenceSum =
-        headSide + middleSide + tailSide;
-    // Segments spread far enough apart to cancel leave no meaningful average,
-    // so take the middle as the reference rather than a direction made of noise.
-    float3 referenceSide =
-        length(referenceSum) > 1e-4
-            ? normalize(referenceSum)
-            : middleSide;
-
-    AlignGroupTorsion(
-        particleBase,
-        headStart,
-        headCount,
-        axis,
-        headSide,
-        referenceSide,
-        torsion);
-    AlignGroupTorsion(
-        particleBase,
-        middleStart,
-        middleCount,
-        axis,
-        middleSide,
-        referenceSide,
-        torsion);
-    AlignGroupTorsion(
-        particleBase,
-        tailStart,
-        tailCount,
-        axis,
-        tailSide,
-        referenceSide,
-        torsion);
 }
 
 // Seconds elapsed since this instance's most recent hop started.

@@ -24,12 +24,12 @@ namespace Yu5h1.UnifiedSolver
         public float bendCompliance = 0.0005f;
         [Min(0f)]
         public float jointDamping = 0.15f;
-        [Tooltip("Per-step fraction of spin about the body's long axis to remove. Structural, not a performance: it runs for every instance whether or not a modifier is attached. Needs at least two particles per control group, so it has no effect on Chain3 or GuideChain4.")]
+        [Tooltip("Per-step fraction of drift around the body's long axis to remove. Structural, not a performance: it runs for every instance whether or not a modifier is attached. GuideChain4 needs this most, since its constraints all reach the spine and so leave the guide free to orbit with no resistance at all, taking the body's cross direction with it. No effect on Chain3, which has nothing off the spine to hold onto.")]
         [Range(0f, 1f)]
         public float rollDamping = 0.25f;
-        [Tooltip("Per-step fraction of accumulated twist to undo, bringing the segments' cross directions back into agreement. Roll Damping only removes the rate of twist, so twist already built up stays, and the mesh takes its frame from each segment separately: a body twisted along its length skins into a contorted shape even when its controls are perfectly collinear. Structural, like Roll Damping, and equally without effect on Chain3 or GuideChain4.")]
-        [Range(0f, 1f)]
-        public float torsionAlign = 0.3f;
+        [Tooltip("Relative speed below which the body stops changing shape, in metres per second. Rotation about the long axis meets no resistance, so what the solver leaves behind each step is never given back and eventually adds up to the body reading as mirrored. Clearing the remainder while it is still small stops it ever getting there. Only motion relative to the body's own mean is removed, so it still travels and slides. Raise it if bodies still drift over time; lower it if they look stiff while settling.")]
+        [Min(0f)]
+        public float settleSpeed = 0.05f;
         public bool collideWithSameProfile = true;
         public bool showCollisionParticles;
 

@@ -73,6 +73,18 @@ float3 RotateByQuaternion(
         cross(rotation.xyz, t);
 }
 
+// Direction perpendicular to tangent, taken from candidate where that is
+// meaningful and from fallback where it is not.
+//
+// Judged relative to the candidate's own length, not against a fixed floor. An
+// absolute threshold lets through a projection that is numerically tiny but
+// still above it, and normalizing that returns rounding error as a direction,
+// which flips from step to step. The body frame is built from this, so a flip
+// swaps the body's left and right, and anything reading the frame swings with
+// it.
+//
+// The handover is a blend rather than a switch, so the direction cannot jump as
+// the candidate degenerates.
 float3 SafePerpendicular(
     float3 candidate,
     float3 tangent,
@@ -81,24 +93,102 @@ float3 SafePerpendicular(
     float3 projected =
         candidate -
         tangent * dot(candidate, tangent);
-    float projectedLength = length(projected);
-    if (projectedLength > 1e-5)
-        return projected / projectedLength;
-
-    projected =
+    float3 fallbackProjected =
         fallback -
         tangent * dot(fallback, tangent);
-    projectedLength = length(projected);
-    if (projectedLength > 1e-5)
-        return projected / projectedLength;
 
+    float candidateLength = length(candidate);
+    float projectedLength = length(projected);
+    float fallbackLength = length(fallbackProjected);
+
+    // How much of the candidate survived the projection. Below a tenth of its
+    // own length it is treated as carrying no direction at all.
+    float confidence =
+        candidateLength > 1e-9
+            ? saturate(
+                projectedLength /
+                (0.1 * candidateLength))
+            : 0.0;
+
+    float3 projectedDirection =
+        projectedLength > 1e-9
+            ? projected / projectedLength
+            : float3(0.0, 0.0, 0.0);
+    float3 fallbackDirection =
+        fallbackLength > 1e-9
+            ? fallbackProjected / fallbackLength
+            : float3(0.0, 0.0, 0.0);
+
+    float3 blended = lerp(
+        fallbackDirection,
+        projectedDirection,
+        confidence);
+    float blendedLength = length(blended);
+    if (blendedLength > 1e-6)
+        return blended / blendedLength;
+
+    // Both degenerate. Pick the world axis furthest from the tangent so the
+    // projection that follows is as large, and as stable, as it can be.
+    float3 magnitude = abs(tangent);
     float3 axis =
-        abs(tangent.x) < 0.8
+        magnitude.x <= magnitude.y &&
+        magnitude.x <= magnitude.z
             ? float3(1.0, 0.0, 0.0)
-            : float3(0.0, 0.0, 1.0);
+            : (magnitude.y <= magnitude.z
+                ? float3(0.0, 1.0, 0.0)
+                : float3(0.0, 0.0, 1.0));
     return normalize(
         axis -
         tangent * dot(axis, tangent));
+}
+
+// Unit axis bisecting two segment directions, handed over to a fallback as the
+// two approach opposition.
+//
+// Their sum has length 2 * cos(fold / 2), so it shrinks to nothing at a hairpin,
+// and long before that its direction is set by whatever asymmetry is left
+// between the two segments: the direction error is roughly that asymmetry
+// divided by the sum's length, so it grows without bound and reverses outright
+// the moment the fold passes through straight. Everything downstream reads the
+// middle's frame and the drive rebuilds its pose from it, so a reversal swaps
+// the body's two ends over and the next step measures the reversal again. That
+// is a spin that feeds itself, not a one-off glitch.
+//
+// Testing the sum against a fixed floor cannot catch this. A sum of 3e-4 is
+// thirty times any such floor while carrying no usable direction at all; the
+// test has to be against the sum's own natural scale of 2, which is the same
+// relative-length reasoning SafePerpendicular above already needed.
+//
+// The fallback must be asymmetric between the two ends or it degenerates in the
+// same place for the same reason. One segment's own direction is asymmetric,
+// stays unit length, and moves continuously, so the handover neither jumps nor
+// flips. It also leans the axis toward the half of the body that still has a
+// direction, which is what lets a drive built on this frame pull a folded body
+// back open instead of holding it shut.
+float3 BisectDirections(
+    float3 first,
+    float3 second,
+    float3 fallback)
+{
+    float3 sum = first + second;
+    float sumLength = length(sum);
+
+    // Full confidence down to a fold of about 160 degrees, none at 180.
+    float confidence = saturate(sumLength / 0.35);
+    float3 sumDirection =
+        sumLength > 1e-9
+            ? sum / sumLength
+            : float3(0.0, 0.0, 0.0);
+
+    float3 blended = lerp(
+        fallback,
+        sumDirection,
+        confidence);
+    float blendedLength = length(blended);
+    return
+        blendedLength > 1e-6
+            ? blended / blendedLength
+            : fallback;
 }
 
 float3 LimitMagnitude(

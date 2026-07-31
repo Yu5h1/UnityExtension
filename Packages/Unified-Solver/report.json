@@ -8,10 +8,15 @@
     {
       "id": "body-bend-performance",
       "title": "身體彎曲表演與接觸彈跳",
-      "status": "done",
+      "status": "in_progress",
       "priority": 0,
-      "summary": "共用 Body Frame 標頭消除物理與蒙皮的分歧；彎曲改為角度式驅動，產生 C／反 C 交替；Roll 阻尼消除麻花捲；vitality（活力）將接觸彈跳從 substeps 的副作用轉為可指定值。Modifier 具備 enabled 開關，Emitter 會自動補上 Runner。詳見 plan.md 第 15 節。",
+      "summary": "三個表演軸(stiffness／vitality／muscleTension)與時間模型(frequency／duration)已完成並經使用者實測。彈跳由接觸反作用產生,不需 SurfaceImpulse。詳見 plan.md 第 15 節。尚有一項未解:靜置實體偶爾整條瞬間鏡像。",
       "pending_items": [
+        {
+          "id": "mirrored-body-flip",
+          "title": "靜置實體瞬間鏡像。繞長軸旋轉在位置層級累積,速度側措施只能減緩。詳見 plan.md 15.10",
+          "priority": 0
+        },
         {
           "id": "decide-acceleration-field",
           "title": "acceleration 只夾速度通道且預設值下從未生效，待比對 0 與 120 的畫面差異後決定保留或移除",

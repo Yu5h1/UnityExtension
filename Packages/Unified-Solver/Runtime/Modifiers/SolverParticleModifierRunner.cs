@@ -147,28 +147,38 @@ namespace Yu5h1.UnifiedSolver
                 "_SubDeltaTime",
                 Time.fixedDeltaTime /
                 Mathf.Max(1, _emitter.Solver.substeps));
+
+            // Shared rather than owned by the oscillation modifier: the
+            // structural unfold budgets its downward reach against this axis and
+            // runs on instances that carry no modifier at all.
+            SolverManager solver = _emitter.Solver;
+            _runtimeCompute.SetVector(
+                "_UpAxis",
+                solver.gravity.sqrMagnitude > 1e-8f
+                    ? -solver.gravity.normalized
+                    : Vector3.up);
         }
 
+        // Dispatched unconditionally. Roll damping and settle still gate
+        // themselves inside the kernel on their own profile values, but the
+        // hairpin unfold ahead of them is structural: a body folded onto itself
+        // has no axis for the frame to be built from, and that is true whatever
+        // the profile asks for.
         void DispatchRollDamping()
         {
             SolverParticleProfile profile =
                 _emitter.profile;
             float rollDamping =
                 Mathf.Clamp01(profile.rollDamping);
-            float torsionAlign =
-                Mathf.Clamp01(profile.torsionAlign);
-            if (rollDamping <= 0f &&
-                torsionAlign <= 0f)
-            {
-                return;
-            }
+            float settleSpeed =
+                Mathf.Max(0f, profile.settleSpeed);
 
             _runtimeCompute.SetFloat(
                 "_RollDamping",
                 rollDamping);
             _runtimeCompute.SetFloat(
-                "_TorsionAlign",
-                torsionAlign);
+                "_SettleSpeed",
+                settleSpeed);
             BindBuffers(_rollDampingKernel);
             Dispatch(_rollDampingKernel);
         }
@@ -210,17 +220,9 @@ namespace Yu5h1.UnifiedSolver
             // Vitality is the launch speed ceiling, enforced directly on the
             // body's velocity, so no substep conversion is needed: the kernel
             // reads the speed the solver already produced.
-            SolverManager solver = _emitter.Solver;
             _runtimeCompute.SetFloat(
                 "_OscillationVitality",
                 Mathf.Clamp01(profile.vitality));
-            Vector3 up =
-                solver.gravity.sqrMagnitude > 1e-8f
-                    ? -solver.gravity.normalized
-                    : Vector3.up;
-            _runtimeCompute.SetVector(
-                "_OscillationUpAxis",
-                up);
             BindBuffers(_oscillationKernel);
             Dispatch(_oscillationKernel);
         }
