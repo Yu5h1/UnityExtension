@@ -186,6 +186,9 @@ namespace Yu5h1.UnifiedSolver
                 "_OscillationDuration",
                 Mathf.Max(0f, profile.duration));
             _runtimeCompute.SetFloat(
+                "_OscillationDurationRandomness",
+                Mathf.Clamp01(profile.durationRandomness));
+            _runtimeCompute.SetFloat(
                 "_OscillationRandomness",
                 profile.frequencyRandomness);
             _runtimeCompute.SetFloat(

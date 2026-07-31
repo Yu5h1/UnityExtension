@@ -20,6 +20,7 @@ float _OscillationDirectionAngle;
 float _OscillationDirectionRandomness;
 float _OscillationMuscleTension;
 float _OscillationDuration;
+float _OscillationDurationRandomness;
 float _OscillationTensionRandomness;
 // Launch speed a fully driven body may reach off a surface, in metres per
 // second, which is roughly a 46 cm hop. Scaled by the drive weight, so this is
@@ -68,6 +69,8 @@ void ApplyOscillation(
         2.0 - 1.0;
     float bendRandom =
         Hash01(instanceIndex * 5u + 4u);
+    float durationRandom =
+        Hash01(instanceIndex * 13u + 11u);
     float frequencyScale = lerp(
         1.0 - _OscillationRandomness,
         1.0 + _OscillationRandomness,
@@ -97,8 +100,15 @@ void ApplyOscillation(
     // Releasing the drive instead leaves it limp, exactly as Vitality 0 does.
     float burstFrequency =
         _OscillationFrequency * frequencyScale;
+    float durationScale = lerp(
+        1.0 - _OscillationDurationRandomness,
+        1.0 + _OscillationDurationRandomness,
+        durationRandom);
+    float duration = max(
+        0.0,
+        _OscillationDuration * durationScale);
     float burstFraction = saturate(
-        _OscillationDuration * burstFrequency);
+        duration * burstFrequency);
 
     float wave = 0.0;
     float waveRate = 0.0;
@@ -263,12 +273,12 @@ void ApplyOscillation(
     // The ceiling is the peak speed a control point reaches while tracing the
     // shape over its duration, so a longer duration is both slower and gentler,
     // and the launch scales down with it.
-    if (_OscillationDuration > 1e-5)
+    if (duration > 1e-5)
     {
         float maximumStep =
             TWO_PI * segmentLength *
             peakHalfAngle /
-            _OscillationDuration *
+            duration *
             _DeltaTime;
         float longestStep = max(
             length(headDeltaPosition),

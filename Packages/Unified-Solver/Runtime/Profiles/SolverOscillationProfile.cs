@@ -16,21 +16,12 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("How hard the muscle tries, before Stiffness resists it. 0 stops all self-driven motion: the body still gets pushed around by contact, it just never moves itself. 1 is full effort and looks freshest. Also budgets the bounce the body gets off a surface, since that bounce is feedback from this same effort. Effective drive is Vitality * (1 - Stiffness), so either one at its limit stops both the motion and the bounce.")]
         [Range(0f, 1f)]
         public float vitality = 1f;
-        [Tooltip("How often a run of the animation begins, in runs per second. Only the timing: it changes neither the shape nor how long a run takes. Between runs the body is left limp exactly as Vitality 0 leaves it, so it keeps whatever shape it had rather than being straightened. 0 means a run never begins.")]
-        //[Range(0f, 8f)]
-        public float frequency = 0.8f;
-        [Tooltip("Seconds one run of the animation takes, start to finish. Set 1 and it takes 1, whatever shape is playing. If a run is longer than the gap Frequency leaves, runs play back to back with no idle time.")]
-        [Min(0f)]
-        public float duration = 1f;
-        [Tooltip("Spread of frequency across instances. At 1 the range is 0x to 2x, so some bodies barely move while others run at double rate.")]
-        [Range(0f, 1f)]
-        public float frequencyRandomness = 0.35f;
         [Range(-180f, 180f)]
         public float directionAngle;
         [Range(0f, 180f)]
         public float directionRandomness;
 
-        [Header("Body Bend")]
+        [Header("Animation")]
         [Tooltip("Hardness, as a rate on everything the body does. Reads like a timescale in reverse: 0 runs at full speed, 0.5 halves it, 1 stops it. At 1 the body freezes in whatever shape it currently holds, curled or straight, and keeps only its overall velocity, so it still travels and collides but no longer changes form. It holds no target shape of its own; reaching a straight body is Muscle Tension's job.")]
         [Range(0f, 1f)]
         public float stiffness;
@@ -41,5 +32,17 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("Per-instance variation applied to Muscle Tension, so bodies do not all hold the same shape.")]
         [Range(0f, 1f)]
         public float tensionRandomness = 0.15f;
+        [Tooltip("How often a run of the animation begins, in runs per second. Only the timing: it changes neither the shape nor how long a run takes. Between runs the body is left limp exactly as Vitality 0 leaves it, so it keeps whatever shape it had rather than being straightened. 0 means a run never begins.")]
+        //[Range(0f, 8f)]
+        public float frequency = 0.8f;
+        [Tooltip("Spread of Frequency across instances. At 1 the range is 0x to 2x, so some bodies barely move while others run at double rate.")]
+        [Range(0f, 1f)]
+        public float frequencyRandomness = 0.35f;
+        [Tooltip("Seconds one run of the animation takes, start to finish. Set 1 and it takes 1, whatever shape is playing. Also paces how fast the body may move, so a longer run is gentler and launches the body less. If a run is longer than the gap Frequency leaves, runs play back to back with no idle time.")]
+        [Min(0f)]
+        public float duration = 1f;
+        [Tooltip("Spread of Duration across instances, so bodies do not all move at the same pace. At 1 the range is 0x to 2x, which leaves some running instantly and hitting hard.")]
+        [Range(0f, 1f)]
+        public float durationRandomness = 0.25f;
     }
 }
