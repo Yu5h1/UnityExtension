@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -12,32 +13,29 @@ namespace Yu5h1.UnifiedSolver
     // defensively instead.
     public sealed class SolverMeshRenderer : MonoBehaviour
     {
-        const string RigidShaderName =
-            "Yu5h1/UnifiedSolver/RigidMesh";
         const string ArticulatedShaderName =
             "Yu5h1/UnifiedSolver/ArticulatedMesh";
 
-        const string HullKeyword =
-            "SOLVER_HULL_FROM_PARTICLES";
-
-        static readonly SolverParticleTopology[]
-            HullVariants =
-            {
-                SolverParticleTopology.RigidCluster4,
-                SolverParticleTopology.RigidCluster6,
-                SolverParticleTopology.RigidCluster8
-            };
+        // Graphics.RenderMeshInstanced draws at most this many per call.
+        const int InstancesPerBatch = 1023;
 
         [Min(1f)]
         public float drawBoundsSize = 1000f;
 
         SolverParticleEmitter _emitter;
-        Material _runtimeMaterial;
         MaterialPropertyBlock _properties;
+        Material _runtimeMaterial;
         SolverRenderProfile _activeRenderProfile;
-        bool _activeHullMode;
-        readonly Mesh[] _hullMeshes = new Mesh[3];
         bool _reportedMissingSetup;
+
+        // Rigid path. One mesh per template, built once from the same vertices
+        // the emitter used as rest particles.
+        Mesh[] _templateMeshes;
+        SolverShapeSource _templateSource;
+        Vector3 _templateDimensions;
+        Matrix4x4[] _matrices =
+            new Matrix4x4[InstancesPerBatch];
+        Vector3[] _templateScratch = new Vector3[12];
 
         void Awake()
         {
@@ -56,30 +54,324 @@ namespace Yu5h1.UnifiedSolver
                 return;
             }
 
-            // Rebuild on the derived mode too, not just on profile identity.
-            // Assigning or clearing the Mesh switches between hull and authored
-            // drawing without changing which render profile is referenced, and
-            // the shader keyword is baked into the material.
-            bool hull = profile.UsesHullRendering;
-            if (_runtimeMaterial == null ||
-                _activeRenderProfile != renderProfile ||
-                _activeHullMode != hull)
-            {
-                CreateRuntimeMaterial(profile, renderProfile);
-            }
-
-            if (_runtimeMaterial == null ||
-                _emitter.InstanceCount == 0 ||
-                _emitter.InstanceBuffer == null ||
-                _emitter.Solver == null ||
-                _emitter.Solver.ParticleBuffer == null)
+            if (_emitter.InstanceCount == 0 ||
+                _emitter.Solver == null)
             {
                 return;
             }
 
+            // A rigid body is a mesh and a matrix, and the solver already hands
+            // out that matrix on the CPU every frame through
+            // TryGetRigidBodyMeshPose. So rigid instances are drawn with
+            // Graphics.RenderMeshInstanced and an ordinary material: no custom
+            // shader, which means any URP or HDRP material works unmodified,
+            // along with everything the pipeline gives a normal renderer.
+            //
+            // Only articulated bodies still need a shader of their own. Their
+            // vertices are skinned from particle positions every frame and
+            // cannot be expressed as a single transform.
+            if (profile.MeshMode == SolverMeshMode.Rigid)
+                DrawRigid(profile, renderProfile);
+            else
+                DrawArticulated(profile, renderProfile);
+        }
+
+        void DrawRigid(
+            SolverParticleProfile profile,
+            SolverRenderProfile renderProfile)
+        {
+            Material material = renderProfile.sourceMaterial;
+            if (material == null)
+            {
+                ReportOnce(
+                    "its Render Profile has no Material. Rigid " +
+                    "instances are drawn with it directly, so any " +
+                    "URP or HDRP material will do");
+                return;
+            }
+
+            // RenderMeshInstanced refuses a material without GPU instancing.
+            // Setting the flag on the assigned asset would dirty something
+            // shared, so the runtime copy carries it instead.
+            if (_runtimeMaterial == null ||
+                _activeRenderProfile != renderProfile)
+            {
+                DestroyRuntimeMaterial();
+                _runtimeMaterial = new Material(material)
+                {
+                    name = $"{material.name} (Runtime)",
+                    enableInstancing = true
+                };
+                _activeRenderProfile = renderProfile;
+            }
+
+            var parameters =
+                new RenderParams(_runtimeMaterial)
+                {
+                    worldBounds = new Bounds(
+                        transform.position,
+                        Vector3.one * drawBoundsSize),
+                    shadowCastingMode =
+                        renderProfile.castShadows
+                            ? ShadowCastingMode.On
+                            : ShadowCastingMode.Off,
+                    receiveShadows =
+                        renderProfile.receiveShadows,
+                    layer = gameObject.layer
+                };
+
             if (profile.UsesHullRendering)
             {
-                DrawHull(profile, renderProfile);
+                DrawHullTemplates(profile, parameters);
+                return;
+            }
+
+            if (renderProfile.mesh == null)
+            {
+                ReportOnce(
+                    $"profile '{profile.name}' is rigid but " +
+                    "has neither a Mesh on its Render Profile " +
+                    "nor a Shape Source to build particle hulls " +
+                    "from, so there is no geometry to draw");
+                return;
+            }
+
+            DrawAuthoredMesh(renderProfile, parameters);
+        }
+
+        // One instanced call per template, because RenderMeshInstanced takes a
+        // single mesh and the templates are genuinely different shapes. This is
+        // why the shape source hands out a fixed library rather than a unique
+        // shape per instance: a shape nothing else shares cannot be batched.
+        void DrawHullTemplates(
+            SolverParticleProfile profile,
+            RenderParams parameters)
+        {
+            if (!EnsureTemplateMeshes(profile))
+                return;
+
+            for (int template = 0;
+                 template < _templateMeshes.Length;
+                 template++)
+            {
+                Mesh mesh = _templateMeshes[template];
+                if (mesh == null)
+                    continue;
+
+                IReadOnlyList<int> bodies =
+                    _emitter.TemplateBodies(template);
+                if (bodies == null || bodies.Count == 0)
+                    continue;
+
+                DrawBodies(mesh, bodies, parameters);
+            }
+        }
+
+        // Every rigid instance shares the authored mesh, so one pass covers all
+        // of them. visualScale is applied through the matrix here, which is safe
+        // because an authored mesh carries no baked particle-radius inflation
+        // for a scale to stretch.
+        void DrawAuthoredMesh(
+            SolverRenderProfile renderProfile,
+            RenderParams parameters)
+        {
+            Mesh mesh = renderProfile.mesh;
+            if (mesh == null)
+                return;
+
+            int filled = 0;
+            for (int i = 0;
+                 i < _emitter.InstanceCount;
+                 i++)
+            {
+                SolverParticleInstance instance =
+                    _emitter.Instances[i];
+                if (instance.rigidBodyCount <= 0)
+                    continue;
+                if (!TryGetMatrix(
+                        instance.rigidBodyOffset,
+                        Vector3.Scale(
+                            renderProfile.visualScale,
+                            instance.scale),
+                        out _matrices[filled]))
+                {
+                    continue;
+                }
+
+                filled++;
+                if (filled == InstancesPerBatch)
+                {
+                    Flush(parameters, mesh, filled);
+                    filled = 0;
+                }
+            }
+
+            Flush(parameters, mesh, filled);
+        }
+
+        void DrawBodies(
+            Mesh mesh,
+            IReadOnlyList<int> bodies,
+            RenderParams parameters)
+        {
+            int filled = 0;
+            for (int i = 0; i < bodies.Count; i++)
+            {
+                // Template meshes are already the right size, and their
+                // particle-radius inflation was baked in local space, so a
+                // scale here would stretch that inflation with it.
+                if (!TryGetMatrix(
+                        bodies[i],
+                        Vector3.one,
+                        out _matrices[filled]))
+                {
+                    continue;
+                }
+
+                filled++;
+                if (filled == InstancesPerBatch)
+                {
+                    Flush(parameters, mesh, filled);
+                    filled = 0;
+                }
+            }
+
+            Flush(parameters, mesh, filled);
+        }
+
+        void Flush(
+            RenderParams parameters,
+            Mesh mesh,
+            int count)
+        {
+            if (count <= 0)
+                return;
+
+            Graphics.RenderMeshInstanced(
+                parameters,
+                mesh,
+                0,
+                _matrices,
+                count);
+        }
+
+        // The solver composes the shape-matched rotation with the spawn
+        // transform, so this maps unrotated template space straight to world,
+        // which is the same space the rest particles were built in.
+        bool TryGetMatrix(
+            int rigidBodyId,
+            Vector3 scale,
+            out Matrix4x4 matrix)
+        {
+            if (!_emitter.Solver.TryGetRigidBodyMeshPose(
+                    rigidBodyId,
+                    out Vector3 position,
+                    out Quaternion rotation))
+            {
+                matrix = Matrix4x4.identity;
+                return false;
+            }
+
+            matrix = Matrix4x4.TRS(
+                position,
+                rotation,
+                scale);
+            return true;
+        }
+
+        // Meshes are built from a second BuildTemplate call with the same
+        // arguments the emitter used, so the drawn surface and the collision
+        // shape come from one source and cannot drift apart.
+        bool EnsureTemplateMeshes(
+            SolverParticleProfile profile)
+        {
+            SolverShapeSource source = profile.shapeSource;
+            if (source == null)
+                return false;
+
+            if (_templateMeshes != null &&
+                _templateSource == source &&
+                _templateDimensions ==
+                    profile.baseDimensions &&
+                _templateMeshes.Length ==
+                    source.TemplateCount)
+            {
+                return true;
+            }
+
+            ReleaseTemplateMeshes();
+            int count = Mathf.Max(1, source.TemplateCount);
+            if (_templateScratch.Length <
+                source.MaximumParticles)
+            {
+                _templateScratch =
+                    new Vector3[source.MaximumParticles];
+            }
+
+            _templateMeshes = new Mesh[count];
+            for (int i = 0; i < count; i++)
+            {
+                SolverParticleTopology topology =
+                    source.BuildTemplate(
+                        i,
+                        profile.baseDimensions,
+                        _templateScratch,
+                        out int vertexCount);
+                _templateMeshes[i] = SolverHullMesh.Build(
+                    topology,
+                    _templateScratch,
+                    vertexCount,
+                    _emitter.Solver.particleRadius);
+            }
+
+            _templateSource = source;
+            _templateDimensions = profile.baseDimensions;
+            return true;
+        }
+
+        void ReleaseTemplateMeshes()
+        {
+            if (_templateMeshes == null)
+                return;
+
+            for (int i = 0; i < _templateMeshes.Length; i++)
+            {
+                if (_templateMeshes[i] == null)
+                    continue;
+                if (Application.isPlaying)
+                    Destroy(_templateMeshes[i]);
+                else
+                    DestroyImmediate(_templateMeshes[i]);
+            }
+            _templateMeshes = null;
+            _templateSource = null;
+        }
+
+        void DrawArticulated(
+            SolverParticleProfile profile,
+            SolverRenderProfile renderProfile)
+        {
+            if (renderProfile.mesh == null)
+            {
+                ReportOnce(
+                    $"profile '{profile.name}' is articulated " +
+                    "and its Render Profile has no Mesh. A body " +
+                    "that deforms every frame is skinned from a " +
+                    "supplied mesh; there is nothing to derive " +
+                    "one from");
+                return;
+            }
+
+            if (_runtimeMaterial == null ||
+                _activeRenderProfile != renderProfile)
+            {
+                CreateArticulatedMaterial(renderProfile);
+            }
+
+            if (_runtimeMaterial == null ||
+                _emitter.InstanceBuffer == null ||
+                _emitter.Solver.ParticleBuffer == null)
+            {
                 return;
             }
 
@@ -98,9 +390,6 @@ namespace Yu5h1.UnifiedSolver
             _properties.SetBuffer(
                 "_Instances",
                 _emitter.InstanceBuffer);
-            if (!TryBindRigidBuffers(profile))
-                return;
-
             _properties.SetVector(
                 "_MeshCenter",
                 meshBounds.center);
@@ -126,153 +415,20 @@ namespace Yu5h1.UnifiedSolver
                         meshBounds.size,
                         renderProfile.forwardAxis)));
 
-            Bounds drawBounds = new Bounds(
-                transform.position,
-                Vector3.one * drawBoundsSize);
-            ShadowCastingMode shadows =
-                renderProfile.castShadows
-                    ? ShadowCastingMode.On
-                    : ShadowCastingMode.Off;
-
             Graphics.DrawMeshInstancedProcedural(
                 mesh,
                 0,
                 _runtimeMaterial,
-                drawBounds,
+                new Bounds(
+                    transform.position,
+                    Vector3.one * drawBoundsSize),
                 _emitter.InstanceCount,
                 _properties,
-                shadows,
-                renderProfile.receiveShadows,
-                gameObject.layer);
-        }
-
-        // One draw per rigid cluster variant.
-        //
-        // DrawMeshInstancedProcedural takes a single mesh, and the three
-        // variants have three different face lists, so they cannot share a call.
-        // Each draw covers only the instances of its own variant and the shader
-        // maps the batch-local id back through the emitter's variant index
-        // buffer. This is also the batch-to-instance mapping baked fracture
-        // fragments will need, where the split is per fragment mesh rather than
-        // per variant.
-        void DrawHull(
-            SolverParticleProfile profile,
-            SolverRenderProfile renderProfile)
-        {
-            if (!SolverManagerAccess
-                    .TryGetRigidRestOffsets(
-                        _emitter.Solver,
-                        out ComputeBuffer restOffsets))
-            {
-                return;
-            }
-
-            Bounds drawBounds = new Bounds(
-                transform.position,
-                Vector3.one * drawBoundsSize);
-            ShadowCastingMode shadows =
                 renderProfile.castShadows
                     ? ShadowCastingMode.On
-                    : ShadowCastingMode.Off;
-
-            for (int i = 0;
-                 i < HullVariants.Length;
-                 i++)
-            {
-                SolverParticleTopology variant =
-                    HullVariants[i];
-                if (!_emitter.TryGetVariantBatch(
-                        variant,
-                        out ComputeBuffer variantIndices,
-                        out int variantOffset,
-                        out int variantCount))
-                {
-                    continue;
-                }
-
-                Mesh mesh = ResolveHullMesh(i, variant);
-                if (mesh == null)
-                    continue;
-
-                _properties.Clear();
-                _properties.SetBuffer(
-                    "_Particles",
-                    _emitter.Solver.ParticleBuffer);
-                _properties.SetBuffer(
-                    "_Instances",
-                    _emitter.InstanceBuffer);
-                if (!TryBindRigidBuffers(profile))
-                    return;
-
-                _properties.SetBuffer(
-                    "_RigidRestOffsets",
-                    restOffsets);
-                _properties.SetBuffer(
-                    "_VariantInstances",
-                    variantIndices);
-                _properties.SetInt(
-                    "_VariantOffset",
-                    variantOffset);
-                _properties.SetFloat(
-                    "_ParticleRadius",
-                    _emitter.Solver.particleRadius);
-
-                Graphics.DrawMeshInstancedProcedural(
-                    mesh,
-                    0,
-                    _runtimeMaterial,
-                    drawBounds,
-                    variantCount,
-                    _properties,
-                    shadows,
-                    renderProfile.receiveShadows,
-                    gameObject.layer);
-            }
-        }
-
-        Mesh ResolveHullMesh(
-            int slot,
-            SolverParticleTopology variant)
-        {
-            if (_hullMeshes[slot] == null)
-            {
-                _hullMeshes[slot] =
-                    SolverHullMesh.Build(variant);
-            }
-            return _hullMeshes[slot];
-        }
-
-        bool TryBindRigidBuffers(
-            SolverParticleProfile profile)
-        {
-            if (profile.MeshMode !=
-                SolverMeshMode.Rigid)
-            {
-                return true;
-            }
-
-            if (!SolverManagerAccess.TryGetRigidBuffers(
-                    _emitter.Solver,
-                    out ComputeBuffer rigidBodyBuffer,
-                    out ComputeBuffer
-                        rigidParticleIndexBuffer))
-            {
-                return false;
-            }
-
-            if (rigidBodyBuffer == null ||
-                rigidParticleIndexBuffer == null)
-            {
-                return false;
-            }
-
-            _properties.SetBuffer(
-                "_RigidBodies",
-                rigidBodyBuffer);
-            _properties.SetBuffer(
-                "_RigidParticleIndices",
-                rigidParticleIndexBuffer);
-            return true;
+                    : ShadowCastingMode.Off,
+                renderProfile.receiveShadows,
+                gameObject.layer);
         }
 
         bool TryResolveSetup(
@@ -286,84 +442,66 @@ namespace Yu5h1.UnifiedSolver
                 ? profile.renderProfile
                 : null;
 
-            // Hull rendering builds its own meshes from the variant face lists,
-            // so a rigid profile needs no Mesh at all. Only an articulated one
-            // does, because there is nothing to derive its surface from.
             bool valid =
-                profile != null &&
-                renderProfile != null &&
-                (renderProfile.mesh != null ||
-                 profile.UsesHullRendering);
+                profile != null && renderProfile != null;
             if (!valid && !_reportedMissingSetup)
             {
-                // Name the missing piece. The previous message asked for all
-                // three whichever one was absent, which is no help when two are
-                // already assigned.
-                string missing =
+                ReportOnce(
                     profile == null
                         ? "no Particle Profile is assigned"
-                        : renderProfile == null
-                            ? $"profile '{profile.name}' has no " +
-                              "Render Profile"
-                            : $"profile '{profile.name}' is " +
-                              "articulated, so its Render Profile " +
-                              "needs a Mesh; only rigid profiles " +
-                              "can be drawn from their particles";
-                Debug.LogWarning(
-                    $"SolverMeshRenderer on '{name}': " +
-                    $"nothing can be drawn because {missing}.",
-                    this);
-                _reportedMissingSetup = true;
+                        : $"profile '{profile.name}' has no " +
+                          "Render Profile");
             }
             if (valid)
                 _reportedMissingSetup = false;
             return valid;
         }
 
-        void CreateRuntimeMaterial(
-            SolverParticleProfile profile,
+        // Once per fault, and it names the missing piece. The earlier message
+        // asked for all three whichever one was absent, which is no help when
+        // two are already assigned.
+        void ReportOnce(string reason)
+        {
+            if (_reportedMissingSetup)
+                return;
+
+            _reportedMissingSetup = true;
+            Debug.LogWarning(
+                $"SolverMeshRenderer on '{name}': nothing " +
+                $"can be drawn because {reason}.",
+                this);
+        }
+
+        void CreateArticulatedMaterial(
             SolverRenderProfile renderProfile)
         {
             DestroyRuntimeMaterial();
-            bool rigid =
-                profile.MeshMode == SolverMeshMode.Rigid;
             Shader shader =
-                rigid
-                    ? renderProfile.rigidShader
-                    : renderProfile.articulatedShader;
-            if (shader == null)
-            {
-                shader = Shader.Find(
-                    rigid
-                        ? RigidShaderName
-                        : ArticulatedShaderName);
-            }
-
+                renderProfile.articulatedShader != null
+                    ? renderProfile.articulatedShader
+                    : Shader.Find(ArticulatedShaderName);
             if (shader == null)
             {
                 Debug.LogError(
-                    "SolverMeshRenderer: Compatible shader " +
-                    "not found. Assign it on Render Profile.",
+                    "SolverMeshRenderer: the articulated " +
+                    "shader was not found. Assign it on the " +
+                    "Render Profile.",
                     this);
                 return;
             }
 
             _runtimeMaterial = new Material(shader)
             {
-                name =
-                    $"{shader.name} (Runtime)"
+                name = $"{shader.name} (Runtime)"
             };
-            if (profile.UsesHullRendering)
-                _runtimeMaterial.EnableKeyword(HullKeyword);
-            else
-                _runtimeMaterial.DisableKeyword(HullKeyword);
             _activeRenderProfile = renderProfile;
-            _activeHullMode = profile.UsesHullRendering;
             CopyMaterialProperties(
                 renderProfile.sourceMaterial,
                 _runtimeMaterial);
         }
 
+        // Articulated only. The rigid path uses the assigned material as-is, so
+        // it needs no property forwarding at all.
         static void CopyMaterialProperties(
             Material source,
             Material destination)
@@ -466,16 +604,7 @@ namespace Yu5h1.UnifiedSolver
         void OnDestroy()
         {
             DestroyRuntimeMaterial();
-            for (int i = 0; i < _hullMeshes.Length; i++)
-            {
-                if (_hullMeshes[i] == null)
-                    continue;
-                if (Application.isPlaying)
-                    Destroy(_hullMeshes[i]);
-                else
-                    DestroyImmediate(_hullMeshes[i]);
-                _hullMeshes[i] = null;
-            }
+            ReleaseTemplateMeshes();
         }
 
         void OnValidate()

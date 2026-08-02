@@ -121,8 +121,13 @@ namespace Yu5h1.UnifiedSolver
         // draw: the hull of its own particles. Making that a toggle meant a
         // fully configured fragment profile rendered nothing until the toggle
         // was found, with no error to say so.
+        //
+        // Requires the shape source, because the hull meshes are built from its
+        // templates. Without one there is nothing to build them from, and the
+        // renderer says so rather than drawing nothing quietly.
         public bool UsesHullRendering =>
             MeshMode == SolverMeshMode.Rigid &&
+            shapeSource != null &&
             (renderProfile == null ||
              renderProfile.mesh == null);
 

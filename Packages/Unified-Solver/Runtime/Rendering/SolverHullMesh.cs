@@ -2,87 +2,115 @@ using UnityEngine;
 
 namespace Yu5h1.UnifiedSolver
 {
-    // Index carrier for hull rendering: one mesh per rigid cluster variant,
-    // holding no geometry of its own.
+    // Builds an ordinary Mesh from a template's rest particle positions.
     //
-    // Every vertex position is read from the solver's rest offsets at draw time,
-    // so what the mesh actually supplies is the face list, expanded so that no
-    // vertex is shared between two faces. Sharing them would force the corners
-    // to interpolate a single normal and round off the facets, and ice is
-    // supposed to read as flat and sharp.
+    // Ordinary is the point. The vertices are baked in local space, so the mesh
+    // needs no custom shader to place them: a rigid body is a mesh and a matrix,
+    // and the solver already hands out that matrix on the CPU every frame.
+    // Anything Unity can draw a mesh with will draw these, including a URP or
+    // HDRP material taken off the shelf.
     //
-    // The three corner indices of a vertex's face, its own first, travel in UV1
-    // rather than in NORMAL. Both channels are free here, but a normal is
-    // semantically a direction and mesh tooling is entitled to renormalise one;
-    // nothing ever rewrites a UV.
+    // The earlier version carried no geometry at all, only indices for a vertex
+    // shader that read positions out of the solver's buffers. That worked, but
+    // it made the look of a fragment the shader's problem, and there was never a
+    // reason for it to be.
     public static class SolverHullMesh
     {
+        // vertices must be the same positions the emitter used as rest
+        // particles, from the same SolverShapeSource.BuildTemplate call, or the
+        // fragment collides as one shape and is drawn as another.
+        //
+        // particleRadius pushes the surface out to where the body actually
+        // collides. The hull passes through particle centres, but the fragment
+        // collides as the union of spheres around them, so drawn untouched it
+        // reads a radius smaller than it behaves. Radial inflation from the
+        // centroid is the cheap approximation of that union, and baking it here
+        // is only correct because the instance matrix carries no scale that
+        // would stretch it afterwards.
         public static Mesh Build(
-            SolverParticleTopology topology)
+            SolverParticleTopology topology,
+            Vector3[] vertices,
+            int vertexCount,
+            float particleRadius)
         {
             int[] faces =
                 SolverHullShapes.Faces(topology);
-            Vector3[] baseVertices =
-                SolverHullShapes.BaseVertices(topology);
-            if (faces == null || baseVertices == null)
+            if (faces == null ||
+                vertices == null ||
+                vertexCount <= 0)
+            {
                 return null;
+            }
 
+            Vector3 centroid = Vector3.zero;
+            for (int i = 0; i < vertexCount; i++)
+                centroid += vertices[i];
+            centroid /= vertexCount;
+
+            var inflated = new Vector3[vertexCount];
+            for (int i = 0; i < vertexCount; i++)
+            {
+                Vector3 radial = vertices[i] - centroid;
+                float length = radial.magnitude;
+                inflated[i] = length > 1e-6f
+                    ? centroid +
+                      radial *
+                      ((length + particleRadius) / length)
+                    : vertices[i];
+            }
+
+            // One vertex per face corner, never shared between faces. Sharing
+            // would force the corners to interpolate a single normal and round
+            // the facets off, and ice is supposed to read as flat and sharp.
             int count = faces.Length;
             var positions = new Vector3[count];
-            var cornerIndices = new Vector3[count];
+            var normals = new Vector3[count];
             var uv = new Vector2[count];
             var triangles = new int[count];
 
             for (int i = 0; i < count; i += 3)
             {
-                int a = faces[i];
-                int b = faces[i + 1];
-                int c = faces[i + 2];
+                Vector3 a = inflated[faces[i]];
+                Vector3 b = inflated[faces[i + 1]];
+                Vector3 c = inflated[faces[i + 2]];
+                Vector3 normal = Vector3.Cross(
+                    b - a,
+                    c - a).normalized;
 
-                // Each of the three gets the same face, rotated so its own
-                // corner is first. The winding is preserved by rotating rather
-                // than reordering, which is what keeps the computed facet normal
-                // pointing outward for all three.
-                Write(i, a, b, c);
-                Write(i + 1, b, c, a);
-                Write(i + 2, c, a, b);
+                Write(i, a, normal, 0);
+                Write(i + 1, b, normal, 1);
+                Write(i + 2, c, normal, 2);
             }
 
             void Write(
                 int vertex,
-                int own,
-                int next,
-                int last)
+                Vector3 position,
+                Vector3 normal,
+                int corner)
             {
-                // A real position so the mesh has usable bounds in the editor
-                // and nothing downstream sees a zero-size mesh. The shader
-                // ignores it.
-                positions[vertex] = baseVertices[own];
-                cornerIndices[vertex] = new Vector3(
-                    own,
-                    next,
-                    last);
-                uv[vertex] = FaceUV(vertex % 3);
+                positions[vertex] = position;
+                normals[vertex] = normal;
+                uv[vertex] = FaceUV(corner);
                 triangles[vertex] = vertex;
             }
 
             var mesh = new Mesh
             {
-                name =
-                    $"SolverHull_{topology}",
+                name = $"SolverHull_{topology}",
                 vertices = positions,
-                normals = positions,
+                normals = normals,
                 uv = uv,
                 triangles = triangles
             };
-            mesh.SetUVs(1, cornerIndices);
             mesh.RecalculateBounds();
+            mesh.RecalculateTangents();
             return mesh;
         }
 
         // Flat triangle mapping. A fragment has no meaningful surface
-        // parameterisation of its own, and stretching one texture over each
-        // facet is what reads as ice rather than as a painted solid.
+        // parameterisation of its own, and stretching one texture across each
+        // facet is what reads as ice rather than as a painted solid. A shader
+        // using triplanar or screen-space coordinates ignores this anyway.
         static Vector2 FaceUV(int corner)
         {
             switch (corner)

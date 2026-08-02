@@ -42,16 +42,15 @@ The original `unified-solver` source is vendored as a read-only dependency under
 - `Documentation/ParticleSystem x Unified Solver.md` defines ParticleSystem/Solver ownership boundaries, five cooperation modes, current component placement, phased validation, and long-term Soft Body goals without scheduling Soft Body implementation.
 - README and architecture plan.
 
-## Written, not yet compiled: procedural ice fragments
+## Procedural ice fragments
 
-The 4/6/8 rigid fragment slice from `plan.md` section 13.12. Nothing here has
-been through a compiler or Unity; it was written with the Editor closed.
+The 4/6/8 rigid fragment slice from `plan.md` section 13.12. Fragments were
+confirmed on screen in Unity; the move to instanced matrix rendering that
+followed has not been compiled.
 
-- `AddRigidBody` already sizes a group from `particleIndices.Length`, and
-  `_rigidRestOffsetBuffer` (`q_i = x_i0 - x_cm0`, parallel to
-  `_RigidParticleIndices`) is already on the GPU every frame. 4/6/8 physics and
-  hull rendering both needed zero vendored solver changes. The only thing
-  pinning the extension to 4 was `_rigidIndexScratch = new int[4]`.
+- `AddRigidBody` already sizes a group from `particleIndices.Length`, so 4/6/8
+  physics needed zero vendored solver changes. The only thing pinning the
+  extension to 4 was `_rigidIndexScratch = new int[4]`.
 - New: `SolverShapeSource` (abstract seam), `SolverHullShapes` (base polyhedra
   and face tables), `SolverIceFragmentShapeSource`, `SolverHullMesh`.
 - `SolverShapeSource` is the line that matters for the future. Baked fracture
@@ -61,15 +60,23 @@ been through a compiler or Unity; it was written with the Editor closed.
   fixed combinatorial polyhedron with bounded vertex displacement, so a
   rank-deficient or self-intersecting fragment cannot be produced. This replaces
   `plan.md` 13.5's candidate-and-reject loop.
-- `SolverRigidMesh.shader` gained a `SOLVER_HULL_FROM_PARTICLES` branch rather
-  than a second shader. Corner indices ride in UV1, not NORMAL, because mesh
-  tooling may renormalise a normal.
-- Rest offsets already contain the spawn rotation and scale. The hull branch
-  applies `body.quaternion` alone; applying `instance.spawnRotation` or
-  `instance.scale` there would apply both twice.
-- One draw call per variant, with a variant instance-index buffer remapping the
-  batch-local instance id. That is the batch-to-instance mapping `plan.md` 13.6
-  asks for, and fracture will reuse it split per fragment mesh instead.
+- Rigid instances are drawn with `Graphics.RenderMeshInstanced` and an ordinary
+  material. `SolverManager.TryGetRigidBodyMeshPose` is public and the rigid body
+  buffer is already read back every frame, so a rigid body is a mesh plus a
+  matrix that costs nothing extra to obtain. `SolverRigidMesh.shader` is deleted:
+  any URP or HDRP material now works unmodified, along with shadows, decals,
+  motion vectors and the SRP batcher.
+- The shape source hands out a fixed library of templates rather than a unique
+  shape per instance, because `RenderMeshInstanced` takes one mesh and a matrix
+  list; a shape nothing else shares cannot be batched. One instanced call per
+  template. That is the batch-to-instance mapping `plan.md` 13.6 asks for, and
+  fracture fits it exactly: a bake asset is already a fixed library.
+- The matrix carries **no scale** on the hull path. Particle-radius inflation is
+  baked into the template mesh in local space, and a scale would stretch it.
+  Size variety therefore lives inside the templates, not in the instance.
+- The reflection contract narrowed from three private `SolverManager` fields to
+  one. `_rigidBodyBuffer` and `_rigidParticleIndexBuffer` were only read so a
+  custom shader could place vertices; nothing needs them now.
 - Capacity is reserved against `WorstCaseRequirements`, because the variant is
   not known until the shape source picks it and a half-reserved batch would
   leave partial instances behind.
@@ -165,7 +172,8 @@ Settings that make it worse and are worth checking before blaming the code:
 
 ## Verification
 
-- NOT YET VERIFIED: nothing in the section 13.12 ice fragment slice has been compiled or run. Unity was not running. Compile first, then check in this order: fragments spawn at mixed 4/6/8; hulls are drawn and match where the particles are (`showCollisionParticles` on); fragments collide with each other and with fish; nothing is drawn inside-out.
+- User-confirmed in Unity: fragments spawn at mixed 4/6/8 and are drawn.
+- NOT YET VERIFIED: the switch to `Graphics.RenderMeshInstanced` with matrices, the template library replacing per-instance shapes, the `settleSpeed` gate fix, and the hidden companion components. Check in this order: fragments still appear and sit where their particles are (`showCollisionParticles` on); nothing is inside-out; the assigned Material is what shows, since it is now used directly instead of being sampled for base map and tint; fragments settle after landing; prefab apply/revert and Undo on the hidden companions.
 - User-confirmed in Unity: the section 15.11 hairpin fix compiles and resolves the fault. Head and tail no longer stick together in the net, and the spine no longer spins.
 - Runtime extension sources compile against the current original solver and Unity 6000.3.9f1 references with 0 warnings / 0 errors.
 - Runtime compatibility tests compile with 0 warnings / 0 errors and cover field-contract resolution, rigid-particle reference count reads, pre-allocation buffer reads, and original `ClothGenerator` particle-range reads.
@@ -268,7 +276,7 @@ Established while building the bend and bounce. Read before tuning anything that
 - Instances are append-only; no free list/recycling yet.
 - Cross-emitter capacity reservation is not globally atomic at the final capacity edge.
 - Modifier dispatch is batched per emitter, not yet globally across all emitters sharing a modifier type.
-- The non-invasive compatibility bridge depends on the names and types of three private `SolverManager` fields and the private `ClothGenerator._particleOffset` field.
+- The non-invasive compatibility bridge depends on the name and type of one private `SolverManager` field, `_rigidParticleRefCount`, and the private `ClothGenerator._particleOffset` field. It was three until rigid rendering stopped needing the buffers.
 - The original solver always performs synchronous rigid-body readback; the extension cannot disable it without changing the original source.
 - Ice source-Mesh fracture, fragment bake assets, fragment runtime spawning, fragment collision validation, and fragment Sleep/Wake are planned but not implemented.
 - A true GPU-saving Sleep path cannot be completed entirely in the extension while the vendored Solver Compute Pipeline remains read-only.

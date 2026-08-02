@@ -64,22 +64,15 @@ namespace Yu5h1.UnifiedSolver
         readonly int[] _rigidScratch6 = new int[6];
         readonly int[] _rigidScratch8 = new int[8];
 
-        // Instance indices grouped by rigid cluster variant, so the renderer can
-        // issue one draw per variant. Instances are append-only, and an
-        // instance's variant is fixed at spawn, so this only ever grows.
-        readonly List<int>[] _variantInstances =
-        {
-            new List<int>(),
-            new List<int>(),
-            new List<int>()
-        };
-        readonly List<int> _variantIndexScratch =
-            new List<int>();
+        // Rigid body ids grouped by the template their instance was built from,
+        // so the renderer can draw everything sharing a template in one
+        // instanced call. Instances are append-only and a template is fixed at
+        // spawn, so these only ever grow.
+        readonly List<List<int>> _templateBodies =
+            new List<List<int>>();
 
         SolverManager _solver;
         ComputeBuffer _instanceBuffer;
-        ComputeBuffer _variantIndexBuffer;
-        bool _variantIndicesDirty;
         int _sharedPhase;
         bool _reportedCapacity;
 
@@ -280,13 +273,18 @@ namespace Yu5h1.UnifiedSolver
             // of them would need three profiles and three emitters to make one.
             SolverParticleTopology topology;
             int shapeCount;
+            int templateIndex = -1;
             if (profile.shapeSource != null)
             {
-                topology = profile.shapeSource.BuildShape(
-                    dimensions,
-                    ShapeSeedFor(_instances.Count),
-                    _shapeScratch,
-                    out shapeCount);
+                templateIndex = TemplateFor(
+                    _instances.Count,
+                    profile.shapeSource.TemplateCount);
+                topology =
+                    profile.shapeSource.BuildTemplate(
+                        templateIndex,
+                        dimensions,
+                        _shapeScratch,
+                        out shapeCount);
             }
             else
             {
@@ -348,7 +346,11 @@ namespace Yu5h1.UnifiedSolver
                 request.position,
                 request.rotation);
 
-            TrackVariant(topology, _instances.Count);
+            // Rigid bodies are appended in order, so the id of the one just
+            // created is the count captured before creating it.
+            if (requirements.rigidBodies > 0)
+                TrackTemplate(templateIndex, rigidBodyOffset);
+
             _instances.Add(
                 new SolverParticleInstance
                 {
@@ -492,106 +494,49 @@ namespace Yu5h1.UnifiedSolver
             }
         }
 
-        // Seeded from the emitter and the instance's own index, so a pile is
-        // reproducible run to run and no two fragments in it are alike.
-        int ShapeSeedFor(int instanceIndex)
+        // Which template an instance is built from. Spread across the library by
+        // the emitter's seed, so the same seed lays out the same pile every run.
+        int TemplateFor(int instanceIndex, int templateCount)
         {
-            return shapeSeed * 73856093 ^
-                (instanceIndex + 1) * 19349663;
+            if (templateCount <= 1)
+                return 0;
+
+            uint value =
+                (uint)(shapeSeed * 73856093 ^
+                       (instanceIndex + 1) * 19349663);
+            value ^= value >> 16;
+            value *= 0x7feb352du;
+            value ^= value >> 15;
+            value *= 0x846ca68bu;
+            value ^= value >> 16;
+            return (int)(value % (uint)templateCount);
         }
 
-        void TrackVariant(
-            SolverParticleTopology topology,
-            int instanceIndex)
+        void TrackTemplate(
+            int templateIndex,
+            int rigidBodyId)
         {
-            int slot = VariantSlot(topology);
-            if (slot < 0)
+            if (templateIndex < 0 || rigidBodyId < 0)
                 return;
 
-            _variantInstances[slot].Add(instanceIndex);
-            _variantIndicesDirty = true;
+            while (_templateBodies.Count <= templateIndex)
+                _templateBodies.Add(new List<int>());
+            _templateBodies[templateIndex].Add(rigidBodyId);
         }
 
-        static int VariantSlot(
-            SolverParticleTopology topology)
-        {
-            switch (topology)
-            {
-                case SolverParticleTopology.RigidCluster4:
-                    return 0;
-                case SolverParticleTopology.RigidCluster6:
-                    return 1;
-                case SolverParticleTopology.RigidCluster8:
-                    return 2;
-                default:
-                    return -1;
-            }
-        }
-
-        // Instance indices for one rigid cluster variant, laid out back to back
-        // in the buffer below.
+        // Rigid body ids sharing one template.
         //
-        // The renderer draws one mesh per variant, and DrawMeshInstancedProcedural
-        // hands the shader a batch-local instance id, so the shader needs this to
-        // find the instance the id actually refers to.
-        public bool TryGetVariantBatch(
-            SolverParticleTopology topology,
-            out ComputeBuffer indices,
-            out int offset,
-            out int count)
+        // The renderer turns each id into a matrix through the solver's own
+        // TryGetRigidBodyMeshPose and draws the whole list in a single instanced
+        // call, so the list is what a draw call is made of.
+        public IReadOnlyList<int> TemplateBodies(
+            int templateIndex)
         {
-            indices = null;
-            offset = 0;
-            count = 0;
-
-            int slot = VariantSlot(topology);
-            if (slot < 0)
-                return false;
-
-            RebuildVariantIndices();
-            if (_variantIndexBuffer == null)
-                return false;
-
-            for (int i = 0; i < slot; i++)
-                offset += _variantInstances[i].Count;
-            count = _variantInstances[slot].Count;
-            indices = _variantIndexBuffer;
-            return count > 0;
-        }
-
-        void RebuildVariantIndices()
-        {
-            if (!_variantIndicesDirty)
-                return;
-
-            _variantIndicesDirty = false;
-            _variantIndexScratch.Clear();
-            for (int slot = 0;
-                 slot < _variantInstances.Length;
-                 slot++)
-            {
-                _variantIndexScratch.AddRange(
-                    _variantInstances[slot]);
-            }
-
-            int required = _variantIndexScratch.Count;
-            if (required == 0)
-                return;
-
-            if (_variantIndexBuffer == null ||
-                _variantIndexBuffer.count < required)
-            {
-                _variantIndexBuffer?.Release();
-                _variantIndexBuffer = new ComputeBuffer(
-                    Mathf.Max(required, maxInstances),
-                    sizeof(int));
-            }
-
-            _variantIndexBuffer.SetData(
-                _variantIndexScratch,
-                0,
-                0,
-                required);
+            return
+                templateIndex >= 0 &&
+                templateIndex < _templateBodies.Count
+                    ? _templateBodies[templateIndex]
+                    : null;
         }
 
         void AddJoint(int[] p, int a, int b)
@@ -1010,8 +955,6 @@ namespace Yu5h1.UnifiedSolver
         {
             _instanceBuffer?.Release();
             _instanceBuffer = null;
-            _variantIndexBuffer?.Release();
-            _variantIndexBuffer = null;
 #if UNITY_EDITOR
             RemoveCompanionsIfOrphaned();
 #endif

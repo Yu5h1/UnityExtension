@@ -819,21 +819,25 @@ Wake Threshold：明顯高於 Sleep Threshold
 
 四面體其實對任何非共面位移都成立；八面體與立方體才是上限真正在保護的對象。
 
-#### 繪製：Mesh 就是粒子的凸包
+#### 繪製：剛體是一張 mesh 加一個矩陣
 
-沿用 `SolverRigidMesh.shader`，加一個 `SOLVER_HULL_FROM_PARTICLES` keyword 分支，不另開 shader —— 光照、fragment、陰影 pass、材質屬性全部共用，唯一的差別是 local 頂點從哪裡來。
+不寫任何自訂 shader。`SolverManager.TryGetRigidBodyMeshPose()` 是 public，而剛體 buffer 每幀本來就會 readback 到 CPU（handoff 早就記著這條同步成本無法關掉），所以每個碎片的世界變換免費就有。剛體的定義就是「一張 mesh + 一個變換矩陣」，於是：
 
 ```
-worldPos = body.xcm + RotateByQuaternion(_RigidRestOffsets[body.particleOffset + k], body.quaternion)
+每幀:  各碎片的 pose → Matrix4x4[] → Graphics.RenderMeshInstanced(材質, mesh, matrices)
 ```
 
-兩個一定會寫錯的地方：rest offsets 是從 spawn 當下的**世界座標**算的，所以 `instance.spawnRotation` 與 `instance.scale` 都已經烘在裡面，再乘一次就是乘兩次。原本的固定 mesh 路徑要乘，是因為它的頂點在未旋轉的 local 空間。
+**任何 URP 或 HDRP 材質都能直接用**，連同陰影、decal、motion vector、SRP Batcher 這些整條管線的東西。`SolverRigidMesh.shader` 已刪除。相依的 private 欄位也從三個降到一個 —— 那兩個 rigid buffer 當初只是為了讓自訂 shader 讀頂點。
 
-平面著色需要每面獨立頂點，所以 canonical mesh 每個頂點在 **UV1** 帶三個 corner index（自己在前），法線在 vertex shader 用叉積算。選 UV1 而不是 NORMAL，是因為 normal 語意上是方向、mesh 工具有權把它重新正規化，而沒有東西會去改 UV。
+代價是 `RenderMeshInstanced` 一次只吃一張 mesh，所以**形狀必須可共用**：shape source 改成產生固定的樣板庫（預設 24 個），每顆碎片分配一個，同樣板的一起批次繪製。一個樣板一次 draw call。
 
-視覺凸包穿過粒子**圓心**，但碎片是以 `particleRadius` 的球體聯集在碰撞，所以直接畫會比實際碰撞小一圈。頂點沿徑向從質心外推 `(|q| + r) / |q|` 補回來。
+樣板的頂點同時是該碎片的 rest particle 位置 —— 同一次 `BuildTemplate` 呼叫的結果，emitter 拿來放粒子、renderer 拿來建 mesh，所以碰撞形狀與可見表面不可能漂移。
 
-一個 variant 一次 draw call：`DrawMeshInstancedProcedural` 只吃一張 mesh，三個 variant 的面表不同，不能共用。Shader 透過 emitter 的 variant index buffer 把 batch-local id 映射回真正的 instance。**這就是 13.6 要求的 batch-local → global mapping**，之後烘焙碎片按 fragment mesh 分批時是同一個機制。
+**矩陣不帶縮放。** 粒子半徑的外推是在 local 空間烘進樣板 mesh 的，縮放會把那圈外推一起拉長。所以尺寸變化屬於樣板內部（24 個樣板各自不同大小），不屬於實體。變化度 = 24 種輪廓 × 每顆自己的旋轉。
+
+這個形狀也正是 13.6 要求的 batch-local → global mapping，而 mesh 切割天生就吻合：一份 bake 資產本來就是一個固定的碎片庫。
+
+會變形的身體（魚）仍然需要自己的 shader，因為逐幀蒙皮無法用單一矩陣表示。
 
 #### 序列化：分三層，只有中間一層存
 
