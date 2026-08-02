@@ -6,6 +6,5 @@ namespace Yu5h1Lib
     /// Concrete <see cref="ResolverObject{TData, TValue}"/> asset wrapping a <see cref="Repeater"/>.
     /// Repeats a fixed number of times (or forever) and raises its UnityEvents on each step / completion.
     /// </summary>
-    [CreateAssetMenu(fileName = "Repeater", menuName = "Yu5h1Lib/Resolver/Repeater")]
     public class RepeaterObject : ResolverObject<Repeater, int> { }
 }
