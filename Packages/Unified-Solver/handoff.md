@@ -181,8 +181,8 @@ Settings that make it worse and are worth checking before blaming the code:
 
 ## Verification
 
-- User-confirmed in Unity: fragments spawn at mixed 4/6/8 and are drawn.
-- NOT YET VERIFIED: the switch to `Graphics.RenderMeshInstanced` with matrices, the template library replacing per-instance shapes, the `settleSpeed` gate fix, and the hidden companion components. Check in this order: fragments still appear and sit where their particles are (`showCollisionParticles` on); nothing is inside-out; the assigned Material is what shows, since it is now used directly instead of being sampled for base map and tint; fragments settle after landing; prefab apply/revert and Undo on the hidden companions.
+- User-confirmed in Unity: fragments spawn at mixed 4/6/8 and are drawn through `Graphics.RenderMeshInstanced` with an ordinary URP material. The template library, the matrix path, the hidden companion components and the new spawn defaults all run. Switching `GPU_Ice.mat` from the deleted `SolverRigidMesh` shader to URP/Lit was the only change needed.
+- NOT YET VERIFIED: the `settleSpeed` gate fix and the landing behaviour it was meant to cure; whether template repetition reads as repetitive at 24; prefab apply/revert and Undo on the hidden companions.
 - User-confirmed in Unity: the section 15.11 hairpin fix compiles and resolves the fault. Head and tail no longer stick together in the net, and the spine no longer spins.
 - Runtime extension sources compile against the current original solver and Unity 6000.3.9f1 references with 0 warnings / 0 errors.
 - Runtime compatibility tests compile with 0 warnings / 0 errors and cover field-contract resolution, rigid-particle reference count reads, pre-allocation buffer reads, and original `ClothGenerator` particle-range reads.
