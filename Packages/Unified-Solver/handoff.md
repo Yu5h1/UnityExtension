@@ -260,6 +260,14 @@ A settled body occasionally mirrors end to end in a single step. The pose is cor
 - A symmetric C-bend does not rotate the head-tail chord. That is correct, not a defect. A tail-dominant beat that yaws the body needs asymmetric drive, not more control points.
 - `SolverOscillationProfile.acceleration` caps only the velocity channel, does not affect the pose, and never engages at its default: the drive needs about 1.75 m/s against a cap of `120 * 0.02 = 2.4`. It has to drop below roughly 87 to bind at all. Pending a user check of 0 against 120; delete it if there is no visible difference at 0.
 
+## Colliders
+
+- Unity's own `BoxCollider`/`Rigidbody` are invisible to the solver; they are separate physics worlds with no bridge. Use the vendored `SolverBoxCollider`, `SolverSphereCollider` or `SolverCapsuleCollider`, which register themselves with `SolverManager` on enable.
+- A box has no size field: centre, half extents and orientation all come from the Transform, with half extents as `lossyScale * 0.5`, so a parent's scale counts. It is an OBB, so rotation works.
+- It is a solid, not a container. A particle that ends up inside is pushed out through the nearest face, so a holding box has to be built from several thin ones as walls, and spawning inside one ejects the body.
+- Colliders are re-uploaded every FixedUpdate, so they may move, rotate and scale at runtime.
+- Contact leaves a `particleRadius` gap between the surface and a particle centre, which reads as the mesh floating off the wall by that much.
+
 ## Solver behaviour that constrains any future work here
 
 Established while building the bend and bounce. Read before tuning anything that touches forces, damping or contact. Full derivations in `plan.md` section 15.
