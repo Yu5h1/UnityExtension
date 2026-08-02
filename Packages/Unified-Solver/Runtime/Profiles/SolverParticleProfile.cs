@@ -1,10 +1,8 @@
 using UnityEngine;
+using Yu5h1Lib;
 
 namespace Yu5h1.UnifiedSolver
 {
-    [CreateAssetMenu(
-        fileName = "SolverParticleProfile",
-        menuName = "Yu5h1/Unified Solver/Particle Profile")]
     public sealed class SolverParticleProfile : ScriptableObject
     {
         [Header("Topology")]
@@ -14,6 +12,9 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("X = width, Y = length/height, Z = thickness/depth.")]
         public Vector3 baseDimensions =
             new Vector3(0.12f, 0.4f, 0.08f);
+
+        [Inline,Tooltip("Optional. Supplies each instance's rest particle positions instead of the fixed shape the Topology above would build, and chooses that instance's own topology. Leave empty for everything except procedurally varied rigid fragments. This is also where baked mesh fracture data will attach, so the spawn path does not have to change again for it.")]
+        public SolverShapeSource shapeSource;
 
         [Header("Physics")]
         [Min(0.0001f)]
@@ -27,7 +28,7 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("Per-step fraction of drift around the body's long axis to remove. Structural, not a performance: it runs for every instance whether or not a modifier is attached. GuideChain4 needs this most, since its constraints all reach the spine and so leave the guide free to orbit with no resistance at all, taking the body's cross direction with it. No effect on Chain3, which has nothing off the spine to hold onto.")]
         [Range(0f, 1f)]
         public float rollDamping = 0.25f;
-        [Tooltip("Relative speed below which the body stops changing shape, in metres per second. Rotation about the long axis meets no resistance, so what the solver leaves behind each step is never given back and eventually adds up to the body reading as mirrored. Clearing the remainder while it is still small stops it ever getting there. Only motion relative to the body's own mean is removed, so it still travels and slides. Raise it if bodies still drift over time; lower it if they look stiff while settling.")]
+        [Tooltip("Relative speed below which an instance stops moving internally, in metres per second. Only motion relative to the instance's own mean is removed, so it still travels, falls and slides. Runs for every topology.\n\nOn a deforming body this is what stops shape drift accumulating into a mirrored body. On a rigid cluster the only internal motion left after shape matching is its rotation, so this acts as rolling resistance: a body made of spheres has none of its own, and a landed fragment otherwise rolls until something blocks it. Raise it if things keep creeping after they land; lower it if they look glued and refuse to tip.")]
         [Min(0f)]
         public float settleSpeed = 0.05f;
         public bool collideWithSameProfile = true;
@@ -38,47 +39,92 @@ namespace Yu5h1.UnifiedSolver
             new Color(0.35f, 0.65f, 0.8f, 1f);
         [Range(0f, 1f)]
         public float colorVariation = 0.15f;
+        [Inline]
         public SolverRenderProfile renderProfile;
 
         [Header("Optional Modifiers")]
         public SolverParticleModifierProfile[] modifiers =
             new SolverParticleModifierProfile[0];
 
-        public SolverParticleRequirements Requirements
+        public SolverParticleRequirements Requirements =>
+            RequirementsFor(topology);
+
+        // What a single spawn may cost before its variant is known.
+        //
+        // A shape source picks the variant per instance, so the capacity check
+        // has to reserve against the largest one it could return. Checking
+        // against the realized variant instead would let a batch pass and then
+        // run out partway through, which leaves half-built instances behind.
+        public SolverParticleRequirements
+            WorstCaseRequirements
         {
             get
             {
-                switch (topology)
-                {
-                    case SolverParticleTopology.Single:
-                        return new SolverParticleRequirements(
-                            1, 0, 0, 0);
-                    case SolverParticleTopology.Chain3:
-                        return new SolverParticleRequirements(
-                            3, 3, 0, 0);
-                    case SolverParticleTopology.GuideChain4:
-                        return new SolverParticleRequirements(
-                            4, 6, 0, 0);
-                    case SolverParticleTopology.DualRail6:
-                        return new SolverParticleRequirements(
-                            6, 13, 0, 0);
-                    case SolverParticleTopology.RigidCluster4:
-                        return new SolverParticleRequirements(
-                            4, 0, 1, 4);
-                    case SolverParticleTopology.ArticulatedCluster12:
-                        return new SolverParticleRequirements(
-                            12, 12, 3, 12);
-                    default:
-                        return new SolverParticleRequirements(
-                            0, 0, 0, 0);
-                }
+                if (shapeSource == null)
+                    return Requirements;
+
+                return RequirementsFor(
+                    SolverTopologyInfo.RigidClusterFor(
+                        shapeSource.MaximumParticles));
             }
         }
 
-        public SolverMeshMode ExpectedMeshMode =>
-            topology == SolverParticleTopology.RigidCluster4
+        public static SolverParticleRequirements
+            RequirementsFor(
+                SolverParticleTopology topology)
+        {
+            int rigidParticles =
+                SolverTopologyInfo.RigidClusterParticles(
+                    topology);
+            if (rigidParticles > 0)
+            {
+                return new SolverParticleRequirements(
+                    rigidParticles,
+                    0,
+                    1,
+                    rigidParticles);
+            }
+
+            switch (topology)
+            {
+                case SolverParticleTopology.Single:
+                    return new SolverParticleRequirements(
+                        1, 0, 0, 0);
+                case SolverParticleTopology.Chain3:
+                    return new SolverParticleRequirements(
+                        3, 3, 0, 0);
+                case SolverParticleTopology.GuideChain4:
+                    return new SolverParticleRequirements(
+                        4, 6, 0, 0);
+                case SolverParticleTopology.DualRail6:
+                    return new SolverParticleRequirements(
+                        6, 13, 0, 0);
+                case SolverParticleTopology.ArticulatedCluster12:
+                    return new SolverParticleRequirements(
+                        12, 12, 3, 12);
+                default:
+                    return new SolverParticleRequirements(
+                        0, 0, 0, 0);
+            }
+        }
+
+        // Derived, never authored. The physics setup already decides this, and
+        // asking for it a second time on the render profile only created a way
+        // for the two to disagree and draw nothing.
+        public SolverMeshMode MeshMode =>
+            shapeSource != null ||
+            SolverTopologyInfo.IsRigidCluster(topology)
                 ? SolverMeshMode.Rigid
                 : SolverMeshMode.Articulated;
+
+        // A rigid profile with no authored mesh has exactly one thing it can
+        // draw: the hull of its own particles. Making that a toggle meant a
+        // fully configured fragment profile rendered nothing until the toggle
+        // was found, with no error to say so.
+        public bool UsesHullRendering =>
+            MeshMode == SolverMeshMode.Rigid &&
+            (renderProfile == null ||
+             renderProfile.mesh == null);
 
         void OnValidate()
         {

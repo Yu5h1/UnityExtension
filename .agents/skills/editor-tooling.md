@@ -2,6 +2,38 @@
 
 Use this skill for Yu5h1Lib Inspector, PropertyDrawer, EditorWindow, context-menu, shortcut, AssetDatabase, sub-asset, and other Editor extension work.
 
+## A setting is for a real choice
+
+If code can settle something, code settles it. A serialized field is for a
+decision only a human can make, never for restating something already determined
+elsewhere in the data.
+
+- A field whose only correct value is derivable from other fields must be
+  derived, not authored. Two places holding the same fact means they can
+  disagree, and the usual symptom is nothing happening with no error.
+- Companion components are the same fault in another form. `[RequireComponent]`
+  does not solve "this needs that": it converts *forgot to add it* into *forced
+  to look at it*, which is still manual work and still inspector noise.
+- The owning component should add its companions itself, from `Reset` for the
+  edit-time path and `Awake` for the runtime one, mark them
+  `HideFlags.HideInInspector`, and draw them as foldout modules from its own
+  custom editor. This is exactly how Unity ships ParticleSystem:
+  `ParticleSystemRenderer` is a genuine second component that users never
+  experience as one.
+- Add companions unconditionally rather than gating on what the current
+  configuration appears to need. A gate leaves the object one component short as
+  soon as the configuration changes, and says nothing.
+- Two costs to cover before hiding anything: the owner must remove its
+  companions when it is itself removed, or they become components that cannot be
+  seen and therefore cannot be deleted; and a companion must not declare
+  `[RequireComponent]` back at its owner, or removing the owner raises a dialog
+  naming a component the user cannot see. Defer the cleanup through
+  `EditorApplication.delayCall`, guarded on the GameObject still being alive, so
+  scene close and play-mode exit do not trip it.
+- Defaults must produce something visible. A component that does nothing until
+  configured looks broken, and hides every other fault behind the same blank
+  screen.
+
 ## Native-first workflow
 
 Before designing or implementing an extension:

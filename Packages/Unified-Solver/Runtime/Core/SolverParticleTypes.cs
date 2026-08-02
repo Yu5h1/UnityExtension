@@ -11,7 +11,56 @@ namespace Yu5h1.UnifiedSolver
         GuideChain4 = 4,
         DualRail6 = 6,
         RigidCluster4 = 104,
+        RigidCluster6 = 106,
+        RigidCluster8 = 108,
         ArticulatedCluster12 = 12
+    }
+
+    public static class SolverTopologyInfo
+    {
+        // Particles in a single rigid cluster variant, or 0 for anything else.
+        //
+        // The variant is per instance rather than per profile, because a body of
+        // ice is a mix of sizes and a profile that could only spawn one of them
+        // would need three profiles and three emitters to make one pile.
+        public static int RigidClusterParticles(
+            SolverParticleTopology topology)
+        {
+            switch (topology)
+            {
+                case SolverParticleTopology.RigidCluster4:
+                    return 4;
+                case SolverParticleTopology.RigidCluster6:
+                    return 6;
+                case SolverParticleTopology.RigidCluster8:
+                    return 8;
+                default:
+                    return 0;
+            }
+        }
+
+        public static bool IsRigidCluster(
+            SolverParticleTopology topology)
+        {
+            return RigidClusterParticles(topology) > 0;
+        }
+
+        public static SolverParticleTopology RigidClusterFor(
+            int particles)
+        {
+            switch (particles)
+            {
+                case 4:
+                    return SolverParticleTopology
+                        .RigidCluster4;
+                case 6:
+                    return SolverParticleTopology
+                        .RigidCluster6;
+                default:
+                    return SolverParticleTopology
+                        .RigidCluster8;
+            }
+        }
     }
 
     public enum SolverMeshMode

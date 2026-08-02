@@ -926,12 +926,21 @@ void ApplyRollDamping(
         UnfoldHairpin(instance);
     }
 
-    if (instance.topology != TOPOLOGY_GUIDE_4 &&
-        instance.topology != TOPOLOGY_DUAL_RAIL_6 &&
-        instance.topology != TOPOLOGY_ARTICULATED_12)
-    {
-        return;
-    }
+    // Settle runs for every topology, including rigid clusters.
+    //
+    // It was behind the roll-damping gate below, which lists only the chain
+    // topologies, so `settleSpeed` had never once run on a rigid fragment: a
+    // profile could set it, the inspector showed it, and the gate quietly
+    // discarded it. That is the second time this exact shape of bug has cost a
+    // debugging session; see the roll damping note in handoff.md.
+    //
+    // Nothing in it is chain-specific. It converges particle velocities onto the
+    // instance mean, which removes motion relative to the body. For a deforming
+    // body that is deformation; for a rigid cluster, whose shape matching has
+    // already removed everything else, the remainder is exactly its rotation.
+    // Damping that as the body slows is the rolling resistance a body made of
+    // spheres does not otherwise have, and without it a fragment that has landed
+    // keeps rolling until something stops it.
 
     // Settle: once the body is barely deforming, take the last of that motion
     // out rather than letting it trickle on.
@@ -989,6 +998,17 @@ void ApplyRollDamping(
                 _Particles[index] = particle;
             }
         }
+    }
+
+    // Roll damping, unlike settle, is chain-only. It damps rotation about the
+    // body's long axis, and a rigid fragment has no long axis: GetFrame would
+    // read particles 0, 1 and 2 as if they were head, middle and tail, which for
+    // a tetrahedron means three arbitrary corners.
+    if (instance.topology != TOPOLOGY_GUIDE_4 &&
+        instance.topology != TOPOLOGY_DUAL_RAIL_6 &&
+        instance.topology != TOPOLOGY_ARTICULATED_12)
+    {
+        return;
     }
 
     float strength = saturate(_RollDamping);

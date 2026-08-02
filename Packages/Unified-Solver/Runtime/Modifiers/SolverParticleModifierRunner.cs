@@ -4,7 +4,13 @@ using UnityEngine.Serialization;
 namespace Yu5h1.UnifiedSolver
 {
     [DefaultExecutionOrder(50)]
-    [RequireComponent(typeof(SolverParticleEmitter))]
+    // No RequireComponent back to the emitter.
+    //
+    // The emitter owns this component's whole lifecycle, and a
+    // requirement pointing back at it would block removing the emitter
+    // with a dialog naming a component the user cannot see, because this
+    // one is hidden. Standalone use is handled by resolving the emitter
+    // defensively instead.
     public sealed class SolverParticleModifierRunner :
         MonoBehaviour
     {

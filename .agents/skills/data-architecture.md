@@ -2,6 +2,15 @@
 
 Use this skill for Yu5h1Lib Unity data modeling: ScriptableObject architecture, Parameter/Member/Invocation objects, ValuePort, Theme, presets, and their runtime relationships.
 
+## Authoring conventions
+
+House rules for every new ScriptableObject, including ones outside the data architecture below. Code that ignores them has to be corrected by hand each time.
+
+- **Never write `[CreateAssetMenu]`.** Yu5h1Lib already owns creation: `ScriptableObjectContextMenu` hooks `EditorApplication.contextualPropertyMenu` and offers, on any object-reference field, every non-abstract type derived from that field's declared type. Creation follows from filling the field, so a Project-window menu entry is a second and worse way to do the same thing.
+- **Put `[Inline]` on every serialized ScriptableObject reference field.** `InlineAttributeDrawer` then draws the referenced asset's own inspector beneath the field, so it is edited in place instead of by hunting for it in the Project window. A bare object field is the exception and needs a reason.
+- Because the menu enumerates derived types of the **declared field type**, an abstract base with concrete subclasses is the shape that works: type the field as the base and every implementation appears automatically. A field typed as a concrete class offers only that one.
+- `[Inline]` accepts `Minimize` and `ShowLabel`, and propagates `[Decorator]` and `[StringOptionsContext]` to the drawn sub-object, so those combine on a single field.
+
 ## Scope
 
 - Treat `Packages/common/Runtime/Data/Architecture/` as the home of reusable ScriptableObject data objects.

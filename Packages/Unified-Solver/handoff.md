@@ -8,6 +8,10 @@ Target: `Packages/Unified-Solver`
 
 Canonical workspace: `C:\Users\Yu5h1\Dev\VSProjects\Yu5h1Lib\Unity\UnityExtension\Packages\Unified-Solver`
 
+Additional to the shared Unity index that `AgentsRule.md` step 4 already resolves:
+`skills/gpu-rendering.md` is the one this package leans on hardest, and much of it
+was written from this package's own work.
+
 The former standalone Unified Solver workspace is retired and may be deleted. Do not route work or handoffs back to it.
 
 The original `unified-solver` source is vendored as a read-only dependency under `Runtime/Dependencies/unified-solver` and `Editor/Dependencies/unified-solver`. Keep changes scoped to this package without modifying the vendored dependency unless the user explicitly requests it.
@@ -38,8 +42,130 @@ The original `unified-solver` source is vendored as a read-only dependency under
 - `Documentation/ParticleSystem x Unified Solver.md` defines ParticleSystem/Solver ownership boundaries, five cooperation modes, current component placement, phased validation, and long-term Soft Body goals without scheduling Soft Body implementation.
 - README and architecture plan.
 
+## Written, not yet compiled: procedural ice fragments
+
+The 4/6/8 rigid fragment slice from `plan.md` section 13.12. Nothing here has
+been through a compiler or Unity; it was written with the Editor closed.
+
+- `AddRigidBody` already sizes a group from `particleIndices.Length`, and
+  `_rigidRestOffsetBuffer` (`q_i = x_i0 - x_cm0`, parallel to
+  `_RigidParticleIndices`) is already on the GPU every frame. 4/6/8 physics and
+  hull rendering both needed zero vendored solver changes. The only thing
+  pinning the extension to 4 was `_rigidIndexScratch = new int[4]`.
+- New: `SolverShapeSource` (abstract seam), `SolverHullShapes` (base polyhedra
+  and face tables), `SolverIceFragmentShapeSource`, `SolverHullMesh`.
+- `SolverShapeSource` is the line that matters for the future. Baked fracture
+  attaches as another subclass; without it the fracture pipeline would have to
+  rewrite the spawn path rather than add to it.
+- Degeneracy is prevented by construction rather than validated: a variant is a
+  fixed combinatorial polyhedron with bounded vertex displacement, so a
+  rank-deficient or self-intersecting fragment cannot be produced. This replaces
+  `plan.md` 13.5's candidate-and-reject loop.
+- `SolverRigidMesh.shader` gained a `SOLVER_HULL_FROM_PARTICLES` branch rather
+  than a second shader. Corner indices ride in UV1, not NORMAL, because mesh
+  tooling may renormalise a normal.
+- Rest offsets already contain the spawn rotation and scale. The hull branch
+  applies `body.quaternion` alone; applying `instance.spawnRotation` or
+  `instance.scale` there would apply both twice.
+- One draw call per variant, with a variant instance-index buffer remapping the
+  batch-local instance id. That is the batch-to-instance mapping `plan.md` 13.6
+  asks for, and fracture will reuse it split per fragment mesh instead.
+- Capacity is reserved against `WorstCaseRequirements`, because the variant is
+  not known until the shape source picks it and a half-reserved batch would
+  leave partial instances behind.
+- The ice profile must set `collideWithSameProfile = true`. Same non-zero phase
+  means no collision, so leaving it false makes fragments pass through each
+  other while still colliding with fish, which does not read as a phase problem.
+- Sleep/Wake (`plan.md` 13.8) is not part of this and is still unstarted.
+
+### First validation attempt failed, and why
+
+Nothing was drawn. The cause was `SolverRenderProfile.hullFromParticles`, a bool
+that defaulted off, had to be ticked by hand, and produced no geometry and no
+error when it was not. Three design faults, all avoidable, all now fixed:
+
+- `meshMode` and `hullFromParticles` restated what the particle profile already
+  determines. Both are deleted. `SolverParticleProfile.MeshMode` and
+  `.UsesHullRendering` derive them; a rigid profile with no authored Mesh draws
+  its particle hull because that is the only thing it can draw. The existing ice
+  and fish assets both reproduce their old behaviour with no edit.
+- `SolverMeshRenderer` was not auto-added, so an emitter without one silently
+  drew nothing. This exact trap is recorded under Known limitations and was
+  still shipped. The emitter now carries `[RequireComponent]` for it; the pair is
+  mutually required, which Unity allows.
+- `playOnAwake` (was `spawnOnStart`) defaults true and `initialCount` defaults
+  100. Defaults that produce nothing on screen make every other fault invisible.
+
+The render profile now holds only genuine drawing choices. A shape source is not
+a render profile and must not inherit one: it produces physics rest positions on
+the CPU at spawn, and coupling them would stop one shape being drawn two ways or
+one look being applied to two shapes.
+
+## Companion components are owned, hidden, and drawn as modules
+
+`SolverMeshRenderer` and `SolverParticleModifierRunner` are no longer the user's
+to assemble. `SolverParticleEmitter.EnsureCompanions()` adds both from `Reset`,
+`Awake` and the editor's `OnEnable`, sets `HideFlags.HideInInspector`, and the
+emitter's `OnDestroy` removes them when the emitter is removed. The custom
+editor draws them as foldout modules.
+
+- This replaces `[RequireComponent]`, which was the wrong tool: it only turned
+  "forgot to add it" into "forced to look at it". Unity's own ParticleSystem is
+  also two components — `ParticleSystemRenderer` is real and separate — and is
+  never experienced that way because its inspector draws the renderer as a
+  module. Same technique.
+- Both back-references to the emitter were removed. A `RequireComponent` from a
+  hidden companion would block removing the emitter with a dialog naming a
+  component the user cannot see.
+- Companions are added unconditionally, not gated on what the profile looks like
+  it needs. Gating meant that editing the profile later left the object one
+  component short with nothing to say so.
+- Cleanup is deferred through `EditorApplication.delayCall` and guarded on the
+  GameObject still being alive, so closing a scene or leaving play mode does not
+  trip it.
+- Not yet exercised: prefab apply/revert and Undo on the hidden components.
+  Check both before trusting this on prefabs.
+
+Standing rule this came from: if code can settle it, code settles it. A setting
+is for a real choice, not for restating something already determined elsewhere.
+`hullFromParticles` and `meshMode` were the same fault in field form.
+
+## Open: bodies spread on landing instead of settling
+
+Fish and fragments both keep creeping apart after they hit the ground. Two
+separate causes; only the first is a defect.
+
+- `settleSpeed` sat behind the roll-damping topology gate, which lists only the
+  chain topologies, so it had **never run on a rigid cluster**. A fragment
+  profile could set it and the gate discarded it silently. Settle is now ahead of
+  that gate and runs for every topology; roll damping stays chain-only, because a
+  fragment has no long axis for `GetFrame` to find. `EnsureModifierRunner` also
+  now counts `settleSpeed`, so a profile that sets only that still gets a runner.
+- A body made of spheres has **no rolling resistance of any kind**. Coulomb
+  friction in the solver is correct and substep-independent — the per-substep
+  limit `mu * penetration` works out to `a = mu * g` — but friction converts
+  sliding into rolling and nothing removes the rolling. On a rigid cluster,
+  shape matching has already removed every other internal motion, so settle
+  converging velocities onto the instance mean is exactly angular damping. That
+  is the stand-in until Sleep/Wake in `plan.md` 13.8 exists; it is not a
+  substitute for it.
+
+Settings that make it worse and are worth checking before blaming the code:
+
+- `particleRadius` 0.1 against ice `baseDimensions` 0.12 x 0.4 x 0.08 means the
+  collision shape is far larger than the authored size — a fragment collides as a
+  blob roughly 0.2 m wider than it looks. Keep the smallest dimension comfortably
+  above `2 * particleRadius` or lower the radius.
+- 100 instances in a 5 x 2 x 5 spawn volume average 0.79 m apart, which with the
+  above overlaps heavily at t=0. `maxDepenetrationSpeed` 5 m/s then throws them
+  apart on the first frame, and what looks like failure to settle is the tail of
+  that initial scatter. Lower it, spread the volume, or spawn fewer.
+- `frictionKinetic` 0.2 is genuinely slippery, which is right for ice and wrong
+  if the goal is a pile that holds its shape.
+
 ## Verification
 
+- NOT YET VERIFIED: nothing in the section 13.12 ice fragment slice has been compiled or run. Unity was not running. Compile first, then check in this order: fragments spawn at mixed 4/6/8; hulls are drawn and match where the particles are (`showCollisionParticles` on); fragments collide with each other and with fish; nothing is drawn inside-out.
 - User-confirmed in Unity: the section 15.11 hairpin fix compiles and resolves the fault. Head and tail no longer stick together in the net, and the spine no longer spins.
 - Runtime extension sources compile against the current original solver and Unity 6000.3.9f1 references with 0 warnings / 0 errors.
 - Runtime compatibility tests compile with 0 warnings / 0 errors and cover field-contract resolution, rigid-particle reference count reads, pre-allocation buffer reads, and original `ClothGenerator` particle-range reads.
@@ -55,7 +181,7 @@ The original `unified-solver` source is vendored as a read-only dependency under
 - The fish profile in the consuming project uses `topology: 4`, which is GuideChain4. The roll damping kernel excluded that topology until recently, so `rollDamping` had never once run on it; a setting that appeared to do nothing was doing exactly what the gate said. Check the topology value before concluding a structural feature is broken.
 - GuideChain4 has no resistance whatever to rotation about the spine, not merely a weak one: its three constraints on the guide all reach points on the spine, and rotating the guide about that line leaves every one of those distances unchanged. DualRail6's diagonals give a second-order restoring force, weak but non-zero, which matches the user's impression that it drifts less often.
 
-## Fixed, awaiting Unity validation: head and tail stuck together
+## Fixed and verified: head and tail stuck together
 
 Reported as a fatal glitch: the two ends meet, stay met, and the middle spine
 plus the whole mesh spin fast enough that the user could not read the rate.
@@ -132,7 +258,7 @@ Established while building the bend and bounce. Read before tuning anything that
 
 - Three longitudinal controls support C-bends but not true S-curves.
 - `torsionAlign` was added and then removed: it solved nothing, because the hourglass it was aimed at turned out to be a shader-side sign flip, and whole-body roll leaves the segments agreeing with each other so it cannot detect that either. It also caused jumping and a standing oscillation of its own. See `plan.md` section 15.8 before proposing it again.
-- `SolverParticleModifierRunner` is not added by `RequireComponent`: that attribute sits on the runner and pulls in an emitter, never the reverse. An emitter without it silently ran no modifiers and no roll damping, which cost a long debugging session because a fully configured profile is indistinguishable from one that runs and does nothing. `SolverParticleEmitter.Awake()` now adds it and warns. The same trap still applies to `SolverMeshRenderer`, which carries the same attribute direction and is not auto-added.
+- `SolverParticleModifierRunner` is not added by `RequireComponent`: that attribute sits on the runner and pulls in an emitter, never the reverse. An emitter without it silently ran no modifiers and no roll damping, which cost a long debugging session because a fully configured profile is indistinguishable from one that runs and does nothing. `SolverParticleEmitter.Awake()` now adds it and warns. `SolverMeshRenderer` had the identical trap and it was left unfixed long enough to cost a failed validation pass; the emitter now declares `[RequireComponent(typeof(SolverMeshRenderer))]`. Check for this attribute direction on any new companion component before assuming it is reachable.
 - Roll damping and the runner-added guard both depend on the runner existing on the same GameObject, so roll damping is still dispatched from a modifier component despite being a structural body property. Moving it into the emitter is unresolved.
 - The bounce budget limits only the component along the gravity axis, so bending across a surface is unrestricted. A body pressing into a wall or ceiling is not covered.
 - Apparent bend speed is `peakHalfAngle * angularFrequency`, so amplitude and rate both read as speed and cannot be separated in a continuous wave. `muscleTension` at 0 gives 90 degrees, roughly double the amplitude the retired `bendRatio` default produced, which reads as frantic. A `burstDuration` split was tried and reverted for not addressing this; see `plan.md` section 15.8.

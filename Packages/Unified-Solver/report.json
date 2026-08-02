@@ -3,7 +3,7 @@
   "report_id": "unified-solver-ice-fragment-physics",
   "scope_id": "unified-solver",
   "title": "Unified Solver 擴充：身體形變與冰塊碎片物理",
-  "updated_at": "2026-07-31T00:00:00+08:00",
+  "updated_at": "2026-08-02T00:00:00+08:00",
   "tasks": [
     {
       "id": "body-bend-performance",
@@ -95,86 +95,56 @@
     {
       "id": "fragment-rigid-groups",
       "title": "每片 4／6／8 點剛體 Group",
-      "status": "planned",
+      "status": "in_progress",
       "priority": 0,
-      "summary": "每個碎片依可重現 Seed 與幾何條件選擇 4、6 或 8 個非退化 Rest Particles；候選覆蓋不足時升級點數或拒絕 Bake。",
+      "summary": "程序化 4/6/8 剛體 variant 已實作並在 Unity 確認生成。改用固定組合多面體加有界頂點位移，退化碎片由建構保證不會產生，取代原本的候選點驗證迴圈。SolverShapeSource 為抽象接縫，未來 bake 切割資料以子類接入，spawn path 不需改動。詳見 plan.md 13.12。",
       "pending_items": [
         {
-          "id": "select-fragment-particles",
-          "title": "建立 4／6／8 候選點選取策略",
-          "priority": 0
+          "id": "fragment-shape-tuning",
+          "title": "variant 權重、尺寸區間與位移量尚未針對實際冰塊外觀調校",
+          "priority": 2
         },
         {
-          "id": "validate-particle-volume",
-          "title": "驗證非共平面、協方差秩、體積、粒子間距與碎片覆蓋率",
-          "priority": 0
-        },
-        {
-          "id": "upgrade-invalid-variants",
-          "title": "4／6 點候選不足時升級到較高點數或明確拒絕",
-          "priority": 0
-        },
-        {
-          "id": "support-variable-rigid-counts",
-          "title": "擴充 Rigid Scratch、Capacity Requirements 與 Fragment／Variant Mapping",
-          "priority": 0
+          "id": "particle-radius-vs-dimensions",
+          "title": "particleRadius 0.1 大於冰塊最小維度 0.08，碰撞體遠大於外觀，需重新取值",
+          "priority": 1
         }
       ]
     },
     {
       "id": "fragment-runtime-rendering",
       "title": "碎片 Runtime 生成與批次繪製",
-      "status": "planned",
+      "status": "in_progress",
       "priority": 0,
-      "summary": "由 Bake Asset 為每片建立一個 SolverParticleInstance 與 Rigid Group，並以 Mesh／Material Batch 繪製，不在 Runtime 重新切割或建立逐片 Material。",
+      "summary": "凸包繪製已實作並確認畫面上出現碎片。頂點直接讀 solver 既有的 _rigidRestOffsets，不需形狀資產也不需新增 buffer；每個 variant 一次 draw call，經 variant index buffer 把 batch-local instance id 映射回實際 instance。meshMode 與 hullFromParticles 兩個手填欄位已刪除改為推導。",
       "pending_items": [
         {
-          "id": "spawn-fragment-instances",
-          "title": "一次建立全部 Fragment Instances 與 Rigid Groups",
+          "id": "urp-ice-shading",
+          "title": "目前用內建管線的 SolverRigidMesh，固定假光照、無折射，不是 URP 也不像冰。需決定 URP 化路線",
           "priority": 0
         },
         {
-          "id": "build-fragment-batches",
-          "title": "建立 Mesh／Material Batch 與 Batch-local 到 Global Instance Mapping",
+          "id": "prefab-undo-hidden-components",
+          "title": "隱藏 companion component 的 prefab apply/revert 與 Undo 行為尚未驗證",
           "priority": 1
-        },
-        {
-          "id": "verify-render-pose",
-          "title": "驗證 Fragment Mesh、Pivot、Center of Mass 與 Rest Pose 對齊",
-          "priority": 0
-        },
-        {
-          "id": "reject-partial-spawn",
-          "title": "容量不足時整片拒絕，不建立半生成 Instance",
-          "priority": 0
         }
       ]
     },
     {
       "id": "fragment-collision-validation",
       "title": "魚、碎片與箱體碰撞",
-      "status": "planned",
+      "status": "in_progress",
       "priority": 0,
-      "summary": "在同一 SolverManager 驗證碎片互撞、魚撞碎片與箱體碰撞，並確認最多 8 點的物理覆蓋足以代表碎片體積。",
+      "summary": "魚與碎片可同場並互撞。已知問題:落地後持續散開停不住。settleSpeed 原本被擋在 roll damping 的拓樸 gate 後,從未在剛體 variant 上執行過,已修正為所有拓樸適用。球體剛體本質上沒有滾動阻力,settle 是 Sleep/Wake 之前的替代方案。",
       "pending_items": [
         {
-          "id": "build-fragment-test-scene",
-          "title": "建立魚、碎片與 SolverBoxCollider 箱體基準場景",
+          "id": "verify-settle-on-rigid",
+          "title": "settle 修正後的落地行為尚未驗證",
           "priority": 0
         },
         {
-          "id": "verify-phase-collisions",
-          "title": "驗證碎片互撞、魚碎片互撞與箱體碰撞的 Phase 設定",
-          "priority": 0
-        },
-        {
-          "id": "validate-particle-coverage",
-          "title": "找出會因 4／6／8 點覆蓋不足而穿透的碎片並在 Bake 階段拒絕",
-          "priority": 0
-        },
-        {
-          "id": "tune-stacking",
-          "title": "調校 Substeps、Friction、Depenetration、牆厚與 Spawn Spacing",
+          "id": "spawn-overlap-scatter",
+          "title": "100 個碎片在 5x2x5 內平均間距小於實際碰撞尺寸,開場 depenetration 會炸開",
           "priority": 1
         }
       ]

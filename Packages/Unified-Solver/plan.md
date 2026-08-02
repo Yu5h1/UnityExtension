@@ -799,6 +799,58 @@ Wake Threshold：明顯高於 Sleep Threshold
 - 完整 Despawn、Free List 與 Constraint/Rigid slot 回收。
 - ParticleSystem 的通用系統整合與 Soft Body 產品化。
 
+### 13.12 P0 修訂：程序化碎片先行，Mesh 切割延後
+
+13.9 原本的 Stage 1 是 Editor Mesh 切割。實際執行順序改為**先做 Stage 2 的粒子群組**，用程序化生成取代切割作為第一個 shape 來源。切割不取消，只是不再是進入這條垂直切片的門檻。
+
+理由是一個具體發現：`SolverManager.AddRigidBody(int[] particleIndices, ...)` 讀的是 `particleIndices.Length`，而 `_rigidRestOffsetBuffer`（`q_i = x_i⁰ − x_cm⁰`，與 `_RigidParticleIndices` 平行索引）每幀都在 GPU 上。**4/6/8 的物理與繪製所需的資料，vendored solver 全部已經備妥**，唯一擋路的是 extension 這側寫死的 `new int[4]`。既然如此，先驗證碰撞與觀感的成本遠低於先做切割。
+
+#### 形狀：固定多面體 + 有界位移
+
+不採用 13.5 的「Bounds 內取候選點再驗證退化、失敗就升級點數或拒絕」。改為每個 variant 是一個**固定組合多面體**，頂點在基底位置上做有界位移：
+
+| variant | 基底 | 面 | 展開頂點 |
+|---|---|---|---|
+| 4 | 正四面體 | 4 | 12 |
+| 6 | 正八面體 | 8 | 24 |
+| 8 | 立方體 | 12 | 36 |
+
+尺寸是線性映射，線性映射保持凸性，所以任意極端的長寬高都安全；只有位移需要設上限。上限設在遠低於「某個頂點掉進其餘頂點凸包內」的位置。結果是**退化碎片不是要偵測並拒絕的東西，而是產生不出來的東西** —— 13.10 驗收標準裡「不輸出不穩定 Group」因此自動成立，不需要驗證迴圈。
+
+四面體其實對任何非共面位移都成立；八面體與立方體才是上限真正在保護的對象。
+
+#### 繪製：Mesh 就是粒子的凸包
+
+沿用 `SolverRigidMesh.shader`，加一個 `SOLVER_HULL_FROM_PARTICLES` keyword 分支，不另開 shader —— 光照、fragment、陰影 pass、材質屬性全部共用，唯一的差別是 local 頂點從哪裡來。
+
+```
+worldPos = body.xcm + RotateByQuaternion(_RigidRestOffsets[body.particleOffset + k], body.quaternion)
+```
+
+兩個一定會寫錯的地方：rest offsets 是從 spawn 當下的**世界座標**算的，所以 `instance.spawnRotation` 與 `instance.scale` 都已經烘在裡面，再乘一次就是乘兩次。原本的固定 mesh 路徑要乘，是因為它的頂點在未旋轉的 local 空間。
+
+平面著色需要每面獨立頂點，所以 canonical mesh 每個頂點在 **UV1** 帶三個 corner index（自己在前），法線在 vertex shader 用叉積算。選 UV1 而不是 NORMAL，是因為 normal 語意上是方向、mesh 工具有權把它重新正規化，而沒有東西會去改 UV。
+
+視覺凸包穿過粒子**圓心**，但碎片是以 `particleRadius` 的球體聯集在碰撞，所以直接畫會比實際碰撞小一圈。頂點沿徑向從質心外推 `(|q| + r) / |q|` 補回來。
+
+一個 variant 一次 draw call：`DrawMeshInstancedProcedural` 只吃一張 mesh，三個 variant 的面表不同，不能共用。Shader 透過 emitter 的 variant index buffer 把 batch-local id 映射回真正的 instance。**這就是 13.6 要求的 batch-local → global mapping**，之後烘焙碎片按 fragment mesh 分批時是同一個機制。
+
+#### 序列化：分三層，只有中間一層存
+
+| 層 | 內容 | 是否序列化 |
+|---|---|---|
+| Variant 樣板 | 基底頂點、面索引表、位移上限 | 否，程式碼常數。它是幾何定義不是內容，做成資產只會多一個能跟 shader 不同步的東西 |
+| 調校區間 | 尺寸範圍、位移量、4/6/8 權重、拉長量 | 是，`SolverIceFragmentShapeSource` |
+| 每個實體的實際形狀 | 該碎片的 rest positions | 否。它是 `f(seed, variant, 區間)`，而且 spawn 後 solver 自己就存在 `_rigidRestOffsets` 裡 |
+
+Mesh 切割會打破第三層：切出來的碎片形狀無法由 seed 推導，一定要序列化。這正是 `SolverShapeSource` 存在的理由 —— 它是「誰提供 local rest positions」這個問題的抽象，程序化生成與 bake 資產是同一個介面的兩個實作，其後的容量預留、粒子建立、rigid group、renderer 完全不變。**這是今天唯一必須先做對、否則之後要重寫 spawn path 的一條線。**
+
+繪製這側則會分岔，這點要說清楚：切割碎片有真實的非凸幾何與 UV，那不是它 8 顆粒子的凸包，所以它走的是既有的固定 mesh 路徑（`restOriginOffset` solver 也已經有了）。凸包繪製是並存的第二種 variant，不是切割的基礎。
+
+#### 碰撞
+
+`ResolvePhase()` 依 `profile.collideWithSameProfile` 決定。Solver 的規則是「同一個非零 phase 的粒子不互撞」，所以冰塊 profile **必須 `collideWithSameProfile = true`**，否則碎片之間全部穿透 —— 而魚照撞不誤，看起來會像「只有冰塊之間壞掉」，很難聯想到 phase。
+
 ## 14. 身體形變的未來計畫
 
 本節記錄兩項已完成設計評估、但明確延後實作的項目。兩者都不阻塞目前的彎曲表演修正。

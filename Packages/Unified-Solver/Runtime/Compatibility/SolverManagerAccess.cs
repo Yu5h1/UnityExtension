@@ -21,12 +21,21 @@ namespace Yu5h1.UnifiedSolver
             RigidParticleRefCountField =
                 ResolveField<SolverManager, int>(
                     "_rigidParticleRefCount");
+        // Rest offsets q_i = x_i0 - x_cm0, flat and indexed in parallel with
+        // _rigidParticleIndexBuffer. The solver keeps these for shape matching,
+        // which means a fragment's own corner geometry is already on the GPU and
+        // the hull renderer needs no shape buffer of its own.
+        static readonly FieldInfo
+            RigidRestOffsetBufferField =
+                ResolveField<ComputeBuffer>(
+                    "_rigidRestOffsetBuffer");
         static readonly FieldInfo
             ClothParticleOffsetField =
                 ResolveField<ClothGenerator, int>(
                     "_particleOffset");
 
         static bool _reportedRigidContractFailure;
+        static bool _reportedRestOffsetContractFailure;
         static bool _reportedClothContractFailure;
         static bool _reportedAccessFailure;
 
@@ -38,6 +47,12 @@ namespace Yu5h1.UnifiedSolver
             RigidBodyBufferField != null &&
             RigidParticleIndexBufferField != null &&
             RigidParticleRefCountField != null;
+
+        // Separate from the rigid contract on purpose. Only hull rendering needs
+        // rest offsets, so a solver version that renamed this field should cost
+        // the hull path and nothing else.
+        internal static bool RigidRestOffsetsAvailable =>
+            RigidRestOffsetBufferField != null;
 
         internal static bool ClothContractAvailable =>
             ClothParticleOffsetField != null;
@@ -71,6 +86,47 @@ namespace Yu5h1.UnifiedSolver
                     RigidParticleIndexBufferField.GetValue(
                         solver);
                 return true;
+            }
+            catch (Exception exception)
+            {
+                ReportAccessFailure(
+                    solver,
+                    exception);
+                return false;
+            }
+        }
+
+        internal static bool TryGetRigidRestOffsets(
+            SolverManager solver,
+            out ComputeBuffer restOffsetBuffer)
+        {
+            restOffsetBuffer = null;
+            if (solver == null ||
+                !RigidRestOffsetsAvailable)
+            {
+                if (!_reportedRestOffsetContractFailure)
+                {
+                    Debug.LogError(
+                        "Unified Solver compatibility " +
+                        "bridge could not resolve " +
+                        "SolverManager's private " +
+                        "'_rigidRestOffsetBuffer'. Hull " +
+                        "rendering needs it; the original " +
+                        "solver remains unchanged.",
+                        solver);
+                    _reportedRestOffsetContractFailure =
+                        true;
+                }
+                return false;
+            }
+
+            try
+            {
+                restOffsetBuffer =
+                    (ComputeBuffer)
+                    RigidRestOffsetBufferField.GetValue(
+                        solver);
+                return restOffsetBuffer != null;
             }
             catch (Exception exception)
             {

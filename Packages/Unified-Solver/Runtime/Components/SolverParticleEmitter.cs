@@ -1,22 +1,45 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
+using Yu5h1Lib;
 
 namespace Yu5h1.UnifiedSolver
 {
+    // The emitter owns its renderer and modifier runner outright.
+    //
+    // They stay separate classes because they run in different phases and have
+    // different concerns, but they are not the user's to assemble. Unity's own
+    // ParticleSystem works this way: ParticleSystemRenderer is a real second
+    // component, and you never see it, because the ParticleSystem inspector
+    // draws it as a module. `[RequireComponent]` was the wrong tool here — it
+    // only converted "forgot to add it" into "forced to look at it", which is
+    // still manual work the code could have done.
+    //
+    // Companions are created here, hidden here, and removed here. Nothing about
+    // them is a decision.
     [DefaultExecutionOrder(-100)]
     public sealed class SolverParticleEmitter : MonoBehaviour
     {
-        [Header("Definition")]
+        [Inline]
         public SolverParticleProfile profile;
 
         [Header("Capacity")]
         [Min(1)]
         public int maxInstances = 2048;
 
+        [Tooltip("Seed for profiles that use a Shape Source. The same seed lays out the same pile of fragments every run, so a look that works can be kept. Ignored when the profile has no Shape Source.")]
+        public int shapeSeed = 12345;
+
         [Header("Initial Spawn")]
-        public bool spawnOnStart;
+        // Named for the Unity convention, not for the callback it happens to
+        // use. AudioSource and ParticleSystem both call this Play On Awake, and
+        // a component that spawns nothing by default looks broken rather than
+        // idle, so it defaults on with a count that is visible.
+        [FormerlySerializedAs("spawnOnStart")]
+        [Tooltip("Spawn Initial Count instances as soon as the emitter starts. Off means nothing appears until something calls TryEnqueue or SpawnOne.")]
+        public bool playOnAwake = true;
         [Min(0)]
-        public int initialCount;
+        public int initialCount = 100;
         public Vector3 spawnVolume =
             new Vector3(5f, 2f, 5f);
         public Vector3 initialVelocity;
@@ -33,11 +56,30 @@ namespace Yu5h1.UnifiedSolver
             new Vector3[12];
         readonly int[] _indexScratch =
             new int[12];
-        readonly int[] _rigidIndexScratch =
-            new int[4];
+        // One per variant, not one shared array. AddRigidBody already reads
+        // particleIndices.Length, so the solver has always supported 6 and 8
+        // particle groups; these arrays were the only thing pinning the
+        // extension to 4.
+        readonly int[] _rigidScratch4 = new int[4];
+        readonly int[] _rigidScratch6 = new int[6];
+        readonly int[] _rigidScratch8 = new int[8];
+
+        // Instance indices grouped by rigid cluster variant, so the renderer can
+        // issue one draw per variant. Instances are append-only, and an
+        // instance's variant is fixed at spawn, so this only ever grows.
+        readonly List<int>[] _variantInstances =
+        {
+            new List<int>(),
+            new List<int>(),
+            new List<int>()
+        };
+        readonly List<int> _variantIndexScratch =
+            new List<int>();
 
         SolverManager _solver;
         ComputeBuffer _instanceBuffer;
+        ComputeBuffer _variantIndexBuffer;
+        bool _variantIndicesDirty;
         int _sharedPhase;
         bool _reportedCapacity;
 
@@ -56,47 +98,52 @@ namespace Yu5h1.UnifiedSolver
 
         void Awake()
         {
+            EnsureCompanions();
             CreateInstanceBuffer();
-            EnsureModifierRunner();
         }
 
-        // Modifiers and roll damping are dispatched by
-        // SolverParticleModifierRunner, and nothing forces that component to
-        // exist: RequireComponent on the runner pulls in an emitter, never the
-        // other way round. An emitter with a fully configured profile and no
-        // runner is therefore silently inert, which is indistinguishable from a
-        // modifier that runs and has no visible effect. Add it rather than warn,
-        // because a populated profile has already stated the intent.
-        void EnsureModifierRunner()
+        // Called when the component is first added in the editor, and when Reset
+        // is chosen. A safe context for AddComponent, unlike OnValidate.
+        void Reset()
         {
-            if (profile == null)
-                return;
+            EnsureCompanions();
+        }
 
-            bool wantsModifiers =
-                profile.modifiers != null &&
-                profile.modifiers.Length > 0;
-            bool wantsRollDamping =
-                profile.rollDamping > 0f;
-            if (!wantsModifiers && !wantsRollDamping)
-                return;
+        // Adds the renderer and the modifier runner if they are missing, and
+        // keeps them out of the inspector.
+        //
+        // Both are added unconditionally rather than only when the profile looks
+        // like it needs them. Gating on the profile meant that changing the
+        // profile later left the object one component short, silently: a
+        // populated modifier list with no runner is indistinguishable from a
+        // modifier that runs and does nothing, and an emitter with no renderer
+        // is indistinguishable from every other reason nothing is on screen.
+        // Both cost nothing when there is nothing to do.
+        //
+        // Public so the editor can call it on objects created before the
+        // companions were owned here.
+        public void EnsureCompanions()
+        {
+            Hide(
+                GetComponent<SolverMeshRenderer>() ??
+                gameObject.AddComponent<
+                    SolverMeshRenderer>());
+            Hide(
+                GetComponent<
+                    SolverParticleModifierRunner>() ??
+                gameObject.AddComponent<
+                    SolverParticleModifierRunner>());
+        }
 
-            if (GetComponent<
-                    SolverParticleModifierRunner>() !=
-                null)
+        static void Hide(Component companion)
+        {
+            // HideInInspector only. DontSave would stop them serializing, and
+            // their settings have to survive a scene reload like any other.
+            if (companion != null)
             {
-                return;
+                companion.hideFlags =
+                    HideFlags.HideInInspector;
             }
-
-            gameObject.AddComponent<
-                SolverParticleModifierRunner>();
-            Debug.LogWarning(
-                "SolverParticleEmitter: profile " +
-                $"'{profile.name}' needs a " +
-                "SolverParticleModifierRunner to " +
-                "dispatch its modifiers and roll " +
-                "damping, so one was added. Add it " +
-                "in the scene to silence this.",
-                this);
         }
 
         void Start()
@@ -118,7 +165,7 @@ namespace Yu5h1.UnifiedSolver
                 return;
             }
 
-            if (spawnOnStart && initialCount > 0)
+            if (playOnAwake && initialCount > 0)
             {
                 QueueInitialRequests();
                 FlushQueued();
@@ -222,16 +269,37 @@ namespace Yu5h1.UnifiedSolver
                 return false;
             }
 
-            SolverParticleRequirements requirements =
-                profile.Requirements;
             Vector3 dimensions = Vector3.Scale(
                 profile.baseDimensions,
                 request.scale);
-            int shapeCount =
-                BuildLocalShape(
-                    profile.topology,
+
+            // The shape source, when there is one, both builds the rest
+            // positions and decides which topology this instance realized. That
+            // is why the variant is read back out rather than passed in: a pile
+            // of ice is a mix of sizes, and a profile that could only spawn one
+            // of them would need three profiles and three emitters to make one.
+            SolverParticleTopology topology;
+            int shapeCount;
+            if (profile.shapeSource != null)
+            {
+                topology = profile.shapeSource.BuildShape(
+                    dimensions,
+                    ShapeSeedFor(_instances.Count),
+                    _shapeScratch,
+                    out shapeCount);
+            }
+            else
+            {
+                topology = profile.topology;
+                shapeCount = BuildLocalShape(
+                    topology,
                     dimensions,
                     _shapeScratch);
+            }
+
+            SolverParticleRequirements requirements =
+                SolverParticleProfile.RequirementsFor(
+                    topology);
             if (shapeCount !=
                 requirements.particles)
             {
@@ -275,11 +343,12 @@ namespace Yu5h1.UnifiedSolver
             }
 
             AddTopologyData(
-                profile.topology,
+                topology,
                 _indexScratch,
                 request.position,
                 request.rotation);
 
+            TrackVariant(topology, _instances.Count);
             _instances.Add(
                 new SolverParticleInstance
                 {
@@ -294,8 +363,7 @@ namespace Yu5h1.UnifiedSolver
                         rigidBodyOffset,
                     rigidBodyCount =
                         requirements.rigidBodies,
-                    topology =
-                        (int)profile.topology,
+                    topology = (int)topology,
                     profileId =
                         profile.GetInstanceID(),
                     scale = request.scale,
@@ -347,9 +415,14 @@ namespace Yu5h1.UnifiedSolver
                     break;
 
                 case SolverParticleTopology.RigidCluster4:
+                case SolverParticleTopology.RigidCluster6:
+                case SolverParticleTopology.RigidCluster8:
                     AddRigidGroup(
                         p,
                         0,
+                        SolverTopologyInfo
+                            .RigidClusterParticles(
+                                topology),
                         origin,
                         rotation);
                     break;
@@ -363,6 +436,7 @@ namespace Yu5h1.UnifiedSolver
                         AddRigidGroup(
                             p,
                             start,
+                            4,
                             origin,
                             rotation);
                     }
@@ -375,18 +449,149 @@ namespace Yu5h1.UnifiedSolver
         void AddRigidGroup(
             int[] indices,
             int start,
+            int count,
             Vector3 origin,
             Quaternion rotation)
         {
-            for (int i = 0; i < 4; i++)
+            // AddRigidBody sizes the group from the array it is handed, so the
+            // scratch has to be exactly as long as the group. A fixed length 8
+            // array with four entries filled would silently create an 8 particle
+            // body referencing whatever the last spawn left in slots 4 to 7.
+            // Hence one preallocated array per variant rather than one shared
+            // one: spawning is a hot path and must not allocate.
+            int[] group = ResolveRigidScratch(count);
+            if (group == null)
             {
-                _rigidIndexScratch[i] =
-                    indices[start + i];
+                Debug.LogError(
+                    "SolverParticleEmitter: Unsupported " +
+                    $"rigid group size {count}.",
+                    this);
+                return;
             }
+
+            for (int i = 0; i < count; i++)
+                group[i] = indices[start + i];
             _solver.AddRigidBody(
-                _rigidIndexScratch,
+                group,
                 origin,
                 rotation);
+        }
+
+        int[] ResolveRigidScratch(int count)
+        {
+            switch (count)
+            {
+                case 4:
+                    return _rigidScratch4;
+                case 6:
+                    return _rigidScratch6;
+                case 8:
+                    return _rigidScratch8;
+                default:
+                    return null;
+            }
+        }
+
+        // Seeded from the emitter and the instance's own index, so a pile is
+        // reproducible run to run and no two fragments in it are alike.
+        int ShapeSeedFor(int instanceIndex)
+        {
+            return shapeSeed * 73856093 ^
+                (instanceIndex + 1) * 19349663;
+        }
+
+        void TrackVariant(
+            SolverParticleTopology topology,
+            int instanceIndex)
+        {
+            int slot = VariantSlot(topology);
+            if (slot < 0)
+                return;
+
+            _variantInstances[slot].Add(instanceIndex);
+            _variantIndicesDirty = true;
+        }
+
+        static int VariantSlot(
+            SolverParticleTopology topology)
+        {
+            switch (topology)
+            {
+                case SolverParticleTopology.RigidCluster4:
+                    return 0;
+                case SolverParticleTopology.RigidCluster6:
+                    return 1;
+                case SolverParticleTopology.RigidCluster8:
+                    return 2;
+                default:
+                    return -1;
+            }
+        }
+
+        // Instance indices for one rigid cluster variant, laid out back to back
+        // in the buffer below.
+        //
+        // The renderer draws one mesh per variant, and DrawMeshInstancedProcedural
+        // hands the shader a batch-local instance id, so the shader needs this to
+        // find the instance the id actually refers to.
+        public bool TryGetVariantBatch(
+            SolverParticleTopology topology,
+            out ComputeBuffer indices,
+            out int offset,
+            out int count)
+        {
+            indices = null;
+            offset = 0;
+            count = 0;
+
+            int slot = VariantSlot(topology);
+            if (slot < 0)
+                return false;
+
+            RebuildVariantIndices();
+            if (_variantIndexBuffer == null)
+                return false;
+
+            for (int i = 0; i < slot; i++)
+                offset += _variantInstances[i].Count;
+            count = _variantInstances[slot].Count;
+            indices = _variantIndexBuffer;
+            return count > 0;
+        }
+
+        void RebuildVariantIndices()
+        {
+            if (!_variantIndicesDirty)
+                return;
+
+            _variantIndicesDirty = false;
+            _variantIndexScratch.Clear();
+            for (int slot = 0;
+                 slot < _variantInstances.Length;
+                 slot++)
+            {
+                _variantIndexScratch.AddRange(
+                    _variantInstances[slot]);
+            }
+
+            int required = _variantIndexScratch.Count;
+            if (required == 0)
+                return;
+
+            if (_variantIndexBuffer == null ||
+                _variantIndexBuffer.count < required)
+            {
+                _variantIndexBuffer?.Release();
+                _variantIndexBuffer = new ComputeBuffer(
+                    Mathf.Max(required, maxInstances),
+                    sizeof(int));
+            }
+
+            _variantIndexBuffer.SetData(
+                _variantIndexScratch,
+                0,
+                0,
+                required);
         }
 
         void AddJoint(int[] p, int a, int b)
@@ -467,16 +672,29 @@ namespace Yu5h1.UnifiedSolver
                         new Vector3(-hx, -hy, 0f);
                     return 6;
 
+                // The same base polyhedra the hull renderer draws, unjittered.
+                // A profile can therefore use a rigid cluster on its own, with
+                // no shape source, and still get a shape the renderer can close
+                // into a surface. Varying them is the shape source's job.
                 case SolverParticleTopology.RigidCluster4:
-                    result[0] =
+                case SolverParticleTopology.RigidCluster6:
+                case SolverParticleTopology.RigidCluster8:
+                {
+                    Vector3[] baseVertices =
+                        SolverHullShapes.BaseVertices(
+                            topology);
+                    Vector3 halfExtents =
                         new Vector3(hx, hy, hz);
-                    result[1] =
-                        new Vector3(-hx, hy, -hz);
-                    result[2] =
-                        new Vector3(-hx, -hy, hz);
-                    result[3] =
-                        new Vector3(hx, -hy, -hz);
-                    return 4;
+                    for (int i = 0;
+                         i < baseVertices.Length;
+                         i++)
+                    {
+                        result[i] = Vector3.Scale(
+                            baseVertices[i],
+                            halfExtents);
+                    }
+                    return baseVertices.Length;
+                }
 
                 case SolverParticleTopology.ArticulatedCluster12:
                     BuildArticulatedShape(
@@ -560,7 +778,7 @@ namespace Yu5h1.UnifiedSolver
             }
 
             SolverParticleRequirements r =
-                profile.Requirements;
+                profile.WorstCaseRequirements;
             bool available =
                 _solver.ActiveCount +
                     requested * r.particles <=
@@ -586,7 +804,7 @@ namespace Yu5h1.UnifiedSolver
                 return false;
 
             SolverParticleRequirements r =
-                profile.Requirements;
+                profile.WorstCaseRequirements;
             return
                 _solver.ActiveCount + r.particles <=
                     _solver.maxParticles &&
@@ -792,7 +1010,52 @@ namespace Yu5h1.UnifiedSolver
         {
             _instanceBuffer?.Release();
             _instanceBuffer = null;
+            _variantIndexBuffer?.Release();
+            _variantIndexBuffer = null;
+#if UNITY_EDITOR
+            RemoveCompanionsIfOrphaned();
+#endif
         }
+
+#if UNITY_EDITOR
+        // Take the hidden companions with it when the emitter is removed.
+        //
+        // Without this they survive as components that cannot be seen and
+        // therefore cannot be deleted. Deferred, because destroying components
+        // from inside OnDestroy is not allowed, and guarded on the GameObject
+        // still being alive so that closing a scene or leaving play mode does
+        // not trip it.
+        void RemoveCompanionsIfOrphaned()
+        {
+            if (Application.isPlaying)
+                return;
+
+            GameObject owner = gameObject;
+            UnityEditor.EditorApplication.delayCall += () =>
+            {
+                if (owner == null)
+                    return;
+                if (owner.GetComponent<
+                        SolverParticleEmitter>() != null)
+                {
+                    return;
+                }
+
+                DestroyCompanion(
+                    owner.GetComponent<
+                        SolverMeshRenderer>());
+                DestroyCompanion(
+                    owner.GetComponent<
+                        SolverParticleModifierRunner>());
+            };
+        }
+
+        static void DestroyCompanion(Component companion)
+        {
+            if (companion != null)
+                DestroyImmediate(companion);
+        }
+#endif
 
         void OnDrawGizmosSelected()
         {

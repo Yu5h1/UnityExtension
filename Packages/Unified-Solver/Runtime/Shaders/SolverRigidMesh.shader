@@ -59,6 +59,16 @@ Shader "Yu5h1/UnifiedSolver/RigidMesh"
         float4 _BaseMap_ST;
         float4 _Tint;
 
+        // Hull mode only. Rest offsets q_i = x_i0 - x_cm0 come straight from the
+        // solver's own shape-matching buffer, indexed in parallel with
+        // _RigidParticleIndices, so a fragment's corners need no storage of their
+        // own. _VariantInstances remaps the batch-local instance id, because one
+        // draw covers only the instances of a single 4/6/8 variant.
+        StructuredBuffer<float3> _RigidRestOffsets;
+        StructuredBuffer<int> _VariantInstances;
+        int _VariantOffset;
+        float _ParticleRadius;
+
         float4 QuatMul(float4 a, float4 b)
         {
             return float4(
@@ -101,14 +111,111 @@ Shader "Yu5h1/UnifiedSolver/RigidMesh"
             return float3(value.x, value.z, value.y);
         }
 
-        void DeformVertex(
-            float3 meshPosition,
-            float3 meshNormal,
+        // Vertex built from the body's own rest particles instead of an authored
+        // mesh.
+        //
+        // The drawn surface is then the convex hull of the very points the
+        // solver collides with, so the two cannot drift apart however the
+        // fragment was generated, and a randomly shaped fragment needs no mesh
+        // asset at all.
+        //
+        // cornerIndices arrives in UV1 and holds indices, not a direction: x is
+        // this vertex's own corner and yz are the other two corners of its face,
+        // wound outward. A flat facet has no single vertex normal to
+        // interpolate, and those three corners are exactly what is needed to
+        // compute the facet's own.
+        //
+        // The rest offsets already include the spawn rotation and the spawn
+        // scale, since they were captured from world positions at spawn. Applying
+        // instance.spawnRotation or instance.scale here would apply both twice.
+        void DeformHullVertex(
+            float3 cornerIndices,
             uint instanceID,
             out float3 worldPosition,
             out float3 worldNormal,
             out float3 color)
         {
+            uint index =
+                (uint)_VariantInstances[
+                    (uint)_VariantOffset + instanceID];
+            SolverInstance instance =
+                _Instances[index];
+            RigidBody body =
+                _RigidBodies[
+                    instance.rigidBodyOffset];
+            float4 rotation =
+                normalize(body.quaternion);
+
+            uint slot =
+                (uint)body.particleOffset;
+            float3 own =
+                _RigidRestOffsets[
+                    slot + (uint)cornerIndices.x];
+            float3 nextCorner =
+                _RigidRestOffsets[
+                    slot + (uint)cornerIndices.y];
+            float3 lastCorner =
+                _RigidRestOffsets[
+                    slot + (uint)cornerIndices.z];
+
+            // The hull passes through particle centres, but the fragment
+            // collides as the union of spheres of _ParticleRadius around them,
+            // so drawn as-is it reads a radius smaller than it behaves. Pushing
+            // the corners out radially from the centre of mass is the cheap
+            // approximation of that union and needs no extra data.
+            float ownLength = length(own);
+            float3 inflated =
+                ownLength > 1e-6
+                    ? own *
+                      ((ownLength + _ParticleRadius) /
+                       ownLength)
+                    : own;
+
+            float3 faceNormal = cross(
+                nextCorner - own,
+                lastCorner - own);
+            float faceLength = length(faceNormal);
+            float3 localNormal =
+                faceLength > 1e-9
+                    ? faceNormal / faceLength
+                    : normalize(
+                        ownLength > 1e-6
+                            ? own
+                            : float3(0.0, 1.0, 0.0));
+
+            worldPosition =
+                body.xcm +
+                RotateByQuaternion(
+                    inflated,
+                    rotation);
+            worldNormal = RotateByQuaternion(
+                localNormal,
+                rotation);
+            int firstParticle =
+                _RigidParticleIndices[
+                    body.particleOffset];
+            color =
+                _Particles[firstParticle].color;
+        }
+
+        void DeformVertex(
+            float3 meshPosition,
+            float3 meshNormal,
+            float3 cornerIndices,
+            uint instanceID,
+            out float3 worldPosition,
+            out float3 worldNormal,
+            out float3 color)
+        {
+        #ifdef SOLVER_HULL_FROM_PARTICLES
+            DeformHullVertex(
+                cornerIndices,
+                instanceID,
+                worldPosition,
+                worldNormal,
+                color);
+            return;
+        #else
             SolverInstance instance =
                 _Instances[instanceID];
             RigidBody body =
@@ -152,6 +259,7 @@ Shader "Yu5h1/UnifiedSolver/RigidMesh"
                     body.particleOffset];
             color =
                 _Particles[firstParticle].color;
+        #endif
         }
         ENDCG
 
@@ -161,12 +269,14 @@ Shader "Yu5h1/UnifiedSolver/RigidMesh"
             #pragma vertex vert
             #pragma fragment frag
             #pragma target 5.0
+            #pragma multi_compile_local _ SOLVER_HULL_FROM_PARTICLES
 
             struct appdata
             {
                 float4 vertex : POSITION;
                 float3 normal : NORMAL;
                 float2 uv : TEXCOORD0;
+                float3 corners : TEXCOORD1;
             };
 
             struct v2f
@@ -188,6 +298,7 @@ Shader "Yu5h1/UnifiedSolver/RigidMesh"
                 DeformVertex(
                     v.vertex.xyz,
                     v.normal,
+                    v.corners,
                     instanceID,
                     worldPosition,
                     worldNormal,
@@ -232,6 +343,7 @@ Shader "Yu5h1/UnifiedSolver/RigidMesh"
             #pragma vertex vertShadow
             #pragma fragment fragShadow
             #pragma target 5.0
+            #pragma multi_compile_local _ SOLVER_HULL_FROM_PARTICLES
             #pragma multi_compile_shadowcaster
 
             struct v2fShadow
@@ -239,8 +351,18 @@ Shader "Yu5h1/UnifiedSolver/RigidMesh"
                 V2F_SHADOW_CASTER;
             };
 
+            // Not appdata_base: hull mode needs the corner indices out of UV1,
+            // and appdata_base stops at one texcoord. The shadow caster macros
+            // only require vertex and normal to be present by those names.
+            struct appdataShadow
+            {
+                float4 vertex : POSITION;
+                float3 normal : NORMAL;
+                float3 corners : TEXCOORD1;
+            };
+
             v2fShadow vertShadow(
-                appdata_base v,
+                appdataShadow v,
                 uint instanceID : SV_InstanceID)
             {
                 v2fShadow o;
@@ -250,6 +372,7 @@ Shader "Yu5h1/UnifiedSolver/RigidMesh"
                 DeformVertex(
                     v.vertex.xyz,
                     v.normal,
+                    v.corners,
                     instanceID,
                     worldPosition,
                     worldNormal,
