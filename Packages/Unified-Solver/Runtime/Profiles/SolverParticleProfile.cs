@@ -28,9 +28,20 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("Per-step fraction of drift around the body's long axis to remove. Structural, not a performance: it runs for every instance whether or not a modifier is attached. GuideChain4 needs this most, since its constraints all reach the spine and so leave the guide free to orbit with no resistance at all, taking the body's cross direction with it. No effect on Chain3, which has nothing off the spine to hold onto.")]
         [Range(0f, 1f)]
         public float rollDamping = 0.25f;
-        [Tooltip("Relative speed below which an instance stops moving internally, in metres per second. Only motion relative to the instance's own mean is removed, so it still travels, falls and slides. Runs for every topology.\n\nOn a deforming body this is what stops shape drift accumulating into a mirrored body. On a rigid cluster the only internal motion left after shape matching is its rotation, so this acts as rolling resistance: a body made of spheres has none of its own, and a landed fragment otherwise rolls until something blocks it. Raise it if things keep creeping after they land; lower it if they look glued and refuse to tip.")]
+        [Tooltip("KNOWN WEAK. Relative speed below which an instance's internal motion is damped, in metres per second.\n\nIt writes velocities, and the solver rebuilds velocity from positions at the end of every substep, so what this writes survives one substep out of thirty. Measured effect is close to nothing whatever it is set to. Use Sleep Speed below to actually stop a settled body; keep this only as a mild bias while a body is still moving.")]
         [Min(0f)]
         public float settleSpeed = 0.05f;
+        [Header("Sleep")]
+        [Tooltip("Speed below which an instance starts counting down to sleep, in metres per second. 0 disables sleeping entirely.\n\nThis is the one control that can actually stop a settled body. Damping cannot: the solver rebuilds velocity from positions at the end of every substep, so a velocity written from outside the loop survives one substep out of thirty. Sleep writes positions instead, which hold.\n\nAn instance under a continuous modifier never sleeps.")]
+        [Min(0f)]
+        public float sleepSpeed = 0.04f;
+        [Tooltip("How long an instance must stay below Sleep Speed before it is held still, in seconds. Too short and things freeze mid-tumble; too long and a pile keeps twitching after it has visibly settled.")]
+        [Min(0f)]
+        public float sleepDelay = 0.5f;
+        [Tooltip("How far the solver may push a sleeping instance before it wakes, in metres. A sleeping body's velocity is held at zero so it cannot report motion itself; displacement is the honest signal, and it covers being hit, being landed on, and the pile under it shifting. Too small and bodies wake from their own contact noise; too large and a fish can swim through a sleeping fragment.")]
+        [Min(0.0001f)]
+        public float wakeDistance = 0.005f;
+
         public bool collideWithSameProfile = true;
         public bool showCollisionParticles;
 

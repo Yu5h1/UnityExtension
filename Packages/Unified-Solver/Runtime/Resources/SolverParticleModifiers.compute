@@ -1,6 +1,7 @@
 #pragma kernel ApplyOscillation
 #pragma kernel ApplySurfaceImpulse
 #pragma kernel ApplyRollDamping
+#pragma kernel ApplySleep
 
 #include "../Shaders/SolverBodyFrameTypes.hlsl"
 
@@ -48,6 +49,21 @@ static const float MINIMUM_CHORD_FRACTION = 0.25;
 // correction may reach downward in one step.
 static const float UNFOLD_SPEED = 0.3;
 static const float UNFOLD_DROP_SPEED = 0.5;
+
+// Sleep. Per instance: x = state, y = seconds spent as a candidate.
+RWStructuredBuffer<float2> _SleepState;
+// Per instance: the pose a sleeping body is held at, _SleepPoseStride entries
+// each. Held rather than merely damped, because damping cannot reach this.
+RWStructuredBuffer<float3> _SleepPose;
+uint _SleepPoseStride;
+float _SleepSpeed;
+float _SleepDelay;
+float _WakeDistance;
+float _KeepAwake;
+
+static const float SLEEP_AWAKE = 0.0;
+static const float SLEEP_CANDIDATE = 1.0;
+static const float SLEEP_SLEEPING = 2.0;
 
 float _SurfaceImpulseSpeed;
 float _SurfaceSpreadSeconds;
@@ -1072,6 +1088,153 @@ void ApplyRollDamping(
             strength);
     }
 
+}
+
+// Stops a settled instance moving, by writing positions rather than velocities.
+//
+// This kernel exists because damping cannot do the job, and the reason is
+// structural rather than a matter of tuning. UnifiedSolver.compute ends every
+// substep with
+//
+//     p.velocity = (p.position - p.prevPosition) / subDt
+//
+// which overwrites velocity outright. A modifier runs once per FixedUpdate,
+// outside that loop, so a velocity it writes survives exactly one Predict out of
+// `substeps` before being recomputed from positions. At 30 substeps that is
+// about three percent of the intent. `settleSpeed` was written against the
+// velocity channel and is inert for this reason, whatever it is set to.
+//
+// Positions are the channel that holds. Writing `prevPosition` alongside
+// `position` is what makes it stick: the difference between them is the only
+// thing UpdateVelocity reads, so setting them equal produces a genuine zero
+// rather than one that is immediately recomputed away.
+//
+// Runs after the solver has stepped: SolverManager has no execution order and
+// so sits at 0, while the runner is at 50. Each dispatch therefore sees what the
+// solver just did and corrects it before the next frame's Predict.
+[numthreads(64, 1, 1)]
+void ApplySleep(
+    uint3 dispatchID : SV_DispatchThreadID)
+{
+    uint instanceIndex = dispatchID.x;
+    if (instanceIndex >= _InstanceCount)
+        return;
+    if (_SleepSpeed <= 0.0)
+        return;
+
+    SolverInstance instance =
+        _Instances[instanceIndex];
+    uint particleBase =
+        (uint)instance.particleOffset;
+    uint count = (uint)max(0, instance.particleCount);
+    if (count == 0)
+        return;
+    count = min(count, _SleepPoseStride);
+
+    uint poseBase =
+        instanceIndex * _SleepPoseStride;
+    float2 state = _SleepState[instanceIndex];
+    uint i;
+
+    // A body under a continuous modifier must never sleep, and must wake the
+    // moment one is enabled. The drive writes a pose every step, so a sleeping
+    // instance would fight it and win, holding a body still while it is being
+    // told to move.
+    if (_KeepAwake > 0.5)
+    {
+        _SleepState[instanceIndex] =
+            float2(SLEEP_AWAKE, 0.0);
+        return;
+    }
+
+    if (state.x == SLEEP_SLEEPING)
+    {
+        // Wake on displacement, not on speed.
+        //
+        // A sleeping body has its velocity held at zero by this kernel, so it
+        // can never report motion of its own; asking it how fast it is going
+        // would keep it asleep through anything. How far the solver managed to
+        // push it since the last frame is the honest signal, and it covers
+        // every source at once: another fragment landing on it, a fish, a
+        // moving collider, a pile shifting underneath.
+        float displaced = 0.0;
+        for (i = 0; i < count; i++)
+        {
+            displaced = max(
+                displaced,
+                length(
+                    _Particles[particleBase + i].position -
+                    _SleepPose[poseBase + i]));
+        }
+
+        if (displaced > _WakeDistance)
+        {
+            _SleepState[instanceIndex] =
+                float2(SLEEP_AWAKE, 0.0);
+            return;
+        }
+
+        for (i = 0; i < count; i++)
+        {
+            uint index = particleBase + i;
+            Particle particle = _Particles[index];
+            if (particle.invMass > 0.0)
+            {
+                particle.position =
+                    _SleepPose[poseBase + i];
+                particle.prevPosition =
+                    particle.position;
+                particle.velocity =
+                    float3(0.0, 0.0, 0.0);
+            }
+            _Particles[index] = particle;
+        }
+        return;
+    }
+
+    // Awake or candidate. The fastest particle rather than the mean, so a body
+    // that is rotating in place still counts as moving.
+    float fastest = 0.0;
+    for (i = 0; i < count; i++)
+    {
+        fastest = max(
+            fastest,
+            length(
+                _Particles[particleBase + i].velocity));
+    }
+
+    if (fastest > _SleepSpeed)
+    {
+        _SleepState[instanceIndex] =
+            float2(SLEEP_AWAKE, 0.0);
+        return;
+    }
+
+    state.y += _DeltaTime;
+    if (state.y < _SleepDelay)
+    {
+        _SleepState[instanceIndex] =
+            float2(SLEEP_CANDIDATE, state.y);
+        return;
+    }
+
+    // Falling asleep. Record the pose it will be held at, and zero it out in
+    // the same pass so there is no step where it is asleep but still drifting.
+    for (i = 0; i < count; i++)
+    {
+        uint index = particleBase + i;
+        Particle particle = _Particles[index];
+        _SleepPose[poseBase + i] = particle.position;
+        if (particle.invMass > 0.0)
+        {
+            particle.prevPosition = particle.position;
+            particle.velocity =
+                float3(0.0, 0.0, 0.0);
+        }
+        _Particles[index] = particle;
+    }
+    _SleepState[instanceIndex] =
+        float2(SLEEP_SLEEPING, 0.0);
 }
 
 // Seconds elapsed since this instance's most recent hop started.

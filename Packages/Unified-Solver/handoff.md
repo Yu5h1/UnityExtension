@@ -146,38 +146,50 @@ Standing rule this came from: if code can settle it, code settles it. A setting
 is for a real choice, not for restating something already determined elsewhere.
 `hullFromParticles` and `meshMode` were the same fault in field form.
 
-## Open: bodies spread on landing instead of settling
+## Sleep holds settled bodies still; settle never could
 
-Fish and fragments both keep creeping apart after they hit the ground. Two
-separate causes; only the first is a defect.
+Bodies kept creeping after landing. `settleSpeed` did not help, and the reason is
+structural rather than a matter of tuning.
 
-- `settleSpeed` sat behind the roll-damping topology gate, which lists only the
-  chain topologies, so it had **never run on a rigid cluster**. A fragment
-  profile could set it and the gate discarded it silently. Settle is now ahead of
-  that gate and runs for every topology; roll damping stays chain-only, because a
-  fragment has no long axis for `GetFrame` to find. `EnsureModifierRunner` also
-  now counts `settleSpeed`, so a profile that sets only that still gets a runner.
-- A body made of spheres has **no rolling resistance of any kind**. Coulomb
-  friction in the solver is correct and substep-independent — the per-substep
-  limit `mu * penetration` works out to `a = mu * g` — but friction converts
-  sliding into rolling and nothing removes the rolling. On a rigid cluster,
-  shape matching has already removed every other internal motion, so settle
-  converging velocities onto the instance mean is exactly angular damping. That
-  is the stand-in until Sleep/Wake in `plan.md` 13.8 exists; it is not a
-  substitute for it.
+- `UnifiedSolver.compute` ends **every substep** with
+  `p.velocity = (p.position - p.prevPosition) / subDt`, overwriting velocity
+  outright. A modifier runs once per FixedUpdate, outside that loop, so a
+  velocity it writes survives one Predict out of `substeps` — about 3% at 30.
+  This was already recorded under solver behaviour; the earlier `settleSpeed`
+  gate fix was necessary but nowhere near sufficient, and `settleSpeed` is now
+  labelled weak in its own tooltip rather than left looking live.
+- `ApplySleep` writes **positions**. Setting `prevPosition = position` is what
+  makes a stop hold, because that difference is the only thing UpdateVelocity
+  reads.
+- Wake is by **displacement, not speed**. A sleeping body's velocity is held at
+  zero by the kernel, so it cannot report its own motion; how far the solver
+  managed to push it is the honest signal and covers every source at once.
+- The runner is at `[DefaultExecutionOrder(50)]` and `SolverManager` declares
+  none, so it sits at 0. Our kernels therefore run **after** the solver has
+  stepped, which is what makes observe-then-correct work. Anything reordering
+  those breaks sleep.
+- An instance under any enabled modifier never sleeps (`_KeepAwake`), per
+  `plan.md` 13.8.
+- Extension-side only. It stops visible motion but still runs every solver
+  kernel; skipping them needs the vendored dependency opened, which is a
+  separate authorization.
+- Buffers are sized to `maxInstances` so a slot always means one instance index,
+  and are explicitly zeroed: undefined ComputeBuffer contents would read as
+  instances already asleep at a pose made of whatever was in memory.
 
-Settings that make it worse and are worth checking before blaming the code:
+Settings that still make landing worse and are worth checking:
 
 - `particleRadius` 0.1 against ice `baseDimensions` 0.12 x 0.4 x 0.08 means the
-  collision shape is far larger than the authored size — a fragment collides as a
-  blob roughly 0.2 m wider than it looks. Keep the smallest dimension comfortably
-  above `2 * particleRadius` or lower the radius.
+  collision shape is far larger than the authored size. Keep the smallest
+  dimension comfortably above `2 * particleRadius` or lower the radius. This one
+  also caps how small a crushed-ice chip can be.
 - 100 instances in a 5 x 2 x 5 spawn volume average 0.79 m apart, which with the
-  above overlaps heavily at t=0. `maxDepenetrationSpeed` 5 m/s then throws them
-  apart on the first frame, and what looks like failure to settle is the tail of
-  that initial scatter. Lower it, spread the volume, or spawn fewer.
-- `frictionKinetic` 0.2 is genuinely slippery, which is right for ice and wrong
-  if the goal is a pile that holds its shape.
+  above overlaps at t=0; `maxDepenetrationSpeed` 5 m/s then throws them apart on
+  the first frame.
+- `frictionKinetic` 0.2 is genuinely slippery, right for ice and wrong for a pile
+  that holds its shape. Friction is correct and substep-independent — the
+  per-substep limit `mu * penetration` works out to `a = mu * g` — but it turns
+  sliding into rolling, and a body made of spheres has no rolling resistance.
 
 ## Verification
 

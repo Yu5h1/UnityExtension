@@ -22,11 +22,17 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("Leave empty for normal use: the packaged Resources/SolverParticleModifiers.compute is loaded automatically. Assign one only to run a modified copy of that compute instead. It must declare the same kernels and uniforms.")]
         public ComputeShader overrideCompute;
 
+        // Room for the largest topology, so any instance's pose fits one slot.
+        const int SleepPoseStride = 12;
+
         SolverParticleEmitter _emitter;
         ComputeShader _runtimeCompute;
         int _oscillationKernel = -1;
         int _surfaceImpulseKernel = -1;
         int _rollDampingKernel = -1;
+        int _sleepKernel = -1;
+        ComputeBuffer _sleepState;
+        ComputeBuffer _sleepPose;
         bool _reportedMissingCompute;
         bool _reportedModifiers;
 
@@ -60,11 +66,13 @@ namespace Yu5h1.UnifiedSolver
             if (modifiers == null ||
                 modifiers.Length == 0)
             {
+                DispatchSleep(false);
                 ReportModifiersOnce(modifiers, 0);
                 return;
             }
 
             int dispatched = 0;
+            bool keepAwake = false;
             for (int i = 0; i < modifiers.Length; i++)
             {
                 SolverParticleModifierProfile modifier =
@@ -80,6 +88,7 @@ namespace Yu5h1.UnifiedSolver
                 {
                     DispatchOscillation(oscillation);
                     dispatched++;
+                    keepAwake = true;
                 }
                 else if (modifier is
                     SolverSurfaceImpulseProfile
@@ -87,8 +96,13 @@ namespace Yu5h1.UnifiedSolver
                 {
                     DispatchSurfaceImpulse(surface);
                     dispatched++;
+                    keepAwake = true;
                 }
             }
+
+            // After the modifiers, so a body that was driven this step is
+            // measured as moving rather than being caught mid-drive.
+            DispatchSleep(keepAwake);
 
             ReportModifiersOnce(modifiers, dispatched);
         }
@@ -187,6 +201,88 @@ namespace Yu5h1.UnifiedSolver
                 settleSpeed);
             BindBuffers(_rollDampingKernel);
             Dispatch(_rollDampingKernel);
+        }
+
+        // Holds settled instances still by writing positions.
+        //
+        // Dispatched whether or not the profile lists modifiers, because a body
+        // that will not stop moving is a fault of the body, not of its
+        // performance. Gated only on sleepSpeed, which is what turns it off.
+        void DispatchSleep(bool keepAwake)
+        {
+            SolverParticleProfile profile =
+                _emitter.profile;
+            float sleepSpeed =
+                Mathf.Max(0f, profile.sleepSpeed);
+            if (sleepSpeed <= 0f)
+                return;
+            if (!EnsureSleepBuffers())
+                return;
+
+            _runtimeCompute.SetFloat(
+                "_SleepSpeed",
+                sleepSpeed);
+            _runtimeCompute.SetFloat(
+                "_SleepDelay",
+                Mathf.Max(0f, profile.sleepDelay));
+            _runtimeCompute.SetFloat(
+                "_WakeDistance",
+                Mathf.Max(0.0001f, profile.wakeDistance));
+            _runtimeCompute.SetFloat(
+                "_KeepAwake",
+                keepAwake ? 1f : 0f);
+            _runtimeCompute.SetInt(
+                "_SleepPoseStride",
+                SleepPoseStride);
+            _runtimeCompute.SetBuffer(
+                _sleepKernel,
+                "_SleepState",
+                _sleepState);
+            _runtimeCompute.SetBuffer(
+                _sleepKernel,
+                "_SleepPose",
+                _sleepPose);
+            BindBuffers(_sleepKernel);
+            Dispatch(_sleepKernel);
+        }
+
+        // Allocated against maxInstances rather than the current count, so the
+        // state of an instance never moves slot as more are spawned. A slot's
+        // meaning is its instance index and nothing else.
+        bool EnsureSleepBuffers()
+        {
+            if (_sleepKernel < 0)
+                return false;
+
+            int instances = Mathf.Max(
+                1,
+                _emitter.maxInstances);
+            if (_sleepState != null &&
+                _sleepState.count >= instances)
+            {
+                return true;
+            }
+
+            _sleepState?.Release();
+            _sleepPose?.Release();
+
+            // Zeroed on creation, which is state 0 with a zero timer: awake.
+            // ComputeBuffer contents are otherwise undefined, and undefined here
+            // would read as instances that are already asleep at a pose made of
+            // whatever was in memory.
+            _sleepState = new ComputeBuffer(
+                instances,
+                sizeof(float) * 2);
+            _sleepState.SetData(
+                new Vector2[instances]);
+
+            _sleepPose = new ComputeBuffer(
+                instances * SleepPoseStride,
+                sizeof(float) * 3);
+            _sleepPose.SetData(
+                new Vector3[
+                    instances * SleepPoseStride]);
+            return true;
         }
 
         void DispatchOscillation(
@@ -345,6 +441,9 @@ namespace Yu5h1.UnifiedSolver
             _rollDampingKernel =
                 _runtimeCompute.FindKernel(
                     "ApplyRollDamping");
+            _sleepKernel =
+                _runtimeCompute.FindKernel(
+                    "ApplySleep");
             return true;
         }
 
@@ -353,6 +452,10 @@ namespace Yu5h1.UnifiedSolver
             if (_runtimeCompute != null)
                 Destroy(_runtimeCompute);
             _runtimeCompute = null;
+            _sleepState?.Release();
+            _sleepState = null;
+            _sleepPose?.Release();
+            _sleepPose = null;
         }
     }
 }
