@@ -90,6 +90,23 @@ namespace Yu5h1.UnifiedSolver
                 return;
             }
 
+            // A material whose shader was deleted still loads: Unity swaps in
+            // the internal error shader and the result is magenta, or with
+            // instancing, nothing at all. Worth naming, because the material
+            // looks correctly assigned in the inspector and the fault is one
+            // level below it.
+            if (material.shader == null ||
+                material.shader.name ==
+                    "Hidden/InternalErrorShader")
+            {
+                ReportOnce(
+                    $"material '{material.name}' has no working " +
+                    "shader; the one it was authored against is " +
+                    "missing. Pick a shader on the material, for " +
+                    "example Universal Render Pipeline/Lit");
+                return;
+            }
+
             // RenderMeshInstanced refuses a material without GPU instancing.
             // Setting the flag on the assigned asset would dirty something
             // shared, so the runtime copy carries it instead.

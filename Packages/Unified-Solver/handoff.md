@@ -85,6 +85,15 @@ followed has not been compiled.
   other while still colliding with fish, which does not read as a phase problem.
 - Sleep/Wake (`plan.md` 13.8) is not part of this and is still unstarted.
 
+### Deleting a shader orphans materials in consuming projects
+
+Removing `SolverRigidMesh.shader` left `GPU_Ice.mat` in BonghuoVR bound to a
+missing shader, so nothing drew. The material still looked correctly assigned in
+the inspector; the fault was one level below it. Before deleting a shader,
+search the consuming projects for materials referencing its GUID, not just this
+package for code references. `SolverMeshRenderer` now detects
+`Hidden/InternalErrorShader` and names the material.
+
 ### First validation attempt failed, and why
 
 Nothing was drawn. The cause was `SolverRenderProfile.hullFromParticles`, a bool
