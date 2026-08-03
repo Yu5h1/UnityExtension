@@ -35,6 +35,7 @@ namespace Yu5h1.UnifiedSolver
         [Min(0f)]
         public float fallSpeedLimit = 0.5f;
 
+        [Space]
         // Answers whether the modifier fires at all, separately from whether
         // the launch is strong enough to see.
         [Tooltip("Tint instances red on the steps a hop is applied.")]

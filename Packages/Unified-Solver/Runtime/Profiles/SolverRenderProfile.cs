@@ -21,6 +21,7 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("Rigid uses this directly, so any URP or HDRP material works.")]
         public Material sourceMaterial;
 
+        [Space]
         [Tooltip("Articulated only. Assign to prevent build stripping.")]
         public Shader articulatedShader;
 
@@ -30,6 +31,7 @@ namespace Yu5h1.UnifiedSolver
         public bool fitMeshToDimensions = true;
         public Vector3 visualScale = Vector3.one;
 
+        [Space]
         public bool castShadows = true;
         public bool receiveShadows = true;
 

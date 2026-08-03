@@ -2,24 +2,22 @@
 
 Use this skill for Yu5h1Lib Inspector, PropertyDrawer, EditorWindow, context-menu, shortcut, AssetDatabase, sub-asset, and other Editor extension work.
 
-## A Header must say something no field name says
+## Separate with `[Space]`; add `[Header]` only when it says something new
 
-The first field of a group already labels it. A `[Header]` earns its place only
-when it names a concept none of the fields carry.
+Groups need separating, not always labelling. Use `[Space]` for the gap, and
+promote it to `[Header]` only when the name is something no field in the group
+already carries.
 
 ```csharp
-[Header("Speed Limit")]     // says nothing the field does not
+[Space]                 // speedLimit already labels the group
 public float speedLimit;
+public float speedDecayRate;
 
-[Header("Physics")]         // no field is called physics; this groups
+[Header("Physics")]     // no field is called physics
 public float mass;
 public float jointCompliance;
 public float jointDamping;
 ```
-
-Drop it when the header and the first field are the same word, and when every
-field in the group already carries the term — `[Header("Initial Spawn")]` over
-`initialCount`, `initialVelocity` and `spawnVolume` is three restatements.
 
 ## Tooltips are one line, and usually absent
 
