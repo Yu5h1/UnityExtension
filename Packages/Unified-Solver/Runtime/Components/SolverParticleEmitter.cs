@@ -23,14 +23,12 @@ namespace Yu5h1.UnifiedSolver
         [Inline]
         public SolverParticleProfile profile;
 
-        [Header("Capacity")]
         [Min(1)]
         public int maxInstances = 2048;
 
         [Tooltip("The same seed lays out the same pile every run. Needs a Shape Source.")]
         public int shapeSeed = 12345;
 
-        [Header("Initial Spawn")]
         // Named for the Unity convention, not for the callback it happens to
         // use. AudioSource and ParticleSystem both call this Play On Awake, and
         // a component that spawns nothing by default looks broken rather than

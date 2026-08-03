@@ -5,7 +5,6 @@ namespace Yu5h1.UnifiedSolver
 {
     public sealed class SolverParticleProfile : ScriptableObject
     {
-        [Header("Topology")]
         public SolverParticleTopology topology =
             SolverParticleTopology.Chain3;
 
@@ -34,7 +33,6 @@ namespace Yu5h1.UnifiedSolver
         [Range(0f, 1f)]
         public float rollDamping = 0.25f;
 
-        [Header("Speed Limit")]
         // A threshold, not a ceiling: the excess decays, so a body hit hard still
         // ends up faster than one hit lightly. Below it nothing happens at all,
         // which global damping cannot offer. Applies to the instance mean, so
@@ -47,7 +45,6 @@ namespace Yu5h1.UnifiedSolver
         [Min(0.01f)]
         public float speedDecayRate = 10f;
 
-        [Header("Sleep")]
         // The only control that can stop a settled body. Damping cannot: the
         // solver rebuilds velocity from positions every substep, so a velocity
         // written from outside survives one substep in thirty. Sleep writes
@@ -76,7 +73,6 @@ namespace Yu5h1.UnifiedSolver
         [Inline]
         public SolverRenderProfile renderProfile;
 
-        [Header("Optional Modifiers")]
         public SolverParticleModifierProfile[] modifiers =
             new SolverParticleModifierProfile[0];
 
