@@ -40,7 +40,6 @@ float _SubDeltaTime;
 float3 _UpAxis;
 
 float _RollDamping;
-float _SettleSpeed;
 // Shortest chord the body's two ends may be held at, as a fraction of body
 // length. Below the 34% the drive itself reaches at full tension, so the floor
 // never fights a legitimate beat.
@@ -942,84 +941,10 @@ void ApplyRollDamping(
         UnfoldHairpin(instance);
     }
 
-    // Settle runs for every topology, including rigid clusters.
-    //
-    // It was behind the roll-damping gate below, which lists only the chain
-    // topologies, so `settleSpeed` had never once run on a rigid fragment: a
-    // profile could set it, the inspector showed it, and the gate quietly
-    // discarded it. That is the second time this exact shape of bug has cost a
-    // debugging session; see the roll damping note in handoff.md.
-    //
-    // Nothing in it is chain-specific. It converges particle velocities onto the
-    // instance mean, which removes motion relative to the body. For a deforming
-    // body that is deformation; for a rigid cluster, whose shape matching has
-    // already removed everything else, the remainder is exactly its rotation.
-    // Damping that as the body slows is the rolling resistance a body made of
-    // spheres does not otherwise have, and without it a fragment that has landed
-    // keeps rolling until something stops it.
-
-    // Settle: once the body is barely deforming, take the last of that motion
-    // out rather than letting it trickle on.
-    //
-    // Rotation about the long axis meets no resistance, so the little that the
-    // solver leaves behind each step is never given back. Damping lowers the
-    // rate but cannot undo what has already turned, so it accumulates until the
-    // cross direction has gone right round and the body reads as mirrored.
-    // Clearing the remainder while it is still small stops it ever reaching
-    // that point, and once cleared it takes a long time to build again.
-    //
-    // Only motion relative to the instance's own mean is removed, so the body
-    // still travels, falls and slides; it just stops changing shape. Faded in
-    // as the body slows rather than switched on at a line, so nothing pops.
-    uint settleCount =
-        (uint)max(0, instance.particleCount);
-    if (_SettleSpeed > 0.0 && settleCount > 0u)
-    {
-        uint particleIndex = (uint)instance.particleOffset;
-        float3 meanVelocity =
-            float3(0.0, 0.0, 0.0);
-        uint i;
-        for (i = 0u; i < settleCount; i++)
-        {
-            meanVelocity +=
-                _Particles[particleIndex + i].velocity;
-        }
-        meanVelocity /= (float)settleCount;
-
-        float fastestRelative = 0.0;
-        for (i = 0u; i < settleCount; i++)
-        {
-            fastestRelative = max(
-                fastestRelative,
-                length(
-                    _Particles[particleIndex + i].velocity -
-                    meanVelocity));
-        }
-
-        float settle = 1.0 - saturate(
-            fastestRelative / _SettleSpeed);
-        if (settle > 0.0)
-        {
-            for (i = 0u; i < settleCount; i++)
-            {
-                uint index = particleIndex + i;
-                Particle particle = _Particles[index];
-                if (particle.invMass > 0.0)
-                {
-                    particle.velocity = lerp(
-                        particle.velocity,
-                        meanVelocity,
-                        settle);
-                }
-                _Particles[index] = particle;
-            }
-        }
-    }
-
-    // Roll damping, unlike settle, is chain-only. It damps rotation about the
-    // body's long axis, and a rigid fragment has no long axis: GetFrame would
-    // read particles 0, 1 and 2 as if they were head, middle and tail, which for
-    // a tetrahedron means three arbitrary corners.
+    // Roll damping is chain-only. It damps rotation about the body's long axis,
+    // and a rigid fragment has no long axis: GetFrame would read particles 0, 1
+    // and 2 as if they were head, middle and tail, which for a tetrahedron means
+    // three arbitrary corners. Rigid bodies are held still by ApplySleep instead.
     if (instance.topology != TOPOLOGY_GUIDE_4 &&
         instance.topology != TOPOLOGY_DUAL_RAIL_6 &&
         instance.topology != TOPOLOGY_ARTICULATED_12)
@@ -1101,8 +1026,10 @@ void ApplyRollDamping(
 // which overwrites velocity outright. A modifier runs once per FixedUpdate,
 // outside that loop, so a velocity it writes survives exactly one Predict out of
 // `substeps` before being recomputed from positions. At 30 substeps that is
-// about three percent of the intent. `settleSpeed` was written against the
-// velocity channel and is inert for this reason, whatever it is set to.
+// about three percent of the intent, and zero wherever a contact or shape
+// matching writes the position anyway, which is every case this is aimed at.
+// A `settleSpeed` control was built on the velocity channel for this job and
+// removed once it was clear it could not work; do not reintroduce one.
 //
 // Positions are the channel that holds. Writing `prevPosition` alongside
 // `position` is what makes it stick: the difference between them is the only

@@ -31,7 +31,7 @@ The original `unified-solver` source is vendored as a read-only dependency under
   - `muscleTension` replaces `bendRatio` and chooses the target shape through `asin(1 - muscleTension)`. 1 targets the topology's own rest form, the muscle-cramp behaviour. 0 is the geometric limit at 90 degrees rather than a natural amplitude; useful range is about 0.2 to 0.4.
   - `frequency` is how often a run begins and `duration` is how long one takes, authored directly in seconds. Duration also paces the pose, so a longer run is both slower and gentler on whatever the body rests against. Between runs the drive is released, leaving the body limp rather than straightened.
   - `tensionRandomness` and `durationRandomness` spread those per instance, alongside the existing `frequencyRandomness`.
-- `SolverParticleProfile.rollDamping` and `settleSpeed` are structural: they run for every instance whether or not a modifier is attached. Roll damping removes angular velocity about the long axis, including a dedicated path for GuideChain4's guide particle. Settle converges relative velocity onto the instance mean once the body is barely deforming, fading in rather than switching at a threshold, so the body still travels while its shape stops drifting.
+- `SolverParticleProfile.rollDamping` and the Sleep controls are structural: they run for every instance whether or not a modifier is attached. Roll damping removes angular velocity about the long axis, including a dedicated path for GuideChain4's guide particle.
 - `SolverSurfaceImpulseProfile` gates on the instance's mean velocity instead of a world-space height plane, so it works against cloth, colliders and piles rather than only a flat plane at a known Y. Superseded in practice by the contact reaction described in `plan.md` section 15.2; keep it disabled rather than deleted.
 - `SolverParticleModifierProfile.enabled` gates dispatch per modifier without removing it from the profile's list.
 - `SolverParticleEmitter.Awake()` adds a `SolverParticleModifierRunner` when the profile declares modifiers or roll damping and none is present, and logs a warning saying so.
@@ -194,7 +194,8 @@ Settings that still make landing worse and are worth checking:
 ## Verification
 
 - User-confirmed in Unity: fragments spawn at mixed 4/6/8 and are drawn through `Graphics.RenderMeshInstanced` with an ordinary URP material. The template library, the matrix path, the hidden companion components and the new spawn defaults all run. Switching `GPU_Ice.mat` from the deleted `SolverRigidMesh` shader to URP/Lit was the only change needed.
-- NOT YET VERIFIED: the `settleSpeed` gate fix and the landing behaviour it was meant to cure; whether template repetition reads as repetitive at 24; prefab apply/revert and Undo on the hidden companions.
+- User-confirmed in Unity: Sleep stops settled bodies. Template repetition at 24 is not noticeable.
+- NOT YET VERIFIED: prefab apply/revert and Undo on the hidden companions; the removal of `settleSpeed`.
 - User-confirmed in Unity: the section 15.11 hairpin fix compiles and resolves the fault. Head and tail no longer stick together in the net, and the spine no longer spins.
 - Runtime extension sources compile against the current original solver and Unity 6000.3.9f1 references with 0 warnings / 0 errors.
 - Runtime compatibility tests compile with 0 warnings / 0 errors and cover field-contract resolution, rigid-particle reference count reads, pre-allocation buffer reads, and original `ClothGenerator` particle-range reads.
@@ -249,6 +250,7 @@ ground. Full detail in `plan.md` section 15.11.
 A settled body occasionally mirrors end to end in a single step. The pose is correct; left and right swap, so the far side's texture shows. Full detail and the candidate fix are in `plan.md` section 15.10.
 
 - `stiffness = 1` prevents it outright. Its only extra effect is converging particle velocities onto the instance mean, which removes relative motion.
+- A `settleSpeed` control did the same convergence on an automatic threshold and was removed: it wrote velocities, which a contact or shape matching overwrites in the same substep, so it could not work on the bodies it was aimed at. Sleep covers stopping a settled body, and `stiffness` covers freezing a shape. Do not reintroduce a third.
 - Setting `stiffness` to 1 and back to 0 at runtime clears the accumulation, and it stays clear for a while afterwards.
 - Bodies at rest are fine. Bodies still slowly working their tail are the ones that flip.
 - The drift accumulates at the position level inside the solver's substep loop, before any modifier can act, so velocity-side measures (`rollDamping`, `settleSpeed`) only slow it. `settleSpeed` acts near stillness while the fault occurs during slow motion, so the two ranges miss each other.
@@ -276,7 +278,7 @@ Established while building the bend and bounce. Read before tuning anything that
 - Velocity written from outside the substep loop is almost inert. `UpdateVelocity` rebuilds velocity from `(position - prevPosition)` every substep, so an injection survives one `Predict` out of `substeps`. Position writes are what take effect, and they bypass collision detection, so large ones tunnel.
 - Bounce comes from the position write penetrating a support, the solver clamping it back, and `UpdateVelocity` dividing that correction by `subDt` rather than the frame. At 30 substeps that is roughly a 1500x amplification, so bounce is inversely proportional to `substeps`. `vitality` exists to cancel that coupling.
 - `Particle` carries no contact flag, and no collision kernel writes state. Contact can only be inferred, and the instance mean velocity is the one signal immune to the momentum-neutral modifiers.
-- Constraint damping is scaled by compliance: `gamma = compliance * damping / subDt`. `ClothGenerator.compliance` defaults to 0, which makes `constraintDamping` mathematically inert at any value.
+- Constraint damping is scaled by compliance: `gamma = compliance * damping / subDt`. `ClothGenerator.compliance` defaults to 0, which makes `constraintDamping` mathematically inert at any value. Working cloth values found in use: `compliance = 1e-7`, `constraintDamping = 999999`, which give `gamma` around 150. The enormous damping number is not a mistake, it is compensating for the tiny compliance it is multiplied by — so changing either one rescales the other's effect, and so does changing `substeps`, since `gamma` divides by `subDt`.
 - Global damping is a single uniform and `UpdateVelocity` never reads `phase`, so the solver has no per-group damping mechanism. Compensating from outside the loop does not work; it was tried and removed.
 
 ## Planned next work

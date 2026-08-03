@@ -28,9 +28,7 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("Per-step fraction of drift around the body's long axis to remove. Structural, not a performance: it runs for every instance whether or not a modifier is attached. GuideChain4 needs this most, since its constraints all reach the spine and so leave the guide free to orbit with no resistance at all, taking the body's cross direction with it. No effect on Chain3, which has nothing off the spine to hold onto.")]
         [Range(0f, 1f)]
         public float rollDamping = 0.25f;
-        [Tooltip("KNOWN WEAK. Relative speed below which an instance's internal motion is damped, in metres per second.\n\nIt writes velocities, and the solver rebuilds velocity from positions at the end of every substep, so what this writes survives one substep out of thirty. Measured effect is close to nothing whatever it is set to. Use Sleep Speed below to actually stop a settled body; keep this only as a mild bias while a body is still moving.")]
-        [Min(0f)]
-        public float settleSpeed = 0.05f;
+
         [Header("Sleep")]
         [Tooltip("Speed below which an instance starts counting down to sleep, in metres per second. 0 disables sleeping entirely.\n\nThis is the one control that can actually stop a settled body. Damping cannot: the solver rebuilds velocity from positions at the end of every substep, so a velocity written from outside the loop survives one substep out of thirty. Sleep writes positions instead, which hold.\n\nAn instance under a continuous modifier never sleeps.")]
         [Min(0f)]

@@ -179,26 +179,19 @@ namespace Yu5h1.UnifiedSolver
                     : Vector3.up);
         }
 
-        // Dispatched unconditionally. Roll damping and settle still gate
-        // themselves inside the kernel on their own profile values, but the
-        // hairpin unfold ahead of them is structural: a body folded onto itself
-        // has no axis for the frame to be built from, and that is true whatever
-        // the profile asks for.
+        // Dispatched unconditionally. Roll damping still gates itself inside the
+        // kernel on its own profile value, but the hairpin unfold ahead of it is
+        // structural: a body folded onto itself has no axis for the frame to be
+        // built from, and that is true whatever the profile asks for.
         void DispatchRollDamping()
         {
             SolverParticleProfile profile =
                 _emitter.profile;
             float rollDamping =
                 Mathf.Clamp01(profile.rollDamping);
-            float settleSpeed =
-                Mathf.Max(0f, profile.settleSpeed);
-
             _runtimeCompute.SetFloat(
                 "_RollDamping",
                 rollDamping);
-            _runtimeCompute.SetFloat(
-                "_SettleSpeed",
-                settleSpeed);
             BindBuffers(_rollDampingKernel);
             Dispatch(_rollDampingKernel);
         }
