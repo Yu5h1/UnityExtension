@@ -2,6 +2,7 @@
 #pragma kernel ApplySurfaceImpulse
 #pragma kernel ApplyRollDamping
 #pragma kernel ApplySleep
+#pragma kernel ApplySpeedLimit
 
 #include "../Shaders/SolverBodyFrameTypes.hlsl"
 
@@ -59,6 +60,9 @@ float _SleepSpeed;
 float _SleepDelay;
 float _WakeDistance;
 float _KeepAwake;
+
+float _SpeedLimit;
+float _SpeedDecayRate;
 
 static const float SLEEP_AWAKE = 0.0;
 static const float SLEEP_CANDIDATE = 1.0;
@@ -1015,6 +1019,85 @@ void ApplyRollDamping(
 
 }
 
+// Bleeds off travel speed above a threshold, instead of clamping it.
+//
+// A hard ceiling makes everything that crosses it come out at exactly the same
+// speed, so a body flung hard and one nudged past the limit become
+// indistinguishable in the same frame. That reads as obviously artificial, and
+// the ordering it destroys is real information. Decaying the excess keeps the
+// order and only compresses the spread: harder still means faster, and the
+// difference closes over a few frames instead of vanishing in one.
+//
+// Below the threshold this does nothing whatever, which is what separates it
+// from global damping. Damping pulls on everything all the time, so raising it
+// enough to catch a launch also makes ordinary motion sluggish.
+//
+// Acts on the instance's mean velocity, never per particle. A fish's tail tip
+// legitimately moves faster than its centre, and clamping particles
+// individually would flatten the body's own motion into the limit. Adding the
+// same correction to every particle scales the mean and leaves every relative
+// velocity untouched.
+//
+// Only reaches bodies that are actually free. Where a contact or shape matching
+// writes the position in the same substep, the velocity is rebuilt from that
+// position and this is overwritten. That is the correct scope: it exists for
+// bodies thrown by a depenetration or a moving collider, not as friction and
+// not as a substitute for Sleep.
+[numthreads(64, 1, 1)]
+void ApplySpeedLimit(
+    uint3 dispatchID : SV_DispatchThreadID)
+{
+    uint instanceIndex = dispatchID.x;
+    if (instanceIndex >= _InstanceCount)
+        return;
+    if (_SpeedLimit <= 0.0)
+        return;
+
+    SolverInstance instance =
+        _Instances[instanceIndex];
+    uint particleBase =
+        (uint)instance.particleOffset;
+    uint count = (uint)max(0, instance.particleCount);
+    if (count == 0)
+        return;
+
+    uint i;
+    float3 meanVelocity = float3(0.0, 0.0, 0.0);
+    uint movable = 0u;
+    for (i = 0; i < count; i++)
+    {
+        Particle sample =
+            _Particles[particleBase + i];
+        if (sample.invMass <= 0.0)
+            continue;
+        meanVelocity += sample.velocity;
+        movable++;
+    }
+    if (movable == 0u)
+        return;
+
+    meanVelocity /= (float)movable;
+    float speed = length(meanVelocity);
+    if (speed <= _SpeedLimit || speed <= 1e-6)
+        return;
+
+    float excess = speed - _SpeedLimit;
+    float target =
+        _SpeedLimit +
+        excess * exp(-_SpeedDecayRate * _DeltaTime);
+    float3 correction =
+        meanVelocity * (target / speed - 1.0);
+
+    for (i = 0; i < count; i++)
+    {
+        uint index = particleBase + i;
+        Particle particle = _Particles[index];
+        if (particle.invMass > 0.0)
+            particle.velocity += correction;
+        _Particles[index] = particle;
+    }
+}
+
 // Stops a settled instance moving, by writing positions rather than velocities.
 //
 // This kernel exists because damping cannot do the job, and the reason is
@@ -1101,6 +1184,36 @@ void ApplySleep(
             return;
         }
 
+        // Wake on a push that will not stop, as well as on a big one.
+        //
+        // Holding the pose is itself what stops a wedged body reporting that it
+        // is wedged: the restore undoes the depenetration every frame, so the
+        // displacement never grows and the test above never fires. A fragment
+        // that ended up inside a wall stayed there permanently, and the harder
+        // this kernel held it the less able it was to say so.
+        //
+        // Persistence separates the two cases where magnitude cannot. A body
+        // that is genuinely at rest has nothing pushing it, so the correction it
+        // comes back with is essentially zero. A wedged one comes back with the
+        // same correction every frame for as long as it is stuck. So a small
+        // displacement that never goes away is the signal, and it needs no
+        // threshold of its own: a tenth of the distance that would wake it
+        // outright, sustained for as long as it took to fall asleep.
+        //
+        // Waking is a retry rather than a fix. The restore stops, the solver
+        // gets a clear run at pushing it out, and it falls asleep again wherever
+        // it lands. Still stuck, and the cycle simply repeats.
+        float pushFloor = _WakeDistance * 0.1;
+        state.y = displaced > pushFloor
+            ? state.y + _DeltaTime
+            : 0.0;
+        if (state.y > _SleepDelay)
+        {
+            _SleepState[instanceIndex] =
+                float2(SLEEP_AWAKE, 0.0);
+            return;
+        }
+
         for (i = 0; i < count; i++)
         {
             uint index = particleBase + i;
@@ -1116,6 +1229,12 @@ void ApplySleep(
             }
             _Particles[index] = particle;
         }
+
+        // y carries the candidate countdown while awake and the sustained-push
+        // timer while asleep. The two phases never overlap, so one field does
+        // for both rather than widening the buffer.
+        _SleepState[instanceIndex] =
+            float2(SLEEP_SLEEPING, state.y);
         return;
     }
 

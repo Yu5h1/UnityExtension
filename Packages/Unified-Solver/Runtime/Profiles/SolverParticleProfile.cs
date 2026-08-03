@@ -29,6 +29,20 @@ namespace Yu5h1.UnifiedSolver
         [Range(0f, 1f)]
         public float rollDamping = 0.25f;
 
+        [Header("Speed Limit")]
+        [Tooltip("Travel speed above which an instance starts shedding the excess, in metres per second. 0 disables it.
+
+Not a ceiling: everything above a hard ceiling comes out at the same speed in the same frame, which reads as obviously artificial and throws away the difference between a hard hit and a light one. The excess decays instead, so harder still means faster.
+
+Below the threshold it does nothing at all, which is what makes it usable where global damping is not: damping pulls on everything all the time. Acts on the body's travel, never on its internal motion, so a tail still outruns its own centre.
+
+Only reaches bodies that are actually free. A body in contact has its velocity rebuilt from positions, so this cannot serve as friction or as a substitute for Sleep.")]
+        [Min(0f)]
+        public float speedLimit;
+        [Tooltip("How fast the excess above Speed Limit bleeds off. This is a rate, so 10 sheds about two thirds of the excess in a tenth of a second, and higher values approach a hard clamp. Low values leave a long, visible follow-through.")]
+        [Min(0.01f)]
+        public float speedDecayRate = 10f;
+
         [Header("Sleep")]
         [Tooltip("Speed below which an instance starts counting down to sleep, in metres per second. 0 disables sleeping entirely.\n\nThis is the one control that can actually stop a settled body. Damping cannot: the solver rebuilds velocity from positions at the end of every substep, so a velocity written from outside the loop survives one substep out of thirty. Sleep writes positions instead, which hold.\n\nAn instance under a continuous modifier never sleeps.")]
         [Min(0f)]

@@ -31,6 +31,7 @@ namespace Yu5h1.UnifiedSolver
         int _surfaceImpulseKernel = -1;
         int _rollDampingKernel = -1;
         int _sleepKernel = -1;
+        int _speedLimitKernel = -1;
         ComputeBuffer _sleepState;
         ComputeBuffer _sleepPose;
         bool _reportedMissingCompute;
@@ -56,6 +57,11 @@ namespace Yu5h1.UnifiedSolver
             }
 
             SetSharedParameters();
+
+            // First, so it acts on what the solver just produced rather than on
+            // anything a modifier adds afterwards. A launch comes from a
+            // depenetration or a moving collider, not from the drive.
+            DispatchSpeedLimit();
 
             // Structural, not a modifier: an instance with no modifier attached
             // still must not corkscrew when something pushes it.
@@ -194,6 +200,29 @@ namespace Yu5h1.UnifiedSolver
                 rollDamping);
             BindBuffers(_rollDampingKernel);
             Dispatch(_rollDampingKernel);
+        }
+
+        // Sheds travel speed above a threshold instead of clamping it, so the
+        // ordering between a hard hit and a light one survives.
+        void DispatchSpeedLimit()
+        {
+            SolverParticleProfile profile =
+                _emitter.profile;
+            float speedLimit =
+                Mathf.Max(0f, profile.speedLimit);
+            if (speedLimit <= 0f)
+                return;
+            if (_speedLimitKernel < 0)
+                return;
+
+            _runtimeCompute.SetFloat(
+                "_SpeedLimit",
+                speedLimit);
+            _runtimeCompute.SetFloat(
+                "_SpeedDecayRate",
+                Mathf.Max(0.01f, profile.speedDecayRate));
+            BindBuffers(_speedLimitKernel);
+            Dispatch(_speedLimitKernel);
         }
 
         // Holds settled instances still by writing positions.
@@ -437,6 +466,9 @@ namespace Yu5h1.UnifiedSolver
             _sleepKernel =
                 _runtimeCompute.FindKernel(
                     "ApplySleep");
+            _speedLimitKernel =
+                _runtimeCompute.FindKernel(
+                    "ApplySpeedLimit");
             return true;
         }
 

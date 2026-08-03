@@ -262,6 +262,48 @@ A settled body occasionally mirrors end to end in a single step. The pose is cor
 - A symmetric C-bend does not rotate the head-tail chord. That is correct, not a defect. A tail-dominant beat that yaws the body needs asymmetric drive, not more control points.
 - `SolverOscillationProfile.acceleration` caps only the velocity channel, does not affect the pose, and never engages at its default: the drive needs about 1.75 m/s against a cap of `120 * 0.02 = 2.4`. It has to drop below roughly 87 to bind at all. Pending a user check of 0 against 120; delete it if there is no visible difference at 0.
 
+## Sleep can wedge a body, and how it says so
+
+Confirmed in Unity: with `sleepSpeed = 0` fragments never stuck in walls, so
+Sleep was the cause. Holding the pose is itself what stopped a wedged body
+reporting it: the restore undid the depenetration every frame, the displacement
+never grew, and the wake test never fired. The harder it held, the less able the
+body was to complain.
+
+- Persistence separates the cases magnitude cannot. A body genuinely at rest has
+  nothing pushing it, so its correction is essentially zero; a wedged one returns
+  the same correction every frame. Sustained displacement above a tenth of
+  `wakeDistance`, for as long as `sleepDelay`, now wakes it. No new field: both
+  numbers are derived from controls that already exist.
+- Waking is a retry, not a repair. The restore stops, the solver gets a clear run
+  at pushing the body out, and it sleeps again wherever it lands. Still stuck and
+  the cycle repeats, which is the correct behaviour.
+- The sleeping branch reuses `state.y` for the sustained-push timer, since the
+  candidate countdown it holds while awake never overlaps.
+
+## Speed limit sheds the excess rather than clamping it
+
+`speedLimit` with `speedDecayRate`, both on `SolverParticleProfile`, 0 disables.
+
+- A hard ceiling makes everything above it come out at the same speed in the same
+  frame. That reads as artificial and destroys real information: how hard a body
+  was hit. Decaying the excess keeps the ordering and only compresses the spread.
+- Below the threshold it does nothing, which is what makes it usable where global
+  damping is not. Global damping was raised to 2 to tame launches and made
+  ordinary motion sluggish; with this it can go back down.
+- Acts on the instance's mean velocity, so relative motion is untouched and a
+  tail still outruns its own centre. Adding one correction to every particle
+  scales the mean and leaves every difference intact.
+- Only reaches free bodies. Where a contact or shape matching writes the position
+  in the same substep the velocity is rebuilt from it, so this is not friction
+  and not a substitute for Sleep. That scope is deliberate: it exists for bodies
+  thrown by a depenetration or a dragged collider.
+- `maxDepenetrationSpeed` is a different kind of limit and stays hard: it bounds
+  a positional correction inside the substep loop precisely so the resulting
+  velocity cannot explode, and a soft knee would let large values through. It
+  also applies only to particle-versus-particle contact, never to world
+  colliders, so it does not govern a dragged collider at all.
+
 ## Colliders
 
 - Unity's own `BoxCollider`/`Rigidbody` are invisible to the solver; they are separate physics worlds with no bridge. Use the vendored `SolverBoxCollider`, `SolverSphereCollider` or `SolverCapsuleCollider`, which register themselves with `SolverManager` on enable.
