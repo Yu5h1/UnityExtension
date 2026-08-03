@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -33,6 +34,9 @@ namespace Yu5h1.UnifiedSolver
         int _rollDampingKernel = -1;
         int _sleepKernel = -1;
         int _speedLimitKernel = -1;
+        int _mediumKernel = -1;
+        ComputeBuffer _mediumBuffer;
+        SolverMediumGPU[] _mediumData;
         ComputeBuffer _sleepState;
         ComputeBuffer _sleepPose;
         bool _reportedMissingCompute;
@@ -63,6 +67,10 @@ namespace Yu5h1.UnifiedSolver
             // anything a modifier adds afterwards. A launch comes from a
             // depenetration or a moving collider, not from the drive.
             DispatchSpeedLimit();
+
+            // Environment before performance: a body should be floating or
+            // drifting before it decides how hard to swim against it.
+            DispatchMedium();
 
             // Structural, not a modifier: an instance with no modifier attached
             // still must not corkscrew when something pushes it.
@@ -201,6 +209,86 @@ namespace Yu5h1.UnifiedSolver
                 rollDamping);
             BindBuffers(_rollDampingKernel);
             Dispatch(_rollDampingKernel);
+        }
+
+        // Uploads every registered medium and lets the kernel decide which
+        // particles are inside which.
+        //
+        // The list is global rather than per emitter, because a medium belongs
+        // to the scene rather than to whoever is swimming in it. Re-uploaded
+        // every step so a volume can be moved, resized or retuned at runtime.
+        void DispatchMedium()
+        {
+            if (_mediumKernel < 0)
+                return;
+
+            IReadOnlyList<SolverMediumVolume> volumes =
+                SolverMediumVolume.Registered;
+            int count = 0;
+            if (_mediumData == null ||
+                _mediumData.Length < volumes.Count)
+            {
+                _mediumData = new SolverMediumGPU[
+                    Mathf.Max(4, volumes.Count)];
+            }
+
+            for (int i = 0; i < volumes.Count; i++)
+            {
+                SolverMediumVolume volume = volumes[i];
+                if (volume == null ||
+                    volume.profile == null ||
+                    volume.Radius <= 0f)
+                {
+                    continue;
+                }
+
+                _mediumData[count++] = new SolverMediumGPU
+                {
+                    center = volume.Center,
+                    radius = volume.Radius,
+                    flow = volume.profile.flow,
+                    density = Mathf.Max(
+                        0f,
+                        volume.profile.density),
+                    viscosity = Mathf.Max(
+                        0f,
+                        volume.profile.viscosity)
+                };
+            }
+
+            if (count == 0)
+                return;
+
+            if (_mediumBuffer == null ||
+                _mediumBuffer.count < count)
+            {
+                _mediumBuffer?.Release();
+                _mediumBuffer = new ComputeBuffer(
+                    Mathf.Max(4, count),
+                    SolverMediumGPU.Stride);
+            }
+            _mediumBuffer.SetData(_mediumData, 0, 0, count);
+
+            SolverManager solver = _emitter.Solver;
+            float radius = Mathf.Max(
+                1e-6f,
+                solver.particleRadius);
+            _runtimeCompute.SetBuffer(
+                _mediumKernel,
+                "_Mediums",
+                _mediumBuffer);
+            _runtimeCompute.SetInt(
+                "_MediumCount",
+                count);
+            _runtimeCompute.SetVector(
+                "_Gravity",
+                solver.gravity);
+            _runtimeCompute.SetFloat(
+                "_ParticleVolume",
+                4f / 3f * Mathf.PI *
+                radius * radius * radius);
+            BindBuffers(_mediumKernel);
+            Dispatch(_mediumKernel);
         }
 
         // Sheds travel speed above a threshold instead of clamping it, so the
@@ -470,6 +558,9 @@ namespace Yu5h1.UnifiedSolver
             _speedLimitKernel =
                 _runtimeCompute.FindKernel(
                     "ApplySpeedLimit");
+            _mediumKernel =
+                _runtimeCompute.FindKernel(
+                    "ApplyMedium");
             return true;
         }
 
@@ -482,6 +573,8 @@ namespace Yu5h1.UnifiedSolver
             _sleepState = null;
             _sleepPose?.Release();
             _sleepPose = null;
+            _mediumBuffer?.Release();
+            _mediumBuffer = null;
         }
     }
 }

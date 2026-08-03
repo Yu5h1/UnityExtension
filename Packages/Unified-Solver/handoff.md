@@ -304,6 +304,54 @@ body was to complain.
   also applies only to particle-versus-particle contact, never to world
   colliders, so it does not govern a dragged collider at all.
 
+## Medium volumes
+
+`SolverMediumVolume` (scene, sphere from Transform) plus `SolverMediumProfile`
+(density, flow, viscosity). Inside one, the global environment is replaced;
+outside, nothing changes. Written, not compiled.
+
+- Registration is a static list on the component, not per emitter, because a
+  medium belongs to the scene rather than to whoever is swimming in it.
+  Re-uploaded every step, so a volume can move, resize and retune at runtime.
+- **Density is a ratio, not an override.** `a = g * (1 - medium / body)`, with
+  body density from the particle's own mass and the solver's global particle
+  radius. Overriding gravity with one vector would float a heavy fragment and a
+  light one together, which is not what density means. Units follow the profile
+  masses and particle radius, not kg/m3, so water is not 1000 here.
+- **Flow is a velocity target, not an acceleration.** Things converge on it and
+  stop. Expressed as an acceleration instead, the final speed is set by the
+  solver's global damping — authoring 5 gives 2.5 m/s because damping is 2, and
+  retuning damping silently retunes every current. Applied as
+  `1 - exp(-viscosity * dt)`, which cannot overshoot the way `viscosity * dt`
+  does past 1.
+- Per particle, so a body crossing the surface is part in and part out and sits
+  at the waterline with nothing modelling one.
+- Overlapping volumes apply in sequence. Overlap is physically ill-defined; this
+  at least composes predictably.
+- Global `damping` stays. It is the solver's energy bleed, not a stand-in for
+  viscosity: PBD injects energy through constraint corrections and without it
+  that energy has nowhere to go. Viscosity adds local drag on top.
+
+Open interactions:
+
+- **A sleeping body is immune to flow.** Sleep runs after the medium and zeroes
+  velocity, so a settled fragment in a current is never pushed and never wakes,
+  because waking is measured on displacement it was prevented from making.
+- **Buoyancy may not lift a body off the floor.** Contact rebuilds velocity from
+  position in the same substep, so the write is overwritten for the particles
+  actually touching. Untested; the most likely place this design disappoints.
+- Each emitter's runner uploads the whole medium list separately. Correct but
+  redundant with several emitters.
+
+Not implemented, and deliberately: **fish do not swim.** The oscillation drive is
+momentum-neutral by construction — every delta has the weighted mean subtracted
+— so bending produces no net motion, in water or out. Linear isotropic viscosity
+cannot change that either: a reciprocal bending cycle cancels exactly over a
+period. Thrust needs drag that is anisotropic, higher across the body than along
+it, which is how real slender-body propulsion works and is the intended next
+step. The same fact is why "loses autonomy out of water" needs no code: it is
+already true.
+
 ## Colliders
 
 - Unity's own `BoxCollider`/`Rigidbody` are invisible to the solver; they are separate physics worlds with no bridge. Use the vendored `SolverBoxCollider`, `SolverSphereCollider` or `SolverCapsuleCollider`, which register themselves with `SolverManager` on enable.

@@ -121,6 +121,21 @@ namespace Yu5h1.UnifiedSolver
         public Quaternion spawnRotation;
     }
 
+    // Mirrored by SolverMedium in SolverParticleModifiers.compute. Both
+    // declarations have to agree and nothing checks that they do.
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SolverMediumGPU
+    {
+        public const int Stride = 48;
+
+        public Vector3 center;
+        public float radius;
+        public Vector3 flow;
+        public float density;
+        public float viscosity;
+        public Vector3 _padding;
+    }
+
     public readonly struct SolverParticleRequirements
     {
         public readonly int particles;

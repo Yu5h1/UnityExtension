@@ -3,6 +3,7 @@
 #pragma kernel ApplyRollDamping
 #pragma kernel ApplySleep
 #pragma kernel ApplySpeedLimit
+#pragma kernel ApplyMedium
 
 #include "../Shaders/SolverBodyFrameTypes.hlsl"
 
@@ -63,6 +64,24 @@ float _KeepAwake;
 
 float _SpeedLimit;
 float _SpeedDecayRate;
+
+// Mirrored by SolverMediumGPU in SolverParticleTypes.cs.
+struct SolverMedium
+{
+    float3 center;
+    float  radius;
+    float3 flow;
+    float  density;
+    float  viscosity;
+    float3 padding;
+};
+
+StructuredBuffer<SolverMedium> _Mediums;
+uint _MediumCount;
+float3 _Gravity;
+// Volume of one particle, from the solver's global radius. Turns a particle's
+// mass into a density without the kernel needing to know the radius.
+float _ParticleVolume;
 
 static const float SLEEP_AWAKE = 0.0;
 static const float SLEEP_CANDIDATE = 1.0;
@@ -1017,6 +1036,86 @@ void ApplyRollDamping(
             strength);
     }
 
+}
+
+// Replaces the global environment with a medium, inside the volumes that
+// declare one.
+//
+// Two effects, and they are deliberately different shapes of maths.
+//
+// Density is a ratio, applied as an acceleration: a = g * (1 - medium / body).
+// Overriding gravity with a single vector instead would make a heavy fragment
+// and a light one float together in the same water, which is not what anyone
+// means by density. Body density comes from the particle's own mass and the
+// solver's global particle radius, so the same medium sorts what floats from
+// what sinks with one authored number.
+//
+// Flow is a velocity target, applied as convergence: things approach the speed
+// the medium is moving at and stop there. Expressing a current as an
+// acceleration instead leaves its final speed decided by the solver's global
+// damping -- author 5 and you get 2.5 m/s because damping happens to be 2, and
+// retuning damping silently retunes every current in the scene.
+//
+// Per particle, not per instance, so a body crossing the surface is part in and
+// part out and floats at the waterline without anything having to model one.
+//
+// Volumes are applied in sequence where they overlap. Overlap is ill-defined
+// physically and this at least composes predictably.
+[numthreads(64, 1, 1)]
+void ApplyMedium(
+    uint3 dispatchID : SV_DispatchThreadID)
+{
+    uint instanceIndex = dispatchID.x;
+    if (instanceIndex >= _InstanceCount)
+        return;
+    if (_MediumCount == 0u)
+        return;
+
+    SolverInstance instance =
+        _Instances[instanceIndex];
+    uint particleBase =
+        (uint)instance.particleOffset;
+    uint count = (uint)max(0, instance.particleCount);
+
+    for (uint i = 0u; i < count; i++)
+    {
+        uint index = particleBase + i;
+        Particle particle = _Particles[index];
+        if (particle.invMass <= 0.0)
+            continue;
+
+        for (uint m = 0u; m < _MediumCount; m++)
+        {
+            SolverMedium medium = _Mediums[m];
+            float3 offset =
+                particle.position - medium.center;
+            if (dot(offset, offset) >
+                medium.radius * medium.radius)
+            {
+                continue;
+            }
+
+            // mediumDensity / bodyDensity, without the division: body density
+            // is mass over volume, so its reciprocal is invMass times volume.
+            float ratio =
+                medium.density *
+                _ParticleVolume *
+                particle.invMass;
+            particle.velocity -=
+                _Gravity * ratio * _DeltaTime;
+
+            // Exponential rather than viscosity * dt, which overshoots past
+            // the flow and oscillates once the product exceeds 1.
+            float blend = 1.0 -
+                exp(-max(0.0, medium.viscosity) *
+                    _DeltaTime);
+            particle.velocity +=
+                (medium.flow - particle.velocity) *
+                blend;
+        }
+
+        _Particles[index] = particle;
+    }
 }
 
 // Bleeds off travel speed above a threshold, instead of clamping it.
