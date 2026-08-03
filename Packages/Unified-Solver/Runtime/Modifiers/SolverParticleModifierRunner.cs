@@ -19,7 +19,8 @@ namespace Yu5h1.UnifiedSolver
         const int ThreadsPerGroup = 64;
 
         [FormerlySerializedAs("computeShader")]
-        [Tooltip("Leave empty for normal use: the packaged Resources/SolverParticleModifiers.compute is loaded automatically. Assign one only to run a modified copy of that compute instead. It must declare the same kernels and uniforms.")]
+        // Must declare the same kernels and uniforms as the packaged one.
+        [Tooltip("Leave empty to use the packaged compute.")]
         public ComputeShader overrideCompute;
 
         // Room for the largest topology, so any instance's pose fits one slot.

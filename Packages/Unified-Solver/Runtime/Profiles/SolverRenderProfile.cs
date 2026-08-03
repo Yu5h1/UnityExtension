@@ -13,13 +13,16 @@ namespace Yu5h1.UnifiedSolver
     // is the worst possible way for a mistake to present.
     public sealed class SolverRenderProfile : ScriptableObject
     {
-        [Tooltip("Leave empty on a rigid profile to draw each instance as the convex hull of its own particles: the drawn surface is then the same points the solver collides with, so a procedurally varied fragment needs no mesh asset and physics and visuals cannot drift apart. Assign a mesh to draw that instead. Articulated profiles always need one.")]
+        // Empty on a rigid profile draws the convex hull of the instance's own
+        // particles, so the drawn surface is the points the solver collides
+        // with and a varied fragment needs no mesh asset.
+        [Tooltip("Empty on a rigid profile draws its particle hull. Articulated needs one.")]
         public Mesh mesh;
-        [Tooltip("Rigid profiles are drawn with this material directly, so any URP or HDRP material works, including one taken off the shelf. Articulated profiles skin their mesh in a shader of their own and can only borrow this material's base map and tint.")]
+        [Tooltip("Rigid uses this directly, so any URP or HDRP material works.")]
         public Material sourceMaterial;
 
         [Header("Shader References")]
-        [Tooltip("Articulated profiles only. Assign the package shader to prevent build stripping; the renderer falls back to Shader.Find when empty. Rigid profiles need no shader reference, because they are drawn with the Material above as-is.")]
+        [Tooltip("Articulated only. Assign to prevent build stripping.")]
         public Shader articulatedShader;
 
         [Header("Mesh Mapping")]

@@ -27,7 +27,7 @@ namespace Yu5h1.UnifiedSolver
         [Min(1)]
         public int maxInstances = 2048;
 
-        [Tooltip("Seed for profiles that use a Shape Source. The same seed lays out the same pile of fragments every run, so a look that works can be kept. Ignored when the profile has no Shape Source.")]
+        [Tooltip("The same seed lays out the same pile every run. Needs a Shape Source.")]
         public int shapeSeed = 12345;
 
         [Header("Initial Spawn")]
@@ -36,7 +36,7 @@ namespace Yu5h1.UnifiedSolver
         // a component that spawns nothing by default looks broken rather than
         // idle, so it defaults on with a count that is visible.
         [FormerlySerializedAs("spawnOnStart")]
-        [Tooltip("Spawn Initial Count instances as soon as the emitter starts. Off means nothing appears until something calls TryEnqueue or SpawnOne.")]
+        [Tooltip("Off means nothing appears until something calls TryEnqueue or SpawnOne.")]
         public bool playOnAwake = true;
         [Min(0)]
         public int initialCount = 100;

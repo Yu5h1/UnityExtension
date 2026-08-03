@@ -6,31 +6,35 @@ namespace Yu5h1.UnifiedSolver
         SolverShapeSource
     {
         [Header("Library")]
-        [Tooltip("How many distinct fragment shapes to generate. Every instance is assigned one, and everything sharing a template is drawn in a single batch, so this is also the draw call count. A couple of dozen is enough for a pile of ice to read as all different.")]
+        // Everything sharing a template draws in one batch, so this is also the
+        // draw call count.
+        [Tooltip("Distinct shapes in the library, and the draw call count.")]
         [Range(1, 64)]
         public int templateCount = 24;
-        [Tooltip("Changes every template at once. The same seed always rebuilds the same library, so a set of shapes that works can be kept.")]
+        [Tooltip("The same seed always rebuilds the same library.")]
         public int seed = 7;
 
         [Header("Variant Mix")]
-        [Tooltip("Relative chance of a 4 particle template: a tetrahedron, the sharpest and cheapest shard.")]
+        [Tooltip("Tetrahedron: the sharpest, cheapest shard.")]
         [Min(0f)]
         public float weight4 = 1f;
-        [Tooltip("Relative chance of a 6 particle template: an octahedron, the middle size.")]
+        [Tooltip("Octahedron: the middle size.")]
         [Min(0f)]
         public float weight6 = 1f;
-        [Tooltip("Relative chance of an 8 particle template: a box, the bulkiest and the best at covering its own volume with particles.")]
+        [Tooltip("Box: bulkiest, and best at covering its own volume with particles.")]
         [Min(0f)]
         public float weight8 = 1f;
 
         [Header("Shape")]
-        [Tooltip("How far each corner may be displaced, as a fraction of the half extent it sits at. 0 gives clean regular solids that read as manufactured; higher values read as broken ice. Bounded well inside where a corner could fall inside the hull of the others and turn the fragment inside out.")]
+        // Bounded well inside where a corner could fall inside the hull of the
+        // others and turn the fragment inside out.
+        [Tooltip("Fraction of the half extent. 0 gives clean regular solids.")]
         [Range(0f, SolverHullShapes.MaximumJitter)]
         public float jitter = 0.25f;
-        [Tooltip("Size multiplier range across the library, applied on top of the profile's Base Dimensions. Both ends at 1 makes every template the same size and differ only in shape.")]
+        [Tooltip("Multiplier range on Base Dimensions across the library.")]
         public Vector2 sizeRange =
             new Vector2(0.6f, 1.4f);
-        [Tooltip("How far a template may be stretched along one randomly chosen axis, so the pile is not all equally chunky. 0 keeps every template the shape of Base Dimensions.")]
+        [Tooltip("Stretch along one random axis, so the pile is not all equally chunky.")]
         [Range(0f, 1f)]
         public float stretch = 0.3f;
 

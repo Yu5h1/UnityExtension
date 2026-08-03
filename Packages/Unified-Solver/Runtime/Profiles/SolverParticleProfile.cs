@@ -13,7 +13,9 @@ namespace Yu5h1.UnifiedSolver
         public Vector3 baseDimensions =
             new Vector3(0.12f, 0.4f, 0.08f);
 
-        [Inline,Tooltip("Optional. Supplies each instance's rest particle positions instead of the fixed shape the Topology above would build, and chooses that instance's own topology. Leave empty for everything except procedurally varied rigid fragments. This is also where baked mesh fracture data will attach, so the spawn path does not have to change again for it.")]
+        // Overrides Topology per instance. Also where baked mesh fracture data
+        // will attach, so the spawn path does not change again for it.
+        [Inline]
         public SolverShapeSource shapeSource;
 
         [Header("Physics")]
@@ -25,32 +27,41 @@ namespace Yu5h1.UnifiedSolver
         public float bendCompliance = 0.0005f;
         [Min(0f)]
         public float jointDamping = 0.15f;
-        [Tooltip("Per-step fraction of drift around the body's long axis to remove. Structural, not a performance: it runs for every instance whether or not a modifier is attached. GuideChain4 needs this most, since its constraints all reach the spine and so leave the guide free to orbit with no resistance at all, taking the body's cross direction with it. No effect on Chain3, which has nothing off the spine to hold onto.")]
+        // Runs for every instance, modifier or not. GuideChain4 needs it most:
+        // its constraints all reach the spine, so the guide can orbit freely and
+        // drag the body's cross direction with it.
+        [Tooltip("Chain topologies only. No effect on Chain3.")]
         [Range(0f, 1f)]
         public float rollDamping = 0.25f;
 
         [Header("Speed Limit")]
-        [Tooltip("Travel speed above which an instance starts shedding the excess, in metres per second. 0 disables it.
-
-Not a ceiling: everything above a hard ceiling comes out at the same speed in the same frame, which reads as obviously artificial and throws away the difference between a hard hit and a light one. The excess decays instead, so harder still means faster.
-
-Below the threshold it does nothing at all, which is what makes it usable where global damping is not: damping pulls on everything all the time. Acts on the body's travel, never on its internal motion, so a tail still outruns its own centre.
-
-Only reaches bodies that are actually free. A body in contact has its velocity rebuilt from positions, so this cannot serve as friction or as a substitute for Sleep.")]
+        // A threshold, not a ceiling: the excess decays, so a body hit hard still
+        // ends up faster than one hit lightly. Below it nothing happens at all,
+        // which global damping cannot offer. Applies to the instance mean, so
+        // internal motion is untouched, and only reaches free bodies: a contact
+        // rebuilds velocity from position and overwrites it.
+        [Tooltip("m/s. 0 disables.")]
         [Min(0f)]
         public float speedLimit;
-        [Tooltip("How fast the excess above Speed Limit bleeds off. This is a rate, so 10 sheds about two thirds of the excess in a tenth of a second, and higher values approach a hard clamp. Low values leave a long, visible follow-through.")]
+        [Tooltip("Higher approaches a hard clamp; lower leaves follow-through.")]
         [Min(0.01f)]
         public float speedDecayRate = 10f;
 
         [Header("Sleep")]
-        [Tooltip("Speed below which an instance starts counting down to sleep, in metres per second. 0 disables sleeping entirely.\n\nThis is the one control that can actually stop a settled body. Damping cannot: the solver rebuilds velocity from positions at the end of every substep, so a velocity written from outside the loop survives one substep out of thirty. Sleep writes positions instead, which hold.\n\nAn instance under a continuous modifier never sleeps.")]
+        // The only control that can stop a settled body. Damping cannot: the
+        // solver rebuilds velocity from positions every substep, so a velocity
+        // written from outside survives one substep in thirty. Sleep writes
+        // positions. An instance under a continuous modifier never sleeps.
+        [Tooltip("m/s. 0 disables sleeping.")]
         [Min(0f)]
         public float sleepSpeed = 0.04f;
-        [Tooltip("How long an instance must stay below Sleep Speed before it is held still, in seconds. Too short and things freeze mid-tumble; too long and a pile keeps twitching after it has visibly settled.")]
+        [Tooltip("Seconds. Too short freezes bodies mid-tumble.")]
         [Min(0f)]
         public float sleepDelay = 0.5f;
-        [Tooltip("How far the solver may push a sleeping instance before it wakes, in metres. A sleeping body's velocity is held at zero so it cannot report motion itself; displacement is the honest signal, and it covers being hit, being landed on, and the pile under it shifting. Too small and bodies wake from their own contact noise; too large and a fish can swim through a sleeping fragment.")]
+        // Displacement, not speed: a sleeping body is held at zero velocity and
+        // cannot report its own motion, but how far the solver pushed it covers
+        // being hit, being landed on, and the pile under it shifting.
+        [Tooltip("Metres. Too small and contact noise wakes everything.")]
         [Min(0.0001f)]
         public float wakeDistance = 0.005f;
 

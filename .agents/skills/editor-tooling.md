@@ -2,6 +2,29 @@
 
 Use this skill for Yu5h1Lib Inspector, PropertyDrawer, EditorWindow, context-menu, shortcut, AssetDatabase, sub-asset, and other Editor extension work.
 
+## Tooltips are one line, and usually absent
+
+The field name carries the meaning. A tooltip is for the one thing the name
+cannot hold — a unit, a disabling value, a non-obvious limit — and nothing else.
+
+- **Default to no tooltip.** `sleepDelay`, `weight4`, `castShadows` explain
+  themselves; a sentence restating the name is noise in the inspector and noise
+  in the source.
+- **One line when there is one.** `"m/s. 0 disables sleeping."` is a good
+  tooltip. If it runs past a line, the content belongs somewhere else.
+- **A tooltip that needs more than one source line must use a verbatim string,**
+  `[Tooltip(@"...")]`. An ordinary C# string literal cannot span source lines and
+  will not compile. Inside `@"..."` there are no escapes and a quote is written
+  `""`. Reaching for this is the signal that the text is too long, not a licence
+  to keep going.
+- **Reasoning goes above the field as a `//` comment, or in `<summary>`.** That
+  is where the *why* is useful — to whoever edits the code next, and to an agent
+  reading it — and it costs the inspector nothing. Note that
+  `.agents/CodingConventions.md` bans explanatory comments *inside method
+  bodies*; a comment above a field or a type is not that.
+- Rename the field before writing a tooltip to explain it. `speedLimit` plus
+  `"m/s. 0 disables."` beats `limit` plus a sentence.
+
 ## A setting is for a real choice
 
 If code can settle something, code settles it. A serialized field is for a
