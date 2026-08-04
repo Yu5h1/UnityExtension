@@ -16,13 +16,10 @@ namespace Yu5h1.UnifiedSolver
         // volume. Body density comes from the particle's own mass and the
         // solver's global particle radius.
         //
-        // The units are whatever the profile masses and particle radius imply,
-        // not kg/m3, so the useful value has nothing to do with water being
-        // 1000. Raise it until things stop sinking; that point is neutral.
-        // The value that means neutral is typically in the hundreds, because
-        // the solver's masses are not kilograms. The runner logs the exact
-        // number for each profile the first time a medium touches it; do not
-        // guess, and do not expect water to be 1000.
+        // The units follow the profile masses and particle radius, not kg/m3, so
+        // neutral usually lands in the hundreds and water is not 1000. The
+        // runner logs the exact number per profile the first time a medium
+        // touches it; do not guess it.
         [Tooltip("Equals the body's own density for neutral buoyancy. See the console for the number.")]
         [Min(0f)]
         public float density;
