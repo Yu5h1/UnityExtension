@@ -4,6 +4,7 @@
 #pragma kernel ApplySleep
 #pragma kernel ApplySpeedLimit
 #pragma kernel ApplyMedium
+#pragma kernel ApplyLocomotion
 
 #include "../Shaders/SolverBodyFrameTypes.hlsl"
 
@@ -86,10 +87,33 @@ static const float MEDIUM_BOX = 0.0;
 
 StructuredBuffer<SolverMedium> _Mediums;
 uint _MediumCount;
+// Fraction of an instance's particles standing in a medium, written by
+// ApplyMedium and read by anything that needs something to push against.
+// Written every step even with no media at all, so a stale value can never be
+// mistaken for being submerged.
+RWStructuredBuffer<float> _Submersion;
 float3 _Gravity;
 // Volume of one particle, from the solver's global radius. Turns a particle's
 // mass into a density without the kernel needing to know the radius.
 float _ParticleVolume;
+
+// Mirrored by SolverMotionTargetGPU in SolverParticleTypes.cs.
+struct SolverMotionTarget
+{
+    float3 position;
+    float  mode;
+    float3 direction;
+    float  radius;
+};
+
+StructuredBuffer<SolverMotionTarget> _MotionTargets;
+uint _MotionTargetCount;
+float _LocomotionSpeed;
+float _LocomotionFrequency;
+float _LocomotionDuration;
+float _LocomotionRandomness;
+
+static const float TARGET_POINT = 0.0;
 
 static const float SLEEP_AWAKE = 0.0;
 static const float SLEEP_CANDIDATE = 1.0;
@@ -1084,6 +1108,10 @@ void ApplyMedium(
     uint particleBase =
         (uint)instance.particleOffset;
     uint count = (uint)max(0, instance.particleCount);
+    if (count == 0u)
+        return;
+
+    uint submerged = 0u;
 
     for (uint i = 0u; i < count; i++)
     {
@@ -1120,6 +1148,7 @@ void ApplyMedium(
             }
             if (!inside)
                 continue;
+            submerged++;
 
             // mediumDensity / bodyDensity, without the division: body density
             // is mass over volume, so its reciprocal is invMass times volume.
@@ -1140,6 +1169,136 @@ void ApplyMedium(
                 blend;
         }
 
+        _Particles[index] = particle;
+    }
+
+    _Submersion[instanceIndex] =
+        (float)submerged / (float)count;
+}
+
+// Moves a body toward a target, by pushing against the medium it is standing in.
+//
+// Adding momentum is legitimate here rather than a shortcut: an animal moves by
+// pushing something backward, and the medium is what it pushes. The reaction
+// belongs to the water, which is not simulated, so the body keeps its share and
+// the water silently absorbs the rest. Outside a medium there is nothing to push
+// and nothing is applied, which is why a fish out of water goes limp without a
+// rule saying so.
+//
+// Applied to the instance's mean velocity, so the body's own bending is left
+// alone and only its travel is steered.
+//
+// Between pushes nothing is written at all. The medium's viscosity bleeds the
+// speed off on its own, and that is the glide: the accelerate-coast-accelerate
+// rhythm is what the two mechanisms produce together, not a third state.
+[numthreads(64, 1, 1)]
+void ApplyLocomotion(
+    uint3 dispatchID : SV_DispatchThreadID)
+{
+    uint instanceIndex = dispatchID.x;
+    if (instanceIndex >= _InstanceCount)
+        return;
+    if (_MotionTargetCount == 0u ||
+        _LocomotionSpeed <= 0.0)
+    {
+        return;
+    }
+
+    float submersion = _Submersion[instanceIndex];
+    if (submersion <= 0.0)
+        return;
+
+    SolverInstance instance =
+        _Instances[instanceIndex];
+    uint particleBase =
+        (uint)instance.particleOffset;
+    uint count = (uint)max(0, instance.particleCount);
+    if (count == 0u)
+        return;
+
+    float frequencyScale = lerp(
+        1.0 - _LocomotionRandomness,
+        1.0 + _LocomotionRandomness,
+        Hash01(instanceIndex * 7u + 17u));
+    float frequency =
+        _LocomotionFrequency * frequencyScale;
+    float duration = max(0.01, _LocomotionDuration);
+    float burstFraction = saturate(duration * frequency);
+    if (burstFraction <= 1e-5)
+        return;
+
+    float cyclePhase =
+        _Time * frequency +
+        Hash01(instanceIndex * 7u + 23u);
+    cyclePhase -= floor(cyclePhase);
+    if (cyclePhase >= burstFraction)
+        return;
+
+    uint i;
+    float3 center = float3(0.0, 0.0, 0.0);
+    float3 meanVelocity = float3(0.0, 0.0, 0.0);
+    uint movable = 0u;
+    for (i = 0u; i < count; i++)
+    {
+        Particle sample =
+            _Particles[particleBase + i];
+        if (sample.invMass <= 0.0)
+            continue;
+        center += sample.position;
+        meanVelocity += sample.velocity;
+        movable++;
+    }
+    if (movable == 0u)
+        return;
+    center /= (float)movable;
+    meanVelocity /= (float)movable;
+
+    // Nearest target that reaches this body. Radius 0 reaches everything, so a
+    // single shared heading needs no ids and several groups need no more than
+    // placing their targets apart.
+    float bestDistance = 3.402823466e+38;
+    float3 heading = float3(0.0, 0.0, 0.0);
+    for (uint t = 0u; t < _MotionTargetCount; t++)
+    {
+        SolverMotionTarget target = _MotionTargets[t];
+        float3 toTarget = target.position - center;
+        float distance = length(toTarget);
+        if (target.radius > 0.0 &&
+            distance > target.radius)
+        {
+            continue;
+        }
+        if (distance >= bestDistance)
+            continue;
+
+        bestDistance = distance;
+        heading =
+            target.mode == TARGET_POINT
+                ? (distance > 1e-5
+                    ? toTarget / distance
+                    : float3(0.0, 0.0, 0.0))
+                : target.direction;
+    }
+
+    float headingLength = length(heading);
+    if (headingLength <= 1e-5)
+        return;
+    heading /= headingLength;
+
+    // Reaches the speed over roughly one push, so the rhythm decides how sharp
+    // the acceleration reads and nothing has to author a rate as well.
+    float blend = 1.0 -
+        exp(-3.0 / duration * _DeltaTime);
+    float3 correction =
+        (heading * _LocomotionSpeed - meanVelocity) *
+        (blend * submersion);
+
+    for (i = 0u; i < count; i++)
+    {
+        uint index = particleBase + i;
+        Particle particle = _Particles[index];
+        if (particle.invMass > 0.0)
+            particle.velocity += correction;
         _Particles[index] = particle;
     }
 }

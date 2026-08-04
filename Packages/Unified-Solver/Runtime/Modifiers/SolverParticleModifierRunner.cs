@@ -35,8 +35,14 @@ namespace Yu5h1.UnifiedSolver
         int _sleepKernel = -1;
         int _speedLimitKernel = -1;
         int _mediumKernel = -1;
+        int _locomotionKernel = -1;
         ComputeBuffer _mediumBuffer;
         SolverMediumGPU[] _mediumData;
+        ComputeBuffer _submersionBuffer;
+        ComputeBuffer _targetBuffer;
+        SolverMotionTargetGPU[] _targetData;
+        int _targetCount;
+        bool _reportedMissingMedium;
         ComputeBuffer _sleepState;
         ComputeBuffer _sleepPose;
         bool _reportedMissingCompute;
@@ -111,6 +117,14 @@ namespace Yu5h1.UnifiedSolver
                     surface)
                 {
                     DispatchSurfaceImpulse(surface);
+                    dispatched++;
+                    keepAwake = true;
+                }
+                else if (modifier is
+                    SolverLocomotionProfile
+                    locomotion)
+                {
+                    DispatchLocomotion(locomotion);
                     dispatched++;
                     keepAwake = true;
                 }
@@ -222,6 +236,8 @@ namespace Yu5h1.UnifiedSolver
         {
             if (_mediumKernel < 0)
                 return;
+            if (!EnsureSubmersionBuffer())
+                return;
 
             IReadOnlyList<SolverMediumVolume> volumes =
                 SolverMediumVolume.Registered;
@@ -257,18 +273,23 @@ namespace Yu5h1.UnifiedSolver
                 };
             }
 
-            if (count == 0)
-                return;
-
+            // Dispatched even with nothing to apply, because this is also what
+            // writes submersion. Skipping it would leave last step's value in
+            // place, and a body that had left the water would still read as
+            // being in it.
             if (_mediumBuffer == null ||
-                _mediumBuffer.count < count)
+                _mediumBuffer.count < Mathf.Max(1, count))
             {
                 _mediumBuffer?.Release();
                 _mediumBuffer = new ComputeBuffer(
                     Mathf.Max(4, count),
                     SolverMediumGPU.Stride);
             }
-            _mediumBuffer.SetData(_mediumData, 0, 0, count);
+            if (count > 0)
+            {
+                _mediumBuffer.SetData(
+                    _mediumData, 0, 0, count);
+            }
 
             SolverManager solver = _emitter.Solver;
             float radius = Mathf.Max(
@@ -278,6 +299,10 @@ namespace Yu5h1.UnifiedSolver
                 _mediumKernel,
                 "_Mediums",
                 _mediumBuffer);
+            _runtimeCompute.SetBuffer(
+                _mediumKernel,
+                "_Submersion",
+                _submersionBuffer);
             _runtimeCompute.SetInt(
                 "_MediumCount",
                 count);
@@ -288,44 +313,129 @@ namespace Yu5h1.UnifiedSolver
                 "_ParticleVolume",
                 4f / 3f * Mathf.PI *
                 radius * radius * radius);
-            ReportNeutralDensityOnce(radius);
+            if (count > 0)
+                ReportNeutralDensityOnce(radius);
             BindBuffers(_mediumKernel);
             Dispatch(_mediumKernel);
         }
 
-        // Says what Density has to be set to for this profile to float.
-        //
-        // Buoyancy is a ratio of real densities, and the solver's masses are not
-        // kilograms, so the value that means neutral is whatever the profile
-        // mass and the global particle radius happen to imply -- typically in
-        // the hundreds. Left undiscoverable, Density reads as a dead control:
-        // every value a person would try first is a fraction of a percent of
-        // gravity. Logged once, and only when a medium actually exists.
-        void ReportNeutralDensityOnce(float radius)
+        // One slot per instance, so a slot always means one instance index.
+        bool EnsureSubmersionBuffer()
         {
-            if (_reportedNeutralDensity)
-                return;
-
-            _reportedNeutralDensity = true;
-            SolverParticleProfile profile =
-                _emitter.profile;
-            int particles = Mathf.Max(
+            int instances = Mathf.Max(
                 1,
-                profile.WorstCaseRequirements.particles);
-            float particleVolume =
-                4f / 3f * Mathf.PI *
-                radius * radius * radius;
-            float neutral =
-                profile.mass /
-                (particles * particleVolume);
+                _emitter.maxInstances);
+            if (_submersionBuffer != null &&
+                _submersionBuffer.count >= instances)
+            {
+                return true;
+            }
 
-            Debug.Log(
-                $"SolverMediumVolume affects '{profile.name}': " +
-                $"Density {neutral:0.#} is neutral buoyancy " +
-                $"({profile.mass} mass over {particles} particles " +
-                $"at radius {radius}). Below floats nothing, " +
-                $"above lifts.",
-                this);
+            _submersionBuffer?.Release();
+            _submersionBuffer = new ComputeBuffer(
+                instances,
+                sizeof(float));
+            _submersionBuffer.SetData(
+                new float[instances]);
+            return true;
+        }
+
+        // Pushes bodies toward the nearest motion target that reaches them.
+        //
+        // Reads the submersion ApplyMedium wrote, so it can only act where there
+        // is something to push against. Reported once when no medium exists at
+        // all, because the modifier is then configured, dispatched and unable to
+        // do anything, which looks identical to it being broken.
+        void DispatchLocomotion(
+            SolverLocomotionProfile profile)
+        {
+            if (_locomotionKernel < 0)
+                return;
+            if (!EnsureSubmersionBuffer())
+                return;
+            EnsureTargetBuffer();
+
+            if (SolverMediumVolume.Registered.Count == 0 &&
+                !_reportedMissingMedium)
+            {
+                _reportedMissingMedium = true;
+                Debug.LogWarning(
+                    $"SolverLocomotionProfile '{profile.name}' " +
+                    "cannot move anything: locomotion pushes " +
+                    "against a medium, and no SolverMediumVolume " +
+                    "exists in the scene.",
+                    this);
+            }
+
+            _runtimeCompute.SetBuffer(
+                _locomotionKernel,
+                "_Submersion",
+                _submersionBuffer);
+            _runtimeCompute.SetBuffer(
+                _locomotionKernel,
+                "_MotionTargets",
+                _targetBuffer);
+            _runtimeCompute.SetInt(
+                "_MotionTargetCount",
+                _targetCount);
+            _runtimeCompute.SetFloat(
+                "_LocomotionSpeed",
+                Mathf.Max(0f, profile.speed));
+            _runtimeCompute.SetFloat(
+                "_LocomotionFrequency",
+                Mathf.Max(0f, profile.frequency));
+            _runtimeCompute.SetFloat(
+                "_LocomotionDuration",
+                Mathf.Max(0.01f, profile.duration));
+            _runtimeCompute.SetFloat(
+                "_LocomotionRandomness",
+                Mathf.Clamp01(profile.randomness));
+            BindBuffers(_locomotionKernel);
+            Dispatch(_locomotionKernel);
+        }
+
+        void EnsureTargetBuffer()
+        {
+            IReadOnlyList<SolverMotionTarget> targets =
+                SolverMotionTarget.Registered;
+            if (_targetData == null ||
+                _targetData.Length < targets.Count)
+            {
+                _targetData = new SolverMotionTargetGPU[
+                    Mathf.Max(4, targets.Count)];
+            }
+
+            _targetCount = 0;
+            for (int i = 0; i < targets.Count; i++)
+            {
+                SolverMotionTarget target = targets[i];
+                if (target == null)
+                    continue;
+
+                _targetData[_targetCount++] =
+                    new SolverMotionTargetGPU
+                    {
+                        position = target.Position,
+                        mode = (float)target.mode,
+                        direction = target.Direction,
+                        radius = Mathf.Max(0f, target.radius)
+                    };
+            }
+
+            if (_targetBuffer == null ||
+                _targetBuffer.count <
+                    Mathf.Max(1, _targetCount))
+            {
+                _targetBuffer?.Release();
+                _targetBuffer = new ComputeBuffer(
+                    Mathf.Max(4, _targetCount),
+                    SolverMotionTargetGPU.Stride);
+            }
+            if (_targetCount > 0)
+            {
+                _targetBuffer.SetData(
+                    _targetData, 0, 0, _targetCount);
+            }
         }
 
         // Sheds travel speed above a threshold instead of clamping it, so the
@@ -598,6 +708,9 @@ namespace Yu5h1.UnifiedSolver
             _mediumKernel =
                 _runtimeCompute.FindKernel(
                     "ApplyMedium");
+            _locomotionKernel =
+                _runtimeCompute.FindKernel(
+                    "ApplyLocomotion");
             return true;
         }
 
@@ -612,6 +725,10 @@ namespace Yu5h1.UnifiedSolver
             _sleepPose = null;
             _mediumBuffer?.Release();
             _mediumBuffer = null;
+            _submersionBuffer?.Release();
+            _submersionBuffer = null;
+            _targetBuffer?.Release();
+            _targetBuffer = null;
         }
     }
 }

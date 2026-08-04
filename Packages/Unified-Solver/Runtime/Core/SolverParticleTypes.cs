@@ -132,6 +132,28 @@ namespace Yu5h1.UnifiedSolver
         Ellipsoid = 1
     }
 
+    public enum SolverMotionTargetMode
+    {
+        // Head for a place. The direction is recomputed per body, so a group
+        // converges.
+        Point = 0,
+        // Head the same way, wherever the body is. A group travels in parallel
+        // instead of converging.
+        Direction = 1
+    }
+
+    // Mirrored by SolverMotionTarget in SolverParticleModifiers.compute.
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SolverMotionTargetGPU
+    {
+        public const int Stride = 32;
+
+        public Vector3 position;
+        public float mode;
+        public Vector3 direction;
+        public float radius;
+    }
+
     // Mirrored by SolverMedium in SolverParticleModifiers.compute. Both
     // declarations have to agree and nothing checks that they do.
     [StructLayout(LayoutKind.Sequential)]

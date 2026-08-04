@@ -374,6 +374,45 @@ it, which is how real slender-body propulsion works and is the intended next
 step. The same fact is why "loses autonomy out of water" needs no code: it is
 already true.
 
+## Locomotion
+
+`SolverMotionTarget` (scene: Point or Direction, plus a reach radius) and
+`SolverLocomotionProfile` (modifier: speed, frequency, duration, randomness).
+Written, not compiled.
+
+- **Named for locomotion, not swimming.** A fish, a snake and a herd differ in
+  what they push against and how they look doing it, not in speed and rhythm.
+- **Adding momentum here is legitimate, not a shortcut.** An animal moves by
+  pushing something backward; the medium is what it pushes, and the reaction
+  belongs to water that is not simulated. That is also why it is gated on
+  submersion: outside a medium there is nothing to push, so a fish out of water
+  goes limp with no rule saying so.
+- **The glide is emergent.** A push works the mean velocity toward
+  `direction * speed`; between pushes nothing is written at all and the medium's
+  viscosity bleeds it off. The accelerate-coast-accelerate rhythm real fish show
+  is those two mechanisms together, not a third state.
+- Steady locomotion needs no mode: `duration >= 1 / frequency` leaves no gap to
+  glide in. Same shape as `SolverOscillationProfile`.
+- Speed is authored, not force. A force would let the medium's viscosity decide
+  how fast every animal in the scene can go, so retuning the water would retune
+  the wildlife.
+- Acts on the instance mean, so the body's own bending is untouched.
+- `ApplyMedium` now writes per-instance submersion and is dispatched even with no
+  volumes present. Skipping it would leave the previous step's value in place and
+  a body that had left the water would still read as being in it.
+- Targets carry a reach radius, so several groups need no ids: a body follows the
+  nearest target that reaches it, and radius 0 reaches everything.
+- Interpolation, splines and Timeline are deliberately absent. They drive the
+  target's Transform from outside, which Unity already does better than anything
+  written here; feeding bait is moving that object.
+
+Known gap: **travel direction is not facing.** Nothing rotates a body toward
+where it is going, so a school heading up translates sideways with its heads
+still pointing the old way. Fixing it needs asymmetric drive, which `plan.md`
+15.x already identifies as the route to yaw, or anisotropic drag, which would
+align a slender body with the flow passively. Deliberately deferred until the
+translation is seen to be worth steering.
+
 ## Colliders
 
 - Unity's own `BoxCollider`/`Rigidbody` are invisible to the solver; they are separate physics worlds with no bridge. Use the vendored `SolverBoxCollider`, `SolverSphereCollider` or `SolverCapsuleCollider`, which register themselves with `SolverManager` on enable.
