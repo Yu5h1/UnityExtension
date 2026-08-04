@@ -319,6 +319,40 @@ namespace Yu5h1.UnifiedSolver
             Dispatch(_mediumKernel);
         }
 
+        // Says what Density has to be set to for this profile to float.
+        //
+        // Buoyancy is a ratio of real densities, and the solver's masses are not
+        // kilograms, so the value that means neutral is whatever the profile
+        // mass and the global particle radius happen to imply -- typically in
+        // the hundreds. Left undiscoverable, Density reads as a dead control:
+        // every value a person would try first is a fraction of a percent of
+        // gravity. Logged once, and only when a medium actually exists.
+        void ReportNeutralDensityOnce(float radius)
+        {
+            if (_reportedNeutralDensity)
+                return;
+
+            _reportedNeutralDensity = true;
+            SolverParticleProfile profile =
+                _emitter.profile;
+            int particles = Mathf.Max(
+                1,
+                profile.WorstCaseRequirements.particles);
+            float particleVolume =
+                4f / 3f * Mathf.PI *
+                radius * radius * radius;
+            float neutral =
+                profile.mass /
+                (particles * particleVolume);
+
+            Debug.Log(
+                $"SolverMediumVolume affects '{profile.name}': " +
+                $"Density {neutral:0.#} is neutral buoyancy " +
+                $"({profile.mass} mass over {particles} particles " +
+                $"at radius {radius}). Below sinks, above lifts.",
+                this);
+        }
+
         // One slot per instance, so a slot always means one instance index.
         bool EnsureSubmersionBuffer()
         {
