@@ -420,6 +420,9 @@ namespace Yu5h1.UnifiedSolver
                 "_MeshForwardAxis",
                 (int)renderProfile.forwardAxis);
             _properties.SetFloat(
+                "_MeshFlipForward",
+                renderProfile.flipForward ? 1f : 0f);
+            _properties.SetFloat(
                 "_MeshAxisMin",
                 AxisComponent(
                     meshBounds.min,

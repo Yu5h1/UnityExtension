@@ -114,6 +114,7 @@ float _LocomotionDuration;
 float _LocomotionRandomness;
 float _LocomotionTurnRate;
 float _LocomotionUprightRate;
+float _LocomotionHeadingSpread;
 
 static const float TARGET_POINT = 0.0;
 
@@ -1285,6 +1286,38 @@ void ApplyLocomotion(
     if (headingLength <= 1e-5)
         return;
     heading /= headingLength;
+
+    // Scatter the heading inside a cone, re-rolled each push.
+    //
+    // A shared heading obeyed exactly reads as an arrow, not a group: every body
+    // takes the same line at the same moment. Re-rolling per push rather than
+    // fixing it per body is what makes them wander, which is also what turns a
+    // heading that points upward into a few bodies breaching at a time instead
+    // of the whole school leaving the water together.
+    if (_LocomotionHeadingSpread > 1e-4)
+    {
+        uint push = (uint)floor(
+            _Time * frequency +
+            Hash01(instanceIndex * 7u + 23u));
+        float azimuth = Hash01(
+            instanceIndex * 31u + push * 97u) *
+            TWO_PI;
+        float reach = tan(_LocomotionHeadingSpread) *
+            sqrt(Hash01(
+                instanceIndex * 37u + push * 89u));
+
+        float3 guide =
+            abs(heading.y) < 0.9
+                ? float3(0.0, 1.0, 0.0)
+                : float3(1.0, 0.0, 0.0);
+        float3 across = normalize(
+            cross(heading, guide));
+        heading = normalize(
+            heading +
+            (across * cos(azimuth) +
+             cross(heading, across) * sin(azimuth)) *
+            reach);
+    }
 
     // Thrust while pushing, and reaching the speed over roughly one push, so the
     // rhythm decides how sharp the acceleration reads and nothing has to author

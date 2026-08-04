@@ -26,6 +26,9 @@ Shader "Yu5h1/UnifiedSolver/ArticulatedMesh"
         int _MeshForwardAxis;
         float _MeshAxisMin;
         float _MeshAxisLength;
+        // Which end of the supplied mesh is the head. Nothing in the geometry
+        // says, so it has to be told.
+        float _MeshFlipForward;
         sampler2D _BaseMap;
         float4 _BaseMap_ST;
         float4 _Tint;
@@ -120,6 +123,8 @@ Shader "Yu5h1/UnifiedSolver/ArticulatedMesh"
                 (AxisCoordinate(meshPosition) -
                  _MeshAxisMin) /
                 max(_MeshAxisLength, 0.000001));
+            if (_MeshFlipForward > 0.5)
+                longitudinal = 1.0 - longitudinal;
             float spacing =
                 instance.topology ==
                 TOPOLOGY_SINGLE

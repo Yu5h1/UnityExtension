@@ -432,6 +432,10 @@ namespace Yu5h1.UnifiedSolver
                 "_LocomotionUprightRate",
                 Mathf.Max(0f, profile.uprightRate) *
                 Mathf.Deg2Rad);
+            _runtimeCompute.SetFloat(
+                "_LocomotionHeadingSpread",
+                Mathf.Clamp(profile.headingSpread, 0f, 89f) *
+                Mathf.Deg2Rad);
             BindBuffers(_locomotionKernel);
             Dispatch(_locomotionKernel);
         }

@@ -28,6 +28,12 @@ namespace Yu5h1.UnifiedSolver
         [Header("Mesh Mapping")]
         public SolverMeshForwardAxis forwardAxis =
             SolverMeshForwardAxis.Y;
+        // The convention is that the mesh's positive Forward Axis end is the
+        // head, matching the topology's first particle. Nothing in an imported
+        // mesh says which end its nose is, so a mesh authored the other way
+        // round has to say so here.
+        [Tooltip("On when the mesh's nose points down its negative Forward Axis.")]
+        public bool flipForward;
         public bool fitMeshToDimensions = true;
         public Vector3 visualScale = Vector3.one;
 

@@ -35,6 +35,12 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("Spread of the rhythm across bodies, so a group does not pulse in unison.")]
         [Range(0f, 1f)]
         public float randomness = 0.3f;
+        // Re-rolled each push rather than fixed per body, which is what makes
+        // them wander. It also turns an upward heading into a few bodies
+        // breaching at a time instead of the whole group leaving together.
+        [Tooltip("Degrees the heading is scattered within, re-rolled each push. 0 makes the group an arrow.")]
+        [Range(0f, 90f)]
+        public float headingSpread = 25f;
 
         // Steering runs through a glide as well as a push: thrust that arrives
         // before the body has come round only drives it further the wrong way.
