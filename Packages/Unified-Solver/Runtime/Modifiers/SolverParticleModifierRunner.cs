@@ -236,17 +236,17 @@ namespace Yu5h1.UnifiedSolver
             for (int i = 0; i < volumes.Count; i++)
             {
                 SolverMediumVolume volume = volumes[i];
-                if (volume == null ||
-                    volume.profile == null ||
-                    volume.Radius <= 0f)
-                {
+                if (volume == null || !volume.IsUsable)
                     continue;
-                }
 
                 _mediumData[count++] = new SolverMediumGPU
                 {
                     center = volume.Center,
-                    radius = volume.Radius,
+                    shape = (float)volume.shape,
+                    halfExtents = volume.HalfExtents,
+                    axisX = volume.AxisX,
+                    axisY = volume.AxisY,
+                    axisZ = volume.AxisZ,
                     flow = volume.profile.flow,
                     density = Mathf.Max(
                         0f,

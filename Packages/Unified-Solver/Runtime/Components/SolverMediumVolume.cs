@@ -12,8 +12,9 @@ namespace Yu5h1.UnifiedSolver
     // hands it straight back. Same relationship a collider has with the world,
     // except it changes what the space is made of rather than blocking it.
     //
-    // A sphere, taken from the Transform, so there is nothing to author twice:
-    // position is the centre and the largest axis of lossyScale is the diameter.
+    // Geometry is taken from the Transform, so there is nothing to author twice:
+    // position is the centre, lossyScale is the full size, and rotation orients
+    // it. A box therefore has a flat top, and that top is the waterline.
     //
     // Registration is global rather than per emitter. A medium is a property of
     // the scene, not of whoever happens to be swimming in it, so every emitter
@@ -27,25 +28,39 @@ namespace Yu5h1.UnifiedSolver
         public static IReadOnlyList<SolverMediumVolume>
             Registered => Active;
 
+        [Tooltip("Box has a flat top and therefore a waterline; an ellipsoid does not.")]
+        public SolverMediumShape shape =
+            SolverMediumShape.Box;
+
         [Inline]
         public SolverMediumProfile profile;
 
         public Vector3 Center => transform.position;
 
-        // The largest axis wins, so a squashed Transform still gives a sphere
-        // that covers what it looks like it covers.
-        public float Radius
+        public Vector3 HalfExtents =>
+            0.5f * AbsoluteScale;
+
+        public Vector3 AxisX => transform.right;
+        public Vector3 AxisY => transform.up;
+        public Vector3 AxisZ => transform.forward;
+
+        Vector3 AbsoluteScale
         {
             get
             {
                 Vector3 scale = transform.lossyScale;
-                return 0.5f * Mathf.Max(
+                return new Vector3(
                     Mathf.Abs(scale.x),
-                    Mathf.Max(
-                        Mathf.Abs(scale.y),
-                        Mathf.Abs(scale.z)));
+                    Mathf.Abs(scale.y),
+                    Mathf.Abs(scale.z));
             }
         }
+
+        public bool IsUsable =>
+            profile != null &&
+            HalfExtents.x > 0f &&
+            HalfExtents.y > 0f &&
+            HalfExtents.z > 0f;
 
         void OnEnable()
         {
@@ -70,8 +85,17 @@ namespace Yu5h1.UnifiedSolver
 
         void Draw(Color wire)
         {
+            Matrix4x4 previous = Gizmos.matrix;
+            Gizmos.matrix = Matrix4x4.TRS(
+                Center,
+                transform.rotation,
+                AbsoluteScale);
             Gizmos.color = wire;
-            Gizmos.DrawWireSphere(Center, Radius);
+            if (shape == SolverMediumShape.Box)
+                Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
+            else
+                Gizmos.DrawWireSphere(Vector3.zero, 0.5f);
+            Gizmos.matrix = previous;
         }
     }
 }

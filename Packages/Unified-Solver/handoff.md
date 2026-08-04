@@ -306,9 +306,20 @@ body was to complain.
 
 ## Medium volumes
 
-`SolverMediumVolume` (scene, sphere from Transform) plus `SolverMediumProfile`
-(density, flow, viscosity). Inside one, the global environment is replaced;
-outside, nothing changes. Written, not compiled.
+`SolverMediumVolume` (scene, box or ellipsoid from Transform) plus
+`SolverMediumProfile` (density, flow, viscosity). Inside one, the global
+environment is replaced; outside, nothing changes.
+
+Box is the default and the reason is the waterline: **an ellipsoid has no flat
+top**, so its surface height varies with horizontal position and a body floating
+up settles at a different level depending on where it happens to be. The first
+version shipped sphere-only, which could not give a water surface at all.
+Ellipsoid remains for a medium with no surface to speak of — a current or an
+eddy inside a larger body.
+
+Floating at the surface needs nothing extra. Buoyancy is per particle, so a body
+crossing the top face has some particles lifted and some not, and it settles at
+partial submersion by itself.
 
 - Registration is a static list on the component, not per emitter, because a
   medium belongs to the scene rather than to whoever is swimming in it.

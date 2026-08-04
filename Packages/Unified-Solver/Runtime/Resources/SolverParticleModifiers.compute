@@ -69,12 +69,20 @@ float _SpeedDecayRate;
 struct SolverMedium
 {
     float3 center;
-    float  radius;
-    float3 flow;
+    float  shape;
+    float3 halfExtents;
     float  density;
+    float3 axisX;
     float  viscosity;
-    float3 padding;
+    float3 axisY;
+    float  pad0;
+    float3 axisZ;
+    float  pad1;
+    float3 flow;
+    float  pad2;
 };
+
+static const float MEDIUM_BOX = 0.0;
 
 StructuredBuffer<SolverMedium> _Mediums;
 uint _MediumCount;
@@ -1087,13 +1095,31 @@ void ApplyMedium(
         for (uint m = 0u; m < _MediumCount; m++)
         {
             SolverMedium medium = _Mediums[m];
+
+            // Into the volume's own axes once, then the shape test is a
+            // comparison rather than a second transform. A box gets a flat top
+            // and therefore a waterline; an ellipsoid is the same test with the
+            // extents dividing instead of bounding.
             float3 offset =
                 particle.position - medium.center;
-            if (dot(offset, offset) >
-                medium.radius * medium.radius)
+            float3 local = float3(
+                dot(offset, medium.axisX),
+                dot(offset, medium.axisY),
+                dot(offset, medium.axisZ));
+
+            bool inside;
+            if (medium.shape == MEDIUM_BOX)
             {
-                continue;
+                inside = all(
+                    abs(local) <= medium.halfExtents);
             }
+            else
+            {
+                float3 unit = local / medium.halfExtents;
+                inside = dot(unit, unit) <= 1.0;
+            }
+            if (!inside)
+                continue;
 
             // mediumDensity / bodyDensity, without the division: body density
             // is mass over volume, so its reciprocal is invMass times volume.

@@ -121,19 +121,36 @@ namespace Yu5h1.UnifiedSolver
         public Quaternion spawnRotation;
     }
 
+    public enum SolverMediumShape
+    {
+        // A flat top, which is what makes a waterline. An ellipsoid has none:
+        // its surface height varies with horizontal position, so a body floating
+        // up settles at a different level depending on where it happens to be.
+        Box = 0,
+        // For a medium with no surface to speak of, such as a current or an
+        // eddy sitting inside a larger body of water.
+        Ellipsoid = 1
+    }
+
     // Mirrored by SolverMedium in SolverParticleModifiers.compute. Both
     // declarations have to agree and nothing checks that they do.
     [StructLayout(LayoutKind.Sequential)]
     public struct SolverMediumGPU
     {
-        public const int Stride = 48;
+        public const int Stride = 96;
 
         public Vector3 center;
-        public float radius;
-        public Vector3 flow;
+        public float shape;
+        public Vector3 halfExtents;
         public float density;
+        public Vector3 axisX;
         public float viscosity;
-        public Vector3 _padding;
+        public Vector3 axisY;
+        public float _pad0;
+        public Vector3 axisZ;
+        public float _pad1;
+        public Vector3 flow;
+        public float _pad2;
     }
 
     public readonly struct SolverParticleRequirements
