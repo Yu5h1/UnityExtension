@@ -3,7 +3,7 @@
   "report_id": "unified-solver-ice-fragment-physics",
   "scope_id": "unified-solver",
   "title": "Unified Solver 擴充：身體形變與冰塊碎片物理",
-  "updated_at": "2026-08-02T00:00:00+08:00",
+  "updated_at": "2026-08-05T00:00:00+08:00",
   "tasks": [
     {
       "id": "body-bend-performance",
@@ -135,16 +135,16 @@
       "title": "魚、碎片與箱體碰撞",
       "status": "in_progress",
       "priority": 0,
-      "summary": "魚與碎片可同場並互撞。已知問題:落地後持續散開停不住。settleSpeed 原本被擋在 roll damping 的拓樸 gate 後,從未在剛體 variant 上執行過,已修正為所有拓樸適用。球體剛體本質上沒有滾動阻力,settle 是 Sleep/Wake 之前的替代方案。",
+      "summary": "魚與碎片同場互撞已確認。落地散開由 Sleep 解決。另發現世界碰撞體不受 maxDepenetrationSpeed 管轄(它只作用於粒子對粒子),且 BoxColliderGPU 沒有速度欄位,所以移動中的碰撞體等同瞬移的靜態碰撞體,放大倍率就是 substeps。已加 speedLimit 以指數衰減超出量而非硬夾。",
       "pending_items": [
         {
-          "id": "verify-settle-on-rigid",
-          "title": "settle 修正後的落地行為尚未驗證",
-          "priority": 0
+          "id": "moving-collider-velocity",
+          "title": "移動碰撞體需要在 vendored solver 的 SolveBox 加上碰撞體速度並同步 prevPosition,需授權",
+          "priority": 2
         },
         {
-          "id": "spawn-overlap-scatter",
-          "title": "100 個碎片在 5x2x5 內平均間距小於實際碰撞尺寸,開場 depenetration 會炸開",
+          "id": "particle-radius-vs-dimensions",
+          "title": "particleRadius 0.05 對上冰塊最小維度 0.08,碰撞體仍大於外觀",
           "priority": 1
         }
       ]
@@ -152,39 +152,19 @@
     {
       "id": "fragment-sleep-wake",
       "title": "碎片 Sleep／Wake 與 Modifier KeepAwake",
-      "status": "planned",
+      "status": "in_progress",
       "priority": 0,
-      "summary": "建立 Awake／Candidate／Sleeping 狀態機；低動量持續後停止抖動，撞擊、外力、移動 Collider 或 Modifier 可喚醒，持續 Modifier 作用期間禁止睡眠。 身體彎曲工作流同樣需要 Settling／Sleep 來消除殘留 glitch，因此本項不再只服務碎片。",
+      "summary": "Extension 端 Sleep 已實作並經使用者確認有效。關鍵是走位置通道:solver 每個 substep 都用位置差重算速度,所以迴圈外寫入的速度只存活 1/substeps,settleSpeed 因此永遠做不到這件事並已移除。喚醒看位移而非速度,因為睡著的 body 速度被按在零、無法回報自己在動。另有持續推擠偵測,避免 Sleep 把卡牆狀態鎖死。",
       "pending_items": [
         {
-          "id": "add-sleep-state-buffer",
-          "title": "建立 Per-instance Sleep State、Timer 與 KeepAwake Flag",
-          "priority": 0
+          "id": "sleep-flow-immunity",
+          "title": "睡著的 body 對水流免疫:Sleep 在 medium 之後歸零速度,沉底碎片不會被水流推走也不會醒",
+          "priority": 2
         },
         {
-          "id": "measure-sleep-metrics",
-          "title": "量測平均線速度、角運動、接觸／Constraint 修正量與持續時間",
-          "priority": 0
-        },
-        {
-          "id": "add-sleep-hysteresis",
-          "title": "以不同 Sleep／Wake Threshold 與 Delay 避免反覆切換",
-          "priority": 0
-        },
-        {
-          "id": "implement-wake-sources",
-          "title": "支援 Impact、Force、移動 Collider、Manual 與 Modifier Wake",
-          "priority": 0
-        },
-        {
-          "id": "enforce-modifier-keep-awake",
-          "title": "持續寫入狀態的 Modifier 啟用時立即喚醒且持續禁止睡眠",
-          "priority": 0
-        },
-        {
-          "id": "decide-core-sleep-implementation",
-          "title": "先驗證 Extension Settling；若要略過核心 Kernels，取得授權後修改 vendored core 或建立維護 Fork",
-          "priority": 1
+          "id": "core-sleep-gpu-saving",
+          "title": "真正略過 solver kernel 需要修改唯讀的 vendored dependency,需另行授權",
+          "priority": 3
         }
       ]
     },
@@ -233,6 +213,40 @@
           "id": "resume-after-fragment-physics",
           "title": "碎片物理完成後才重新排定 ParticleSystem 整合可行性",
           "priority": 4
+        }
+      ]
+    },
+    {
+      "id": "medium-and-locomotion",
+      "title": "介質體積與生物移動",
+      "status": "in_progress",
+      "priority": 0,
+      "summary": "SolverMediumVolume(Box/Ellipsoid,取自 Transform)以 density/flow/viscosity 在範圍內取代全域環境;SolverMotionTarget + SolverLocomotionProfile 讓個體朝目標移動。密度是比值而非覆寫重力,所以同一片水裡重的沉輕的浮。流動是速度目標而非加速度,否則最終速度會被全域 damping 決定。推進只在介質內生效——動物靠推東西前進,離水沒東西可推,所以「離水失去自主力」不需要任何開關。滑行是推進節奏與 viscosity 的交互結果,不是第三個狀態。轉向與翻正以繞質心的角速度施加,不旋轉位置(torsionAlign 的教訓)。使用者已確認位移、轉向、翻正皆可運作。",
+      "pending_items": [
+        {
+          "id": "density-scale-usability",
+          "title": "density 的中性值在數百量級,靠 log 告知;單位由 profile 質量與粒子半徑決定而非 kg/m3",
+          "priority": 1
+        },
+        {
+          "id": "variant-density-inconsistent",
+          "title": "mass 除以粒子數,所以同 profile 的 4 顆與 8 顆碎片密度不同,大的浮小的沉",
+          "priority": 1
+        },
+        {
+          "id": "anisotropic-drag",
+          "title": "各向異性阻力可讓推進由擺尾自然產生並讓身體順流對齊,目前推進是直接給動量",
+          "priority": 2
+        },
+        {
+          "id": "startle-excitement",
+          "title": "興奮度狀態(受驚放大驅動並衰減)尚未實作",
+          "priority": 2
+        },
+        {
+          "id": "ground-locomotion",
+          "title": "陸行動物推的是地面而非介質,接觸會蓋掉速度寫入,需要另一條位置通道",
+          "priority": 3
         }
       ]
     }

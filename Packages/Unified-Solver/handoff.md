@@ -194,7 +194,8 @@ Settings that still make landing worse and are worth checking:
 ## Verification
 
 - User-confirmed in Unity: fragments spawn at mixed 4/6/8 and are drawn through `Graphics.RenderMeshInstanced` with an ordinary URP material. The template library, the matrix path, the hidden companion components and the new spawn defaults all run. Switching `GPU_Ice.mat` from the deleted `SolverRigidMesh` shader to URP/Lit was the only change needed.
-- User-confirmed in Unity: Sleep stops settled bodies. Template repetition at 24 is not noticeable.
+- User-confirmed in Unity: Sleep stops settled bodies. Template repetition at 24 is not noticeable. Medium volumes float and drag bodies; locomotion moves a group toward a target; steering points heads along the heading and keeps bodies upright.
+- Mesh forward convention: the **positive Forward Axis end of a mesh is the head**, matching the topology's first particle, because the articulated shader blends tail-to-middle below the halfway point. A mesh authored the other way swims backwards until `flipForward` is set.
 - NOT YET VERIFIED: prefab apply/revert and Undo on the hidden companions; the removal of `settleSpeed`.
 - User-confirmed in Unity: the section 15.11 hairpin fix compiles and resolves the fault. Head and tail no longer stick together in the net, and the spine no longer spins.
 - Runtime extension sources compile against the current original solver and Unity 6000.3.9f1 references with 0 warnings / 0 errors.
@@ -430,6 +431,23 @@ correctly and stayed lying flat, because nothing rotated them.
 - It is a solid, not a container. A particle that ends up inside is pushed out through the nearest face, so a holding box has to be built from several thin ones as walls, and spawning inside one ejects the body.
 - Colliders are re-uploaded every FixedUpdate, so they may move, rotate and scale at runtime.
 - Contact leaves a `particleRadius` gap between the surface and a particle centre, which reads as the mesh floating off the wall by that much.
+
+## Next, in order
+
+1. **Excitement / startle.** A per-instance value that scales locomotion and
+   decays, raised by a `Startle(origin, radius, amount)` call. No spawning and no
+   ParticleSystem: the bodies already exist, only their state changes. Jumping is
+   not a separate behaviour — it is a burst whose heading happens to point up.
+2. **Anisotropic drag.** Higher across the body than along it. Would make thrust
+   emerge from the existing bend instead of being handed to the body, and would
+   align a slender body with the flow for free. Locomotion works without it; this
+   makes it physical rather than asserted.
+3. **Mass semantics for shape sources.** `mass / particleCount` gives variants
+   different densities, so big ice floats while small ice sinks. Either mass
+   becomes per particle or it scales with count.
+4. **Ground locomotion.** Walking pushes on a surface, not a medium, and contact
+   rebuilds velocity from position, so the velocity channel cannot carry it.
+   Needs a position-channel design.
 
 ## Solver behaviour that constrains any future work here
 
