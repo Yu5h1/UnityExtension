@@ -406,12 +406,22 @@ Written, not compiled.
   target's Transform from outside, which Unity already does better than anything
   written here; feeding bait is moving that object.
 
-Known gap: **travel direction is not facing.** Nothing rotates a body toward
-where it is going, so a school heading up translates sideways with its heads
-still pointing the old way. Fixing it needs asymmetric drive, which `plan.md`
-15.x already identifies as the route to yaw, or anisotropic drag, which would
-align a slender body with the flow passively. Deliberately deferred until the
-translation is seen to be worth steering.
+Steering closes the gap that showed the moment translation worked: bodies moved
+correctly and stayed lying flat, because nothing rotated them.
+
+- `turnRate` swings the body's own tangent onto the heading, `uprightRate` rolls
+  its normal toward world up. **Two separate axes**: a body can point exactly
+  where it is going and still be on its side, since nothing else resists
+  rotation about the long axis. `uprightRate` 0 suits an animal with no up.
+- Applied as **angular velocity about the body's centre**, never by rotating
+  positions. Rotating positions is what `torsionAlign` did, and it penetrated
+  whatever the body rested against and read as jumping. A velocity cannot
+  teleport through anything, and `cross(omega, r)` over symmetric offsets is
+  momentum neutral.
+- Steering runs through a glide, not only during a push: thrust arriving before
+  the body has come round drives it further the wrong way.
+- Chain topologies only. `GetFrame` would read a tetrahedron's first three
+  corners as head, middle and tail.
 
 ## Colliders
 

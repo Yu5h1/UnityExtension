@@ -35,5 +35,20 @@ namespace Yu5h1.UnifiedSolver
         [Tooltip("Spread of the rhythm across bodies, so a group does not pulse in unison.")]
         [Range(0f, 1f)]
         public float randomness = 0.3f;
+
+        // Steering runs through a glide as well as a push: thrust that arrives
+        // before the body has come round only drives it further the wrong way.
+        // Applied as angular velocity about the body's own centre, so it can
+        // neither teleport through anything nor shift the body sideways.
+        [Space]
+        [Tooltip("Degrees per second the body swings its head onto the heading. 0 leaves it drifting sideways.")]
+        [Min(0f)]
+        public float turnRate = 180f;
+        // A separate axis: a body can point exactly where it is going and still
+        // be lying on its side, because nothing else resists rotation about the
+        // long axis. 0 suits an animal with no up, like a snake.
+        [Tooltip("Degrees per second the body rights itself. 0 lets it roll freely.")]
+        [Min(0f)]
+        public float uprightRate = 120f;
     }
 }

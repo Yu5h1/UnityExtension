@@ -424,6 +424,14 @@ namespace Yu5h1.UnifiedSolver
             _runtimeCompute.SetFloat(
                 "_LocomotionRandomness",
                 Mathf.Clamp01(profile.randomness));
+            _runtimeCompute.SetFloat(
+                "_LocomotionTurnRate",
+                Mathf.Max(0f, profile.turnRate) *
+                Mathf.Deg2Rad);
+            _runtimeCompute.SetFloat(
+                "_LocomotionUprightRate",
+                Mathf.Max(0f, profile.uprightRate) *
+                Mathf.Deg2Rad);
             BindBuffers(_locomotionKernel);
             Dispatch(_locomotionKernel);
         }

@@ -112,6 +112,8 @@ float _LocomotionSpeed;
 float _LocomotionFrequency;
 float _LocomotionDuration;
 float _LocomotionRandomness;
+float _LocomotionTurnRate;
+float _LocomotionUprightRate;
 
 static const float TARGET_POINT = 0.0;
 
@@ -1231,8 +1233,7 @@ void ApplyLocomotion(
         _Time * frequency +
         Hash01(instanceIndex * 7u + 23u);
     cyclePhase -= floor(cyclePhase);
-    if (cyclePhase >= burstFraction)
-        return;
+    bool pushing = cyclePhase < burstFraction;
 
     uint i;
     float3 center = float3(0.0, 0.0, 0.0);
@@ -1285,20 +1286,99 @@ void ApplyLocomotion(
         return;
     heading /= headingLength;
 
-    // Reaches the speed over roughly one push, so the rhythm decides how sharp
-    // the acceleration reads and nothing has to author a rate as well.
-    float blend = 1.0 -
-        exp(-3.0 / duration * _DeltaTime);
-    float3 correction =
-        (heading * _LocomotionSpeed - meanVelocity) *
-        (blend * submersion);
+    // Thrust while pushing, and reaching the speed over roughly one push, so the
+    // rhythm decides how sharp the acceleration reads and nothing has to author
+    // a rate as well.
+    float3 correction = float3(0.0, 0.0, 0.0);
+    if (pushing)
+    {
+        float blend = 1.0 -
+            exp(-3.0 / duration * _DeltaTime);
+        correction =
+            (heading * _LocomotionSpeed -
+             meanVelocity) *
+            (blend * submersion);
+    }
+
+    // Turning, which runs whether or not this step is a push: an animal keeps
+    // steering through a glide, and thrust that arrives before the body has come
+    // round only pushes it further the wrong way.
+    //
+    // Applied as an angular velocity about the body's own centre rather than by
+    // rotating positions. Rotating positions is what `torsionAlign` did, and it
+    // penetrated whatever the body was resting against and read as jumping; a
+    // velocity cannot teleport through anything. It also stays momentum neutral,
+    // because cross(omega, r) summed over a symmetric set of offsets cancels.
+    //
+    // Only chain topologies have a facing to steer. GetFrame would read a
+    // tetrahedron's first three corners as head, middle and tail.
+    float3 omega = float3(0.0, 0.0, 0.0);
+    if (instance.topology == TOPOLOGY_CHAIN_3 ||
+        instance.topology == TOPOLOGY_GUIDE_4 ||
+        instance.topology == TOPOLOGY_DUAL_RAIL_6 ||
+        instance.topology == TOPOLOGY_ARTICULATED_12)
+    {
+        ControlFrame frame = GetFrame(instance, 1u);
+
+        // Yaw and pitch: swing the body's own forward onto the heading. The
+        // shortest arc, so a body never picks a direction to turn.
+        float3 swing = cross(frame.tangent, heading);
+        float sinSwing = length(swing);
+        if (sinSwing > 1e-5 &&
+            _LocomotionTurnRate > 0.0)
+        {
+            float angle = atan2(
+                sinSwing,
+                dot(frame.tangent, heading));
+            float step = min(
+                angle,
+                _LocomotionTurnRate * _DeltaTime);
+            omega += (swing / sinSwing) *
+                (step / _DeltaTime);
+        }
+
+        // Roll: bring the body's own up as close to the world's as the heading
+        // allows. Without this the body points the right way and can still be
+        // lying on its side, because nothing else constrains rotation about the
+        // long axis.
+        if (_LocomotionUprightRate > 0.0)
+        {
+            float3 desiredUp =
+                _UpAxis -
+                frame.tangent *
+                dot(_UpAxis, frame.tangent);
+            float desiredLength = length(desiredUp);
+            if (desiredLength > 1e-4)
+            {
+                desiredUp /= desiredLength;
+                float roll = atan2(
+                    dot(
+                        cross(frame.normal, desiredUp),
+                        frame.tangent),
+                    dot(frame.normal, desiredUp));
+                float limit =
+                    _LocomotionUprightRate * _DeltaTime;
+                omega += frame.tangent *
+                    (clamp(roll, -limit, limit) /
+                     _DeltaTime);
+            }
+        }
+
+        omega *= submersion;
+    }
 
     for (i = 0u; i < count; i++)
     {
         uint index = particleBase + i;
         Particle particle = _Particles[index];
         if (particle.invMass > 0.0)
-            particle.velocity += correction;
+        {
+            particle.velocity +=
+                correction +
+                cross(
+                    omega,
+                    particle.position - center);
+        }
         _Particles[index] = particle;
     }
 }

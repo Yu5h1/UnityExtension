@@ -325,6 +325,52 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b83d4b03222b6fe47995d258321b62d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Yu5h1.Yu5h1libfxunifiedsolver::SolverBoxCollider
+--- !u!1 &82471098
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 82471100}
+  - component: {fileID: 82471099}
+  m_Layer: 0
+  m_Name: SolverMediumVolume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &82471099
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 82471098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27c2f00d7231a014fab708897239e1e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Yu5h1.Yu5h1libfxunifiedsolver::Yu5h1.UnifiedSolver.SolverMediumVolume
+  shape: 0
+  profile: {fileID: 1624969289}
+--- !u!4 &82471100
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 82471098}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.32, y: 5.87, z: 2.67}
+  m_LocalScale: {x: 5, y: 5, z: 5}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &203844586
 GameObject:
   m_ObjectHideFlags: 0
@@ -809,6 +855,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2043261189}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &746193419
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 746193421}
+  - component: {fileID: 746193420}
+  m_Layer: 0
+  m_Name: SolverMotionTarget
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &746193420
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 746193419}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0287585ed82478243925c4b41519cd7d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Yu5h1.Yu5h1libfxunifiedsolver::Yu5h1.UnifiedSolver.SolverMotionTarget
+  mode: 1
+  radius: 0
+--- !u!4 &746193421
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 746193419}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 2.73, y: 8.25, z: 3.01}
+  m_LocalScale: {x: 74.8, y: 74.8, z: 74.8}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!1 &961739749
 GameObject:
   m_ObjectHideFlags: 0
@@ -1087,6 +1179,21 @@ Transform:
   - {fileID: 1695374911}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1624969289
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f9b1c61f2ae6c04ebeca8291a8284bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Yu5h1.Yu5h1libfxunifiedsolver::Yu5h1.UnifiedSolver.SolverMediumProfile
+  density: 472
+  flow: {x: 0, y: 0, z: 0}
+  viscosity: 1
 --- !u!1 &1695374907
 GameObject:
   m_ObjectHideFlags: 0
@@ -1540,3 +1647,5 @@ SceneRoots:
   - {fileID: 1182622175}
   - {fileID: 5092220709811853185}
   - {fileID: 1484369045}
+  - {fileID: 82471100}
+  - {fileID: 746193421}
