@@ -19,7 +19,11 @@ namespace Yu5h1.UnifiedSolver
         // The units are whatever the profile masses and particle radius imply,
         // not kg/m3, so the useful value has nothing to do with water being
         // 1000. Raise it until things stop sinking; that point is neutral.
-        [Tooltip("Equal to a body's own density is neutral buoyancy. Above it, the body floats.")]
+        // The value that means neutral is typically in the hundreds, because
+        // the solver's masses are not kilograms. The runner logs the exact
+        // number for each profile the first time a medium touches it; do not
+        // guess, and do not expect water to be 1000.
+        [Tooltip("Equals the body's own density for neutral buoyancy. See the console for the number.")]
         [Min(0f)]
         public float density;
 

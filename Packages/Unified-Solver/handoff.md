@@ -332,6 +332,17 @@ outside, nothing changes. Written, not compiled.
   viscosity: PBD injects energy through constraint corrections and without it
   that energy has nowhere to go. Viscosity adds local drag on top.
 
+- **The value of `density` that means anything is in the hundreds.** Neutral is
+  `particleMass / particleVolume`; at `particleRadius` 0.05 and a profile mass of
+  1 over 4 particles that is about 478, so every value a person tries first is a
+  fraction of a percent of gravity and the control reads as dead. The runner logs
+  the exact number per profile the first time a medium touches it.
+- **Body density varies by variant, which is wrong for ice.** `particleMass =
+  profile.mass / particleCount`, so a 4-particle fragment is twice as dense as an
+  8-particle one from the same profile: the big ones float while the small ones
+  sink, though both are ice. For consistent density, mass has to scale with
+  particle count. Unresolved.
+
 Open interactions:
 
 - **A sleeping body is immune to flow.** Sleep runs after the medium and zeroes
