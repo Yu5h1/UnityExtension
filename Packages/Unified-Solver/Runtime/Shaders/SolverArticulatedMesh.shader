@@ -17,6 +17,10 @@ Shader "Yu5h1/UnifiedSolver/ArticulatedMesh"
 
         StructuredBuffer<Particle> _Particles;
         StructuredBuffer<SolverInstance> _Instances;
+        // float4(life state, phase, hidden, rate). Only `hidden` is read here.
+        // The emitter zeroes it, so with no bounds effect in the scene this is
+        // an all-zero buffer that costs one read and hides nothing.
+        StructuredBuffer<float4> _Lifecycle;
 
         #include "SolverBodyFrame.hlsl"
 
@@ -123,8 +127,27 @@ Shader "Yu5h1/UnifiedSolver/ArticulatedMesh"
                 (AxisCoordinate(meshPosition) -
                  _MeshAxisMin) /
                 max(_MeshAxisLength, 0.000001));
+            // Turn the mesh end for end, not merely its skinning weights.
+            //
+            // Flipping `longitudinal` alone only decides which control frame a
+            // vertex binds to. The vertex still carries its own offset along the
+            // body axis, so a nose vertex re-bound to the head frame was placed
+            // half a body length *behind* that frame's centre while a tail
+            // vertex was thrown out in front of the tail: the mesh came out
+            // turned inside out rather than turned around, which is why setting
+            // the flag looked like it did nothing useful.
+            //
+            // A half turn about the body's normal is the missing half. It
+            // negates the side and tangent components and leaves the normal
+            // alone, so handedness survives and the same flank of the texture
+            // stays facing outward. Mirroring the tangent component on its own
+            // would be a reflection, and the far side of the fish would show.
             if (_MeshFlipForward > 0.5)
+            {
                 longitudinal = 1.0 - longitudinal;
+                localPosition.xy = -localPosition.xy;
+                localNormal.xy = -localNormal.xy;
+            }
             float spacing =
                 instance.topology ==
                 TOPOLOGY_SINGLE
@@ -188,6 +211,25 @@ Shader "Yu5h1/UnifiedSolver/ArticulatedMesh"
                             head),
                         blend));
             }
+
+            // Fade by collapsing the body onto its own middle, not by alpha.
+            //
+            // Alpha would mean a transparent queue, and with it sorting, a lost
+            // depth prepass and a different shadow path -- a rendering decision
+            // smuggled in by a gameplay feature. Shrinking stays opaque, needs
+            // no material change, and at zero the triangles are degenerate so
+            // nothing is drawn at all.
+            //
+            // The middle frame's centre is the pivot because the body already
+            // turns about it; collapsing onto each frame's own centre would
+            // thin the body without shortening it, leaving a line rather than a
+            // vanishing fish.
+            float visible = saturate(
+                1.0 - _Lifecycle[instanceID].z);
+            worldPosition = lerp(
+                middle.center,
+                worldPosition,
+                visible);
 
             color =
                 _Particles[

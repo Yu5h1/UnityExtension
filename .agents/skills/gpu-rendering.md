@@ -31,6 +31,23 @@ Not in scope: Inspector and Editor extensions ([editor-tooling.md](editor-toolin
 - Put the branch in the one function both passes call, so the ShadowCaster cannot silently diverge from the visible pass.
 - Toggle with `Material.EnableKeyword` / `DisableKeyword` when the runtime material is built, not per frame.
 
+## Deleting a shader orphans materials in projects you cannot see
+
+A `.shader` is referenced by GUID, so removing one leaves every material bound to
+it pointing at nothing and drawing nothing — in **consuming** projects, which a
+search of the package will not find.
+
+- Before deleting a shader, search the consuming projects for its GUID, not just
+  this repo for code references. Nothing in the package reports the breakage.
+- The inspector is no help: an orphaned material still shows its shader slot as
+  correctly assigned. The fault is one level below what it displays.
+- Have the renderer detect `Hidden/InternalErrorShader` on the material it was
+  handed and name that material in the warning. Otherwise the symptom is an empty
+  screen with a clean console, which reads as a bug in whatever drew last.
+- Preferring a plain URP/HDRP material over a custom shader is worth real design
+  effort for exactly this reason — it also buys shadows, decals, motion vectors
+  and the SRP batcher — but the switchover is what breaks existing content.
+
 ## Vertex channels
 
 - Carry integer payloads in **UV channels**, never in `NORMAL`. A normal is semantically a direction and mesh tooling is entitled to renormalise one; nothing ever rewrites a UV. `Mesh.SetUVs(channel, Vector3[])` gives three floats per vertex.

@@ -39,6 +39,15 @@ namespace Yu5h1.UnifiedSolver
         [FormerlySerializedAs("bendRandomness")]
         [Range(0f, 1f)]
         public float tensionRandomness = 0.15f;
+        // Which half of the body does the beating. A heavy head and a light tail
+        // do not sweep the same arc: the head stays near the line of travel and
+        // the tail traces most of the curve. It is also the only way the beat
+        // can yaw the body, since a symmetric C cannot turn the head-tail chord
+        // however hard it is driven. 0.5 is the symmetric C the profile used to
+        // produce, so raising it is the whole of the change.
+        [Tooltip("0.5 sweeps head and tail alike; 1 holds the head and gives the beat to the tail.")]
+        [Range(0f, 1f)]
+        public float tailBias = 0.5f;
         // Timing only: it changes neither the shape nor how long a run takes.
         // Between runs the body is left limp rather than straightened.
         [Tooltip("Runs per second. 0 means a run never begins.")]

@@ -63,6 +63,12 @@ elsewhere in the data.
 - Add companions unconditionally rather than gating on what the current
   configuration appears to need. A gate leaves the object one component short as
   soon as the configuration changes, and says nothing.
+- **`[RequireComponent]` only pulls in the opposite direction from the one you
+  want.** Put it on the companion and it pulls in the owner — never the reverse.
+  So an owner that "requires" a companion by declaring the attribute on the
+  companion gets nothing, and the failure is silent: a fully configured object
+  that runs and does nothing, which is indistinguishable from a broken feature.
+  Check the attribute's direction before assuming a companion is reachable.
 - Two costs to cover before hiding anything: the owner must remove its
   companions when it is itself removed, or they become components that cannot be
   seen and therefore cannot be deleted; and a companion must not declare

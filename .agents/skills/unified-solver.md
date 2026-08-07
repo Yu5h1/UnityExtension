@@ -41,7 +41,11 @@ body its waterline for nothing: part of it is inside, part is not, and it settle
 at partial submersion with nothing modelling a surface. **Per instance** is for
 decisions only meaningful about a whole body — half a fish cannot be recycled.
 
-`SolverVolumeEffectType.Carry` exists in the enum with no profile behind it yet.
+**A moving `SolverBoxCollider` does not carry its load.** `SolveBox` measures
+friction against the particle's own world displacement, so the box's motion never
+enters it: a resting particle on a sliding top face has zero displacement, gets
+zero friction correction, and the box slides out from under it. A conveyor or a
+current is a **medium** with `flow` and `flowIsLocal`, not an animated collider.
 
 Adding an effect is an enum value, a subclass with `Write`, and a kernel branch.
 It touches neither `SolverVolume` nor the upload path. That is the seam.
@@ -98,9 +102,36 @@ That has been built and removed twice here.
    the console; do not guess. Above neutral floats, below sinks.
 5. `flow` is metres per second the water itself moves. Bodies converge on it and
    stop, so it is authored directly rather than as a force.
+6. `flowIsLocal` reads `flow` in the volume's own axes, so aiming the volume aims
+   the flow. Leave it off for an ocean current, which is a property of the world;
+   turn it on for anything aimed, or rotating the object will not change where it
+   pushes. A profile is a shared asset, so a world-space flow is the same vector
+   in every volume referencing it.
 
 Leave `SolverManager.damping` alone. It is the solver's energy bleed, not a
 stand-in for viscosity.
+
+## A jet is a medium
+
+A hose, a vent, a current, a downdraught: box `SolverVolume`, one
+`SolverMediumProfile`, `density = 0` so it is pure push and no buoyancy.
+
+1. Scale the box long and thin, **+Z along the spray**, and push the object
+   forward by half its length — `Center` is the Transform position, so otherwise
+   half the jet is behind the nozzle.
+2. `flow = (0, 0, speed)` with `flowIsLocal` on.
+3. `viscosity` in the **tens**. A modifier writes velocity once per FixedUpdate
+   from outside the substep loop, so one write survives about `1/substeps` of it.
+
+A ParticleSystem alongside it draws the water and owns nothing else; they share a
+Transform and no state. PS particles cannot push solver particles and should not
+try — a droplet is one tiny impulse, and what reads as *washed away* is the
+sustained velocity field the medium already is.
+
+Box costs three things: uniform push inside, a hard boundary, no spread. Two
+existing settings to check before blaming the mechanism — `speedLimit` below the
+jet speed decays the push, and any medium sets `submerged`, so a fish struck in
+**air** starts swimming.
 
 ## Setting up locomotion
 
@@ -155,6 +186,15 @@ solid rather than a container, so a holding tank is built from thin walls.
   each other while still hitting fish, which does not read as a phase problem.
 - Global `damping` raised to tame launches makes ordinary motion sluggish
   everywhere. Use `speedLimit`, which does nothing below its threshold.
+- A spawn volume too small for its instance count overlaps bodies at t=0, and
+  `maxDepenetrationSpeed` then throws them apart on the first frame. Divide the
+  volume by the count and compare the spacing against the body size before
+  blaming the launch on anything else.
+- Low `frictionKinetic` is right for ice and wrong for a pile that holds its
+  shape. Friction itself is correct and substep-independent — the per-substep
+  limit `mu * penetration` works out to `a = mu * g` — but it turns sliding into
+  rolling, and **a body made of spheres has no rolling resistance at all**, so a
+  pile keeps creeping.
 
 ## When something does nothing
 

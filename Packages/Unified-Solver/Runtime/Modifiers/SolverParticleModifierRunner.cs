@@ -36,9 +36,13 @@ namespace Yu5h1.UnifiedSolver
         int _speedLimitKernel = -1;
         int _mediumKernel = -1;
         int _locomotionKernel = -1;
-        ComputeBuffer _mediumBuffer;
-        SolverMediumGPU[] _mediumData;
-        ComputeBuffer _submersionBuffer;
+        ComputeBuffer _volumeBuffer;
+        SolverVolumeGPU[] _volumeData;
+        int _volumeCount;
+        int _mediumEffectCount;
+        int _boundsEffectCount;
+        int _boundsKernel = -1;
+        ComputeBuffer _mediumStateBuffer;
         ComputeBuffer _targetBuffer;
         SolverMotionTargetGPU[] _targetData;
         int _targetCount;
@@ -75,6 +79,11 @@ namespace Yu5h1.UnifiedSolver
             // depenetration or a moving collider, not from the drive.
             DispatchSpeedLimit();
 
+            // Once per step, ahead of every kernel that reads a volume. The
+            // buffer is shared: an effect added later consumes the same upload
+            // rather than gathering the scene again.
+            UploadVolumes();
+
             // Environment before performance: a body should be floating or
             // drifting before it decides how hard to swim against it.
             DispatchMedium();
@@ -88,6 +97,7 @@ namespace Yu5h1.UnifiedSolver
             if (modifiers == null ||
                 modifiers.Length == 0)
             {
+                DispatchBounds();
                 DispatchSleep(false);
                 ReportModifiersOnce(modifiers, 0);
                 return;
@@ -129,6 +139,10 @@ namespace Yu5h1.UnifiedSolver
                     keepAwake = true;
                 }
             }
+
+            // After the modifiers, so the teleport is the last positional word
+            // of the step and nothing drags the body back out of bounds.
+            DispatchBounds();
 
             // After the modifiers, so a body that was driven this step is
             // measured as moving rather than being caught mid-drive.
@@ -226,70 +240,113 @@ namespace Yu5h1.UnifiedSolver
             Dispatch(_rollDampingKernel);
         }
 
-        // Uploads every registered medium and lets the kernel decide which
-        // particles are inside which.
+        // Gathers every registered volume, flattened one entry per effect.
         //
-        // The list is global rather than per emitter, because a medium belongs
+        // The list is global rather than per emitter, because a volume belongs
         // to the scene rather than to whoever is swimming in it. Re-uploaded
         // every step so a volume can be moved, resized or retuned at runtime.
+        //
+        // Nothing here knows what any effect does. The volume writes the
+        // geometry and the effect writes its own payload, so a new kind of
+        // volume effect adds a subclass and a kernel branch and does not touch
+        // this method at all.
+        void UploadVolumes()
+        {
+            IReadOnlyList<SolverVolume> volumes =
+                SolverVolume.Registered;
+
+            int required = 0;
+            for (int i = 0; i < volumes.Count; i++)
+            {
+                SolverVolume volume = volumes[i];
+                if (volume != null)
+                    required += volume.EffectCount;
+            }
+
+            if (_volumeData == null ||
+                _volumeData.Length < required)
+            {
+                _volumeData = new SolverVolumeGPU[
+                    Mathf.Max(4, required)];
+            }
+
+            _volumeCount = 0;
+            _mediumEffectCount = 0;
+            _boundsEffectCount = 0;
+            for (int i = 0; i < volumes.Count; i++)
+            {
+                SolverVolume volume = volumes[i];
+                if (volume == null || !volume.IsUsable)
+                    continue;
+
+                int effects = volume.EffectCount;
+                for (int e = 0; e < effects; e++)
+                {
+                    SolverVolumeEffectProfile effect =
+                        volume.GetEffect(e);
+                    if (effect == null || !effect.enabled)
+                        continue;
+
+                    var entry = new SolverVolumeGPU
+                    {
+                        center = volume.Center,
+                        shape = (float)volume.shape,
+                        halfExtents = volume.HalfExtents,
+                        effectType =
+                            (float)effect.EffectType,
+                        axisX = volume.AxisX,
+                        invert =
+                            effect.actOutside ? 1f : 0f,
+                        axisY = volume.AxisY,
+                        axisZ = volume.AxisZ
+                    };
+                    effect.Write(volume, ref entry);
+                    _volumeData[_volumeCount++] = entry;
+
+                    if (effect.EffectType ==
+                        SolverVolumeEffectType.Medium)
+                    {
+                        _mediumEffectCount++;
+                    }
+                    else if (effect.EffectType ==
+                        SolverVolumeEffectType.Bounds)
+                    {
+                        _boundsEffectCount++;
+                    }
+                }
+            }
+
+            // Allocated even with nothing to upload, because the kernels read it
+            // unconditionally and Unity requires every buffer a kernel declares
+            // to be bound.
+            if (_volumeBuffer == null ||
+                _volumeBuffer.count <
+                    Mathf.Max(1, _volumeCount))
+            {
+                _volumeBuffer?.Release();
+                _volumeBuffer = new ComputeBuffer(
+                    Mathf.Max(4, _volumeCount),
+                    SolverVolumeGPU.Stride);
+            }
+            if (_volumeCount > 0)
+            {
+                _volumeBuffer.SetData(
+                    _volumeData, 0, 0, _volumeCount);
+            }
+        }
+
+        // Applies whatever the uploaded volumes declare, and writes the medium
+        // state every instance's environment is read from.
+        //
+        // Dispatched even with no volumes at all, because this is what clears
+        // that state. Skipping it would leave last step's value in place, and a
+        // body that had left the water would still read as being in it.
         void DispatchMedium()
         {
             if (_mediumKernel < 0)
                 return;
-            if (!EnsureSubmersionBuffer())
+            if (!EnsureMediumStateBuffer())
                 return;
-
-            IReadOnlyList<SolverMediumVolume> volumes =
-                SolverMediumVolume.Registered;
-            int count = 0;
-            if (_mediumData == null ||
-                _mediumData.Length < volumes.Count)
-            {
-                _mediumData = new SolverMediumGPU[
-                    Mathf.Max(4, volumes.Count)];
-            }
-
-            for (int i = 0; i < volumes.Count; i++)
-            {
-                SolverMediumVolume volume = volumes[i];
-                if (volume == null || !volume.IsUsable)
-                    continue;
-
-                _mediumData[count++] = new SolverMediumGPU
-                {
-                    center = volume.Center,
-                    shape = (float)volume.shape,
-                    halfExtents = volume.HalfExtents,
-                    axisX = volume.AxisX,
-                    axisY = volume.AxisY,
-                    axisZ = volume.AxisZ,
-                    flow = volume.profile.flow,
-                    density = Mathf.Max(
-                        0f,
-                        volume.profile.density),
-                    viscosity = Mathf.Max(
-                        0f,
-                        volume.profile.viscosity)
-                };
-            }
-
-            // Dispatched even with nothing to apply, because this is also what
-            // writes submersion. Skipping it would leave last step's value in
-            // place, and a body that had left the water would still read as
-            // being in it.
-            if (_mediumBuffer == null ||
-                _mediumBuffer.count < Mathf.Max(1, count))
-            {
-                _mediumBuffer?.Release();
-                _mediumBuffer = new ComputeBuffer(
-                    Mathf.Max(4, count),
-                    SolverMediumGPU.Stride);
-            }
-            if (count > 0)
-            {
-                _mediumBuffer.SetData(
-                    _mediumData, 0, 0, count);
-            }
 
             SolverManager solver = _emitter.Solver;
             float radius = Mathf.Max(
@@ -297,15 +354,15 @@ namespace Yu5h1.UnifiedSolver
                 solver.particleRadius);
             _runtimeCompute.SetBuffer(
                 _mediumKernel,
-                "_Mediums",
-                _mediumBuffer);
+                "_Volumes",
+                _volumeBuffer);
             _runtimeCompute.SetBuffer(
                 _mediumKernel,
-                "_Submersion",
-                _submersionBuffer);
+                "_MediumState",
+                _mediumStateBuffer);
             _runtimeCompute.SetInt(
-                "_MediumCount",
-                count);
+                "_VolumeCount",
+                _volumeCount);
             _runtimeCompute.SetVector(
                 "_Gravity",
                 solver.gravity);
@@ -313,10 +370,62 @@ namespace Yu5h1.UnifiedSolver
                 "_ParticleVolume",
                 4f / 3f * Mathf.PI *
                 radius * radius * radius);
-            if (count > 0)
+            if (_mediumEffectCount > 0)
                 ReportNeutralDensityOnce(radius);
             BindBuffers(_mediumKernel);
             Dispatch(_mediumKernel);
+        }
+
+        // Recycles bodies that have left where they belong, and drives the fade
+        // that covers it.
+        //
+        // Dispatched even with no boundary in the scene, and the kernel bails
+        // after one buffer read when it has nothing to do. Gating the dispatch
+        // instead would strand any body that happened to be mid-fade when the
+        // last boundary was removed: invisible, forever, with nothing left
+        // running to finish it.
+        //
+        // The spawn box is handed over as a centre and three pre-scaled axes, so
+        // the kernel places a rebirth exactly where the emitter would have
+        // without knowing anything about Transforms.
+        void DispatchBounds()
+        {
+            if (_boundsKernel < 0)
+                return;
+            if (_emitter.LifecycleBuffer == null)
+                return;
+
+            Transform emitterTransform =
+                _emitter.transform;
+            Vector3 half = _emitter.spawnVolume * 0.5f;
+            _runtimeCompute.SetBuffer(
+                _boundsKernel,
+                "_Volumes",
+                _volumeBuffer);
+            _runtimeCompute.SetBuffer(
+                _boundsKernel,
+                "_Lifecycle",
+                _emitter.LifecycleBuffer);
+            _runtimeCompute.SetInt(
+                "_VolumeCount",
+                _volumeCount);
+            _runtimeCompute.SetInt(
+                "_BoundsCount",
+                _boundsEffectCount);
+            _runtimeCompute.SetVector(
+                "_SpawnCenter",
+                emitterTransform.position);
+            _runtimeCompute.SetVector(
+                "_SpawnAxisX",
+                emitterTransform.right * half.x);
+            _runtimeCompute.SetVector(
+                "_SpawnAxisY",
+                emitterTransform.up * half.y);
+            _runtimeCompute.SetVector(
+                "_SpawnAxisZ",
+                emitterTransform.forward * half.z);
+            BindBuffers(_boundsKernel);
+            Dispatch(_boundsKernel);
         }
 
         // Says what Density has to be set to for this profile to float.
@@ -346,7 +455,7 @@ namespace Yu5h1.UnifiedSolver
                 (particles * particleVolume);
 
             Debug.Log(
-                $"SolverMediumVolume affects '{profile.name}': " +
+                $"A medium volume affects '{profile.name}': " +
                 $"Density {neutral:0.#} is neutral buoyancy " +
                 $"({profile.mass} mass over {particles} particles " +
                 $"at radius {radius}). Below sinks, above lifts.",
@@ -354,23 +463,27 @@ namespace Yu5h1.UnifiedSolver
         }
 
         // One slot per instance, so a slot always means one instance index.
-        bool EnsureSubmersionBuffer()
+        //
+        // Explicitly zeroed: undefined contents would read as bodies already
+        // submerged, adrift in a current that does not exist, and unable to
+        // sleep because of it.
+        bool EnsureMediumStateBuffer()
         {
             int instances = Mathf.Max(
                 1,
                 _emitter.maxInstances);
-            if (_submersionBuffer != null &&
-                _submersionBuffer.count >= instances)
+            if (_mediumStateBuffer != null &&
+                _mediumStateBuffer.count >= instances)
             {
                 return true;
             }
 
-            _submersionBuffer?.Release();
-            _submersionBuffer = new ComputeBuffer(
+            _mediumStateBuffer?.Release();
+            _mediumStateBuffer = new ComputeBuffer(
                 instances,
-                sizeof(float));
-            _submersionBuffer.SetData(
-                new float[instances]);
+                sizeof(float) * 4);
+            _mediumStateBuffer.SetData(
+                new Vector4[instances]);
             return true;
         }
 
@@ -385,26 +498,30 @@ namespace Yu5h1.UnifiedSolver
         {
             if (_locomotionKernel < 0)
                 return;
-            if (!EnsureSubmersionBuffer())
+            if (!EnsureMediumStateBuffer())
                 return;
             EnsureTargetBuffer();
 
-            if (SolverMediumVolume.Registered.Count == 0 &&
+            // Counts medium effects, not volumes. A scene can now hold volumes
+            // that carry no medium at all, and a body has nothing to push
+            // against in one of those, so the volume count would report a
+            // reason to swim that does not exist.
+            if (_mediumEffectCount == 0 &&
                 !_reportedMissingMedium)
             {
                 _reportedMissingMedium = true;
                 Debug.LogWarning(
                     $"SolverLocomotionProfile '{profile.name}' " +
                     "cannot move anything: locomotion pushes " +
-                    "against a medium, and no SolverMediumVolume " +
-                    "exists in the scene.",
+                    "against a medium, and no SolverVolume in the " +
+                    "scene carries an enabled SolverMediumProfile.",
                     this);
             }
 
             _runtimeCompute.SetBuffer(
                 _locomotionKernel,
-                "_Submersion",
-                _submersionBuffer);
+                "_MediumState",
+                _mediumStateBuffer);
             _runtimeCompute.SetBuffer(
                 _locomotionKernel,
                 "_MotionTargets",
@@ -522,6 +639,13 @@ namespace Yu5h1.UnifiedSolver
                 return;
             if (!EnsureSleepBuffers())
                 return;
+            if (_emitter.LifecycleBuffer == null)
+                return;
+            // Bound whether or not a medium exists. The kernel reads it either
+            // way, and a zeroed buffer is what "no medium is pushing on this"
+            // looks like.
+            if (!EnsureMediumStateBuffer())
+                return;
 
             _runtimeCompute.SetFloat(
                 "_SleepSpeed",
@@ -546,6 +670,16 @@ namespace Yu5h1.UnifiedSolver
                 _sleepKernel,
                 "_SleepPose",
                 _sleepPose);
+            _runtimeCompute.SetBuffer(
+                _sleepKernel,
+                "_MediumState",
+                _mediumStateBuffer);
+            // Read, not written, here: a body mid-recycle must not be held at a
+            // pose recorded before it was moved.
+            _runtimeCompute.SetBuffer(
+                _sleepKernel,
+                "_Lifecycle",
+                _emitter.LifecycleBuffer);
             BindBuffers(_sleepKernel);
             Dispatch(_sleepKernel);
         }
@@ -622,6 +756,9 @@ namespace Yu5h1.UnifiedSolver
             _runtimeCompute.SetFloat(
                 "_OscillationTensionRandomness",
                 profile.tensionRandomness);
+            _runtimeCompute.SetFloat(
+                "_OscillationTailBias",
+                Mathf.Clamp01(profile.tailBias));
 
             // Vitality is the launch speed ceiling, enforced directly on the
             // body's velocity, so no substep conversion is needed: the kernel
@@ -757,6 +894,9 @@ namespace Yu5h1.UnifiedSolver
             _locomotionKernel =
                 _runtimeCompute.FindKernel(
                     "ApplyLocomotion");
+            _boundsKernel =
+                _runtimeCompute.FindKernel(
+                    "ApplyBounds");
             return true;
         }
 
@@ -769,10 +909,10 @@ namespace Yu5h1.UnifiedSolver
             _sleepState = null;
             _sleepPose?.Release();
             _sleepPose = null;
-            _mediumBuffer?.Release();
-            _mediumBuffer = null;
-            _submersionBuffer?.Release();
-            _submersionBuffer = null;
+            _volumeBuffer?.Release();
+            _volumeBuffer = null;
+            _mediumStateBuffer?.Release();
+            _mediumStateBuffer = null;
             _targetBuffer?.Release();
             _targetBuffer = null;
         }

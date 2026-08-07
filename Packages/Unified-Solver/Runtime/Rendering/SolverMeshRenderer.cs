@@ -387,6 +387,7 @@ namespace Yu5h1.UnifiedSolver
 
             if (_runtimeMaterial == null ||
                 _emitter.InstanceBuffer == null ||
+                _emitter.LifecycleBuffer == null ||
                 _emitter.Solver.ParticleBuffer == null)
             {
                 return;
@@ -407,6 +408,12 @@ namespace Yu5h1.UnifiedSolver
             _properties.SetBuffer(
                 "_Instances",
                 _emitter.InstanceBuffer);
+            // Drives the recycle fade. Always bound, because the shader reads it
+            // unconditionally; with no bounds effect it is all zeroes and hides
+            // nothing.
+            _properties.SetBuffer(
+                "_Lifecycle",
+                _emitter.LifecycleBuffer);
             _properties.SetVector(
                 "_MeshCenter",
                 meshBounds.center);

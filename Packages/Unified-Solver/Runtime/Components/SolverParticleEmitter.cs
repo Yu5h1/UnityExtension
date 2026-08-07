@@ -73,12 +73,27 @@ namespace Yu5h1.UnifiedSolver
 
         SolverManager _solver;
         ComputeBuffer _instanceBuffer;
+        ComputeBuffer _lifecycleBuffer;
         int _sharedPhase;
         bool _reportedCapacity;
 
         public SolverManager Solver => _solver;
         public ComputeBuffer InstanceBuffer =>
             _instanceBuffer;
+
+        // Where each instance is in the fade-out / respawn / fade-in cycle:
+        // float4(state, phase seconds, hidden, respawn count).
+        //
+        // Owned here rather than by either companion because both need it and
+        // neither owns the other: the modifier runner writes it and the mesh
+        // renderer reads it, exactly as they already share InstanceBuffer.
+        //
+        // Zero means alive, unfaded and never respawned, which is why the third
+        // slot stores *hidden* rather than visible. A scene with no bounds
+        // effect therefore never writes this buffer at all and the renderer
+        // still reads a correct answer out of it.
+        public ComputeBuffer LifecycleBuffer =>
+            _lifecycleBuffer;
         public int InstanceCount => _instances.Count;
         public int PendingCount => _pending.Count;
         public IReadOnlyList<SolverParticleInstance>
@@ -875,6 +890,16 @@ namespace Yu5h1.UnifiedSolver
                 capacity,
                 SolverParticleInstance.Stride,
                 ComputeBufferType.Structured);
+
+            // Explicitly zeroed. Undefined contents would read as instances
+            // part-way through a fade they never started, at a hidden fraction
+            // made of whatever was in memory.
+            _lifecycleBuffer = new ComputeBuffer(
+                capacity,
+                sizeof(float) * 4,
+                ComputeBufferType.Structured);
+            _lifecycleBuffer.SetData(
+                new Vector4[capacity]);
         }
 
         void UploadInstances()
@@ -955,6 +980,8 @@ namespace Yu5h1.UnifiedSolver
         {
             _instanceBuffer?.Release();
             _instanceBuffer = null;
+            _lifecycleBuffer?.Release();
+            _lifecycleBuffer = null;
 #if UNITY_EDITOR
             RemoveCompanionsIfOrphaned();
 #endif

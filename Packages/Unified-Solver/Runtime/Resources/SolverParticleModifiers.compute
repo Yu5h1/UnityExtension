@@ -5,6 +5,7 @@
 #pragma kernel ApplySpeedLimit
 #pragma kernel ApplyMedium
 #pragma kernel ApplyLocomotion
+#pragma kernel ApplyBounds
 
 #include "../Shaders/SolverBodyFrameTypes.hlsl"
 
@@ -26,6 +27,7 @@ float _OscillationMuscleTension;
 float _OscillationDuration;
 float _OscillationDurationRandomness;
 float _OscillationTensionRandomness;
+float _OscillationTailBias;
 // Launch speed a fully driven body may reach off a surface, in metres per
 // second, which is roughly a 46 cm hop. Scaled by the drive weight, so this is
 // the ceiling rather than the usual value.
@@ -66,32 +68,107 @@ float _KeepAwake;
 float _SpeedLimit;
 float _SpeedDecayRate;
 
-// Mirrored by SolverMediumGPU in SolverParticleTypes.cs.
-struct SolverMedium
+// One volume paired with one of its effects. Mirrored by SolverVolumeGPU in
+// SolverParticleTypes.cs.
+//
+// The geometry is the same for every effect on the same volume, and the payload
+// means whatever the effect that wrote it says it means. Each kernel reads only
+// the entries carrying its own effectType and aliases the payload to names that
+// make sense there, so the untyped slots never escape the branch that owns them.
+struct SolverVolume
 {
     float3 center;
     float  shape;
     float3 halfExtents;
-    float  density;
+    float  effectType;
     float3 axisX;
-    float  viscosity;
+    float  invert;
     float3 axisY;
-    float  pad0;
+    float  payloadX;
     float3 axisZ;
-    float  pad1;
-    float3 flow;
-    float  pad2;
+    float  payloadY;
+    float3 payloadVector;
+    float  payloadZ;
 };
 
-static const float MEDIUM_BOX = 0.0;
+static const float VOLUME_BOX = 0.0;
+static const float EFFECT_MEDIUM = 0.0;
+static const float EFFECT_BOUNDS = 1.0;
 
-StructuredBuffer<SolverMedium> _Mediums;
-uint _MediumCount;
-// Fraction of an instance's particles standing in a medium, written by
-// ApplyMedium and read by anything that needs something to push against.
+// Per instance: x = life state, y = seconds in that state, z = hidden fraction,
+// w = how many times it has been sent home. Owned by the emitter, because the
+// runner writes it and the mesh renderer reads it.
+//
+// Alive is 0 and the third slot is *hidden* rather than visible, so an all-zero
+// buffer already means alive and fully drawn. A scene with no bounds effect
+// never writes this and the renderer still reads the right answer.
+RWStructuredBuffer<float4> _Lifecycle;
+static const float LIFE_ALIVE = 0.0;
+static const float LIFE_FADING_OUT = 1.0;
+static const float LIFE_FADING_IN = 2.0;
+
+// The emitter's spawn box, as a centre and three already-scaled axes, so the
+// kernel places a rebirth exactly where the emitter would have and does not
+// need to know about Transforms or half extents.
+float3 _SpawnCenter;
+float3 _SpawnAxisX;
+float3 _SpawnAxisY;
+float3 _SpawnAxisZ;
+
+StructuredBuffer<SolverVolume> _Volumes;
+uint _VolumeCount;
+// How many of the entries are boundaries. Lets ApplyBounds decline the work
+// without walking the list to discover there is none.
+uint _BoundsCount;
+
+// Whether a volume's effect reaches this point.
+//
+// The shape test and the side test are separate on purpose: a volume knows its
+// own shape and an effect knows which side of it it acts on, and keeping them
+// apart is what lets one box be water within and something else without.
+bool VolumeReaches(
+    SolverVolume volume,
+    float3 position)
+{
+    float3 offset = position - volume.center;
+    // Into the volume's own axes once, then the shape test is a comparison
+    // rather than a second transform. A box gets a flat top and therefore a
+    // waterline; an ellipsoid is the same test with the extents dividing
+    // instead of bounding.
+    float3 local = float3(
+        dot(offset, volume.axisX),
+        dot(offset, volume.axisY),
+        dot(offset, volume.axisZ));
+
+    bool inside;
+    if (volume.shape == VOLUME_BOX)
+    {
+        inside = all(
+            abs(local) <= volume.halfExtents);
+    }
+    else
+    {
+        float3 unit = local / volume.halfExtents;
+        inside = dot(unit, unit) <= 1.0;
+    }
+
+    return volume.invert > 0.5 ? !inside : inside;
+}
+// What the medium is doing to each instance, written by ApplyMedium and read by
+// anything that needs something to push against or needs to know the
+// environment disagrees with the body being still.
+//
+//   x  submersion, the fraction of the instance's particles inside a medium
+//   y  drift, the speed the flow disagrees with the body by, submersion
+//      weighted, so it is directly comparable with sleepSpeed
+//   z  lift, the net environmental acceleration along up, gravity included, so
+//      a dense body resting on the bottom is negative and a buoyant one is
+//      positive
+//   w  reserved
+//
 // Written every step even with no media at all, so a stale value can never be
 // mistaken for being submerged.
-RWStructuredBuffer<float> _Submersion;
+RWStructuredBuffer<float4> _MediumState;
 float3 _Gravity;
 // Volume of one particle, from the solver's global radius. Turns a particle's
 // mass into a density without the kernel needing to know the radius.
@@ -189,6 +266,35 @@ void ApplyOscillation(
         asin(saturate(1.0 - muscleTension)),
         MAXIMUM_HALF_ANGLE);
 
+    // Split the beat between the two halves.
+    //
+    // A symmetric C sweeps head and tail through the same arc, and a body with
+    // a heavy head and a light tail does not: the head holds close to the line
+    // of travel while the tail traces nearly the whole curve. That asymmetry is
+    // not a detail of the look, it is what makes the beat yaw the body at all,
+    // since a symmetric C cannot rotate the head-tail chord however hard it is
+    // driven.
+    //
+    // Expressed as a share of the same total, so 0.5 reproduces the symmetric
+    // beat exactly and existing tuning is untouched. 1 leaves the head segment
+    // on the body axis and gives the whole sweep to the tail.
+    //
+    // Each half is capped separately against the same limit. The total is
+    // preserved by the split, so at full bias one segment is asked for twice
+    // what the symmetric case used, and the cap that keeps the drive clear of a
+    // hairpin has to hold per segment or it does not hold at all. Biasing never
+    // brings the two ends closer together than the symmetric case does: at 70
+    // degrees on one segment and 0 on the other the chord is 82% of the body
+    // length, against 34% when both bend.
+    float headPeakAngle = min(
+        peakHalfAngle * 2.0 *
+            (1.0 - _OscillationTailBias),
+        MAXIMUM_HALF_ANGLE);
+    float tailPeakAngle = min(
+        peakHalfAngle * 2.0 *
+            _OscillationTailBias,
+        MAXIMUM_HALF_ANGLE);
+
     // Duration is authored directly: a run set to one second takes one second,
     // whatever shape it is playing. Frequency only says how often a run begins.
     //
@@ -263,10 +369,12 @@ void ApplyOscillation(
     // that axis could never swing and the body only pulsed its middle sideways.
     // Rotating both segments about the middle sweeps head and tail through a
     // real arc, which is what reads as a beat instead of a twitch.
-    float halfAngle =
-        peakHalfAngle * wave;
-    float halfAngleVelocity =
-        peakHalfAngle * waveRate;
+    float headAngle = headPeakAngle * wave;
+    float tailAngle = tailPeakAngle * wave;
+    float headAngleVelocity =
+        headPeakAngle * waveRate;
+    float tailAngleVelocity =
+        tailPeakAngle * waveRate;
     uint headStart;
     uint headCount;
     uint middleStart;
@@ -297,17 +405,16 @@ void ApplyOscillation(
 
     float segmentLength =
         bodyLength * 0.5;
-    float sinHalf = sin(halfAngle);
-    float cosHalf = cos(halfAngle);
 
-    // Segment directions, head and tail rotated by +/- halfAngle about middle.
-    // Both ends offset to the same side of the middle, which is the C bend.
+    // Segment directions, head and tail rotated about the middle to opposite
+    // sides of the body axis, which is the C bend. The two angles are equal only
+    // at bias 0.5; otherwise the tail carries the larger share.
     float3 headDirection =
-        tangent * cosHalf +
-        direction * sinHalf;
+        tangent * cos(headAngle) +
+        direction * sin(headAngle);
     float3 tailDirection =
-        tangent * cosHalf -
-        direction * sinHalf;
+        tangent * cos(tailAngle) -
+        direction * sin(tailAngle);
     float3 headOffset =
         segmentLength * headDirection;
     float3 middleOffset =
@@ -376,7 +483,7 @@ void ApplyOscillation(
     {
         float maximumStep =
             TWO_PI * segmentLength *
-            peakHalfAngle /
+            max(headPeakAngle, tailPeakAngle) /
             duration *
             _DeltaTime;
         float longestStep = max(
@@ -454,13 +561,13 @@ void ApplyOscillation(
 
     // Analytic derivative of the pose above.
     float3 headDirectionRate =
-        (-tangent * sinHalf +
-          direction * cosHalf) *
-        halfAngleVelocity;
+        (-tangent * sin(headAngle) +
+          direction * cos(headAngle)) *
+        headAngleVelocity;
     float3 tailDirectionRate =
-        (-tangent * sinHalf -
-          direction * cosHalf) *
-        halfAngleVelocity;
+        (-tangent * sin(tailAngle) -
+          direction * cos(tailAngle)) *
+        tailAngleVelocity;
     float3 headOffsetVelocity =
         segmentLength * headDirectionRate;
     float3 middleOffsetVelocity =
@@ -1103,8 +1210,6 @@ void ApplyMedium(
     uint instanceIndex = dispatchID.x;
     if (instanceIndex >= _InstanceCount)
         return;
-    if (_MediumCount == 0u)
-        return;
 
     SolverInstance instance =
         _Instances[instanceIndex];
@@ -1114,7 +1219,23 @@ void ApplyMedium(
     if (count == 0u)
         return;
 
+    // Cleared rather than skipped when there is nothing to apply. Returning
+    // early leaves the previous step's reading in place, so a body that had left
+    // the water would go on reporting itself submerged and swimming.
+    if (_VolumeCount == 0u)
+    {
+        _MediumState[instanceIndex] =
+            float4(0.0, 0.0, 0.0, 0.0);
+        return;
+    }
+
     uint submerged = 0u;
+    uint movable = 0u;
+    // Gravity included, because what decides whether a settled body should be
+    // moving is the environment's net pull, not the medium's contribution to it
+    // in isolation.
+    float3 netAcceleration = float3(0.0, 0.0, 0.0);
+    float3 drift = float3(0.0, 0.0, 0.0);
 
     for (uint i = 0u; i < count; i++)
     {
@@ -1123,60 +1244,68 @@ void ApplyMedium(
         if (particle.invMass <= 0.0)
             continue;
 
-        for (uint m = 0u; m < _MediumCount; m++)
+        movable++;
+        // Sampled before any medium writes to it, so overlapping volumes are
+        // all measured against the same body velocity.
+        float3 restingVelocity = particle.velocity;
+        float3 acceleration = _Gravity;
+        // Counted once per particle rather than once per volume it is in.
+        // Incrementing inside the loop let two overlapping volumes report
+        // submersion above 1, which locomotion then multiplied its thrust by.
+        bool wet = false;
+
+        for (uint v = 0u; v < _VolumeCount; v++)
         {
-            SolverMedium medium = _Mediums[m];
-
-            // Into the volume's own axes once, then the shape test is a
-            // comparison rather than a second transform. A box gets a flat top
-            // and therefore a waterline; an ellipsoid is the same test with the
-            // extents dividing instead of bounding.
-            float3 offset =
-                particle.position - medium.center;
-            float3 local = float3(
-                dot(offset, medium.axisX),
-                dot(offset, medium.axisY),
-                dot(offset, medium.axisZ));
-
-            bool inside;
-            if (medium.shape == MEDIUM_BOX)
-            {
-                inside = all(
-                    abs(local) <= medium.halfExtents);
-            }
-            else
-            {
-                float3 unit = local / medium.halfExtents;
-                inside = dot(unit, unit) <= 1.0;
-            }
-            if (!inside)
+            SolverVolume volume = _Volumes[v];
+            if (volume.effectType != EFFECT_MEDIUM)
                 continue;
-            submerged++;
+            if (!VolumeReaches(
+                    volume, particle.position))
+            {
+                continue;
+            }
+            wet = true;
+
+            float density = volume.payloadX;
+            float viscosity = volume.payloadY;
+            float3 flow = volume.payloadVector;
 
             // mediumDensity / bodyDensity, without the division: body density
             // is mass over volume, so its reciprocal is invMass times volume.
             float ratio =
-                medium.density *
+                density *
                 _ParticleVolume *
                 particle.invMass;
             particle.velocity -=
                 _Gravity * ratio * _DeltaTime;
+            acceleration -= _Gravity * ratio;
 
             // Exponential rather than viscosity * dt, which overshoots past
             // the flow and oscillates once the product exceeds 1.
             float blend = 1.0 -
-                exp(-max(0.0, medium.viscosity) *
-                    _DeltaTime);
+                exp(-viscosity * _DeltaTime);
             particle.velocity +=
-                (medium.flow - particle.velocity) *
-                blend;
+                (flow - particle.velocity) * blend;
+            drift += flow - restingVelocity;
         }
 
+        if (wet)
+            submerged++;
+        netAcceleration += acceleration;
         _Particles[index] = particle;
     }
 
-    _Submersion[instanceIndex] =
-        (float)submerged / (float)count;
+    float inverseMovable =
+        movable > 0u
+            ? 1.0 / (float)movable
+            : 0.0;
+    // The mean of the disagreements rather than the mean of their sizes, so two
+    // opposing currents read as still water instead of as twice the push.
+    _MediumState[instanceIndex] = float4(
+        (float)submerged / (float)count,
+        length(drift * inverseMovable),
+        dot(netAcceleration * inverseMovable, _UpAxis),
+        0.0);
 }
 
 // Moves a body toward a target, by pushing against the medium it is standing in.
@@ -1207,7 +1336,8 @@ void ApplyLocomotion(
         return;
     }
 
-    float submersion = _Submersion[instanceIndex];
+    float submersion =
+        _MediumState[instanceIndex].x;
     if (submersion <= 0.0)
         return;
 
@@ -1554,6 +1684,59 @@ void ApplySleep(
         return;
     }
 
+    // A body being recycled must never sleep, for the same reason one under a
+    // modifier must not: sleep restores a recorded pose, and the pose it
+    // recorded is the one from before the teleport. It would drag the body
+    // straight back out of bounds, every frame, and win. Read per instance
+    // rather than through _KeepAwake because only some bodies are mid-cycle.
+    if (_Lifecycle[instanceIndex].x != LIFE_ALIVE)
+    {
+        _SleepState[instanceIndex] =
+            float2(SLEEP_AWAKE, 0.0);
+        return;
+    }
+
+    // The medium is a wake source in its own right, and has to be asked rather
+    // than observed.
+    //
+    // Every other wake signal here is a measurement of what already happened,
+    // which works because everything else reaches a sleeping body through the
+    // solver. The medium does not: it writes velocity, this kernel runs after it
+    // and zeroes velocity, and the restore then undoes the position too. Both
+    // channels the medium has are exactly the two sleep overwrites, so a
+    // sleeping body in a current is not merely slow to notice it, it is
+    // structurally incapable of ever noticing it. The displacement test then
+    // faithfully reports a body that was never allowed to move.
+    //
+    // Drift is already a speed and already weighted by how much of the body is
+    // in the medium, so it compares against sleepSpeed directly: a current the
+    // body disagrees with by more than the speed we call "still" is not
+    // something to sleep through. Lift is an acceleration, converted by
+    // sleepDelay into the speed the environment would build in the time it takes
+    // to fall asleep. Gravity is inside it, so a dense fragment resting on the
+    // bottom reads negative and stays asleep, a buoyant one reads positive and
+    // rises, and a body floating at the waterline reads about zero because the
+    // dry half of it pulls back down.
+    //
+    // Placed ahead of the state branch so it both wakes a sleeper and stops a
+    // candidate falling asleep, which are the same condition seen from two
+    // sides. Note the consequence: nothing sleeps inside a current stronger than
+    // sleepSpeed, whether or not friction is actually holding it. That is the
+    // honest reading -- being pushed on is a reason to be awake, and contact
+    // still decides whether the body goes anywhere -- but it does mean sleep is
+    // effectively off in flowing water, so raise sleepSpeed above the flow speed
+    // where the current is meant to be scenery rather than a force.
+    float4 mediumState = _MediumState[instanceIndex];
+    float mediumWakeSpeed =
+        mediumState.y +
+        max(0.0, mediumState.z) * _SleepDelay;
+    if (mediumWakeSpeed > _SleepSpeed)
+    {
+        _SleepState[instanceIndex] =
+            float2(SLEEP_AWAKE, 0.0);
+        return;
+    }
+
     if (state.x == SLEEP_SLEEPING)
     {
         // Wake on displacement, not on speed.
@@ -1860,4 +2043,197 @@ void ApplySurfaceImpulse(
             particle.color = debugColor;
         _Particles[index] = particle;
     }
+}
+
+// The first bounds effect that reaches a point, with its two durations.
+//
+// First rather than nearest: every boundary that reaches a body is saying the
+// same thing, which is "not here", so there is nothing to choose between them.
+bool BoundsReaching(
+    float3 position,
+    out float fadeOut,
+    out float fadeIn)
+{
+    fadeOut = 0.0;
+    fadeIn = 0.0;
+    for (uint v = 0u; v < _VolumeCount; v++)
+    {
+        SolverVolume volume = _Volumes[v];
+        if (volume.effectType != EFFECT_BOUNDS)
+            continue;
+        if (!VolumeReaches(volume, position))
+            continue;
+
+        fadeOut = volume.payloadX;
+        fadeIn = volume.payloadY;
+        return true;
+    }
+    return false;
+}
+
+// Fraction of the fade completed per second. A duration of zero becomes a rate
+// large enough to finish inside one step, so "no fade" needs no special case.
+float FadeRate(float seconds)
+{
+    return seconds > 1e-4
+        ? 1.0 / seconds
+        : 1e6;
+}
+
+// Sends a body back to where it was born when it reaches somewhere it should not
+// be, and hides the journey behind a shrink.
+//
+// Per instance, against the body's centre, so a body is not sent home for
+// dipping a single particle over the line.
+//
+// The teleport writes prevPosition alongside position, and that is not
+// housekeeping -- it is the whole thing. UnifiedSolver.compute rebuilds velocity
+// as (position - prevPosition) / subDt at the end of every substep, so a jump
+// written to position alone comes back as the entire distance divided by a
+// substep. Across a scene that is hundreds of metres per second, and the body
+// would arrive at its birthplace already leaving it at that speed. Velocity is
+// zeroed for the same reason from the other side: a body flung out hard enough
+// to cross the boundary would otherwise cross it again immediately.
+//
+// The decision is made once. A body that wanders back inside during its fade out
+// still goes home, because a recycle that can be cancelled halfway needs a
+// fourth state and buys nothing: the body is already half invisible by then.
+//
+// The fade is a visual envelope and nothing else. A shrinking body still
+// collides at full particle radius, because the solver has no idea the renderer
+// is scaling anything. Long fades therefore read as ghosts that still push.
+//
+// Runs after the modifiers and before sleep. After, so the teleport is the last
+// positional word of the step; before, so ApplySleep sees the new state and
+// refuses to hold a body that is in the middle of being recycled.
+[numthreads(64, 1, 1)]
+void ApplyBounds(
+    uint3 dispatchID : SV_DispatchThreadID)
+{
+    uint instanceIndex = dispatchID.x;
+    if (instanceIndex >= _InstanceCount)
+        return;
+
+    float4 life = _Lifecycle[instanceIndex];
+
+    // Dispatched unconditionally, so that removing the last boundary while
+    // bodies are mid-fade lets them finish rather than stranding them invisible.
+    // The common case still costs one buffer read and nothing else.
+    if (life.x == LIFE_ALIVE && _BoundsCount == 0u)
+        return;
+
+    SolverInstance instance =
+        _Instances[instanceIndex];
+    uint particleBase =
+        (uint)instance.particleOffset;
+    uint count = (uint)max(0, instance.particleCount);
+    if (count == 0u)
+        return;
+
+    uint i;
+    float3 center = float3(0.0, 0.0, 0.0);
+    uint movable = 0u;
+    for (i = 0u; i < count; i++)
+    {
+        Particle sample =
+            _Particles[particleBase + i];
+        if (sample.invMass <= 0.0)
+            continue;
+        center += sample.position;
+        movable++;
+    }
+    if (movable == 0u)
+        return;
+    center /= (float)movable;
+
+    float fadeOut = 0.0;
+    float fadeIn = 0.0;
+
+    if (life.x == LIFE_ALIVE)
+    {
+        if (!BoundsReaching(center, fadeOut, fadeIn))
+        {
+            _Lifecycle[instanceIndex] =
+                float4(LIFE_ALIVE, 0.0, 0.0, 0.0);
+            return;
+        }
+
+        life = float4(
+            LIFE_FADING_OUT,
+            0.0,
+            0.0,
+            FadeRate(fadeOut));
+    }
+
+    life.y += life.w * _DeltaTime;
+
+    if (life.x == LIFE_FADING_OUT)
+    {
+        life.z = saturate(life.y);
+        if (life.y >= 1.0)
+        {
+            // Read the fade-in duration now, while the body is still where the
+            // boundary can reach it. A step later it is at its birthplace, well
+            // inside, and there would be nothing left to ask.
+            if (!BoundsReaching(
+                    center, fadeOut, fadeIn))
+            {
+                fadeIn = 0.0;
+            }
+
+            // A fresh point in the emitter's spawn box each time, as a particle
+            // system re-emits rather than returning things to fixed marks.
+            // Seeded from the clock as well as the index so the same body does
+            // not come back to the same spot every lap.
+            uint seed =
+                instanceIndex * 2654435761u +
+                (uint)(_Time * 60.0);
+            float3 unitOffset = float3(
+                Hash01(seed) * 2.0 - 1.0,
+                Hash01(seed + 101u) * 2.0 - 1.0,
+                Hash01(seed + 211u) * 2.0 - 1.0);
+            float3 target =
+                _SpawnCenter +
+                _SpawnAxisX * unitOffset.x +
+                _SpawnAxisY * unitOffset.y +
+                _SpawnAxisZ * unitOffset.z;
+
+            // Rigidly translated rather than rebuilt from the topology's rest
+            // pose. The shape and facing it had are carried over, which the
+            // fade is there to make unremarkable, and it keeps the spawn layout
+            // in one place instead of duplicating it on the GPU.
+            float3 delta = target - center;
+            for (i = 0u; i < count; i++)
+            {
+                uint index = particleBase + i;
+                Particle particle = _Particles[index];
+                if (particle.invMass > 0.0)
+                {
+                    particle.position += delta;
+                    particle.prevPosition =
+                        particle.position;
+                    particle.velocity =
+                        float3(0.0, 0.0, 0.0);
+                }
+                _Particles[index] = particle;
+            }
+
+            life = float4(
+                LIFE_FADING_IN,
+                0.0,
+                1.0,
+                FadeRate(fadeIn));
+        }
+    }
+    else if (life.x == LIFE_FADING_IN)
+    {
+        life.z = 1.0 - saturate(life.y);
+        if (life.y >= 1.0)
+        {
+            life = float4(
+                LIFE_ALIVE, 0.0, 0.0, 0.0);
+        }
+    }
+
+    _Lifecycle[instanceIndex] = life;
 }
