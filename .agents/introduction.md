@@ -12,6 +12,8 @@ Read before writing any Unity code in this tree. These two get written wrong mos
 
 - **Never write `[CreateAssetMenu]`.** Yu5h1Lib already handles ScriptableObject creation, driven by the field that references the object.
 - **Put `[Inline]` on every serialized ScriptableObject reference field.**
+- **The root namespace is `Yu5h1Lib`. There is no `Yu5h1` namespace.** A package nests under it (`Yu5h1Lib.UnifiedSolver`, `Yu5h1Lib.ParticlePhysics`). Never name a namespace after a type that lives in it, and never take a name `UnityEngine` already uses for a type — an enclosing namespace beats a `using`, so `Yu5h1Lib.Physics` would shadow `UnityEngine.Physics` in every file in the library.
+- **A custom inspector derives from `Editor<T>`,** never from `UnityEditor.Editor`. It hands you a cast `targetObject` and a full default inspector; see [editor-tooling.md](skills/editor-tooling.md).
 - **A setting is for a real choice.** If code can settle it, code settles it — never add a field, a toggle, or a `[RequireComponent]` for something already determined by other data. See [editor-tooling.md](skills/editor-tooling.md).
 
 Reasoning for the first two is in [data-architecture.md](skills/data-architecture.md).

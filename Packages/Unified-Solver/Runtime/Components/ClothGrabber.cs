@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 using UnityEngine;
-using Yu5h1.UnifiedSolver;
+using Yu5h1Lib.UnifiedSolver;
 
 // Dynamically grabs cloth nodes near a hand Transform. Animation Events call
 // Grab and Release; all node selection and movement stays on the GPU.

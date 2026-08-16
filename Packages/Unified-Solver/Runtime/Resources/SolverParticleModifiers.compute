@@ -91,7 +91,13 @@ struct SolverVolume
     float  payloadZ;
 };
 
+// Mirrors Yu5h1Lib.ShapeKind. The values are the contract between the enum and
+// this switch: adding a kind there without a branch here leaves a region that
+// silently does nothing.
 static const float VOLUME_BOX = 0.0;
+static const float VOLUME_SPHERE = 1.0;
+static const float VOLUME_CYLINDER = 2.0;
+static const float VOLUME_CONE = 3.0;
 static const float EFFECT_MEDIUM = 0.0;
 static const float EFFECT_BOUNDS = 1.0;
 
@@ -146,10 +152,40 @@ bool VolumeReaches(
         inside = all(
             abs(local) <= volume.halfExtents);
     }
-    else
+    else if (volume.shape == VOLUME_CYLINDER)
+    {
+        float2 radial =
+            local.xy / max(volume.halfExtents.xy, 1e-6);
+        inside =
+            abs(local.z) <= volume.halfExtents.z &&
+            dot(radial, radial) <= 1.0;
+    }
+    else if (volume.shape == VOLUME_CONE)
+    {
+        // Axis on +Z, narrow at -Z. The two cross-section extents are the two
+        // radii; a zero narrow radius is a true cone, non-zero a frustum.
+        float halfLength = volume.halfExtents.z;
+        float t = saturate(
+            (local.z + halfLength) /
+            max(2.0 * halfLength, 1e-6));
+        float radius = lerp(
+            volume.halfExtents.y,
+            volume.halfExtents.x,
+            t);
+        inside =
+            abs(local.z) <= halfLength &&
+            dot(local.xy, local.xy) <= radius * radius;
+    }
+    else if (volume.shape == VOLUME_SPHERE)
     {
         float3 unit = local / volume.halfExtents;
         inside = dot(unit, unit) <= 1.0;
+    }
+    else
+    {
+        // An id with no branch. Reaching nothing is wrong, but reaching the
+        // wrong shape is worse and looks like a tuning problem.
+        inside = false;
     }
 
     return volume.invert > 0.5 ? !inside : inside;

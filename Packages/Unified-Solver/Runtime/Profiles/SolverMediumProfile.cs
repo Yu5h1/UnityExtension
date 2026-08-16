@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Yu5h1.UnifiedSolver
+namespace Yu5h1Lib.UnifiedSolver
 {
     // What a medium is made of: how dense it is, which way it is moving, and how
     // strongly it drags what is inside along with it.
@@ -77,7 +77,7 @@ namespace Yu5h1.UnifiedSolver
             entry.payloadX = Mathf.Max(0f, density);
             entry.payloadY = Mathf.Max(0f, viscosity);
             entry.payloadVector = flowIsLocal
-                ? volume.transform.rotation * flow
+                ? volume.Rotation * flow
                 : flow;
         }
     }

@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using UnityEngine;
 
-namespace Yu5h1.UnifiedSolver
+namespace Yu5h1Lib.UnifiedSolver
 {
     internal static class SolverManagerAccess
     {
@@ -19,8 +19,14 @@ namespace Yu5h1.UnifiedSolver
                 ResolveField<ClothGenerator, int>(
                     "_particleOffset");
 
+        static readonly FieldInfo
+            RopeParticleOffsetField =
+                ResolveField<RopeGenerator, int>(
+                    "_particleOffset");
+
         static bool _reportedRigidContractFailure;
         static bool _reportedClothContractFailure;
+        static bool _reportedRopeContractFailure;
         static bool _reportedAccessFailure;
 
         internal static bool ContractAvailable =>
@@ -33,6 +39,12 @@ namespace Yu5h1.UnifiedSolver
         internal static bool ClothContractAvailable =>
             ClothParticleOffsetField != null;
 
+        // Deliberately outside ContractAvailable. Rope anchoring is optional,
+        // and a scene with no rope must not report the whole bridge as broken
+        // because a body it never uses moved a private field.
+        internal static bool RopeContractAvailable =>
+            RopeParticleOffsetField != null;
+
         // Narrowed from three private SolverManager fields to one. The two
         // rigid buffers were only ever read so a custom shader could place
         // vertices from them; rigid instances are now drawn from the public
@@ -41,6 +53,8 @@ namespace Yu5h1.UnifiedSolver
             "SolverManager private field " +
             "'_rigidParticleRefCount' (Int32); " +
             "ClothGenerator private field " +
+            "'_particleOffset' (Int32); " +
+            "RopeGenerator private field " +
             "'_particleOffset' (Int32)";
 
         internal static bool TryGetRigidParticleRefCount(
@@ -123,6 +137,48 @@ namespace Yu5h1.UnifiedSolver
             }
         }
 
+        internal static bool TryGetRopeParticleRange(
+            SolverManager solver,
+            RopeGenerator rope,
+            out int particleOffset,
+            out int particleCount)
+        {
+            particleOffset = -1;
+            particleCount = 0;
+            if (!EnsureRopeContract(rope) ||
+                solver == null)
+            {
+                return false;
+            }
+
+            int requestedCount = rope.segments;
+            if (requestedCount <= 0)
+                return false;
+
+            try
+            {
+                particleOffset =
+                    (int)
+                    RopeParticleOffsetField.GetValue(
+                        rope);
+                particleCount = requestedCount;
+                return particleOffset >= 0 &&
+                    particleOffset <= solver.ActiveCount &&
+                    particleCount <=
+                        solver.ActiveCount -
+                        particleOffset;
+            }
+            catch (Exception exception)
+            {
+                particleOffset = -1;
+                particleCount = 0;
+                ReportAccessFailure(
+                    rope,
+                    exception);
+                return false;
+            }
+        }
+
         static FieldInfo ResolveField<
             TDeclaring,
             TValue>(
@@ -182,6 +238,30 @@ namespace Yu5h1.UnifiedSolver
                     "version.",
                     cloth);
                 _reportedClothContractFailure = true;
+            }
+            return false;
+        }
+
+        static bool EnsureRopeContract(
+            RopeGenerator rope)
+        {
+            if (rope == null)
+                return false;
+            if (RopeContractAvailable)
+                return true;
+
+            if (!_reportedRopeContractFailure)
+            {
+                Debug.LogError(
+                    "Unified Solver compatibility bridge " +
+                    "could not resolve the installed " +
+                    "RopeGenerator particle-range private " +
+                    "field contract. The original solver " +
+                    "remains unchanged; update " +
+                    "SolverManagerAccess for this solver " +
+                    "version.",
+                    rope);
+                _reportedRopeContractFailure = true;
             }
             return false;
         }

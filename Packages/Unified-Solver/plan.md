@@ -1279,6 +1279,29 @@ tailPeak = 2 × peakHalfAngle × bias
 - 轉向在滑行期間也跑，不只在推進期間：推力在身體轉過來之前抵達，只會把它推得更偏。
 - 僅限鏈狀拓樸。`GetFrame` 會把四面體的前三個角讀成頭、中、尾。
 
+### 18.2 介質對推進的影響：現況
+
+今天三個介質參數各自獨立，互不推導：
+
+| 參數 | 實際做什麼 |
+|---|---|
+| `density` | 只做浮力（`ApplyMedium` 的 `ratio = density × particleVolume × invMass`） |
+| `viscosity` | 以 `1 - exp(-viscosity × dt)` 的比例把速度拉向 `flow`。**沖走身體的是它，不是密度** |
+| `flow` | 被拉向的目標速度 |
+
+- **只有 density 與 viscosity 有交互作用**，而且形式明確：浮力先寫速度，水流再把它拉回去，穩態是「相對 flow 的終端速度 ≈ 浮力加速度 / viscosity」。同樣的浮力在黏稠介質裡浮得慢。
+- **`flow` 與 `density` 無關**，浮力是垂直的，flow 是任意方向，兩者在速度空間相加。
+- **重疊的 volume 逐個套用**，所以一個高 `viscosity` 的水管若泡在一般水體裡，水體會把它剛給的速度拉回一部分；水管的 `viscosity` 要明顯高於水體才壓得過。`submersion` 每顆粒子只算一次，不會因為疊兩層而超過 1。
+
+**身體能不能頂住水流，是純粹的速度比較**：`flow` 的大小對上 `SolverLocomotionProfile.speed`。密度不參與。被沖走的身體仍然在推進，只是輸了 —— 那比關掉推進力好看，也比較真實。
+
+**推進力目前只以 `submersion` 為閘門**，不看介質有多稠。所以同一隻魚在稀薄介質裡游得和在水裡一樣快。這是已知的缺口；把它補成物理一致的參數模型是還沒做的方向，見 `Documentation/Plan/PhysicsParticle.md` §9.9。
+
+**行走仍未解**，兩條限制先寫下來免得重新發現：
+
+- 接觸會在同一個 substep 從位置重建速度，所以**速度通道載不動走路**，需要位置通道的設計。
+- 球體構成的身體沒有滾動阻力，所以以摩擦為預算的位移會讓堆積物持續潛移（見 `.agents/skills/unified-solver.md`）。
+
 ## 19. speedLimit：削去超出的部分，而不是切平
 
 `speedLimit` 與 `speedDecayRate`，都在 `SolverParticleProfile` 上，0 為停用。

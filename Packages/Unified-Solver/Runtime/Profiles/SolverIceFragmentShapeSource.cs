@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Yu5h1.UnifiedSolver
+namespace Yu5h1Lib.UnifiedSolver
 {
     public sealed class SolverIceFragmentShapeSource :
         SolverShapeSource

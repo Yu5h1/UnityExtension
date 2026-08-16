@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace Yu5h1.UnifiedSolver
+namespace Yu5h1Lib.UnifiedSolver
 {
     [DefaultExecutionOrder(50)]
     // No RequireComponent back to the emitter.
@@ -290,7 +290,7 @@ namespace Yu5h1.UnifiedSolver
                     var entry = new SolverVolumeGPU
                     {
                         center = volume.Center,
-                        shape = (float)volume.shape,
+                        shape = (float)volume.Kind,
                         halfExtents = volume.HalfExtents,
                         effectType =
                             (float)effect.EffectType,

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace Yu5h1.UnifiedSolver
+namespace Yu5h1Lib.UnifiedSolver
 {
     [CreateAssetMenu(
         fileName = "OscillationModifier",

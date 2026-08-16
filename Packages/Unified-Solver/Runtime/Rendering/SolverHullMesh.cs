@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Yu5h1.UnifiedSolver
+namespace Yu5h1Lib.UnifiedSolver
 {
     // Builds an ordinary Mesh from a template's rest particle positions.
     //

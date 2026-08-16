@@ -4,7 +4,7 @@ using UnityEngine.Scripting.APIUpdating;
 using UnityEngine.Serialization;
 using Yu5h1Lib;
 
-namespace Yu5h1.UnifiedSolver
+namespace Yu5h1Lib.UnifiedSolver
 {
     // A region of space that is different from the rest of the scene.
     //
@@ -38,9 +38,57 @@ namespace Yu5h1.UnifiedSolver
         public static IReadOnlyList<SolverVolume>
             Registered => Active;
 
-        [Tooltip("Box has a flat top and therefore a waterline; an ellipsoid does not.")]
-        public SolverVolumeShape shape =
-            SolverVolumeShape.Box;
+        // Geometry comes from here and from nowhere else -- not from this
+        // component's own Transform.
+        //
+        // One source rather than "a provider, or else my Transform" because the
+        // fallback is what makes the failure silent: with two possible sources,
+        // dragging this object sometimes moves the region and sometimes does
+        // nothing, and nothing on screen says which. A volume with no provider
+        // simply does not run, and Reset gives every new one a PrimitiveShape
+        // so that state is never where anyone starts.
+        [Tooltip("The volume's geometry. Any component implementing IShapeProvider, including a ParticleSystemAddon.")]
+        [TypeRestriction(typeof(IShapeProvider))]
+        [SerializeField]
+        Object _shapeProvider;
+
+        // The enum this component carried before geometry became a provider.
+        //
+        // Kept with its original name and layout rather than migrated at load,
+        // so opening an old scene without saving it cannot lose the shape.
+        // OnValidate folds it into an added PrimitiveShape on first inspection;
+        // the values were chosen to line up, so Box and Sphere carry across as
+        // themselves.
+        [HideInInspector]
+        [SerializeField]
+        [FormerlySerializedAs("shape")]
+        SolverVolumeShape _legacyShape = SolverVolumeShape.Box;
+
+        IShapeProvider _resolvedShape;
+
+        // Accepts a GameObject as well as a component, because dragging a
+        // provider that lives on another object out of the hierarchy hands over
+        // the GameObject, and the difference is invisible in the field.
+        public IShapeProvider Shape
+        {
+            get
+            {
+                if (_resolvedShape != null)
+                    return _resolvedShape;
+
+                _resolvedShape =
+                    _shapeProvider as IShapeProvider;
+
+                if (_resolvedShape == null &&
+                    _shapeProvider is GameObject owner)
+                {
+                    _resolvedShape =
+                        owner.GetComponent<IShapeProvider>();
+                }
+
+                return _resolvedShape;
+            }
+        }
 
         [Tooltip("What this region does. Several may act on the same space.")]
         [Inline]
@@ -58,26 +106,34 @@ namespace Yu5h1.UnifiedSolver
         [FormerlySerializedAs("profile")]
         SolverMediumProfile _legacyProfile;
 
-        public Vector3 Center => transform.position;
+        public ShapeKind Kind =>
+            Shape == null ? ShapeKind.Box : Shape.Kind;
 
+        public Vector3 Center =>
+            Shape == null
+                ? transform.position
+                : Shape.Center;
+
+        // Half of the provider's full size. For a cone the depth axis is the
+        // narrow-end diameter rather than an extent, and halving it is still
+        // correct -- the kernel reads it as the second radius.
         public Vector3 HalfExtents =>
-            0.5f * AbsoluteScale;
+            Shape == null
+                ? Vector3.zero
+                : 0.5f * Shape.Size;
 
-        public Vector3 AxisX => transform.right;
-        public Vector3 AxisY => transform.up;
-        public Vector3 AxisZ => transform.forward;
+        // The region's orientation, which is the provider's and not this
+        // component's. Anything that means "in the volume's own axes" has to
+        // read this -- reading `transform.rotation` looks identical until a
+        // provider sits on another GameObject, and then it is silently wrong.
+        public Quaternion Rotation =>
+            Shape == null
+                ? transform.rotation
+                : Shape.Rotation;
 
-        Vector3 AbsoluteScale
-        {
-            get
-            {
-                Vector3 scale = transform.lossyScale;
-                return new Vector3(
-                    Mathf.Abs(scale.x),
-                    Mathf.Abs(scale.y),
-                    Mathf.Abs(scale.z));
-            }
-        }
+        public Vector3 AxisX => Rotation * Vector3.right;
+        public Vector3 AxisY => Rotation * Vector3.up;
+        public Vector3 AxisZ => Rotation * Vector3.forward;
 
         public int EffectCount =>
             (effects == null ? 0 : effects.Length) +
@@ -100,13 +156,9 @@ namespace Yu5h1.UnifiedSolver
         {
             get
             {
-                Vector3 half = HalfExtents;
-                if (half.x <= 0f ||
-                    half.y <= 0f ||
-                    half.z <= 0f)
-                {
+                IShapeProvider shape = Shape;
+                if (shape == null || !shape.IsUsable)
                     return false;
-                }
 
                 int count = EffectCount;
                 for (int i = 0; i < count; i++)
@@ -120,8 +172,83 @@ namespace Yu5h1.UnifiedSolver
             }
         }
 
+#if UNITY_EDITOR
+        /// <summary>
+        ///   Prints the exact values this volume would upload for each effect.
+        /// </summary>
+        /// <remarks>
+        ///   Everything between an authored field and the kernel is derived --
+        ///   the provider's frame, the effect's payload packing -- and none of
+        ///   it is visible once it reaches the GPU. This runs the same code the
+        ///   runner does and shows the result, so a wrong direction or a zero
+        ///   can be read instead of inferred.
+        /// </remarks>
+        [ContextMenu("Log Uploaded Values")]
+        void LogUploadedValues()
+        {
+            IShapeProvider shape = Shape;
+            var report = new System.Text.StringBuilder();
+            report.AppendLine($"{name}: usable={IsUsable}");
+            report.AppendLine(
+                shape == null
+                    ? "  shape provider: NONE"
+                    : $"  shape provider: {shape.GetType().Name} " +
+                      $"usable={shape.IsUsable} kind={Kind}");
+            report.AppendLine(
+                $"  center={Center} halfExtents={HalfExtents}");
+            report.AppendLine(
+                $"  axisX={AxisX} axisY={AxisY} axisZ={AxisZ}");
+
+            int count = EffectCount;
+            report.AppendLine($"  effects={count}");
+
+            for (int i = 0; i < count; i++)
+            {
+                SolverVolumeEffectProfile effect = GetEffect(i);
+                if (effect == null)
+                {
+                    report.AppendLine($"  [{i}] null");
+                    continue;
+                }
+
+                var entry = new SolverVolumeGPU
+                {
+                    center = Center,
+                    shape = (float)Kind,
+                    halfExtents = HalfExtents,
+                    effectType = (float)effect.EffectType,
+                    axisX = AxisX,
+                    invert = effect.actOutside ? 1f : 0f,
+                    axisY = AxisY,
+                    axisZ = AxisZ
+                };
+                effect.Write(this, ref entry);
+
+                report.AppendLine(
+                    $"  [{i}] {effect.name} ({effect.GetType().Name}) " +
+                    $"enabled={effect.enabled} type={effect.EffectType}");
+                report.AppendLine(
+                    $"       payloadX={entry.payloadX} " +
+                    $"payloadY={entry.payloadY} " +
+                    $"payloadZ={entry.payloadZ}");
+                report.AppendLine(
+                    $"       payloadVector={entry.payloadVector} " +
+                    $"(magnitude {entry.payloadVector.magnitude})");
+            }
+
+            Debug.Log(report.ToString(), this);
+        }
+#endif
+
+        void Reset()
+        {
+            _shapeProvider =
+                GetComponent<IShapeProvider>() as Object;
+        }
+
         void OnEnable()
         {
+            _resolvedShape = null;
             if (!Active.Contains(this))
                 Active.Add(this);
         }
@@ -134,6 +261,9 @@ namespace Yu5h1.UnifiedSolver
 #if UNITY_EDITOR
         void OnValidate()
         {
+            _resolvedShape = null;
+            EnsureShapeProvider();
+
             if (_legacyProfile == null)
                 return;
 
@@ -148,33 +278,60 @@ namespace Yu5h1.UnifiedSolver
             _legacyProfile = null;
             UnityEditor.EditorUtility.SetDirty(this);
         }
+
+        // Deferred because Unity refuses AddComponent from inside OnValidate,
+        // and guarded on the object surviving the wait so closing a scene or
+        // leaving play mode does not trip it.
+        //
+        // The presence of a provider is itself the "already migrated" marker,
+        // so no extra flag has to be kept honest.
+        void EnsureShapeProvider()
+        {
+            if (_shapeProvider != null)
+                return;
+
+            SolverVolume owner = this;
+            UnityEditor.EditorApplication.delayCall += () =>
+            {
+                if (owner == null ||
+                    owner._shapeProvider != null)
+                {
+                    return;
+                }
+
+                var existing =
+                    owner.GetComponent<IShapeProvider>();
+                if (existing == null)
+                {
+                    PrimitiveShape added =
+                        UnityEditor.Undo.AddComponent<PrimitiveShape>(
+                            owner.gameObject);
+                    added.kind =
+                        (ShapeKind)(int)owner._legacyShape;
+                    existing = added;
+                }
+
+                owner._shapeProvider = existing as Object;
+                owner._resolvedShape = null;
+                UnityEditor.EditorUtility.SetDirty(owner);
+            };
+        }
 #endif
 
-        void OnDrawGizmos()
-        {
-            Draw(new Color(0.2f, 0.6f, 1f, 0.5f));
-        }
-
+        // Drawn from the provider, not from this Transform, so the outline is
+        // always where the region actually is even when the provider lives on
+        // another GameObject.
+        //
+        // Only when selected, because a provider such as a ParticleSystem draws
+        // its own shape and two outlines in the scene at all times is noise.
+        // Kept rather than dropped for that reason, though: this one shows what
+        // the solver derived, and the first cone it drew disagreed with the
+        // ParticleSystem's own gizmo, which is how a reversed axis was caught
+        // before anything simulated it.
         void OnDrawGizmosSelected()
         {
-            Draw(new Color(0.3f, 0.8f, 1f, 1f));
-        }
-
-        void Draw(Color wire)
-        {
-            Matrix4x4 previous = Gizmos.matrix;
-            Gizmos.matrix = Matrix4x4.TRS(
-                Center,
-                transform.rotation,
-                AbsoluteScale);
-            Gizmos.color = wire;
-            if (shape == SolverVolumeShape.Box)
-                Gizmos.DrawWireCube(
-                    Vector3.zero, Vector3.one);
-            else
-                Gizmos.DrawWireSphere(
-                    Vector3.zero, 0.5f);
-            Gizmos.matrix = previous;
+            ShapeGizmos.Draw(
+                Shape, new Color(0.3f, 0.8f, 1f, 1f));
         }
     }
 }

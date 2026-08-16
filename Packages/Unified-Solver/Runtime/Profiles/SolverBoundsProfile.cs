@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Yu5h1.UnifiedSolver
+namespace Yu5h1Lib.UnifiedSolver
 {
     // Sends a body back to where it was born when it reaches somewhere it should
     // not be, and hides the journey.

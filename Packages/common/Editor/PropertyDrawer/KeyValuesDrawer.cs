@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEditor;
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Yu5h1Lib.Serialization.Editor
 {
@@ -12,6 +14,9 @@ namespace Yu5h1Lib.Serialization.Editor
     {
         private const float KeyWidthRatio = 0.4f;
         private const float Spacing = 4f;
+
+        /// <summary> foldout 小三角形佔用的寬度（Unity 的箭頭圖是固定尺寸，EditorStyles.foldout.padding 不可靠） </summary>
+        private const float FoldoutWidth = 14f;
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
@@ -38,16 +43,22 @@ namespace Yu5h1Lib.Serialization.Editor
                 EditorGUI.DrawRect(warningRect, new Color(1f, 0.3f, 0.3f, 0.3f));
             }
 
+            // Value 若會畫出 foldout，小三角形會佔掉 Value 左側的空間：
+            // Key 讓出這段寬度，Value 再往右推回來，小三角形就落在中間讓出的空位
+            bool hasFoldout = HasFoldout(valueProp);
+            float foldoutWidth = hasFoldout ? FoldoutWidth : 0f;
+
             // 計算 Key 和 Value 的寬度
             float totalWidth = position.width;
-            float keyWidth = (totalWidth - Spacing) * KeyWidthRatio;
-            float valueWidth = totalWidth - keyWidth - Spacing;
+            float keyWidth = (totalWidth - Spacing) * KeyWidthRatio - foldoutWidth;
+            keyWidth = Mathf.Max(keyWidth, EditorGUIUtility.singleLineHeight);
+            float valueWidth = totalWidth - keyWidth - Spacing - foldoutWidth;
 
             // Key 欄位
             var keyRect = new Rect(position.x, position.y, keyWidth, EditorGUIUtility.singleLineHeight);
-            
+
             // Value 欄位
-            var valueRect = new Rect(position.x + keyWidth + Spacing, position.y, valueWidth, position.height);
+            var valueRect = new Rect(position.x + keyWidth + Spacing + foldoutWidth, position.y, valueWidth, position.height);
 
             // 繪製 Key
             EditorGUI.BeginChangeCheck();
@@ -66,7 +77,7 @@ namespace Yu5h1Lib.Serialization.Editor
                     EditorGUI.PropertyField(keyRect, keyProp, GUIContent.none);
                 }
 
-                if (IsExpandableProperty(valueProp))
+                if (hasFoldout)
                 {
                     valueRect.height = EditorGUIUtility.singleLineHeight;
                     EditorGUI.PropertyField(valueRect, valueProp, GUIContent.none, true);
@@ -88,21 +99,135 @@ namespace Yu5h1Lib.Serialization.Editor
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             var valueProp = property.FindPropertyRelative("value");
-            
-            if (valueProp != null && IsExpandableProperty(valueProp) )
-            {
-                return EditorGUI.GetPropertyHeight(valueProp, true);
-            }
-            
-            return EditorGUIUtility.singleLineHeight;
+
+            if (valueProp == null)
+                return EditorGUIUtility.singleLineHeight;
+
+            return Mathf.Max(EditorGUIUtility.singleLineHeight, EditorGUI.GetPropertyHeight(valueProp, true));
         }
 
-        private bool IsExpandableProperty(SerializedProperty property)
+        /// <summary>
+        /// 判斷這個 property 在 Inspector 上會不會畫出 foldout 小三角形。
+        /// 條件為「陣列」或「有可見子欄位的 class / struct」，
+        /// 且該型別沒有自訂 PropertyDrawer（有 drawer 時由 drawer 自己畫，通常是單行、沒有三角形）。
+        /// </summary>
+        private bool HasFoldout(SerializedProperty property)
         {
-            return property.propertyType == SerializedPropertyType.Generic ||
-                   property.propertyType == SerializedPropertyType.ManagedReference ||
-                   (property.isArray && property.propertyType != SerializedPropertyType.String);
-                   
+            if (property.isArray && property.propertyType != SerializedPropertyType.String)
+                return true;
+
+            if (property.propertyType != SerializedPropertyType.Generic &&
+                property.propertyType != SerializedPropertyType.ManagedReference)
+                return false;
+
+            if (!property.hasVisibleChildren)
+                return false;
+
+            return !HasCustomDrawer(GetValueType());
+        }
+
+        private Type _valueType;
+        private bool _valueTypeResolved;
+
+        /// <summary> 從 fieldInfo 取出 KeyValue&lt;TKey, TValue&gt; 的 TValue </summary>
+        private Type GetValueType()
+        {
+            if (_valueTypeResolved)
+                return _valueType;
+
+            _valueTypeResolved = true;
+
+            // 欄位可能是 KeyValue、KeyValue[] 或 List<KeyValue>
+            var type = fieldInfo?.FieldType;
+            if (type != null && type.IsArray)
+                type = type.GetElementType();
+            else if (type != null && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+                type = type.GetGenericArguments()[0];
+
+            for (; type != null; type = type.BaseType)
+            {
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValue<,>))
+                {
+                    _valueType = type.GetGenericArguments()[1];
+                    break;
+                }
+            }
+
+            return _valueType;
+        }
+
+        private static readonly Dictionary<Type, bool> _customDrawerCache = new Dictionary<Type, bool>();
+
+        /// <summary> 型別是否有自訂 PropertyDrawer（走 UnityEditor 內部 API，取不到時視為沒有） </summary>
+        private static bool HasCustomDrawer(Type type)
+        {
+            if (type == null)
+                return false;
+
+            if (_customDrawerCache.TryGetValue(type, out bool cached))
+                return cached;
+
+            bool result = false;
+            var method = GetDrawerTypeResolver();
+
+            if (method != null)
+            {
+                try
+                {
+                    // 各 Unity 版本的參數不同，除了第一個型別以外都給預設值
+                    var parameters = method.GetParameters();
+                    var args = new object[parameters.Length];
+                    args[0] = type;
+
+                    for (int i = 1; i < parameters.Length; i++)
+                    {
+                        var parameterType = parameters[i].ParameterType;
+                        args[i] = parameterType.IsArray ? Array.CreateInstance(parameterType.GetElementType(), 0)
+                                : parameterType.IsValueType ? Activator.CreateInstance(parameterType)
+                                : null;
+                    }
+
+                    result = method.Invoke(null, args) != null;
+                }
+                catch
+                {
+                    result = false;
+                }
+            }
+
+            _customDrawerCache[type] = result;
+            return result;
+        }
+
+        private static MethodInfo _drawerTypeResolver;
+        private static bool _drawerTypeResolverResolved;
+
+        private static MethodInfo GetDrawerTypeResolver()
+        {
+            if (_drawerTypeResolverResolved)
+                return _drawerTypeResolver;
+
+            _drawerTypeResolverResolved = true;
+
+            var utility = typeof(EditorGUI).Assembly.GetType("UnityEditor.ScriptAttributeUtility");
+            if (utility == null)
+                return null;
+
+            foreach (var method in utility.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (method.Name != "GetDrawerTypeForType")
+                    continue;
+
+                var parameters = method.GetParameters();
+                if (parameters.Length == 0 || parameters[0].ParameterType != typeof(Type))
+                    continue;
+
+                // 取參數最少的多載，減少版本差異的影響
+                if (_drawerTypeResolver == null || parameters.Length < _drawerTypeResolver.GetParameters().Length)
+                    _drawerTypeResolver = method;
+            }
+
+            return _drawerTypeResolver;
         }
 
         /// <summary>

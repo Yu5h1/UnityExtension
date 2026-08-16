@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Yu5h1.UnifiedSolver
+namespace Yu5h1Lib.UnifiedSolver
 {
     // Base polyhedra for the rigid cluster variants, and the triangle lists that
     // close them.

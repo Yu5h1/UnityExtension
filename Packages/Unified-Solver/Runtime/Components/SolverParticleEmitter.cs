@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using Yu5h1Lib;
 
-namespace Yu5h1.UnifiedSolver
+namespace Yu5h1Lib.UnifiedSolver
 {
     // The emitter owns its renderer and modifier runner outright.
     //

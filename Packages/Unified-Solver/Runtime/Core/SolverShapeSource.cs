@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Yu5h1.UnifiedSolver
+namespace Yu5h1Lib.UnifiedSolver
 {
     // Supplies a small, fixed library of fragment templates: each one a set of
     // rest particle positions in local space.

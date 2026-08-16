@@ -74,6 +74,19 @@ Within the runner: speed limit → upload volumes → medium → roll damping �
 modifiers → bounds → sleep. Bounds is after the modifiers so a teleport is the
 last positional word of the step; sleep is after so a driven body reads as moving.
 
+**Registering solver data is on the same clock as stepping it.** `SolverManager`
+steps in `FixedUpdate` and uploads whatever is dirty at the top of that step, so
+`AddParticle`, `AddDistanceConstraint` and their kin belong in `FixedUpdate` too.
+Doing it from `Update` compiles, runs, and looks correct — it just guarantees the
+body is simulated for at least one step without whatever was being added, because
+every `FixedUpdate` in a frame has already run by the time `Update` is reached.
+The symptom is a single wrong-looking first step, which is exactly the kind of
+thing that gets blamed on the parameter that was being registered.
+
+This is one-time setup, not simulation, which is what makes `Update` look
+reasonable. It is not: what decides the clock is which data is touched, not
+whether the work repeats.
+
 ## The two channels
 
 Only two ways to affect the simulation from outside. Picking wrong is the most
@@ -89,6 +102,54 @@ common way to build something that does nothing.
 
 A control that damps a settled body through the velocity channel cannot work.
 That has been built and removed twice here.
+
+**Nothing damps a vendored generator's rope or cloth except the global
+`SolverManager.damping`.** Constraint damping enters as
+`gamma = compliance * beta / subDt`, so a constraint stiff enough to be worth
+having has a compliance near zero and can carry no damping at all — and even
+when it can, it damps the rate the constraint is violated, never a whole body
+swinging as a pendulum with every constraint satisfied. `speedLimit` does not
+reach these bodies either: it lives in the extension's modifier runner, which
+only walks emitter instances. Global `damping` applies
+`v *= 1 - damping * subDt` per substep, which integrates to roughly
+`e^(-damping * t)` — so the number is the reciprocal of a decay time constant,
+and it is scene-wide.
+
+## Where the cost actually is
+
+Computing is cheap. **Moving data between CPU and GPU is slow, and waiting for it
+is the expensive thing.** Judge any addition here by asking whether it makes
+something stand at that door once per frame.
+
+- Particles live in a `ComputeBuffer`. Modifiers read, modify and write that same
+  buffer in place, and the renderer reads it too, so nothing round-trips. Keep it
+  that way: a modifier written in C# would have to pull the buffer back.
+- The **rigid** path does round-trip — the CPU builds the matrices for
+  `RenderMeshInstanced`, and the vendored solver's rigid-body readback is
+  synchronous. The **articulated** path does not, because the shader reads the
+  buffer directly. That makes a fish cheaper per instance than a fragment despite
+  being the more complex body.
+- Instance count within one emitter is **not** a cost to worry about: every
+  modifier is one dispatch for all of them. 100 and 1000 cost the same in
+  dispatches. What multiplies is the **number of emitters** — roughly eight
+  dispatches each per FixedUpdate, plus a redundant copy of the whole volume
+  upload per runner.
+
+## One thread is one instance, and that has a ceiling
+
+Every kernel here is dispatched as `ceil(instanceCount / 64)` groups, and each
+thread loops over its own instance's particles **serially**.
+
+This is a design decision, not an oversight: threads cannot communicate, and a
+momentum-neutral drive has to subtract the mean over *its own body*. One thread
+owning one whole body is what makes that mean available with no coordination.
+
+The ceiling follows directly. At 4 particles per instance the loop is optimal. At
+a few thousand — a lattice body, a cloth-sized soft body — one thread runs
+thousands of iterations while the other 63 in its group idle. Kernels that are
+genuinely **per particle** (the medium first) would have to be re-dispatched per
+particle with an instance lookup before this package can carry bodies that large.
+See `Documentation/Plan/SolverParticle.md`.
 
 ## Setting up water
 
@@ -176,6 +237,35 @@ worlds, no bridge. Use the vendored `SolverBoxCollider`, `SolverSphereCollider`
 or `SolverCapsuleCollider`. Geometry comes from the Transform, and a box is a
 solid rather than a container, so a holding tank is built from thin walls.
 
+## Anchoring particles to Transforms
+
+`PhysicsParticleAnchor` holds chosen particles of a body at scene Transforms.
+**One Transform binds many particles**, each keeping its own captured offset, so
+anchoring an edge of cloth to a hand preserves that edge's shape.
+
+It is backend neutral and resolves nothing itself. Pair it with the glue for the
+body you have — both vendored generators need one, because they are read-only and
+cannot implement the interface:
+
+| Body | Glue component | Selector |
+|---|---|---|
+| `ClothGenerator` | `SolverClothParticles` | `(x, y)` |
+| `RopeGenerator` | `SolverRopeParticles` | `(segment, 0)` |
+
+- Offsets are **captured at author time** from the body's rest layout, not at
+  runtime — in edit mode the generators have not spawned any particles, so the
+  glue reproduces their spawn maths instead of reading a buffer. Move the body
+  afterwards and press **Recapture Offsets**, or the offsets point at the old
+  layout.
+- **Turn off `RopeGenerator.fixStart` / `fixEnd` for any end an anchor holds.**
+  They pin the end particle by setting inverse mass to zero. Anchoring still
+  works, but two mechanisms then govern one particle and behaviour becomes
+  impossible to attribute.
+- Anchoring sets `invMass = 0` and **never restores it**. An anchor is permanent
+  by intent; use `ClothGrabber` for grab-and-release, which does restore it.
+- Runs at `-100`, before the solver, because an anchor states where a particle
+  *is*. Do not move it after the solver like a modifier.
+
 ## Settings that silently ruin things
 
 - `particleRadius` larger than a body's smallest dimension makes the collision
@@ -190,6 +280,28 @@ solid rather than a container, so a holding tank is built from thin walls.
   `maxDepenetrationSpeed` then throws them apart on the first frame. Divide the
   volume by the count and compare the spacing against the body size before
   blaming the launch on anything else.
+- **Self-collision on a chain or lattice body makes its own neighbours push
+  each other apart.** `enableSelfCollision` sets the body's phase to
+  `PhaseNone`, which is `0`, and the contact kernel only skips a pair when both
+  share the same **non-zero** phase — so nothing is excluded, adjacent particles
+  included. Contact then demands `2 * particleRadius` between two particles a
+  distance constraint is holding at `spacing`. Whenever
+  `spacing < 2 * particleRadius` the two fight every step and the body buckles
+  sideways to make room: a rope goes visibly crinkled, cloth ripples. The phase
+  system is per body and all-or-nothing, so fine spacing and self-collision are
+  mutually exclusive without an adjacency exclusion in the kernel. Check
+  `spacing` against the **global** `particleRadius` before enabling it.
+- **XPBD `compliance` is scaled by the substep dt, not the frame dt**, so its
+  useful values are far smaller than they look. `alphaTilde = compliance / dt^2`
+  with `dt = fixedDeltaTime / substeps` — at the default 30 substeps that is
+  `0.02 / 30 = 6.7e-4`, so compliance is multiplied by about **2.2 million**
+  before it reaches the solve. The correction applied is
+  `wSum / (wSum + alphaTilde)`, and `wSum` is 2 for two free unit-mass
+  particles. So compliance `1e-6` is roughly half stiffness, `1e-5` is soft,
+  and anything from `1e-4` up applies well under 1% and is indistinguishable
+  from having added no constraint at all. A "reasonable-looking" 0.001 does
+  nothing, silently. Note it also moves with mass: heavier particles mean a
+  smaller `wSum`, so the same compliance reads as softer.
 - Low `frictionKinetic` is right for ice and wrong for a pile that holds its
   shape. Friction itself is correct and substep-independent — the per-substep
   limit `mu * penetration` works out to `a = mu * g` — but it turns sliding into

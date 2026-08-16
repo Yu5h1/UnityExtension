@@ -1,7 +1,8 @@
 {
     "name": "Yu5h1.Yu5h1libfxunifiedsolver.Editor",
     "references": [
-      "Yu5h1.Yu5h1libfxunifiedsolver"
+      "Yu5h1.Yu5h1libfxunifiedsolver",
+      "GUID:0a2ad6279ef01794b8610804d06308fa"
     ],
     "includePlatforms": [
         "Editor"

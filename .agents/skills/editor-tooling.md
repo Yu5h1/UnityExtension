@@ -2,6 +2,44 @@
 
 Use this skill for Yu5h1Lib Inspector, PropertyDrawer, EditorWindow, context-menu, shortcut, AssetDatabase, sub-asset, and other Editor extension work.
 
+## Derive from `Editor<T>`, never from `UnityEditor.Editor`
+
+Every custom inspector derives from `Yu5h1Lib.EditorExtension.Editor<TargetType>`
+(`Unity/UnityExtension/Editor/Source/EditorAdvanced.cs`). It ships inside the
+precompiled `Packages/Core/Editor/Yu5h1Lib.Editor.dll`, which every asmdef
+auto-references, so there is nothing to add to `references` — just
+`using Yu5h1Lib.EditorExtension;`. `Editor<T>` and `UnityEditor.Editor` differ in
+arity, so both `using` directives can coexist without ambiguity.
+
+What the base class already does, and therefore what not to hand-write:
+
+- `targetObject` and `targetObjects` are already cast to `TargetType`. Never
+  write `(Foo)target` or `targets.Cast<Foo>()`.
+- The default `OnInspectorGUI` runs `this.Iterate(DrawProperty, DrawMonoScript)`:
+  it walks the whole serialized object, draws the `m_Script` row disabled, wraps
+  every array in a `ReorderableListEnhanced`, and applies modified properties
+  inside one change check. An inspector that only needs one field drawn
+  differently overrides `DrawProperty`, not `OnInspectorGUI`.
+- `TryPrepareList(property, out var list)` yields that same reorderable list for
+  a property drawn by hand, cached per property path.
+
+Three traps:
+
+- **`Iterate` never calls `serializedObject.Update()`**, unlike Unity's own
+  `DrawDefaultInspector`. Nothing outside the inspector — `OnSceneGUI`, an Undo,
+  another editor — shows up until something else updates the serialized object.
+  An editor that edits its target anywhere but the inspector calls
+  `serializedObject.Update()` itself before `base.OnInspectorGUI()`.
+- `EditorAdvanced.OnDisable` is `protected virtual` and clears the cached lists.
+  A plain `void OnDisable()` in the derived class hides it — a CS0114 warning and
+  stale lists. Write `protected override void OnDisable()` and call
+  `base.OnDisable()`.
+- `EnteredPlayMode`, `ExitingPlayMode`, `EnteredEditMode`, `ExitingEditMode` and
+  `HierarchyChanged` are **not wired by default**. They reach an editor only
+  after `EditorAdvanced.RegisterAdvancedMethods(this)`, and only while the
+  `UseAdvancedEvents` EditorPref is on — it defaults to `false`, and no editor in
+  the library registers today. Treat them as opt-in, not as events that fire.
+
 ## Separate with `[Space]`; add `[Header]` only when it says something new
 
 Groups need separating, not always labelling. Use `[Space]` for the gap, and
@@ -103,6 +141,9 @@ Do not create a convenience command that merely duplicates a discoverable native
 
 ## Existing helpers
 
+- `Unity/UnityExtension/Editor/Source/EditorAdvanced.cs` — `EditorAdvanced` and
+  `Editor<TargetType>`, the base class every inspector uses. See the first
+  section.
 - `Packages/common/Editor/Utility/SubAssetUtility.cs` — main/sub-asset creation, lookup, and removal.
 - `Packages/common/Editor/Utility/ParameterObjectUtility.cs` — resolves concrete ParameterObject implementations.
 - `Runtime/Utility/StringOptionsProvider.cs` — option-provider registry used by Editor drawers.

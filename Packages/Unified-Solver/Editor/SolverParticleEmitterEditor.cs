@@ -1,6 +1,6 @@
 using UnityEditor;
 using UnityEngine;
-using Yu5h1.UnifiedSolver;
+using Yu5h1Lib.UnifiedSolver;
 
 // Draws the emitter's hidden companions as modules, the way Unity's own
 // ParticleSystem inspector draws ParticleSystemRenderer.

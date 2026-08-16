@@ -15,10 +15,8 @@ namespace Yu5h1Lib.EditorExtension
 
             float singleLineHeight = EditorGUIUtility.singleLineHeight;
 
-            // 計算實際 label 結束位置
             float labelEndX = position.x + EditorGUIUtility.labelWidth - (EditorGUI.indentLevel * 15);
 
-            // Toggle 放在 label 和 field 之間
             Rect toggleRect = new Rect(
                 labelEndX - 20,
                 position.y,
