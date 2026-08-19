@@ -23,7 +23,7 @@ namespace Yu5h1Lib.UI
             if (layout == null)
             {
                 Debug.LogError(
-                    $"[LayoutGroupAide] No LayoutGroup found on {name}"
+                    $"[{nameof(LayoutGroupAddon)}] No LayoutGroup found on {name}"
                 );
                 enabled = false;
                 return;

@@ -6,8 +6,8 @@ using Yu5h1Lib.EditorExtension;
 
 namespace Yu5h1Lib
 {
-	[CustomEditor(typeof(AudioSourceAide))]
-	public class AudioSourceAideEditor : Editor<AudioSourceAide>
+	[CustomEditor(typeof(AudioSourceAddon))]
+	public class AudioSourceAddonEditor : Editor<AudioSourceAddon>
 	{
 		AudioSource audio => targetObject.component;
         float playbackNormalize => audio.time / audio.clip.length;
