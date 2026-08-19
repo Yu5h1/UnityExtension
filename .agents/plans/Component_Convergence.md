@@ -424,7 +424,34 @@ Animation/Runtime/Component/    材質相關檔案全部移出
 
 ⚠️ 5.2-5.3 不可逆且需人工核對，比照 Timer 重構前例由**使用者自行處理**。
 
-**遷移範圍已掃描完畢**（2026-08-18）：`MaterialSequence`、`RendererAddon`、`MaterialController`、`RendererMaterialController`、`RendererMaterialResolver` 與三個 driver，在 Yu5h1Lib 內除上述測試場景外**無任何 `.asset` / `.unity` / `.prefab` 掛載點**，在 `W:\UnityProject\Assets` 內**零掛載點**。
+⚠️ **2026-08-18 那次掃描的 W: 結論是錯的**（2026-08-19 更正）。當時掃的路徑是 `W:\UnityProject\Assets`，
+但該路徑不存在——W: 底下是一層專案資料夾（`W:\UnityProject\<專案>\Assets`），所以那次掃描實際上什麼都沒讀到，
+卻被記成「零掛載點」。**Yu5h1Lib 內的結論（除測試場景外無掛載點）仍然成立。**
+
+**正確的 W: 掃描結果**（2026-08-19，比對 script GUID）：掛載點全部集中在 `W:/UnityProject/BonghuoVR/Assets/StaticResources/`。
+
+| 檔案 | 掛的東西 | 狀態 |
+|---|---|---|
+| `Prefab/Sulfuric Fire Line.prefab` | `LineRendererAddon` + `MaterialController` | 使用者已遷移完成（`sources` / `driver` 已接） |
+| `Prefab/Sulfuric Fire Line_TextureSheet.asset` | `TextureSheetDriver` | 已遷移（`_propertyName` / `frameStep.fps: 25`） |
+| `Prefab/DirectionIndicator.prefab` | `LineRendererAddon` | 無材質相依，不需處理 |
+| `Animation/高密度.asset`、`低密度.asset` | `TextureSequenceDriver` | 未遷移，但舊值 `_BaseMap` / `fps: 12` 與新預設完全相同，重存後無損失 |
+| **`Torch Performance.prefab`** | **`RendererMaterialController`（型別已刪除）** | **需人工處理，見下** |
+| **`Animation/5x5 24fps.asset`** | `TextureSheetDriver` | **`fps: 24` 會遺失**，見下 |
+
+**兩件需要人工處理**
+
+1. `Torch Performance.prefab` 上有一顆 `RendererMaterialController`（`&615836047818230860`），型別已刪除 → missing script。
+   它的 `resolver` 指向 `Animation/5x5 24fps.asset`。同一顆 GameObject 上已經有 `LineRendererAddon`，
+   而決議 9 之後它本身就是 `IReadOnlyList<Material>`，所以改法與已完成的 `Sulfuric Fire Line.prefab` 相同：
+   移除 missing script，改掛 `MaterialController`，`sources` 指向那顆 `LineRendererAddon`，`driver` 指向 `5x5 24fps.asset`。
+2. `Animation/5x5 24fps.asset` 的 `fps: 24` 是舊 `MaterialDriver` 的欄位，已下放進 `frameStep`。
+   欄位名改變 → 重存後靜默變成 `FrameStepResolver` 的預設 12，動畫變半速。**重存後要手動改回 24。**
+   （`高密度` / `低密度` 剛好是 12，所以只有這一顆受影響。）
+
+`LineRendererAddon` 在 BonghuoVR 有四個掛載點，因此決議 9 的「每個 `LineRendererAddon` 在 Awake 複製一份材質」
+不是零成本的假想情境，而是四顆實際材質。這不改變該決議的結論（預設維持 false 是安全方向），但先前記錄的
+「`LineRendererAddon` 零掛載點」同樣出自那次錯誤掃描，一併更正。
 
 ### 6. 驗證
 
