@@ -515,6 +515,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!114 &221383589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc2224d27fd0046409971a3c56dbe346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Yu5h1Lib.Common::Yu5h1Lib.TextureScrollDriver
+  _propertyName: _BaseMap
+  speed: {x: 1, y: 0}
 --- !u!1 &317782309
 GameObject:
   m_ObjectHideFlags: 0
@@ -6619,8 +6633,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8135dbb06a62a2d43a83aebe56eab56c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Yu5h1Lib.Animation::Yu5h1Lib.RendererMaterialController
-  _component: {fileID: 0}
-  resolver: {fileID: 0}
 --- !u!114 &1698645395
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6633,12 +6645,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd94667e4edd11c4e8999ea0125ff314, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Yu5h1Lib.Common::MaterialController
-  includeChildren: 1
-  autoFindOnStart: 1
-  useSharedMaterial: 0
-  enableShaderFilter: 0
-  shaderNameFilters: []
-  logOperations: 0
+  sources: []
+  driver: {fileID: 0}
 --- !u!65 &1698645396
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -11779,11 +11787,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1978910203}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8135dbb06a62a2d43a83aebe56eab56c, type: 3}
+  m_Script: {fileID: 11500000, guid: dd94667e4edd11c4e8999ea0125ff314, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Yu5h1Lib.Animation::Yu5h1Lib.RendererMaterialController
-  _component: {fileID: 1978910205}
-  resolver: {fileID: 0}
+  sources:
+  - {fileID: 0}
+  driver: {fileID: 221383589}
 --- !u!1 &2043261186 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2244556015238258711, guid: c455d060e38c8214e92135af7b9f9e75, type: 3}

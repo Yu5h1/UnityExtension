@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Yu5h1Lib.Animation
 {
-    public class LineRendererAddon : ComponentController<LineRenderer>, IColor
+    public class LineRendererAddon : RendererAddon<LineRenderer>, IColor
     {
         public LineRenderer lineRenderer => component;
         [SerializeField] private List<Transform> _points;

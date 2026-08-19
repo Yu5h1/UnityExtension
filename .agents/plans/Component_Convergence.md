@@ -87,18 +87,20 @@ UnityExtension
 | 對一組 Material 做事（改參數、每幀驅動 resolver） | `MaterialController` |
 | 承載一組材質資料 + 循環切換 | `MaterialArrayObject` |
 
-- `MaterialController` 現有的 `includeChildren` / `useSharedMaterial` / `enableShaderFilter` 全是搜集策略，移往 `RendererAddon`。這三個欄位跟「改參數」黏在同一顆，就是問題 1-4 那種「設計一半」感受的來源。
+- `MaterialController` 現有的 `includeChildren` / `useSharedMaterial` / `enableShaderFilter` 全是搜集策略，移往 `RendererAddon`。這三個欄位跟「改參數」黏在同一顆，就是問題 1-4 那種「設計一半」感受的來源。（`includeChildren` 後續由決議 8 直接刪除，不遷移。）
 - **`RendererMaterialController` 取消**。它只是「單一 Renderer + 每幀驅動」，由 `MaterialController` 天然涵蓋。
 - 自洽性檢查：碰 Renderer 的歸 Addon，不碰 Renderer 的歸 Controller。
 - 副作用：**粒子 trail 材質不再是架構搆不到的槽位**，只是來源之一。
 
 成本：`RendererMaterialController` 有 `[RequireComponent(typeof(Renderer))]`，丟上去就自動綁自己的 Renderer、零接線。改成材質來源後最少多一步接線。不以「來源留空則 fallback 到自身 Renderer」補回（決議 5 / A6）。
 
-## 已定案決議（2026-08-18）
+## 已定案決議（2026-08-18 ~ 08-19）
 
 ### 決議 1：instance 生命週期歸供給端
 
-誰產生 instance 誰負責銷毀。`RendererAddon` 呼叫 `renderer.materials` 產生 instance，自己在 `OnDestroy` 銷毀。`MaterialController` 是純借用者，完全不碰生命週期，也因此不需要知道材質從哪來。
+⚠️ **產生方式已由決議 7 取代**（不再呼叫 `renderer.materials`），但「誰產生誰銷毀」的原則不變。
+
+誰產生 instance 誰負責銷毀。`RendererAddon` 產生 instance，自己在 `OnDestroy` 銷毀。`MaterialController` 是純借用者，完全不碰生命週期，也因此不需要知道材質從哪來。
 
 由 `RendererAddon` 的 `useSharedMaterial` 旗標決定回傳哪一種。
 
@@ -213,21 +215,129 @@ Component/Resolver/       → Component/Driver/
 
 **B6 — `TypeRestriction` 的 array 聚合 drawer 不做。** 泛型 drawer 成本高；若對象限定 SO 還可直接畫 SO inspector，但此欄位的對象不一定是 SO。逐格驗證現況已可用。
 
+### 決議 7：instance 自行建立，`useSharedMaterial` 是唯一旗標（2026-08-19）
+
+決議 1 說「誰產生 instance 誰銷毀」，但 `renderer.materials` 的 getter **隱式**產生 instance，使「誰產生」不可觀測——別的腳本碰一下 `.material` 拿到的是同一份，擁有權無法判定。要安全就得加 `owned` 記錄 + `destroyInstancedMaterialsOnDestroy` opt-out，共三個欄位。
+
+改為 `RendererAddon` **自行 `new Material(source)` 再寫回**：
+
+```csharp
+[SerializeField] private Renderer _renderer;
+[SerializeField] private bool useSharedMaterial;
+
+/// <summary>Instances created and owned by this addon. Null while sharing.</summary>
+private Material[] materials;
+
+public void RefreshMaterials()
+{
+    Release();
+    if (_renderer == null || useSharedMaterial || !Application.isPlaying) return;
+
+    var sources = _renderer.sharedMaterials;
+    materials = new Material[sources.Length];
+    for (int i = 0; i < sources.Length; i++)
+        materials[i] = sources[i] == null ? null : new Material(sources[i]);
+    _renderer.sharedMaterials = materials;
+}
+
+private void Release()
+{
+    if (materials == null) return;
+    foreach (var m in materials)
+        if (m != null) Destroy(m);
+    materials = null;
+}
+
+private void OnDestroy() => Release();
+```
+
+自己造的東西全世界只有自己有，歧義消失 → 不需要 opt-out 旗標。`materials != null` 本身即擁有權記錄 → 不需要 `owned`。**欄位收斂成 `useSharedMaterial` 一個。**
+
+**Renderer 機制查證（2026-08-19）**
+
+- Renderer 只有**一個**材質陣列 `m_Materials`（即場景 YAML 中所見那個）。**沒有 source / instance 兩套儲存。**
+- `materials` getter 的行為 = 把 `m_Materials` 每一格複製成新 Material → **寫回 `m_Materials`** → 回傳。因此自動實體化之後，`sharedMaterials` 回傳的是 instance，原始 asset 參照已從該 renderer 上消失。
+- 故 `renderer.sharedMaterials = 自己複製的一份` 與 `renderer.materials` getter 等價。本決議不是繞過 Unity，是把隱式寫入攤開成明確的一行。
+- ⚠️ Unity 官方立場：`renderer.materials` 產生的 instance **由呼叫者負責銷毀**。唯一的自動回收是 `Resources.UnloadUnusedAssets()`，通常只在載入場景時跑。
+- ⚠️ **GC 不回收 `UnityEngine.Object`。** C# GC 只收 managed wrapper，native 那份不歸它管。「沒有 ref 就會被 GC 掉」不成立。
+
+**實作約束**
+
+1. 銷毀迴圈跑 cache 的 `materials`，**絕不跑 `_renderer.sharedMaterials`**。`materials` 裡永遠只有自造 instance，所以旗標中途被改的最壞情況是漏刪（留到換場景被 `UnloadUnusedAssets` 收），不可能刪到 asset。`useSharedMaterial` 那個判斷是免費雙保險，不是主要安全機制。
+2. `!Application.isPlaying` 必須擋。edit mode 下建立並寫回會永久污染場景，且 `Destroy()` 在 edit mode 不可用。
+3. 陣列長度嚴格照 `sources.Length`，null 格保留 null。長度對應 submesh，少一格該 submesh 就不畫；`ParticleSystemRenderer` 的 trail 佔 index 1（見開放技術問題），長度掉到 1 即失去 trail。
+4. shader filter **不得**篩掉陣列成員。filter 只決定哪幾格要實體化（其餘沿用 shared），或只影響對外 `IReadOnlyList` 視圖，不影響寫回 renderer 的那個陣列。舊 `MaterialController.RefreshMaterials()` 的 `continue` 寫法在此會破壞陣列。
+5. `RefreshMaterials()` 放 `Awake` 而非 `Start`，搶在其他腳本碰 `.material` 之前。若他人搶先，`sharedMaterials` 拿到的已是他的 instance，被本 addon 擠掉後會洩漏——那是他造成的，但現象會被觀察到。
+
+### 決議 8：`includeChildren` 刪除，一個 addon 管一顆 Renderer（2026-08-19）
+
+決議 7 的寫回是 per-renderer 的。多 renderer 攤平成單一 `Material[]` 之後無法反推「第 n 格屬於哪個 renderer 的第幾格」，得改成 `Material[][]` 再加一層扁平化視圖，把兩個維度混在一起。
+
+改為讓 `RendererAddon` 名副其實：持有單一 `_renderer`，只管自己那顆。多 renderer 的情境由掛多個 addon 解決——`MaterialController` 的 `Object[]` 多來源欄位（決議 2）本來就能同時接。
+
+`includeChildren` 欄位**直接刪除，不遷移**。
+
+### 決議 9：`RendererAddon` 泛型化，特化 renderer addon 由它繼承（2026-08-19）
+
+```csharp
+public abstract class RendererAddon<TRenderer> : ComponentController<TRenderer>, IReadOnlyList<Material>
+    where TRenderer : Renderer
+public class RendererAddon : RendererAddon<Renderer> { }
+public class LineRendererAddon : RendererAddon<LineRenderer>, IColor
+```
+
+起因：`LineRendererAddon` 拖進 `MaterialController.sources` 被 `TypeRestrictionDrawer` 擋下——它沒實作 `IReadOnlyList<Material>`。
+兩條路是「同一顆 GameObject 再掛一個 `RendererAddon`」或「讓特化 addon 繼承材質供給」。**使用者選後者。**
+
+agent 當時建議前者，理由是材質供給與線段幾何是兩件事，繼承會讓不需要動材質的線也背上複製與回收機制。
+使用者的取捨是：一顆 Renderer 上有兩個都在 `GetComponent` 同一顆 renderer 的 addon 更難解釋，寧可付那份成本。**此項不再重開。**
+
+**衍生約束（實作已套用）**
+
+- 基底的 `OnDestroy` 必須是 `protected virtual`，且子類覆寫時要呼叫 base。Unity 只把訊息派送到最衍生的宣告，
+  子類若自行宣告 `private void OnDestroy()` 會把基底那個藏起來，`Release()` 從此不執行，材質副本全漏——
+  無編譯警告、無 runtime 錯誤，只在 profiler 上看得出來。此約束寫進基底 `<summary>`。
+- `RefreshMaterials()` 同樣改 `virtual`。
+- 完整 `<summary>` 掛在泛型基底上；非泛型 `RendererAddon` 另給一行，因為它才是 inspector 與 IntelliSense 先遇到的那個。
+
+**`useSharedMaterial` 預設維持 false，子類不得翻轉。** 代價是每個 `LineRendererAddon` 在 Awake 複製一份材質，
+即使那條線只用漸層與點位——一個 LineRenderer 一顆材質。反方向會讓寫入直接落在專案資產上，正是驗收條件 8 要抓的失敗；
+為了省一顆材質，讓同一個旗標在 `RendererAddon` 上代表安全、在特化子類上代表危險，代價遠高於那顆材質。
+
+真的量大到有感時，解法是把複製延後到第一次讀清單，不是換預設值。**但本輪不做**：延後會擴大「別人搶先碰 `.material`」的窗口，
+決議 7 約束 5 特意選 Awake 就是為了關掉它。
+
 ## 未決清單
 
-A 組七項見決議 5，B 組六項見決議 6，皆已於 2026-08-18 拍板。以下只剩缺資訊的項目。
+A 組七項見決議 5，B 組六項見決議 6，皆已於 2026-08-18 拍板。
+C 組兩項於 2026-08-19 結案：C1 見決議 7 / 8，C2 見開放技術問題。**本清單已清空。**
 
-### C. 缺資訊
+### C. 缺資訊（已結案）
 
 | # | 議題 | 缺什麼 |
 |---|---|---|
-| C1 | Unity 自動實體化（`renderer.material` / `materials`）與決議 1 的手動管理如何相處。可能方案含 `bool eliminateInstanceMaterialOnDestroy` 之類旗標 | 使用者尚在思考。實作步驟 2.3 若撞到即停手回報，不要自行發明方案 |
-| C2 | `ParticleSystemRenderer` 的 trail 材質是否出現在 `sharedMaterials` 陣列中 | 需在編輯器實測，見下方開放技術問題。這是驗證不是決策 |
+| ~~C1~~ | Unity 自動實體化（`renderer.material` / `materials`）與決議 1 的手動管理如何相處 | 已解決（2026-08-19）。不共存——改為自行建立 instance，見決議 7；`includeChildren` 一併刪除，見決議 8 |
+| ~~C2~~ | `ParticleSystemRenderer` 的 trail 材質是否出現在 `sharedMaterials` 陣列中 | 已解決（2026-08-19）。見下方開放技術問題 |
 
 ## 開放技術問題
 
-- **`ParticleSystemRenderer` 的 trail 材質是否出現在 `sharedMaterials` / `materials` 陣列中？** 未驗證（2026-08-17 Unity 未啟動）。驗證方式：對一個開啟 Trails 的 ParticleSystem 讀 `psr.sharedMaterials.Length`，2 表示 trail 在陣列裡。
-  這不阻塞架構。若 trail 不在陣列裡，表示需要第二種供給端——`psr.trailMaterial` 回傳的是共用資產，不像 `renderer.material` 會自動實體化。決議 2 的 `Object[]` 多來源欄位已為此預留空間。
+- **`ParticleSystemRenderer` 的 trail 材質是否出現在 `sharedMaterials` / `materials` 陣列中？**
+  **已驗證：是。**（2026-08-19）trail 材質就在陣列裡，index 1；index 0 是粒子材質。
+
+  驗證方式不需要啟動 Unity——`m_Materials` 是序列化欄位，直接讀場景 YAML 即可。
+  對照組在 `Unified-Solver/Runtime/Test/test solver mesh.unity`：
+
+  | GameObject | `TrailModule.enabled` | `m_Materials` 長度 |
+  |---|---|---|
+  | fileID 1612126555 | 0 | 1 |
+  | fileID 1978910203 | 1 | 2 |
+
+  **影響：不需要第二種供給端。** 決議 2 的 `Object[]` 多來源欄位本來就能接，
+  而 `RendererAddon` 的 `IReadOnlyList<Material>` 直接含 trail，`psr.trailMaterial` 不需要特例化。
+
+  殘留小未知（不阻塞）：runtime 用腳本切 `ps.trails.enabled` 時陣列長度會不會跟著變。
+  `m_Materials` 是序列化欄位，較可能的行為是長度由編輯期決定。若如此，
+  切換 trail 後需重呼 `RefreshMaterials()`——這是使用約定，不影響架構。
 
 ---
 
@@ -241,7 +351,7 @@ A 組七項見決議 5，B 組六項見決議 6，皆已於 2026-08-18 拍板。
 
 ```text
 common/Runtime/Component/
-├── Addon/RendererAddon.cs      持有 Renderer、搜集材質、負責 instance 生命週期
+├── Addon/RendererAddon.cs      持有單一 Renderer、自建材質 instance、負責其生命週期
 │                               : IReadOnlyList<Material>
 ├── MaterialController.cs       綁材質來源、改參數、每幀驅動 driver
 ├── MaterialDriver.cs         abstract SO 契約：Drive(IReadOnlyList<Material>)
@@ -274,9 +384,9 @@ Animation/Runtime/Component/    材質相關檔案全部移出
 
 ### 2. 搜集職責移入 `RendererAddon`
 
-2.1 把 `includeChildren` / `useSharedMaterial` / `enableShaderFilter` / `shaderNameFilters` 四個序列化欄位從 `MaterialController` 移過來。
-2.2 移入 `RefreshMaterials()` 與 `PassesShaderFilter()`，結果存為內部 `Material[]`。
-2.3 移入 `CleanupMaterials()` 與 `OnDestroy` 的 instance 銷毀（決議 1）。
+2.1 把 `useSharedMaterial` / `enableShaderFilter` / `shaderNameFilters` 三個序列化欄位從 `MaterialController` 移過來。`includeChildren` **直接刪除不遷移**（決議 8）。不新增 `owned` 或 `destroyInstancedMaterialsOnDestroy`（決議 7）。
+2.2 移入 `RefreshMaterials()` 與 `PassesShaderFilter()`，改寫成決議 7 的形式：`Release()` → 讀 `_renderer.sharedMaterials` → 逐格 `new Material(source)` → 寫回 `_renderer.sharedMaterials`，結果存為內部 `Material[] materials`。在 `Awake` 呼叫。shader filter 不得篩掉陣列成員（決議 7 約束 4）。
+2.3 `CleanupMaterials()` 改名 `Release()`：迴圈跑 cache 的 `materials`，**不跑 `_renderer.sharedMaterials`**（決議 7 約束 1）。`OnDestroy` 與 `RefreshMaterials()` 開頭各呼叫一次。
 2.4 實作 `IReadOnlyList<Material>`，三個成員轉發給內部 `Material[]`。
 2.5 刪除 `MoveNext(MaterialSequence)` 包裝、沒用到的 `current` 欄位、以及註解掉的 `MoveNext(_renderer, ref current)`（決議 4）。
 2.6 補 XML `<summary>`（英文），目前沒有。
@@ -333,7 +443,7 @@ Animation/Runtime/Component/    材質相關檔案全部移出
 
 1. `RendererMaterialController`、`AssetSequence`、`MaterialSequence` 三個型別都不存在；`Animation` 套件內沒有材質控制相關檔案。
 2. `MaterialController` 位於 `Yu5h1Lib` namespace，來源欄位可同時接受多個 `IReadOnlyList<Material>` 實作者，並每幀驅動 driver。
-3. `RendererAddon` 依 `includeChildren` / `useSharedMaterial` / shader 過濾產出材質，且自身負責其 instance 銷毀。
+3. `RendererAddon` 持有單一 `Renderer`，依 `useSharedMaterial` 與 shader 過濾產出材質；`useSharedMaterial` 為 false 時 instance 由 addon 自行建立、寫回 renderer，並在 `OnDestroy` 銷毀。序列化欄位中不存在 `includeChildren`、`owned` 或任何 opt-out 旗標。
 4. `MaterialArrayObject : ParameterCollection<Material>` 可在 inspector 建立，`MoveNext(Renderer)` 循環行為與舊 `MaterialSequence` 一致，且當前材質不在陣列中時行為是明確定義的。
 5. 三個 texture driver 位於 common，簽名吃 `IReadOnlyList<Material>`，皆無 `[CreateAssetMenu]`。
 6. `TextureScrollDriver` 的 inspector 上不再出現 `fps`；兩個 frame-based driver 各以內嵌的 `FrameStepResolver` 呈現。`FrameStepResolver` 不引用任何材質或 grid 型別。
@@ -360,7 +470,7 @@ Volume:    改寫 383 行(MaterialController)
            程式碼消費者 0 個
            序列化掛載點 3 個，全在 Unified-Solver 測試場景；W:\UnityProject 零掛載點
 Precedent: SO 策略 + MonoBehaviour 殼、ParameterCollection<T> 皆為庫內既有模式 = settled port
-           「材質 instance 生命週期轉移」無前例，但決議 1 已定調 = 風險已收斂
+           「材質 instance 生命週期轉移」無前例，但決議 1 / 7 已定調 = 風險已收斂
 Proof:     需 Unity 編譯 + 測試場景手動驗證 + trail 需編輯器實測
 ```
 
@@ -379,6 +489,28 @@ Proof:     需 Unity 編譯 + 測試場景手動驗證 + trail 需編輯器實�
 依 [agent-work-route](../../../../.agents/skills/agent-work-route/SKILL.md)，規格已定案，下一步是 Execute。是否轉成 `implementation-checklist.md` 由使用者決定——UnityExtension 目前沒有該檔，尚未 opt in。
 
 ## 已完成
+
+- 2026-08-19：步驟 1-4 與 5.1 全部落地（agent），未編譯驗證。
+  - 新增 `MaterialArrayObject`（`Data/Architecture/Object/`），刪除 `AssetSequence` / `MaterialSequence`。
+  - `RendererAddon` 改寫成決議 7 / 8 的形狀，並改繼承 `ComponentController<Renderer>`（見下方偏離）。
+  - `RendererMaterialResolver` → `common/Runtime/Component/MaterialDriver.cs`（git mv 連同 `.meta`，GUID 保留），
+    三個 resolver → `common/Runtime/Component/Driver/Texture*Driver.cs`，皆 `Drive(IReadOnlyList<Material>)`、無 `[CreateAssetMenu]`。
+  - 新增 `FrameStepResolver`（`common/Runtime/Resolver/`）。
+  - `MaterialController` 改寫：`Object[]` 多來源 + `[Inline] MaterialDriver` + 每幀 `Drive`，
+    移除事件、`SetXxxForShader`、`Get` 系列、`HasProperty`、兩個測試 `[ContextMenu]`，加上 `namespace Yu5h1Lib`。
+  - 刪除 `RendererMaterialController.cs`；`Animation` 套件內已無材質控制檔案。
+
+  **兩處對規格的偏離**（實作時判斷，需使用者確認）：
+  1. `RendererAddon` 改繼承 `ComponentController<TRenderer>` 而非自持 `_renderer` 欄位。
+     `Renderer` 由所在 GameObject 決定，不是設定；且 `OnInitializing` 在 `Awake` 執行，正好滿足決議 7 約束 5。
+     與 `TransformAddon` / `ParticleSystemAddon` 一致。
+     **已由使用者確認並進一步泛型化，見決議 9。**
+  2. 決議 7 的 `materials` 一個欄位拆成三個 runtime 私有欄位 `sources` / `instances` / `materials`。
+     `sources` 保留原始 asset，否則第二次 `RefreshMaterials()` 會拿已被替換的 instance 當來源複製，
+     且 `Release()` 無法把 renderer 還原（addon 單獨移除時會留下指向已銷毀材質的 renderer）。
+     `materials` 是套用 shader filter 後的對外視圖，`instances` 是全長度的擁有權記錄——
+     決議 7 約束 3 要求寫回陣列保持長度，約束 4 要求 filter 不得動到該陣列，兩者無法用同一個陣列同時滿足。
+     **序列化欄位仍只有 `useSharedMaterial`**，驗收條件 3 成立；銷毀迴圈仍只跑 `instances`。
 
 - 2026-08-18：型別 `RendererAide` → `RendererAddon`。
 - 2026-08-17：新增 `TextureScrollDriver`（連續 UV 捲動）。未動既有元件，未編譯驗證。
