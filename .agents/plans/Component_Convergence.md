@@ -456,7 +456,8 @@ Animation/Runtime/Component/    材質相關檔案全部移出
 
 - 未決 C1 的 Unity 自動實體化處理方案。
 - `TypeRestriction` 的 array 聚合 drawer（決議 6 / B6）。
-- `Aide` 清理雖已決定要做（決議 6 / B2-B4），但與材質收斂無關，列為步驟 7 可單獨執行。
+- ~~`Aide` 清理雖已決定要做（決議 6 / B2-B4），但與材質收斂無關，列為步驟 7 可單獨執行。~~ 已於 2026-08-19 執行完畢，見「已完成」。
+- `TypeRestrictionAttribute.cs` / `ComponentController.cs` / `TypeRestrictionDrawer.cs` 在 Core 與 UnityExtension 各有一份實體副本的成因與去留。
 
 ## 工作量規模
 
@@ -489,6 +490,19 @@ Proof:     需 Unity 編譯 + 測試場景手動驗證 + trail 需編輯器實�
 依 [agent-work-route](../../../../.agents/skills/agent-work-route/SKILL.md)，規格已定案，下一步是 Execute。是否轉成 `implementation-checklist.md` 由使用者決定——UnityExtension 目前沒有該檔，尚未 opt in。
 
 ## 已完成
+
+- 2026-08-19：步驟 7 與 B5 完成，**本計畫全數結案**。
+  - 7.1 `AudioSourceAide` → `AudioSourceAddon`（移入 `Component/Addon/`），連同其 editor。使用者執行。
+  - 7.2 `Collider2DAide` → `Collider2DAddon`，`Collider2DAideEditor.cs` 內的 `Collider2DAgentEditor` → `Collider2DAddonEditor`，
+    檔名一併對齊。位於 `Unity/CombatAesthetic`（**另一個 repo**）。`.meta` 隨檔移動，GUID 未變。
+  - 7.3 `LayoutGroupAddon.cs` 的 `"[LayoutGroupAide] ..."` 改為 `$"[{nameof(LayoutGroupAddon)}] ..."`。使用者執行。
+  - 7.4 `PopupPanel.prefab` 的 `m_EditorClassIdentifier` 依決議不動。
+  - B5 `TypeRestrictionAttribute` 的 `Mode` enum 補上「`Exact` 配介面必定不成立」的 `<summary>`，不加執行期檢查。
+
+  **B5 的兩份檔案問題已查明**：`Unity/Runtime/Base/Source/Attribute/` 與 `Unity/UnityExtension/Runtime/Attribute/`
+  下的 `TypeRestrictionAttribute.cs` 是**各自獨立的實體檔**（inode 不同、非 symlink/hardlink、內容 byte 相同、分屬兩個 repo），
+  不是連結來源。因此註解寫進兩份，各自提交。同樣的重複也存在於 `ComponentController.cs` 與 `TypeRestrictionDrawer.cs`，
+  是整片現象而非單一檔案的意外——**其成因（csproj glob 機制）未追查，不屬本計畫範圍**。
 
 - 2026-08-19：步驟 1-4 與 5.1 全部落地（agent），未編譯驗證。
   - 新增 `MaterialArrayObject`（`Data/Architecture/Object/`），刪除 `AssetSequence` / `MaterialSequence`。
