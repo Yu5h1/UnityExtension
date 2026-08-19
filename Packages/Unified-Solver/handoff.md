@@ -82,6 +82,31 @@ rope bend constraints; the shape contract end to end — `PrimitiveShape`, a
 `ParticleSystemAddon` cone driving a region, and live retuning of
 `bendStiffness` while playing.
 
+**Medium parameters are now physical. Written this session, NOT compiled.**
+`SolverMediumProfile.viscosity` is **deleted**; a medium carries only `density`
+and `flow`. The coupling coefficient moved to the body as
+`SolverParticleProfile.dragCoefficient`, and locomotion gained
+`SolverLocomotionProfile.mediumThrust`. Both multiply the **medium-to-body
+density ratio** the kernel already computes for buoyancy, not the raw authored
+density — that is in profile-mass units where neutral lands in the hundreds. A
+neutral medium gives a ratio of 1, so both defaults of 1 reproduce the old
+`viscosity = 1`. No GPU stride changed: the coefficient took
+`SolverParticleInstance._padding` and the purchase took the unused
+`_MediumState.w`. Design and rejected alternatives in `PhysicsParticle.md` §9.9,
+behaviour in `plan.md` §18.2.
+
+**`density = 0` no longer works and should not be reintroduced.** A ratio of 0
+neither drags nor gives anything to push off. The `splash water` cone is now
+authored as what it physically is — spray is dispersed water, so a density well
+below the still body it came from, with a large `flow`. Bodies are swept and
+cannot swim against it, and both follow from the description rather than from a
+setting chosen to produce them. User-confirmed in Unity.
+
+The authoring stance this settled: **match the direction, not the figure.**
+Density here is in profile-mass units and never will be kg/m³, so the question is
+"denser or thinner than this body, and roughly by how much" — still water dense,
+spray thin, air far thinner. Recorded in `.agents/skills/unified-solver.md`.
+
 **Written, NOT compiled, NOT verified:**
 
 - `SolverBoundsProfile`, its lifecycle buffer and shrink fade
@@ -179,10 +204,17 @@ Renaming `SolverVolume` to `PhysicsField` stays blocked on payload neutrality
 Two design conclusions were reached in discussion and recorded rather than
 built. Neither is scheduled:
 
-- **`plan.md` §18.2** — swim, fly and walk are two answers, not three: what the
-  body pushes against. Birds share the fish mechanism; only walking needs the
-  position channel. Locomotion needs no new flag, only a density term it does
-  not yet have.
+- **`plan.md` §18.2** — what the three medium parameters actually do today, and
+  the one interaction between them: `density` is buoyancy only, `viscosity` is
+  what sweeps a body, and terminal rise speed is buoyant acceleration over
+  viscosity. Whether a body holds against a current is a plain speed comparison.
+- **`PhysicsParticle.md` §9.9** — the direction that replaces it. Buoyancy, drag
+  and thrust all scale with the same density, so a medium should carry only
+  `density` and `flow`; the drag and thrust coefficients belong to the **body**,
+  which is where `viscosity` is misplaced today. Propulsion is two coefficients,
+  not a mode flag, because a duck both swims and walks. The price is that every
+  existing medium needs retuning; the reward is that the pipe stops needing a
+  physically impossible `density = 0`.
 - **`PhysicsParticle.md` §9.8** — how the environment itself is represented.
   Today an analytic field; possibly a sampled two-way texture next; and beyond
   that environment particles, for the three things a height field cannot hold —

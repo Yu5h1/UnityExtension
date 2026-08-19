@@ -228,6 +228,9 @@ float _LocomotionRandomness;
 float _LocomotionTurnRate;
 float _LocomotionUprightRate;
 float _LocomotionHeadingSpread;
+// How well this body's stroke converts medium density into travel. A fin is
+// good at it, a hoof is not. Zero means this body does not swim.
+float _LocomotionMediumThrust;
 
 static const float TARGET_POINT = 0.0;
 
@@ -1272,6 +1275,10 @@ void ApplyMedium(
     // in isolation.
     float3 netAcceleration = float3(0.0, 0.0, 0.0);
     float3 drift = float3(0.0, 0.0, 0.0);
+    // Accumulated across every particle and every medium reaching it, so a body
+    // in two overlapping fluids has more to push against than in either alone.
+    // Instance scope, not the particle loop: the mean is taken after it.
+    float mediumRatio = 0.0;
 
     for (uint i = 0u; i < count; i++)
     {
@@ -1303,7 +1310,6 @@ void ApplyMedium(
             wet = true;
 
             float density = volume.payloadX;
-            float viscosity = volume.payloadY;
             float3 flow = volume.payloadVector;
 
             // mediumDensity / bodyDensity, without the division: body density
@@ -1312,14 +1318,26 @@ void ApplyMedium(
                 density *
                 _ParticleVolume *
                 particle.invMass;
+            mediumRatio += ratio;
+
+            // Drag is half rho Cd A v squared, and only rho is the fluid's --
+            // the coefficient, the cross-section and the mass are the body's.
+            //
+            // The ratio rather than the raw density, because it is already the
+            // fluid mass this body carries per unit of its own, and because
+            // authored density is in profile-mass units where neutral lands in
+            // the hundreds. Against a neutral medium the ratio is 1, so a
+            // coefficient of 1 reproduces the viscosity of 1 it replaced.
+            float coupling =
+                ratio * instance.dragCoefficient;
             particle.velocity -=
                 _Gravity * ratio * _DeltaTime;
             acceleration -= _Gravity * ratio;
 
-            // Exponential rather than viscosity * dt, which overshoots past
+            // Exponential rather than coupling * dt, which overshoots past
             // the flow and oscillates once the product exceeds 1.
             float blend = 1.0 -
-                exp(-viscosity * _DeltaTime);
+                exp(-coupling * _DeltaTime);
             particle.velocity +=
                 (flow - particle.velocity) * blend;
             drift += flow - restingVelocity;
@@ -1337,11 +1355,16 @@ void ApplyMedium(
             : 0.0;
     // The mean of the disagreements rather than the mean of their sizes, so two
     // opposing currents read as still water instead of as twice the push.
+    // w is the purchase locomotion pushes off: the mean medium-to-body density
+    // ratio over the body. A stroke throws fluid backward, so what comes back
+    // scales with how much fluid there was -- which is why the same body swims
+    // in water and only flails in air, with no rule saying so. Against a
+    // neutral medium it is 1, so nothing that swims today changes.
     _MediumState[instanceIndex] = float4(
         (float)submerged / (float)count,
         length(drift * inverseMovable),
         dot(netAcceleration * inverseMovable, _UpAxis),
-        0.0);
+        mediumRatio * inverseMovable);
 }
 
 // Moves a body toward a target, by pushing against the medium it is standing in.
@@ -1375,6 +1398,16 @@ void ApplyLocomotion(
     float submersion =
         _MediumState[instanceIndex].x;
     if (submersion <= 0.0)
+        return;
+
+    // What the stroke actually gets back. Density is what a fin throws
+    // backward, so thin air returns almost nothing and the body has to fly
+    // some other way -- lift, not paddling. Saturated because a denser medium
+    // than the body's own stroke can use is still only a full push.
+    float purchase = saturate(
+        _MediumState[instanceIndex].w *
+        _LocomotionMediumThrust);
+    if (purchase <= 0.0)
         return;
 
     SolverInstance instance =
@@ -1496,7 +1529,7 @@ void ApplyLocomotion(
         correction =
             (heading * _LocomotionSpeed -
              meanVelocity) *
-            (blend * submersion);
+            (blend * submersion * purchase);
     }
 
     // Turning, which runs whether or not this step is a push: an animal keeps
@@ -1563,7 +1596,7 @@ void ApplyLocomotion(
             }
         }
 
-        omega *= submersion;
+        omega *= submersion * purchase;
     }
 
     for (i = 0u; i < count; i++)

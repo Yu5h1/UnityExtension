@@ -31,7 +31,7 @@ struct SolverInstance
     int topology;
     int profileId;
     float3 scale;
-    float padding;
+    float dragCoefficient;
     float4 spawnRotation;
 };
 

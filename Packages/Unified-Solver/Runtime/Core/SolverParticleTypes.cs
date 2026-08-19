@@ -117,7 +117,10 @@ namespace Yu5h1Lib.UnifiedSolver
         public int topology;
         public int profileId;
         public Vector3 scale;
-        public float _padding;
+        // How strongly this body couples to any medium: the aggregate of drag
+        // coefficient, cross-section and mass, which are the body's properties
+        // and not the medium's. Drag rate is this times the medium's density.
+        public float dragCoefficient;
         public Quaternion spawnRotation;
     }
 

@@ -550,6 +550,9 @@ namespace Yu5h1Lib.UnifiedSolver
                 Mathf.Max(0f, profile.uprightRate) *
                 Mathf.Deg2Rad);
             _runtimeCompute.SetFloat(
+                "_LocomotionMediumThrust",
+                Mathf.Max(0f, profile.mediumThrust));
+            _runtimeCompute.SetFloat(
                 "_LocomotionHeadingSpread",
                 Mathf.Clamp(profile.headingSpread, 0f, 89f) *
                 Mathf.Deg2Rad);

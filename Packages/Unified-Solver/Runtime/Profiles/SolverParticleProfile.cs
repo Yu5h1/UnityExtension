@@ -33,6 +33,23 @@ namespace Yu5h1Lib.UnifiedSolver
         [Range(0f, 1f)]
         public float rollDamping = 0.25f;
 
+        // How hard a medium can pull this body along, and how hard the body can
+        // push back off it. Both are the same coupling seen from two sides.
+        //
+        // On the body rather than on the medium because the physics puts it
+        // there: drag is one half rho Cd A v squared, and only rho belongs to
+        // the fluid. Cd, the cross-section and the mass are the body's. A medium
+        // that carried this would be claiming that a fish and a boulder are
+        // dragged equally.
+        //
+        // Multiplied by the medium-to-body density ratio, not by the raw
+        // authored density, which is in profile-mass units where neutral lands
+        // in the hundreds. Against a neutral medium the ratio is 1, so 1 here
+        // reproduces the medium `viscosity` of 1 this replaced.
+        [Tooltip("Coupling to any medium: drag toward its flow, and the purchase locomotion pushes off. Multiplied by the medium-to-body density ratio.")]
+        [Min(0f)]
+        public float dragCoefficient = 1f;
+
         [Space]
         // A threshold, not a ceiling: the excess decays, so a body hit hard still
         // ends up faster than one hit lightly. Below it nothing happens at all,
@@ -75,7 +92,7 @@ namespace Yu5h1Lib.UnifiedSolver
         [Inline]
         public SolverRenderProfile renderProfile;
 
-        [Space]
+        [Space,Inline]
         public SolverParticleModifierProfile[] modifiers =
             new SolverParticleModifierProfile[0];
 

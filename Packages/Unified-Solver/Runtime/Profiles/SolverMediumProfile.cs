@@ -52,13 +52,17 @@ namespace Yu5h1Lib.UnifiedSolver
         // was a decision.
         [Tooltip("On reads Flow in the volume's own axes, so aiming the volume aims the flow.")]
         public bool flowIsLocal;
-        // A rate, not a force: things converge on `flow` rather than
-        // accelerating without limit. That is the difference between authoring a
-        // current of 1 m/s and authoring an acceleration whose final speed turns
-        // out to be set by the solver's global damping.
-        [Tooltip("How fast things are dragged to match Flow. 0 lets them pass through freely.")]
-        [Min(0f)]
-        public float viscosity = 1f;
+        // Viscosity used to live here and does not any more.
+        //
+        // How hard a fluid drags a body is half rho Cd A v squared, and only rho
+        // is the fluid's. Carrying the rest here claimed that a fish and a
+        // boulder are dragged alike. It is now
+        // `SolverParticleProfile.dragCoefficient`, multiplied by this density,
+        // so one medium drags every body by that body's own measure.
+        //
+        // The same number is also what locomotion pushes off, because throwing
+        // fluid backward and being dragged by it are one coupling seen from two
+        // sides. A body in a thin medium is barely carried and can barely swim.
 
         public override SolverVolumeEffectType EffectType =>
             SolverVolumeEffectType.Medium;
@@ -75,7 +79,6 @@ namespace Yu5h1Lib.UnifiedSolver
             ref SolverVolumeGPU entry)
         {
             entry.payloadX = Mathf.Max(0f, density);
-            entry.payloadY = Mathf.Max(0f, viscosity);
             entry.payloadVector = flowIsLocal
                 ? volume.Rotation * flow
                 : flow;

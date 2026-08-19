@@ -384,7 +384,8 @@ namespace Yu5h1Lib.UnifiedSolver
                     profileId =
                         profile.GetInstanceID(),
                     scale = request.scale,
-                    _padding = 0f,
+                    dragCoefficient =
+                        Mathf.Max(0f, profile.dragCoefficient),
                     spawnRotation =
                         request.rotation
                 });

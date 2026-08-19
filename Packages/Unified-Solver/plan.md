@@ -1279,28 +1279,34 @@ tailPeak = 2 × peakHalfAngle × bias
 - 轉向在滑行期間也跑，不只在推進期間：推力在身體轉過來之前抵達，只會把它推得更偏。
 - 僅限鏈狀拓樸。`GetFrame` 會把四面體的前三個角讀成頭、中、尾。
 
-### 18.2 介質對推進的影響：現況
+### 18.2 介質與身體的耦合
 
-今天三個介質參數各自獨立，互不推導：
+介質只帶 `density` 與 `flow`。**「多容易被拖動」是身體的性質，不是介質的** —— 阻力是 `½ρC_dAv²`，只有 `ρ` 屬於流體。
 
-| 參數 | 實際做什麼 |
-|---|---|
-| `density` | 只做浮力（`ApplyMedium` 的 `ratio = density × particleVolume × invMass`） |
-| `viscosity` | 以 `1 - exp(-viscosity × dt)` 的比例把速度拉向 `flow`。**沖走身體的是它，不是密度** |
-| `flow` | 被拉向的目標速度 |
+| 參數 | 屬於 | 做什麼 |
+|---|---|---|
+| `density` | 介質 | 浮力，以及下面兩者的 `ρ` |
+| `flow` | 介質 | 被拖向的目標速度 |
+| `dragCoefficient` | 身體（`SolverParticleProfile`） | 被拖動的速率 |
+| `mediumThrust` | 身體（`SolverLocomotionProfile`） | 擺動能換到多少前進 |
 
-- **只有 density 與 viscosity 有交互作用**，而且形式明確：浮力先寫速度，水流再把它拉回去，穩態是「相對 flow 的終端速度 ≈ 浮力加速度 / viscosity」。同樣的浮力在黏稠介質裡浮得慢。
-- **`flow` 與 `density` 無關**，浮力是垂直的，flow 是任意方向，兩者在速度空間相加。
-- **重疊的 volume 逐個套用**，所以一個高 `viscosity` 的水管若泡在一般水體裡，水體會把它剛給的速度拉回一部分；水管的 `viscosity` 要明顯高於水體才壓得過。`submersion` 每顆粒子只算一次，不會因為疊兩層而超過 1。
+**耦合率乘的是密度比，不是原始密度。** kernel 本來就在算 `ratio = density × particleVolume × invMass`（浮力用的那個）。中性浮力的介質 ratio 為 1，所以 `dragCoefficient = 1` 正好重現它取代掉的 `viscosity = 1`。原始 density 的單位是 profile 質量制、中性落在數百，直接乘會失控。
 
-**身體能不能頂住水流，是純粹的速度比較**：`flow` 的大小對上 `SolverLocomotionProfile.speed`。密度不參與。被沖走的身體仍然在推進，只是輸了 —— 那比關掉推進力好看，也比較真實。
+**拖動與推進是同一個耦合的兩面。** 被水拖走和把水往後踢，用的是同一個 `ρ`。所以：
 
-**推進力目前只以 `submersion` 為閘門**，不看介質有多稠。所以同一隻魚在稀薄介質裡游得和在水裡一樣快。這是已知的缺口；把它補成物理一致的參數模型是還沒做的方向，見 `Documentation/Plan/PhysicsParticle.md` §9.9。
+- 稀薄介質 → 拖不動你，你也推不動它。**兩者不會矛盾。**
+- `_MediumState.w` 帶身體所在介質的平均 ratio，locomotion 乘上它與 `mediumThrust`。
+- 魚離開介質癱軟、鳥拍空氣幾乎沒有推力（必須靠升力），都不需要規則去宣告。
 
-**行走仍未解**，兩條限制先寫下來免得重新發現：
+**不是模式旗標，是兩個係數**，因為鴨子游泳也走路。`mediumThrust = 0` 就表示這個身體不會游，不需要 enum。接觸推進是第二個係數，等地面推進實作時才加。
 
-- 接觸會在同一個 substep 從位置重建速度，所以**速度通道載不動走路**，需要位置通道的設計。
-- 球體構成的身體沒有滾動阻力，所以以摩擦為預算的位移會讓堆積物持續潛移（見 `.agents/skills/unified-solver.md`）。
+**身體能不能頂住水流仍是純速度比較**：`flow` 的大小對上 `speed`。被沖走的身體仍然在推進，只是輸了。
+
+**重疊的 volume 逐個套用**，ratio 也累加，所以泡在兩層流體裡的身體有更多可推的東西。`submersion` 每顆粒子仍只算一次。
+
+**行走仍未解**，兩條限制：接觸會在同一個 substep 從位置重建速度，所以速度通道載不動走路；球體構成的身體沒有滾動阻力，堆積物會持續潛移。在海底走路吃力不需要參數 —— 浮力減少接觸力、摩擦是 `mu × penetration`，抓地力自動變小。
+
+設計理由與被否決的替代方案在 `Documentation/Plan/PhysicsParticle.md` §9.9。
 
 ## 19. speedLimit：削去超出的部分，而不是切平
 

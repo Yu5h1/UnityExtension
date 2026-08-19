@@ -33,7 +33,7 @@ of one surface at once.
 
 | Effect | Granularity | Does |
 |---|---|---|
-| `SolverMediumProfile` | Particle | density, flow, viscosity |
+| `SolverMediumProfile` | Particle | density, flow |
 | `SolverBoundsProfile` | Instance | fade out, move back, fade in |
 
 Granularity is not a performance note. **Per particle** is what gives a floating
@@ -156,33 +156,73 @@ See `Documentation/Plan/SolverParticle.md`.
 1. Scale a GameObject over the water, add `SolverVolume`, shape Box. Box has a
    flat top and therefore a waterline; Ellipsoid has none.
 2. Add a `SolverMediumProfile` to `effects`.
-3. `viscosity` around 1 to start — bodies visibly slow.
-4. `density`: **the useful value is in the hundreds, and water is not 1000.**
+3. `density`: **the useful value is in the hundreds, and water is not 1000.**
    Units follow the profile mass and the global particle radius. The runner logs
    the exact neutral value per profile the first time a medium touches it. Read
-   the console; do not guess. Above neutral floats, below sinks.
-5. `flow` is metres per second the water itself moves. Bodies converge on it and
+   the console; do not guess. Above neutral floats, below sinks. **The same
+   number is the coupling baseline** — see below.
+
+   Author the **direction**, not the real figure. This is not kg/m3 and never
+   will be, so the question to answer is "denser or thinner than this body, and
+   by roughly how much" — still water dense, spray thin, air far thinner. A
+   setting that reads correctly against the neutral value behaves correctly;
+   chasing 1000 for water buys nothing and hides what the number means.
+4. `flow` is metres per second the water itself moves. Bodies converge on it and
    stop, so it is authored directly rather than as a force.
-6. `flowIsLocal` reads `flow` in the volume's own axes, so aiming the volume aims
+5. `flowIsLocal` reads `flow` in the volume's own axes, so aiming the volume aims
    the flow. Leave it off for an ocean current, which is a property of the world;
    turn it on for anything aimed, or rotating the object will not change where it
    pushes. A profile is a shared asset, so a world-space flow is the same vector
    in every volume referencing it.
 
+**How hard the medium drags is not on the medium.** A medium carries only
+`density` and `flow`; the coefficient is `SolverParticleProfile.dragCoefficient`
+on the **body**, because drag is `½ρC_dAv²` and only `ρ` is the fluid's. It
+multiplies the medium-to-body density ratio, so a medium at the neutral density
+gives a ratio of 1 and a coefficient of 1 is the neutral starting point.
+
+The same coupling is what locomotion pushes off, scaled by
+`SolverLocomotionProfile.mediumThrust`. Being carried and being able to swim are
+one thing seen from two sides, so they can never contradict each other.
+
 Leave `SolverManager.damping` alone. It is the solver's energy bleed, not a
-stand-in for viscosity.
+per-medium control.
 
 ## A jet is a medium
 
 A hose, a vent, a current, a downdraught: box `SolverVolume`, one
-`SolverMediumProfile`, `density = 0` so it is pure push and no buoyancy.
+`SolverMediumProfile`.
 
 1. Scale the box long and thin, **+Z along the spray**, and push the object
    forward by half its length — `Center` is the Transform position, so otherwise
    half the jet is behind the nozzle.
 2. `flow = (0, 0, speed)` with `flowIsLocal` on.
-3. `viscosity` in the **tens**. A modifier writes velocity once per FixedUpdate
-   from outside the substep loop, so one write survives about `1/substeps` of it.
+3. `density` near neutral and a large `flow`. A modifier writes velocity once per
+   FixedUpdate from outside the substep loop, so one write survives about
+   `1/substeps` of it — a jet needs a big disagreement to win.
+
+**A spray is thin and fast, and authoring it that way is enough.** Water leaving
+a pipe is dispersed — it is genuinely less dense than the still body it came
+from — and it is genuinely moving fast. So `density` well below neutral with a
+large `flow` is not a trick; it is the description.
+
+The behaviour follows on its own:
+
+```
+carried away  ∝  coupling × (flow − velocity)     ← the speed makes up the loss
+thrust        ∝  coupling × mediumThrust          ← nothing makes it up
+```
+
+Both weaken with density, but only the first has a term to compensate with. So a
+body is swept along and cannot swim against it — which is what a real spray does,
+and why nothing swims up a leaf blower either.
+
+Two costs to expect: pickup is gradual, because a low coupling approaches the
+flow speed slowly, so a short region may release the body before it is up to
+speed; and buoyancy falls with density, so bodies sink while inside.
+
+Do **not** reach for `density = 0`. Nothing real is weightless, and the ratio
+goes to zero, so the jet stops dragging as well.
 
 A ParticleSystem alongside it draws the water and owns nothing else; they share a
 Transform and no state. PS particles cannot push solver particles and should not
@@ -211,7 +251,7 @@ moves, read the console — it says when no medium exists.
 Not obvious from the fields:
 
 - `duration >= 1 / frequency` is continuous locomotion. There is no mode switch.
-- The glide between pushes is the medium's viscosity, not a third state.
+- The glide between pushes is the medium coupling bleeding the speed off, not a third state.
 - `headingSpread` is re-rolled per push, so bodies wander instead of forming an
   arrow, and a few breach at a time rather than the whole group leaving together.
 - Jumping is not a behaviour. It is a push whose heading points up, followed by a

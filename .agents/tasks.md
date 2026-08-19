@@ -15,6 +15,7 @@
 | `motion-system` | [Motion_System_Refactor](plans/Motion_System_Refactor.md) | Engine-independent Motion contracts, runners, and Unity migration |
 | `atomic-components` | [AtomicComponents](plans/AtomicComponents.md) | Resolver, Repeater, random and shuffle components, and ScriptableObject wrappers |
 | `unity-event-transmission` | [Transmission design](plans/Transmission_設計.md) | UnityEvent argument persistence, message routing, and the closed Invocation alternative |
+| `component-convergence` | [Component_Convergence](plans/Component_Convergence.md) | Overlapping material-control components, half-designed components, and naming collisions awaiting convergence |
 
 ## Unity application validation routes
 

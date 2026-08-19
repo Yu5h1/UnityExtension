@@ -22,6 +22,16 @@ namespace Yu5h1Lib.UnifiedSolver
         [Min(0f)]
         public float speed = 1.5f;
 
+        // How well this body's stroke converts a medium into travel. A fin is
+        // good at it, a wing in air is not -- a bird stays up on lift, not on
+        // paddling. Zero means this body does not swim at all.
+        //
+        // Multiplied by the medium's density, so the same profile in water and
+        // in air gives full travel and almost none, without a mode to pick.
+        [Tooltip("How much of the medium's density this stroke turns into travel. Multiplied by that density; 0 means this body cannot swim.")]
+        [Min(0f)]
+        public float mediumThrust = 1f;
+
         [Space]
         // Between pushes nothing is applied and the medium's viscosity bleeds
         // the speed off, which is the glide. Steady locomotion needs no separate
