@@ -42,6 +42,7 @@ Read only what matches the current task:
 - [unity-serialization.md](skills/unity-serialization.md) — `Optional<T>`, `SerializedType`, `SerializedAssembly`, and Unity serialization boundaries.
 - [gpu-rendering.md](skills/gpu-rendering.md) — procedural instancing, ComputeBuffer ownership, shader keyword variants, vertex channel payloads, struct layout shared across C#/compute/shader, and reading state out of a vendored solver.
 - [unified-solver.md](skills/unified-solver.md) — assembling `Packages/Unified-Solver`: which components pair with which profiles, water and locomotion setup, the velocity-versus-position channels, mesh conventions, and what to check when something silently does nothing. Its live state is in that package's `handoff.md` and its reasoning in `plan.md`; this skill is neither.
+- [Unity CLI](skills/unity-cli/SKILL.md) — Unity's official CLI and `com.unity.pipeline`: what they add over the `unityMCP` bridge already in use, version requirements, and beta rough edges, for anyone deciding whether to adopt or troubleshoot them.
 
 For a tracked task, start from [tasks.md](tasks.md) and open its canonical entry. Use [handoff.md](../handoff.md) for live coordination state and the reports for progress summaries.
 
