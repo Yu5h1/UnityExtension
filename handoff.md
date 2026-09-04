@@ -1,4 +1,4 @@
-﻿# UnityExtension Handoff
+# UnityExtension Handoff
 
 ## Current Direction
 
@@ -22,6 +22,7 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 ## Next Steps
 
+1. Verify the shared log through **HealthAI > Interaction Debug Window** and `W:\UnityProject\HealthAI\Assets\HealthAI\Editor\HealthAIInteractionDebugWindow.cs` in Unity: multi-line selection/copy/select-all, rejected edits, normal wheel scrolling, independent Ctrl+wheel zoom, Ctrl+middle-click reset to 12 pt, nested clipping, reflow, final-line scrolling, external foldout title, flat Clear toolbar, right-side search and its clear control, collapse retention and bottom-edge resizing with release outside the grip. The acceptance owner and integrated application caller are in `W:\UnityProject\HealthAI\docs\unity\Requirements.UnityExtension.md`; that project retains the Outstanding statuses until interactive acceptance passes.
 1. Finish the BonghuoVR migration in `W:/UnityProject/BonghuoVR/Assets/StaticResources/`. `Torch Performance.prefab` carries a `RendererMaterialController` (`&615836047818230860`) whose type is deleted, so it shows as a missing script; its `resolver` pointed at `Animation/5x5 24fps.asset`. Replace it with a `MaterialController` whose `sources` is the `LineRendererAddon` already on that GameObject (that component is an `IReadOnlyList<Material>` since decision 9) and whose `driver` is that asset - the same shape `Sulfuric Fire Line.prefab` already has. Then set `5x5 24fps.asset` back to `fps: 24`: the field moved into `frameStep`, so re-saving silently drops it to the default 12 and halves the animation speed.
 1. Inventory existing packages and responsibilities.
 2. Identify reusable capabilities currently trapped in application projects.
@@ -32,6 +33,7 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 ## Recent Work
 
+- 2026-09-04: `ReadOnlyLogSection` keeps the toolbar above the messages, with native flat buttons on the left and a native search field on the right. Only the search field is bottom-aligned within the toolbar row, leaving its bottom border visible. Clear stays in its original position. The explicit top border is retained. Search filters literal, case-insensitive matching lines without changing caller data; changing the query resets the viewport. Existing caller signatures, compact padding, foldout, resize and Ctrl font controls are retained. The toolbar/search version compiled against Unity 6000.3.9f1 before the final top-border adjustment. Runtime filter probes failed to start with Windows access denied; the user reported Defender alerts and explicitly requested that testing be left to them. Do not repeat reflection probes or run additional tests for this UI task. The user confirmed the top-border fix visually. They clarified that only the search field should align to the toolbar bottom line; moving the entire toolbar was a misunderstanding and has been reverted. Search alignment is the latest source-only change; Unity verification is left to the user, as requested. Usage belongs to [.agents/skills/editor-tooling.md](.agents/skills/editor-tooling.md#read-only-log-panel).
 - 2026-08-19: Corrected a scan recorded on 2026-08-18. It reported zero mount points under `W:/UnityProject/Assets`, but that path does not exist - W: holds one folder per project - so the scan read nothing and the absence was recorded as a finding. Re-scanned by script GUID: mount points exist in `W:/UnityProject/BonghuoVR`. Most were already migrated by the user; `Torch Performance.prefab` and `5x5 24fps.asset` still need hand work. The Yu5h1Lib half of that scan was correct and stands.
 - 2026-08-19: Finished convergence spec step 7 and item B5, closing the plan entirely. `AudioSourceAide` and the `LayoutGroupAddon` log prefix were done by the user; `Collider2DAide` and its editor (which also carried the retired `Agent` word) renamed to Addon in the separate `Unity/CombatAesthetic` repo, `.meta` files moved with their sources so script GUIDs are unchanged. B5 documents on the `Mode` enum that `Exact` never matches an interface. Committing B5 revealed that the Core attribute file is duplicated rather than linked, so the note went into both repos - see next steps.
 - 2026-08-19: Material convergence landed and is verified by the user - compiled, the three mount points in `test solver mesh.unity` migrated by hand, and a `TextureScrollDriver` asset wired into the surviving `MaterialController`. The `sources`/`instances`/`materials` split in `RendererAddon` was accepted as built, so no deviation is outstanding. Committed as `Converge material control into common`. The plan has no unresolved items left; only spec step 7 remains, and it is independent of materials.
@@ -48,3 +50,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 - 2026-07-27: Removed the `ParticleSystemRigidbody` implementation and its dedicated documentation. The Particle System C# Job approach remained CPU-bound and did not meet the required collision quality or performance for dense interactions.
 - Decision: use `unified-solver` for large-scale collision, stacking, and container interactions. The retrospective is recorded in [DevelopmentLog.md](Documentation/DevelopmentLog.md).
 
+## Ruled-out directions
+
+- A standalone Log example window and menu were removed at the user's request: a dedicated permanent preview for this one control adds unnecessary UI. Keep the minimal API usage in the Editor tooling guide; verify through consuming panels, an existing shared UI viewer when available, or a temporary host.
+
+- Raised-tab contours and mirrored toolbar backgrounds were retired: the user chose the standard flat Console toolbar with search. Retain an explicit top border for the embedded panel.

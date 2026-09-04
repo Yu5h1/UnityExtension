@@ -118,6 +118,95 @@ elsewhere in the data.
   configured looks broken, and hides every other fault behind the same blank
   screen.
 
+## Read-only Log panel
+
+For an embedded IMGUI log, use `ReadOnlyLogSection`: an external foldout title above a framed
+section, a fixed toolbar, scrolling messages and a draggable bottom edge. It delegates text display
+to `ReadOnlyLogPanel`, which remains available for hosts that supply their own chrome or Rect.
+
+- Package: `com.yu5h1.common`; Editor assembly: `Yu5h1Lib.Common.Editor`.
+- Namespace: `Yu5h1Lib.EditorExtension`.
+- Sources: [ReadOnlyLogSection.cs](../../Packages/common/Editor/Tool/ReadOnlyLogSection.cs),
+  [ReadOnlyLogPanel.cs](../../Packages/common/Editor/Tool/ReadOnlyLogPanel.cs).
+- Section API: `new ReadOnlyLogSection(float height = 160)` and
+  `bool DrawLayout(string title, Func<string> getText, Action drawToolbar)`.
+  Height refers to the message viewport, excluding title, toolbar and bottom grip.
+- The whole section uses 4 GUI points of padding on each side within the current layout and
+  follows the caller's `EditorGUI.indentLevel`. Indentation is applied once to title and frame;
+  the caller's indent is restored after drawing. No window-width calculation is needed.
+- Retain one section per visible log. `Expanded`, `Height`, `FontSize` and `SearchText` expose its display state.
+  Foldout starts open; dragging the bottom edge changes height between `MinimumHeight` (60) and
+  `MaximumHeight` (800) GUI points. Collapsing preserves height, font and scroll position.
+- `drawToolbar` runs inside the native horizontal toolbar scope. Use `section.DrawToolbarButton("Clear")`
+  first, then append future actions to its right. Buttons use the native flat toolbar style;
+  an explicit top border completes the embedded frame. The built-in native search field sits on
+  the right, using available width up to 220 GUI points. Controls stay outside the message viewport.
+- Search displays complete lines containing the literal query, ignoring case. It preserves original
+  line endings; an empty query restores the source text. Search changes reset the viewport, and
+  collapsing preserves the query. Filtering does not change caller data: Clear still clears the
+  caller's entire log. Search state belongs to each section instance.
+- `getText` runs after toolbar actions so Clear or Append affects the displayed text immediately.
+  Callbacks own the source text, ordering, timestamps, capacity and clear/save behavior.
+- Draw returns whether display state changed. Call the host's `Repaint()` when true.
+  Recreating the instance in `OnGUI` resets its state. State is not persisted across domain reloads.
+
+Put the caller under an Editor-only assembly. An asmdef-based caller explicitly adds
+`"Yu5h1Lib.Common.Editor"` to `references`; keep this reference out of Runtime asmdefs.
+
+```csharp
+using UnityEditor;
+using UnityEngine;
+using Yu5h1Lib.EditorExtension;
+
+public sealed class DiagnosticLogWindow : EditorWindow
+{
+    private readonly ReadOnlyLogSection log = new ReadOnlyLogSection();
+    private string text = "第一行\nSecond line\n";
+
+    [MenuItem("Window/Diagnostic Log")]
+    private static void Open() => GetWindow<DiagnosticLogWindow>();
+
+    private void OnGUI()
+    {
+        if (log.DrawLayout("Log", () => text, DrawToolbar))
+            Repaint();
+    }
+
+    private void DrawToolbar()
+    {
+        if (log.DrawToolbarButton("Clear"))
+            text = string.Empty;
+    }
+}
+```
+
+For a custom Inspector, retain the same field on `Editor<TargetType>` and make the same draw/repaint
+call inside `OnInspectorGUI`; call `base.OnInspectorGUI()` when the default fields are wanted.
+The section draws its own frame and foldout: avoid an additional help-box wrapper around it.
+
+For a bare message viewport use `ReadOnlyLogPanel.Draw(Rect position, string text)` or
+`ReadOnlyLogPanel.DrawLayout(string text, float height)`. These return whether the font changed.
+The panel accepts null as empty and treats markup literally. Do not use a disabled scope to make
+it read-only: native `SelectableLabel` already prevents editing while retaining selection/copy.
+
+The wheel scrolls normally. Ctrl+wheel changes font one point per vertical wheel event;
+Ctrl+middle-click restores `ReadOnlyLogPanel.DefaultFontSize` (12 pt). Font limits are exposed by
+`MinimumFontSize` (8) and `MaximumFontSize` (32). Font-control events inside the visible message
+viewport (including its scrollbar) are consumed even at the limits and do not also scroll it or its
+parent. Title, toolbar and resize grip are outside that viewport. Width and font changes recalculate
+wrapping and text height. Foldout, resizing and font changes do not set `GUI.changed` themselves.
+
+Ancestor clipping is read through one cached delegate to internal `UnityEngine.GUIClip.visibleRect`;
+Unity has no equivalent public query. If it cannot bind, font gestures and starting a resize are
+disabled; normal wheel scrolling, selection and toolbar/foldout rendering use public APIs.
+Check binding when adopting a new Unity version instead of dropping the clipping check.
+
+Use an existing consuming EditorWindow or Inspector for interaction verification. Check
+collapse/reopen, resize limits, release outside the grip, selection/copy and scrolling. For
+independence and clipping checks, use two instances in an existing UI viewer or a temporary test
+host; the minimal usage above supplies the entry point. Keep acceptance results in the consumer's
+verification record.
+
 ## Native-first workflow
 
 Before designing or implementing an extension:
