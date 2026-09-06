@@ -55,15 +55,10 @@ namespace Yu5h1Lib
                 switch (Shape.shapeType)
                 {
                     case ParticleSystemShapeType.Sphere:
-                    case ParticleSystemShapeType.SphereShell:
                         return ShapeKind.Sphere;
 
                     case ParticleSystemShapeType.Cone:
-                    case ParticleSystemShapeType.ConeShell:
-                    case ParticleSystemShapeType.ConeVolume:
-                    case ParticleSystemShapeType.ConeVolumeShell:
                         return ShapeKind.Cone;
-
                     default:
                         return ShapeKind.Box;
                 }
@@ -79,11 +74,8 @@ namespace Yu5h1Lib
                 case ParticleSystemShapeType.BoxShell:
                 case ParticleSystemShapeType.BoxEdge:
                 case ParticleSystemShapeType.Sphere:
-                case ParticleSystemShapeType.SphereShell:
                 case ParticleSystemShapeType.Cone:
-                case ParticleSystemShapeType.ConeShell:
                 case ParticleSystemShapeType.ConeVolume:
-                case ParticleSystemShapeType.ConeVolumeShell:
                     return true;
                 default:
                     return false;
@@ -167,16 +159,13 @@ namespace Yu5h1Lib
                 switch (shape.shapeType)
                 {
                     case ParticleSystemShapeType.Sphere:
-                    case ParticleSystemShapeType.SphereShell:
                         float diameter =
                             2f * shape.radius * lossy;
                         return new Vector3(
                             diameter, diameter, diameter);
 
                     case ParticleSystemShapeType.Cone:
-                    case ParticleSystemShapeType.ConeShell:
                     case ParticleSystemShapeType.ConeVolume:
-                    case ParticleSystemShapeType.ConeVolumeShell:
                         // The module gives the narrow radius and the angle it
                         // opens at; the wide radius is where that angle has
                         // reached by the end of the length.
