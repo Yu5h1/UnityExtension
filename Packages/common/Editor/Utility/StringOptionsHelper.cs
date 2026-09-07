@@ -27,8 +27,8 @@ namespace Yu5h1Lib.EditorExtension
             var targetObj = property.serializedObject.targetObject;
             if (targetObj != null)
             {
-                var targetID = targetObj.GetInstanceID();
-                if (TryGetContextValidated(targetID, out var contextKey))
+                var targetID = targetObj.GetEntityId().ToULong();
+                if (TryGetContextValidated(targetObj.GetEntityId(), out var contextKey))
                     return contextKey;
 
                 // 3. 嘗試從 ScriptableObject 名稱解析
@@ -214,17 +214,17 @@ namespace Yu5h1Lib.EditorExtension
         /// 嘗試取得物件的 Context，並驗證物件是否仍存在
         /// Editor 專用，會自動清理無效的 Context
         /// </summary>
-        public static bool TryGetContextValidated(EntityId instanceID, out string listKey)
+        public static bool TryGetContextValidated(EntityId id, out string listKey)
         {
-            if (_contextMap.TryGetValue(instanceID, out listKey))
+            if (_contextMap.TryGetValue(id.ToULong(), out listKey))
             {
                 // 驗證物件是否仍然存在
-                var obj = EditorUtility.EntityIdToObject(instanceID);
+                var obj = EditorUtility.EntityIdToObject(id);
                 if (obj != null)
                     return true;
 
                 // 物件已被刪除，清理 Context
-                _contextMap.Remove(instanceID);
+                _contextMap.Remove(id.ToULong());
             }
 
             listKey = null;

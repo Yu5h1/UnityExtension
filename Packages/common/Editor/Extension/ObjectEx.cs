@@ -22,7 +22,7 @@ namespace Yu5h1Lib.Common
                 guid = guid,
                 localId = localId,
                 type = 2,
-                instanceID = obj.GetInstanceID()
+                entityId = obj.GetEntityId()
             };
             EditorGUIUtility.systemCopyBuffer = "UnityEditor.ObjectWrapperJSON:" + JsonUtility.ToJson(wrapper);
         }
@@ -33,7 +33,7 @@ namespace Yu5h1Lib.Common
             public string guid;
             public long localId;
             public int type;
-            public int instanceID;
+            public EntityId entityId;
         }
     }
 }

@@ -22,7 +22,7 @@ namespace Yu5h1Lib.EditorExtension
             var targetObj = property.serializedObject.targetObject;
             if (targetObj is ScriptableObject)
             {
-                DecoratorProvider.TryGetDrawMethod(targetObj.GetInstanceID(), out drawMethod);
+                DecoratorProvider.TryGetDrawMethod(targetObj.GetLongId(), out drawMethod);
             }
 
             // Path A: normal class — find [Decorator] on parent field via reflection

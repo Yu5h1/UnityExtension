@@ -304,7 +304,7 @@ namespace Yu5h1Lib
             if (typeof(UnityEngine.Object).IsAssignableFrom(type))
             {
                 var obj = value as UnityEngine.Object;
-                return obj != null ? obj.GetInstanceID().ToString() : null;
+                return obj != null ? EntityId.ToULong(obj.GetEntityId()).ToString() : null;
             }
 
             if (type.IsSerializable)
@@ -336,8 +336,9 @@ namespace Yu5h1Lib
 
             if (typeof(UnityEngine.Object).IsAssignableFrom(targetType))
             {
-                int instanceID = int.Parse(value);
-                return UnityEngine.Object.FindFirstObjectByType(targetType);
+                var entityId = EntityId.FromULong(ulong.Parse(value));
+                var obj = Resources.EntityIdToObject(entityId);
+                return obj != null && targetType.IsInstanceOfType(obj) ? obj : null;
             }
 
             if (targetType.IsClass)

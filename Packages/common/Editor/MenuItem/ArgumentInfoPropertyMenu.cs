@@ -177,7 +177,7 @@ namespace Yu5h1Lib.EditorExtension
                 if (wrapper == null)
                     return null;
 
-                var instanceObject = EditorUtility.EntityIdToObject(wrapper.instanceID);
+                var instanceObject = EditorUtility.EntityIdToObject(wrapper.entityId);
                 if (instanceObject != null)
                     return instanceObject;
 
@@ -279,7 +279,7 @@ namespace Yu5h1Lib.EditorExtension
             public string guid;
             public long localId;
             public int type;
-            public int instanceID;
+            public EntityId entityId;
         }
     }
 }

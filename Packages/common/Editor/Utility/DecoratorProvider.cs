@@ -24,7 +24,7 @@ namespace Yu5h1Lib.EditorExtension
         private static readonly Dictionary<Type, DecoratorDraw> _drawMethods = new();
 
         // Dynamic registry: SO instanceID → drawer attribute type (registered per-frame by InlineDrawer)
-        private static readonly Dictionary<int, Type> _drawerTypes = new();
+        private static readonly Dictionary<ulong, Type> _drawerTypes = new();
 
         /// <summary>
         /// Register a draw method for a specific attribute type.
@@ -40,19 +40,19 @@ namespace Yu5h1Lib.EditorExtension
         /// Set the drawer type for a specific SO instance.
         /// Called by InlineDrawer when it reads [Decorator] from the field.
         /// </summary>
-        public static void SetDrawerType(int instanceID, Type attributeType)
+        public static void SetDrawerType(ulong id, Type attributeType)
         {
             if (attributeType == null) return;
-            _drawerTypes[instanceID] = attributeType;
+            _drawerTypes[id] = attributeType;
         }
 
         /// <summary>
         /// Query: instanceID → Type → drawMethod (two-step lookup)
         /// </summary>
-        public static bool TryGetDrawMethod(int instanceID, out DecoratorDraw method)
+        public static bool TryGetDrawMethod(ulong id, out DecoratorDraw method)
         {
             method = null;
-            return _drawerTypes.TryGetValue(instanceID, out var type)
+            return _drawerTypes.TryGetValue(id, out var type)
                 && _drawMethods.TryGetValue(type, out method);
         }
 
@@ -62,7 +62,7 @@ namespace Yu5h1Lib.EditorExtension
         public static bool TryGetDrawMethod(Type attributeType, out DecoratorDraw method)
             => _drawMethods.TryGetValue(attributeType, out method);
 
-        public static void ClearInstance(int instanceID)
-            => _drawerTypes.Remove(instanceID);
+        public static void ClearInstance(ulong id)
+            => _drawerTypes.Remove(id);
     }
 }

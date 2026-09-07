@@ -40,7 +40,7 @@ public class InspectorEnhancer : EditorWindow
                             {
                                 if (sobjs[i] != "")
                                 {
-                                    objs[i] = int.Parse(sobjs[i]);
+                                    objs[i] = EntityId.FromULong(ulong.Parse(sobjs[i]));
                                 }
                             }
                             if (objs.Length > 0)
@@ -230,7 +230,7 @@ public class InspectorEnhancer : EditorWindow
         {
             foreach (var obj in item)
             {
-                save += obj.ToString() + ",";
+                save += EntityId.ToULong(obj).ToString() + ",";
             }
             save += "-";
         }
