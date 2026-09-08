@@ -3,8 +3,56 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-07-21T21:01:41+08:00",
+  "updated_at": "2026-09-08T15:29:02+08:00",
   "tasks": [
+    {
+      "id": "project-system-analysis",
+      "title": "專案開發系統分析技能",
+      "status": "planned",
+      "summary": "已記錄需求分類、比對 Yu5h1Lib 能力、列出匹配方案再定案的技能草案；優先重用 Prefab 與資料配置，保留編輯時預覽及微調。正式技能尚未建立。",
+      "completed_items": [
+        "記錄分析流程、候選方案表格與經驗回流方向",
+        "列出技能歸屬、啟用範圍、定案方式與試行案例等待討論事項"
+      ],
+      "pending_items": [
+        "收斂技能歸屬及與既有工作路由、設計技能的分工",
+        "決定消費專案如何從需求找到庫能力與驗證證據",
+        "挑選真實需求試行，驗證重用成果及可編輯性",
+        "依試行結果收斂格式，再建立正式技能與啟用入口"
+      ]
+    },
+    {
+      "id": "agent-scene-workflow",
+      "title": "Agent 文字與 Unity 物件工作流",
+      "status": "planned",
+      "summary": "已有文字描述 Unity 階層、組件與同步的討論草案及候選資源比較；先評估採用或擴充既有方案，尚未選定語法或實作同步系統。",
+      "completed_items": [
+        "整理既有方案的公開能力、差異與待驗證範圍",
+        "記錄既有聊天面板、自製 UI 的擴充案例與同步限制"
+      ],
+      "pending_items": [
+        "定位聊天面板與自製 UI，驗證既有元件接入成本",
+        "釐清一般物件與骨架範圍，完成採用、擴充或自製評估",
+        "收斂文字與 Inspector 主導權、名稱身分及首個案例",
+        "驗證階層同步、引用保留、Undo 與人工編輯往返"
+      ]
+    },
+    {
+      "id": "deformable-world-assets",
+      "title": "可變形物理世界與世界資產",
+      "status": "planned",
+      "summary": "已記錄降低逐件精工製作 3D 資產依賴的探索草案；程序配方、永久變形與世界保存仍屬候選方向，尚未選定原型或後端。",
+      "completed_items": [
+        "整理世界形成、形狀資料、永久修改與保存的候選責任",
+        "區分既有 Unified-Solver 探索經驗與尚未實現的世界能力"
+      ],
+      "pending_items": [
+        "從魚、彈跳及群體互動經驗辨識具體內容製作負擔",
+        "選擇第一個原型與物理、性能、保存驗收範圍",
+        "比較表示與既有資源，驗證本機修改及保存往返",
+        "依結果評估 PhysicsParticle 契約擴充與雲端保存"
+      ]
+    },
     {
       "id": "solution-inventory",
       "title": "Package 責任與可重用能力盤點",
