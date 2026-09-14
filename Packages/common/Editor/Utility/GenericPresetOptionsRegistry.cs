@@ -17,11 +17,11 @@ namespace Yu5h1Lib.EditorExtension
             // 所有 Assembly
             StringOptionsProvider.Register("~Assemblies", (sender, path) =>
             {
-                return AppDomain.CurrentDomain.GetAssemblies()
-                      .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location))
+                return AssemblyUtility.GetAssemblies()
+                      .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.GetLocation()))
                       .Where(a =>
                       {
-                          var location = a.Location;
+                          var location = a.GetLocation();
                           // Editor 組件通常在 Editor 資料夾或特定路徑
                           return !a.FullName.StartsWith("UnityEditor");
                       })
@@ -45,8 +45,8 @@ namespace Yu5h1Lib.EditorExtension
                 if (string.IsNullOrEmpty(assemblyName))
                 {
                     // 未選 assembly → 列出所有非 Editor assembly 的 Component
-                    types = AppDomain.CurrentDomain.GetAssemblies()
-                        .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location)
+                    types = AssemblyUtility.GetAssemblies()
+                        .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.GetLocation())
                                     && !a.FullName.StartsWith("UnityEditor"))
                         .SelectMany(a =>
                         {
@@ -58,7 +58,7 @@ namespace Yu5h1Lib.EditorExtension
                 else
                 {
                     // 已選 assembly → 只列該 assembly（現有行為）
-                    var assembly = AppDomain.CurrentDomain.GetAssemblies()
+                    var assembly = AssemblyUtility.GetAssemblies()
                         .FirstOrDefault(a => a.GetName().Name == assemblyName);
                     if (assembly == null)
                         return Array.Empty<string>();

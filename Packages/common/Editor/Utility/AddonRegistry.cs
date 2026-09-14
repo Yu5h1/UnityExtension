@@ -55,7 +55,7 @@ namespace Yu5h1Lib.EditorExtension
 
             var monoBehaviourType = typeof(MonoBehaviour);
 
-            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (var asm in AssemblyUtility.GetAssemblies())
             {
                 Type[] types;
                 try { types = asm.GetTypes(); }

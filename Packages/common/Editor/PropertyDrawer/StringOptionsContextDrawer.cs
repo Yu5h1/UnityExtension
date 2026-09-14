@@ -37,7 +37,7 @@ namespace Yu5h1Lib.EditorExtension
                 && property.objectReferenceValue is ScriptableObject)
             {
                 StringOptionsProvider.SetContext(
-                    property.objectReferenceValue.GetLongId(),
+                    property.objectReferenceValue.GetEntityId().ToString(),
                     listKey
                 );
             }

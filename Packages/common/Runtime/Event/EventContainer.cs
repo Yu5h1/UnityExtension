@@ -1,4 +1,5 @@
 namespace Yu5h1Lib
 {
-	public abstract class EventContainer {}
+    [System.Serializable]
+    public abstract class EventContainer {}
 }

@@ -37,7 +37,7 @@ namespace Yu5h1Lib
             Data.Resolve();
         }
 
-        public void Reset() => Data.Reset();
+        public void Reset() => Data?.Reset();
 
         protected override void Initialize()
         {

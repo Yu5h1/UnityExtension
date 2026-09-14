@@ -27,7 +27,7 @@ namespace Yu5h1Lib.EditorExtension
             var targetObj = property.serializedObject.targetObject;
             if (targetObj != null)
             {
-                var targetID = targetObj.GetEntityId().ToULong();
+                var targetID = targetObj.GetEntityId();
                 if (TryGetContextValidated(targetObj.GetEntityId(), out var contextKey))
                     return contextKey;
 
@@ -39,7 +39,7 @@ namespace Yu5h1Lib.EditorExtension
                     if (!string.IsNullOrEmpty(parsed) && StringOptionsProvider.Contains(parsed))
                     {
                         // 快取到 Context Map
-                        StringOptionsProvider.SetContext(targetID, parsed);
+                        StringOptionsProvider.SetContext($"{targetID}", parsed);
                         return parsed;
                     }
                 }
@@ -216,7 +216,8 @@ namespace Yu5h1Lib.EditorExtension
         /// </summary>
         public static bool TryGetContextValidated(EntityId id, out string listKey)
         {
-            if (_contextMap.TryGetValue(id.ToULong(), out listKey))
+            var key = $"{id}";
+            if (_contextMap.TryGetValue(key, out listKey))
             {
                 // 驗證物件是否仍然存在
                 var obj = EditorUtility.EntityIdToObject(id);
@@ -224,7 +225,7 @@ namespace Yu5h1Lib.EditorExtension
                     return true;
 
                 // 物件已被刪除，清理 Context
-                _contextMap.Remove(id.ToULong());
+                _contextMap.Remove(key);
             }
 
             listKey = null;

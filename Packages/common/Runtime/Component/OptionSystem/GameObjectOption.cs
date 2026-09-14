@@ -1,12 +1,14 @@
 using UnityEngine;
-using Yu5h1Lib;
 
-public class GameObjectOption : OptionSet<GameObject>
+namespace Yu5h1Lib
 {
-    protected override void OnSelected(int index)
+    public class GameObjectOption : OptionSet<GameObject>
     {
-        GameObject current = Items[index];
-        foreach (var item in Items)
-            item.gameObject.SetActive(item == current);
+        protected override void OnSelected(int index)
+        {
+            GameObject current = Items[index];
+            foreach (var item in Items)
+                item.gameObject.SetActive(item == current);
+        }
     }
 }

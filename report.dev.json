@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "report_id": "unity-extension-progress",
-  "updated_at": "2026-09-08T15:29:02+08:00",
+  "updated_at": "2026-09-09T02:20:00+08:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -9,7 +9,7 @@
     },
     {
       "id": "agent-scene-workflow",
-      "next_step": "依 Documentation/Agent friendly workflow Yu5h1Lib.UnityExtension.md 的擴充性驗收，定位既有聊天面板與自製 UI，再比較候選方案接入成本；尚未授權本計畫的同步系統實作。"
+      "next_step": "依 Documentation/文字結構同步.md#待討論決策 收斂身分保存、完成標記及省略欄位語意；並依上層工作流評估既有方案與聊天面板接入成本。設計文件已完成，同步實作尚未開始。"
     },
     {
       "id": "deformable-world-assets",

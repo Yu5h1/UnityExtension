@@ -62,5 +62,15 @@ namespace Yu5h1Lib
         {
             if (obj != null) obj.transform.SetParent(null, worldPositionStays: true);
         }
+
+        public static T[] FindObjects<T>() where T : UnityEngine.Object
+        {
+#if UNITY_6000_4_OR_NEWER
+            return GameObject.FindObjectsByType<T>();
+#else
+            return GameObject.FindObjectsByType<T>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+#endif
+
+        }
     }
 }

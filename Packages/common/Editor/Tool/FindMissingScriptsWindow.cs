@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
+using Yu5h1Lib;
 
 public class FindMissingScriptsWindow : EditorWindow
 {
@@ -47,7 +48,7 @@ public class FindMissingScriptsWindow : EditorWindow
     {
         _results.Clear();
         
-        var allObjects = FindObjectsByType<GameObject>(FindObjectsInactive.Include,FindObjectsSortMode.None);
+        var allObjects = GameObjectProxy.FindObjects<GameObject>();
         foreach (var go in allObjects)
         {
             var components = go.GetComponents<Component>();

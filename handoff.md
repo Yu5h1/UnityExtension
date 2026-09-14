@@ -26,7 +26,9 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 - Continue [可變形物理世界與世界資產](Documentation/可變形物理世界與世界資產.md) from its world-creation premise: reduce dependence on individually finished, labor-intensive 3D assets. Unified-Solver's fish, bouncing, physical interaction and group-behavior work is exploratory experience, not a converged solution or selected backend. Identify the authoring burden before choosing a deformation prototype; existing PhysicsParticle contracts remain unchanged.
 
-- Continue the scene-text workflow discussion from [Agent friendly workflow](Documentation/Agent%20friendly%20workflow%20Yu5h1Lib.UnityExtension.md#待討論決策), evaluating existing solutions and their extension paths for the user's chat panel and custom UI before settling custom syntax or synchronization ownership. Locate those existing implementations for the extension trial. This is a discussion draft; no implementation has been authorized by this planning task.
+- Continue adoption and extension evaluation from [Agent friendly workflow](Documentation/Agent%20friendly%20workflow%20Yu5h1Lib.UnityExtension.md#待討論決策); locate the existing chat panel and custom UI for comparison.
+
+- Continue [文字結構同步 — 待討論決策](Documentation/文字結構同步.md#待討論決策) to settle identity storage, completion-marker transport and omitted-field semantics before implementation. The user authorized the design document and report update; synchronization implementation has not started.
 
 1. Verify the shared log through **HealthAI > Interaction Debug Window** and `W:\UnityProject\HealthAI\Assets\HealthAI\Editor\HealthAIInteractionDebugWindow.cs` in Unity: multi-line selection/copy/select-all, rejected edits, normal wheel scrolling, independent Ctrl+wheel zoom, Ctrl+middle-click reset to 12 pt, nested clipping, reflow, final-line scrolling, external foldout title, flat Clear toolbar, right-side search and its clear control, collapse retention and bottom-edge resizing with release outside the grip. The acceptance owner and integrated application caller are in `W:\UnityProject\HealthAI\docs\unity\Requirements.UnityExtension.md`; that project retains the Outstanding statuses until interactive acceptance passes.
 1. Finish the BonghuoVR migration in `W:/UnityProject/BonghuoVR/Assets/StaticResources/`. `Torch Performance.prefab` carries a `RendererMaterialController` (`&615836047818230860`) whose type is deleted, so it shows as a missing script; its `resolver` pointed at `Animation/5x5 24fps.asset`. Replace it with a `MaterialController` whose `sources` is the `LineRendererAddon` already on that GameObject (that component is an `IReadOnlyList<Material>` since decision 9) and whose `driver` is that asset - the same shape `Sulfuric Fire Line.prefab` already has. Then set `5x5 24fps.asset` back to `fps: 24`: the field moved into `frameStep`, so re-saving silently drops it to the default 12 and halves the animation speed.
@@ -38,6 +40,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 
 ## Recent Work
+
+- 2026-09-09: Added the dedicated [文字結構同步](Documentation/文字結構同步.md) design and moved synchronization ownership out of the overall workflow draft. Updated the existing agent-scene-workflow report card; implementation remains planned. Both report schemas and overlay IDs passed validation. Independent document review clarified that pending Inspector writeback pauses the whole sync round. Viewer launch failed because the launcher could not access the stale localwebservice-8001.json state file under LocalAppData; visual verification remains unperformed.
 
 - 2026-09-04: `ReadOnlyLogSection` keeps the toolbar above the messages, with native flat buttons on the left and a native search field on the right. Only the search field is bottom-aligned within the toolbar row, leaving its bottom border visible. Clear stays in its original position. The explicit top border is retained. Search filters literal, case-insensitive matching lines without changing caller data; changing the query resets the viewport. Existing caller signatures, compact padding, foldout, resize and Ctrl font controls are retained. The toolbar/search version compiled against Unity 6000.3.9f1 before the final top-border adjustment. Runtime filter probes failed to start with Windows access denied; the user reported Defender alerts and explicitly requested that testing be left to them. Do not repeat reflection probes or run additional tests for this UI task. The user confirmed the top-border fix visually. They clarified that only the search field should align to the toolbar bottom line; moving the entire toolbar was a misunderstanding and has been reverted. Search alignment is the latest source-only change; Unity verification is left to the user, as requested. Usage belongs to [.agents/skills/editor-tooling.md](.agents/skills/editor-tooling.md#read-only-log-panel).
 - 2026-08-19: Corrected a scan recorded on 2026-08-18. It reported zero mount points under `W:/UnityProject/Assets`, but that path does not exist - W: holds one folder per project - so the scan read nothing and the absence was recorded as a finding. Re-scanned by script GUID: mount points exist in `W:/UnityProject/BonghuoVR`. Most were already migrated by the user; `Torch Performance.prefab` and `5x5 24fps.asset` still need hand work. The Yu5h1Lib half of that scan was correct and stands.
@@ -63,6 +67,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 - [可變形物理世界與世界資產 — 待討論決策](Documentation/可變形物理世界與世界資產.md#待討論決策).
 
 - [Agent friendly workflow — 待討論決策](Documentation/Agent%20friendly%20workflow%20Yu5h1Lib.UnityExtension.md#待討論決策).
+
+- [文字結構同步 — 待討論決策](Documentation/文字結構同步.md#待討論決策).
 
 ## Ruled-out directions
 

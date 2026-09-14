@@ -4,6 +4,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
+using Yu5h1Lib;
 
 /// <summary>
 /// Enhanced Inspector utilities:
@@ -38,10 +39,8 @@ public class InspectorEnhancer : EditorWindow
                             var objs = new EntityId[sobjs.Length];
                             for (int i = 0; i < sobjs.Length; i++)
                             {
-                                if (sobjs[i] != "")
-                                {
-                                    objs[i] = EntityId.FromULong(ulong.Parse(sobjs[i]));
-                                }
+                                if (sobjs[i].TryParseEntityId(out EntityId id))
+                                    objs[i] = id;
                             }
                             if (objs.Length > 0)
                             {
@@ -230,7 +229,7 @@ public class InspectorEnhancer : EditorWindow
         {
             foreach (var obj in item)
             {
-                save += EntityId.ToULong(obj).ToString() + ",";
+                save += obj.ToString() + ",";
             }
             save += "-";
         }

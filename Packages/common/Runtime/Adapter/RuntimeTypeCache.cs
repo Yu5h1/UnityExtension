@@ -22,7 +22,7 @@ namespace Yu5h1Lib
         {
             var cache = new Dictionary<Type, List<Type>>();
             
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (var assembly in AssemblyUtility.GetAssemblies())
             {
                 var name = assembly.FullName;
 

@@ -18,7 +18,7 @@ namespace Yu5h1Lib.EditorExtension
 
             var baseType = typeof(ParameterObject<>).MakeGenericType(valueType);
 
-            var implType = AppDomain.CurrentDomain.GetAssemblies()
+            var implType = AssemblyUtility.GetAssemblies()
                 .SelectMany(a => {
                     try { return a.GetTypes(); }
                     catch { return Type.EmptyTypes; }

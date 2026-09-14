@@ -38,8 +38,9 @@ namespace Yu5h1Lib.UI
                 UpdateDirection();
             }
         }
-        
-        public Renderer renderer => _renderer;
+#pragma warning disable 0109
+        public new Renderer renderer => _renderer;
+#pragma warning restore 0109
         public Axis forwardAxis { get => _forwardAxis; set => _forwardAxis = value; }
         public Vector3 normal => _normal;
 
@@ -55,6 +56,9 @@ namespace Yu5h1Lib.UI
         {
             if (_updateEveryFrame)
                 UpdateDirection();
+
+
+            
         }
 
         public bool UpdateDirection()

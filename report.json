@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-09-08T15:29:02+08:00",
+  "updated_at": "2026-09-09T02:20:00+08:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -25,15 +25,16 @@
       "id": "agent-scene-workflow",
       "title": "Agent 文字與 Unity 物件工作流",
       "status": "planned",
-      "summary": "已有文字描述 Unity 階層、組件與同步的討論草案及候選資源比較；先評估採用或擴充既有方案，尚未選定語法或實作同步系統。",
+      "summary": "已完成獨立的文字結構同步設計：Edit Mode 優先、Component 綁定、版本完成標記及衝突處理；Runtime 分階段加入。既有方案與格式仍待評估，同步實作尚未開始。",
       "completed_items": [
         "整理既有方案的公開能力、差異與待驗證範圍",
-        "記錄既有聊天面板、自製 UI 的擴充案例與同步限制"
+        "記錄既有聊天面板、自製 UI 的擴充案例與同步限制",
+        "完成文字結構同步設計文件，定義責任、版本流程、人工修改及原型驗收"
       ],
       "pending_items": [
         "定位聊天面板與自製 UI，驗證既有元件接入成本",
         "釐清一般物件與骨架範圍，完成採用、擴充或自製評估",
-        "收斂文字與 Inspector 主導權、名稱身分及首個案例",
+        "選定首個案例，收斂身分保存、完成標記形式及省略欄位語意",
         "驗證階層同步、引用保留、Undo 與人工編輯往返"
       ]
     },

@@ -16,7 +16,7 @@ namespace Yu5h1Lib
             get
             {
                 if (_cached == null && !string.IsNullOrEmpty(_assemblyName))
-                    _cached = AppDomain.CurrentDomain.GetAssemblies()
+                    _cached = AssemblyUtility.GetAssemblies()
                         .FirstOrDefault(a => a.GetName().Name == _assemblyName);
                 return _cached;
             }
