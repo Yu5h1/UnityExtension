@@ -49,6 +49,15 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 ## Recent Work
 
+- 2026-09-15: Closed an omission and built the consumer rig. `AnimationController` and `StateBehaviour` finally moved from `common/Runtime/Animation/` into `Packages/Animation/Runtime/Component/`, with `StateBehaviourEditor` following into `Animation/Editor/Inspector/` - decided several sessions back and never executed. `.cs` and `.meta` moved together so script GUIDs survive. `Timer.cs` stays in `common`: it wraps `Yu5h1Lib.Timer` and is not animation, only mis-filed under that folder name.
+
+  `W:/UnityProject/Yu5h1LibTest/Assets/Demos/AppsMenu/` holds a draggable, throwable desktop assembled from `GroupDragLayout`, `PointerVelocity`, `Reaction.Throw`, `SweptContact`, `Gesture.LongPress`, `ShakePlayer`, `Transition.Opening`/`Entrance` and `ElementTarget`. It builds its own panel, so it needs no scene, UXML or USS - drop it on a GameObject and press Play. It exists to make the feel verifiable by hand, since no unit test judges inertia or whether a wobble reads as hanging.
+
+  It also settles `DraggableDesktop`: writing the consumer required inventing nothing. Everything left over is policy - what counts as an obstacle, where the dock is, how fast a release becomes a throw, what holding does, why one icon ignores movement during its hold. That is exactly what should not enter a package, so the control should be dropped from the plan and this demo stands in its place as the worked example.
+
+  Verified through the user's open Editor rather than the CLI, which the project lock rules out: all eleven assemblies build and the editor log carries zero compile errors. The test run still needs either Test Runner in that Editor or a CLI run with it closed.
+
+
 - 2026-09-15: `uitoolkit-decoupling` step 7, first half - `BottomSheet` landed in `com.yu5h1.uitoolkit` at 173/173 EditMode. Ported as-is per the decision to keep the caller's element names (`sheet-layer`, `sheet`, `handle`, `scrim`, `sheet-title`, `sheet-kicker`, `sheet-scroll`, `sheet-close`) and the `hidden` class, with the naming contract written into the type summary. Two changes to what HealthAI had: a missing element now throws naming the element it wanted, instead of a null reference surfacing later somewhere unrelated; and the control sets `handle.focusable` itself, because it both focuses the handle and listens for keys on it, and `Focus()` on a non-focusable element does nothing at all, silently. The test fixture found that one - it built the structure the documentation described, which did not include being focusable.
 
   `DraggableDesktop` is still open and may not be worth building; the assessment is in Next Steps.
