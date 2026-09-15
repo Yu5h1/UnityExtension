@@ -1,0 +1,17 @@
+{
+    "name": "Yu5h1Lib.UIToolkit",
+    "rootNamespace": "Yu5h1Lib.UIToolkit",
+    "references": [
+        "Yu5h1Lib.Common",
+        "Yu5h1Lib.Animation"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

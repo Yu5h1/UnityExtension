@@ -18,6 +18,7 @@
 | `motion-system` | [Motion_System_Refactor](plans/Motion_System_Refactor.md) | Engine-independent Motion contracts, runners, and Unity migration |
 | `atomic-components` | [AtomicComponents](plans/AtomicComponents.md) | Resolver, Repeater, random and shuffle components, and ScriptableObject wrappers |
 | `unity-event-transmission` | [Transmission design](plans/Transmission_設計.md) | UnityEvent argument persistence, message routing, and the closed Invocation alternative |
+| `uitoolkit-decoupling` | [套件解耦計畫](file:///W:/UnityProject/HealthAI/docs/unity/%E5%A5%97%E4%BB%B6%E8%A7%A3%E8%80%A6%E8%A8%88%E7%95%AB.md) | New `com.yu5h1.uitoolkit`, plus motion/geometry extraction into `animation`/`common`/`inputsystem`, validated in `W:/UnityProject/Yu5h1LibTest`. Design and acceptance live in HealthAI; requirements in its `Requirements.UnityExtension.md` |
 | `component-convergence` | [Component_Convergence](plans/Component_Convergence.md) | Overlapping material-control components, half-designed components, and naming collisions awaiting convergence |
 
 ## Unity application validation routes

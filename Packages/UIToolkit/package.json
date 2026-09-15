@@ -1,0 +1,21 @@
+{
+  "name": "com.yu5h1.uitoolkit",
+  "displayName": "Yu5h1Lib.UIToolkit",
+  "version": "0.1.0",
+  "unity": "6000.3",
+  "unityRelease": "9f1",
+  "description": "UI Toolkit runtime gestures, manipulators, controls and panel/world bridging from Yu5h1",
+  "dependencies": {
+    "com.yu5h1.common": "1.0.0",
+    "com.yu5h1.animation": "0.0.0"
+  },
+  "keywords": [
+    "UIToolkit",
+    "UIElements"
+  ],
+  "author": {
+    "name": "Yu5h1",
+    "url": "https://github.com/Yu5h1",
+    "email": "jenyu5h10415@gmail.com"
+  }
+}
