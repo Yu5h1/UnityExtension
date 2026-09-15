@@ -49,6 +49,15 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 ## Recent Work
 
+- 2026-09-16: The Apps Menu consumer is finished and verified by hand, and now ships with the package as `Packages/UIToolkit/Samples~/AppsMenu` - it had been living in Yu5h1LibTest, which is not a repository, so the one worked example of how these packages fit together had no version control at all.
+
+  It settles `DraggableDesktop`: writing the consumer required inventing nothing. Everything in it that is not a package call is policy - which rectangle is an obstacle, where an app lives, what counts as dropping it into Apps, how fast a release becomes a throw, what holding means, which app ignores movement while held. The control should be dropped from the plan and this sample stands in its place.
+
+  Five defects surfaced during hand verification, every one of them in the demo's own composition rather than in a package. Four were the same mistake: **a gesture belongs to one element, and that element must both capture the pointer and run the gesture's own timers.** Splitting those halves fails silently - capture on the desktop left the icon's `LongPress` blind to movement so it fired mid-drag; capture on an icon with the release handled elsewhere wedged the pointer permanently when the icon was hidden by its closing panel; swallowing the release inside the icon stopped the very handler that clears the drag. HealthAI obeys that rule in all three of its own call sites, which is why it works there. The fifth was `BringToFront` inside a flex row, where child order *is* layout order, so raising the dragged item sent it to the last slot and shuffled the rest - fixed by lifting it out of the flow onto an invisible stand-in that holds its place.
+
+  Worth keeping: `Gesture.LongPress` must be attached to the element that captures the pointer, or it never learns that the pointer moved. That is not a defect - HealthAI's colour picker and character stage both do exactly this - but it is the kind of thing a consumer discovers the hard way, so it belongs in the skill file when one is written.
+
+
 - 2026-09-15: Fixed a test defect that only appeared once the suite was run from inside the Editor rather than through `-batchmode`. All nine `WorldPanelTests` failed with every `worldBound` reading NaN. The cause is that a runtime `UIDocument` lays out only while the Game view renders: batchmode runs the main loop so layout happens, an unfocused Editor does not, so the `yield return null` frames advance without a layout pass ever running. A suite that passes in CI and fails on a desk is worse than no suite, so those nine moved to a new PlayMode assembly `Yu5h1Lib.UIToolkit.Tests` under `Tests/Runtime/`, which is where behaviour that depends on a runtime panel belongs. EditMode is now 164/164 and PlayMode 9/9, both green with the Editor unfocused.
 
   The MCP bridge (`com.coplaydev.unity-mcp` at `v10.2.0`, the same pin BonghuoVR uses) is now in Yu5h1LibTest's manifest, so tests and the console can be driven without closing the Editor. That is what surfaced this: every earlier run had been batchmode, which hid it.

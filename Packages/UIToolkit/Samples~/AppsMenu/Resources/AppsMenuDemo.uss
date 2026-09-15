@@ -1,0 +1,78 @@
+/* Modelled on HealthAI's own apps-panel: a float panel anchored under the Apps button. */
+
+.hidden {
+    display: none;
+}
+
+.apps-panel {
+    position: absolute;
+    right: 18px;
+    width: 288px;
+    max-width: 94%;
+    padding: 14px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    background-color: rgba(28, 31, 38, 0.82);
+    border-radius: 24px;
+    border-width: 1px;
+    border-color: rgba(120, 128, 148, 0.45);
+}
+
+.apps-panel.drop-ready {
+    border-color: rgba(96, 190, 168, 0.9);
+    background-color: rgba(34, 46, 48, 0.88);
+}
+
+.panel-item {
+    width: 56px;
+    height: 56px;
+    margin: 7px;
+    border-radius: 14px;
+    background-color: rgb(68, 82, 120);
+    align-items: center;
+    justify-content: center;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0);
+}
+
+/* The slot a dropped app would take. */
+.panel-item.slot-target {
+    border-color: rgb(255, 255, 255);
+}
+
+.apps-button {
+    position: absolute;
+    right: 28px;
+    top: 28px;
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    background-color: rgb(40, 76, 72);
+    align-items: center;
+    justify-content: center;
+    /* Reserved even when invisible, so showing the hint cannot resize the button. */
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0);
+}
+
+/* Something is being dragged: say that Apps will take it. */
+.apps-button.hinting {
+    border-color: rgb(255, 255, 255);
+}
+
+/* And that letting go right here would. */
+.apps-button.drop-ready {
+    background-color: rgb(58, 126, 112);
+    border-color: rgb(255, 255, 255);
+}
+
+.desktop-app {
+    border-radius: 14px;
+    background-color: rgb(82, 115, 184);
+    align-items: center;
+    justify-content: center;
+}
+
+.desktop-app.marked {
+    background-color: rgb(184, 115, 82);
+}

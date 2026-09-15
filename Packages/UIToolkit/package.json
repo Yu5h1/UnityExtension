@@ -17,5 +17,12 @@
     "name": "Yu5h1",
     "url": "https://github.com/Yu5h1",
     "email": "jenyu5h10415@gmail.com"
-  }
+  },
+  "samples": [
+    {
+      "displayName": "Apps Menu",
+      "description": "A draggable, throwable desktop with a float Apps panel, assembled only from Yu5h1Lib packages. The hands-on rig for the things no unit test judges: group drag, inertia, the throw, the hold and its swallowed click, the catch wobble, the staggered entrance.",
+      "path": "Samples~/AppsMenu"
+    }
+  ]
 }
