@@ -2,7 +2,20 @@
 
 > Audience: Claude（跨 session 持續記憶）。使用者是驗證者。本檔是單一真相。
 > 取代並合併 `Tween_Refactor.md` + 舊 `Motion System Refactor Plan.md`（作廢）。
-> **狀態：📐 架構設計中。2026-06-09 大幅收斂 → 殼優先 + `Motion` 巢狀架構。尚未寫 code。**
+> **狀態：📐 架構設計中。2026-06-09 大幅收斂 → 殼優先 + 巢狀架構。尚未寫 code。**
+>
+> **改名定案（2026-09-15，使用者授權由 `uitoolkit-decoupling` 接管本任務）：容器類 `Motion` 更名為
+> `Transition`，namespace 由 `Yu5h1Lib.Animation` 改為扁平的 `Yu5h1Lib`。**
+> `UnityEngine.Motion` 是既有型別（`AnimationClip` 與 `BlendTree` 的基底），`UnityEngine.Animation`
+> 也是；兩者掛在 `Yu5h1Lib` 這一層都會在整個 library 遮蔽 Unity 的同名型別，違反
+> [introduction.md](../introduction.md) 的 house convention，而 animation package 正是最可能需要
+> `UnityEngine.Motion` 的地方。`Transition` 與 `Reaction` 皆已驗證不與任何 `UnityEngine` 型別同名。
+> 本文以下所有 `Motion.IHandle`／`Motion.ISettings`／`Motion.IRunner`／`Motion.Interpolate` 一律讀作
+> `Transition.*`；DOTween／PrimeTween 的 runner 抽換設計不受影響，僅 Yu5h1Lib 自家命名不使用 `Tween` 一字。
+>
+> **並列容器 `Reaction`（已實作於 `Packages/Animation/Runtime/Reaction/`）**：事件驅動、無終點、
+> 速度守恆的運動——彈簧、懸掛、抖動。與 `Transition` 的分界是「有沒有終點與 duration」。
+> 兩者同住 animation package，互不依賴。
 
 ---
 
