@@ -49,6 +49,11 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 ## Recent Work
 
+- 2026-09-15: Fixed a test defect that only appeared once the suite was run from inside the Editor rather than through `-batchmode`. All nine `WorldPanelTests` failed with every `worldBound` reading NaN. The cause is that a runtime `UIDocument` lays out only while the Game view renders: batchmode runs the main loop so layout happens, an unfocused Editor does not, so the `yield return null` frames advance without a layout pass ever running. A suite that passes in CI and fails on a desk is worse than no suite, so those nine moved to a new PlayMode assembly `Yu5h1Lib.UIToolkit.Tests` under `Tests/Runtime/`, which is where behaviour that depends on a runtime panel belongs. EditMode is now 164/164 and PlayMode 9/9, both green with the Editor unfocused.
+
+  The MCP bridge (`com.coplaydev.unity-mcp` at `v10.2.0`, the same pin BonghuoVR uses) is now in Yu5h1LibTest's manifest, so tests and the console can be driven without closing the Editor. That is what surfaced this: every earlier run had been batchmode, which hid it.
+
+
 - 2026-09-15: Closed an omission and built the consumer rig. `AnimationController` and `StateBehaviour` finally moved from `common/Runtime/Animation/` into `Packages/Animation/Runtime/Component/`, with `StateBehaviourEditor` following into `Animation/Editor/Inspector/` - decided several sessions back and never executed. `.cs` and `.meta` moved together so script GUIDs survive. `Timer.cs` stays in `common`: it wraps `Yu5h1Lib.Timer` and is not animation, only mis-filed under that folder name.
 
   `W:/UnityProject/Yu5h1LibTest/Assets/Demos/AppsMenu/` holds a draggable, throwable desktop assembled from `GroupDragLayout`, `PointerVelocity`, `Reaction.Throw`, `SweptContact`, `Gesture.LongPress`, `ShakePlayer`, `Transition.Opening`/`Entrance` and `ElementTarget`. It builds its own panel, so it needs no scene, UXML or USS - drop it on a GameObject and press Play. It exists to make the feel verifiable by hand, since no unit test judges inertia or whether a wobble reads as hanging.

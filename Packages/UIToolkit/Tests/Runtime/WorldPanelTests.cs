@@ -7,9 +7,13 @@ using UnityEngine.UIElements;
 namespace Yu5h1Lib.UIToolkit.Tests
 {
     /// <summary>
-    /// Placement and occlusion against a live panel. A runtime <see cref="UIDocument"/> gives one even in
-    /// EditMode, so these exercise the real thing rather than the guards; the yields let layout settle
-    /// before <c>worldBound</c> is read.
+    /// Placement and occlusion against a live panel.
+    /// <para>
+    /// These are PlayMode tests on purpose. A runtime <see cref="UIDocument"/> lays out only while the Game
+    /// view is rendering, so in EditMode they pass under <c>-batchmode</c>, which runs the main loop, and
+    /// fail inside an unfocused Editor, which does not - leaving every <c>worldBound</c> as NaN. A test that
+    /// passes in CI and fails on a desk is worse than no test.
+    /// </para>
     /// </summary>
     public class WorldPanelTests
     {
