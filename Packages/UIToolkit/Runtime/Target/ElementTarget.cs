@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 namespace Yu5h1Lib.UIToolkit
 {
     /// <summary>
-    /// Drives a <see cref="VisualElement"/> from <c>com.yu5h1.animation</c>'s reactions.
+    /// Drives a <see cref="VisualElement"/> from <c>com.yu5h1.animation</c>'s motion.
     /// <para>
     /// This is the only place in the stack that knows UI Toolkit exists. Everything upstream - springs,
     /// swings, wobbles, travel - works in plain numbers, which is what lets the same motion drive a
@@ -17,7 +17,7 @@ namespace Yu5h1Lib.UIToolkit
     /// an explicit zero - the two render differently once USS has an opinion.
     /// </para>
     /// </summary>
-    public sealed class ElementTarget : Reaction.ISpatial, Reaction.IPivot
+    public sealed class ElementTarget : Drive.ISpatial, Drive.IPivot
     {
         private readonly VisualElement element;
         private readonly StyleRotate restRotate;

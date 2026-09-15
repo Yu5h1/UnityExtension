@@ -17,10 +17,10 @@ namespace Yu5h1Lib.UIToolkit.Tests
         }
 
         [Test]
-        public void ItSatisfiesBothReactionContracts()
+        public void ItSatisfiesBothDriveContracts()
         {
-            Assert.IsInstanceOf<Reaction.ISpatial>(target);
-            Assert.IsInstanceOf<Reaction.IPivot>(target);
+            Assert.IsInstanceOf<Drive.ISpatial>(target);
+            Assert.IsInstanceOf<Drive.IPivot>(target);
         }
 
         [Test]
