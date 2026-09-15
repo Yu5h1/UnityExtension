@@ -47,6 +47,13 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 ## Recent Work
 
+- 2026-09-15: `uitoolkit-decoupling` step 6a continued - `Reaction.Throw`, at 123/123 EditMode. A thrown object coasts, bounces off the edges of its world, may strike something once on the way, and comes to rest: velocity, drag, edge restitution and a lifetime, with no destination anywhere in it. What counts as a strike is a delegate handed the whole step, so a swept test can be done in whatever space the caller needs; what happens when it lands stays with the caller too.
+
+  It was missing from the plan entirely, and the reason is a naming mistake worth recording: HealthAI has two separate mechanisms and this work had been calling both of them the same thing. `EntranceFlight` is choreography on a shared clock with curves, a duration and staggered windows - interpolation, and `Transition`'s business. The throw in `SignalClusterController.TickFlight` carries velocity and has no destination at all - physics, and `Reaction`'s. Conflating them had hidden the second one behind the first. The user's framing settled it: the Apps desktop is a consumer of the throw system, not the system itself, which is also why the single-consumer extraction threshold does not apply - it is the other half of the desktop capability `GroupDragLayout` already covers.
+
+  Renaming follows: the entrance becomes `Transition.Entrance`, not `Flight`.
+
+
 - 2026-09-15: `uitoolkit-decoupling` step 6a - the wobble, at 107/107 EditMode in Yu5h1LibTest. `Reaction.Shake` drives one `Drive.IPivot`; `ShakePlayer` in `com.yu5h1.uitoolkit` runs however many are wobbling, keeps one wobble per element so a flurry of catches builds on the swing instead of fighting over it, restores each element exactly as it was found, and drops any that leave the panel because there is nothing left to restore them to. Shake is built on `Hanging` rather than a second angular spring: an entrance swing and a catch are the same event, one impulse decaying to rest, and only the strength and pivot differ. `Settings.Pivot` returns a normalized pivot instead of HealthAI's `OriginPercent()`, so the y-up authoring convention flips in one place rather than in every adapter.
 
   `ITarget`/`ISpatial`/`IPivot` moved out of `Reaction` into their own `Drive` container. They describe what motion may touch, not what kind of motion touches it, and leaving them under `Reaction` would have forced `Transition.Flight` to depend on `Reaction` for no reason - inverting the split the two containers exist to express. `ElementTarget` implements `Drive.ISpatial`/`Drive.IPivot` now.
