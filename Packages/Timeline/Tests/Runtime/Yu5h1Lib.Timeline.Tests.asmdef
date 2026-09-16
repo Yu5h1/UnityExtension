@@ -1,0 +1,22 @@
+{
+    "name": "Yu5h1Lib.Timeline.Tests",
+    "rootNamespace": "Yu5h1Lib.Tests",
+    "references": [
+        "Yu5h1Lib.Timeline",
+        "Yu5h1Lib.Common",
+        "UnityEngine.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

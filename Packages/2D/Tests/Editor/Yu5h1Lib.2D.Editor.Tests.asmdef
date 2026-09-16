@@ -1,0 +1,26 @@
+{
+    "name": "Yu5h1Lib.2D.Editor.Tests",
+    "rootNamespace": "Yu5h1Lib.Tests",
+    "references": [
+        "Yu5h1Lib.2D",
+        "Yu5h1Lib.2D.Editor",
+        "Yu5h1Lib.Common",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

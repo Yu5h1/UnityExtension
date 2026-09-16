@@ -1,3 +1,6 @@
+// Splines is optional: this component exists only when com.unity.splines is installed.
+// The YU5H1_SPLINES symbol comes from the versionDefines entry on Yu5h1Lib.Animation.asmdef.
+#if YU5H1_SPLINES
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Events;
@@ -349,3 +352,4 @@ namespace Yu5h1Lib
 #endif
     }
 }
+#endif
