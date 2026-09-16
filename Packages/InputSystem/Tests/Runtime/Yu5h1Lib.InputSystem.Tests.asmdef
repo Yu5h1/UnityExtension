@@ -1,0 +1,23 @@
+{
+    "name": "Yu5h1Lib.InputSystem.Tests",
+    "rootNamespace": "Yu5h1Lib.Tests",
+    "references": [
+        "Yu5h1Lib.InputSystem",
+        "Yu5h1Lib.Common",
+        "Unity.InputSystem",
+        "UnityEngine.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
