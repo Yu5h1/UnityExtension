@@ -1,0 +1,68 @@
+# UI Toolkit 解耦 Checklist
+
+Current round: `W:/UnityProject/HealthAI/docs/unity/套件解耦計畫.md#第一階段套件端2026-09-16-通過`.
+
+本輪只收第一階段（套件端）尚未完成的部分：自動測試已全數通過，剩下的是需要人眼與實機的人工驗收、兩個範例的歸位，以及需求 5 的技能與知識路由。第二階段（HealthAI 接入）不屬於本輪。一個任務同時只有一輪；本輪結束後內容保留可讀，直到同一任務開始新的一輪。
+
+- [ ] **1. World 與 ViewportMath 的人工驗收**
+  Outcome: 3D 物件與 UI 文件共用同一個舞台：物件貼齊代表元素、被 UI 蓋住時判定為不可見、代表元素之間的避障成立。
+  Checks:
+    - [x] **場景與組裝**
+      - Action: 以 CLI 建置 `Assets/Demos/WorldStage/WorldStageDemo.unity` 並跑 EditMode 測試。
+      - Expect: 專案編譯無誤，180 項 EditMode 測試全數通過。
+    - [ ] **舞台對位與遮擋** `[manual]`
+      - Action: 開啟 `WorldStageDemo.unity` 進 Play，拖曳每個代表元素、把物件拖到上方橫幅底下、再把兩個物件互相靠近。
+      - Expect: 3D 物件持續貼齊代表元素的矩形（位置與尺寸皆同步）；被橫幅蓋住時該物件的狀態標示為不可見；靠近到重疊前避障就把落點推開。
+      - Reason: 對位與遮擋只有在 Game view 實際繪製時才成立，且判準是視覺是否貼齊，需要人眼判斷。
+    - [ ] **背板填滿視野** `[manual]`
+      - Action: 在 Play 中改變 Game view 的長寬比與解析度。
+      - Expect: world-space 的背板始終剛好填滿相機視野，沒有露邊或溢出。
+      - Reason: 需要在執行中改變視窗尺寸並以視覺確認邊界。
+
+- [ ] **2. BottomSheet 與 Reaction.Hanging 直接使用的範例**
+  Outcome: 存在一個 `HangingSheet` 範例，涵蓋 `BottomSheet` 的開合與拖放，以及消費端直接驅動 `Reaction.Hanging` 的擺盪。
+  Checks:
+    - [ ] **範例建立與編譯**
+      - Action: 建立 `HangingSheet` 範例場景與腳本，使用 `BottomSheet` 控件並以指標速度餵給 `Reaction.Hanging`，然後編譯並跑 EditMode 測試。
+      - Expect: 專案編譯無誤，既有 EditMode 與 PlayMode 測試維持全數通過。
+    - [ ] **面板手感** `[manual]`
+      - Action: 進 Play，拖曳 handle 開合面板、中途放手、連續快速開關、點擊 scrim 與 close。
+      - Expect: 面板跟手、放手後依速度續行到開或關、連續開關不跳動（承接當下位置與速度）、scrim 與 close 都能關閉。
+      - Reason: 判準是跟手與連續性的手感，只能由人操作判斷。
+    - [ ] **懸掛擺盪** `[manual]`
+      - Action: 在同一場景橫向甩動懸掛物件，甩到超出角度上限，再放手。
+      - Expect: 擺盪隨力道加大但不超過角度上限，放手後衰減回靜止不抖動。
+      - Reason: 角度上限與衰減是視覺判斷，無法由數值測試證明外觀正確。
+
+- [ ] **3. DeviceTilt 的實機驗收**
+  Outcome: 在實體裝置上，傾斜手機產生的衝量能驅動 `Reaction.Hanging`，靜置時不產生漂移。
+  Checks:
+    - [x] **感測器契約**
+      - Action: 跑 `Yu5h1Lib.InputSystem.Editor.Tests` 的 `DeviceTiltTests`。
+      - Expect: 16 項全數通過，含啟用延遲、取樣間隔、速率上限與釋放。
+    - [ ] **實機傾斜** `[manual]`
+      - Action: 建置到實體手機，開啟含懸掛物件的場景，左右傾斜裝置，再把裝置平放靜置十秒。
+      - Expect: 傾斜方向與擺盪方向一致、力道隨傾斜速度增減；靜置期間物件不漂移也不持續抖動。
+      - Reason: 需要實體陀螺儀，Editor 與批次模式都無法產生真實感測資料。
+
+- [ ] **4. 兩個範例歸位到套件**
+  Depends on: 1, 2.
+  Outcome: `AppsMenu` 與 `HangingSheet` 都住在 `Packages/UIToolkit/Samples~/`，測試專案不再保留副本或臨時的場景建置器。
+  Checks:
+    - [ ] **套件內的範例宣告**
+      - Action: 把兩個範例移進 `Packages/UIToolkit/Samples~/`，在 `package.json` 的 `samples` 補上對應項目，刪除 `Assets/Demos` 的副本與 `Assets/Editor/DemoSceneBuilder.cs`。
+      - Expect: `package.json` 的每個 `samples` 路徑都指向實際存在的資料夾，`Assets/Demos` 與 `DemoSceneBuilder.cs` 不再存在。
+    - [ ] **匯入後可用**
+      - Action: 在 `W:/UnityProject/Yu5h1LibTest` 由 Package Manager 匯入兩個範例後編譯並跑測試。
+      - Expect: 匯入的範例編譯無誤，場景可開啟，EditMode 與 PlayMode 測試維持全數通過。
+
+- [ ] **5. 新套件的 agent 技能與知識路由**
+  Depends on: 4.
+  Outcome: agent 不必重造輪子就能套用已驗證完成的能力：技能檔描述 Apps Menu 這類組裝的既有作法，並由知識路由指得到。
+  Checks:
+    - [ ] **技能檔內容**
+      - Action: 依 `Requirements.UnityExtension.md` 的 HEALTHAI-UNITYEXTENSION-5 撰寫 `.agents/skills/` 下的技能檔。
+      - Expect: 技能檔涵蓋該需求列出的每一項必含內容，且只描述已實作並驗證過的能力，消費端須自理的部分（UI 排版、icon 串接）明確標示。
+    - [ ] **知識路由可達**
+      - Action: 從 `.agents/introduction.md` 與 `Yu5h1Lib/.agents/AgentsKnowledgeIndex.md` 的條件式路由列走一遍到技能檔。
+      - Expect: 兩條路徑都指向存在的檔案，觸發條件描述得出「什麼時候該讀它」。
