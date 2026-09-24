@@ -19,6 +19,7 @@
 | `atomic-components` | [AtomicComponents](plans/AtomicComponents.md) | Resolver, Repeater, random and shuffle components, and ScriptableObject wrappers |
 | `unity-event-transmission` | [Transmission design](plans/Transmission_設計.md) | UnityEvent argument persistence, message routing, and the closed Invocation alternative |
 | `uitoolkit-decoupling` | [套件解耦計畫](file:///W:/UnityProject/HealthAI/docs/unity/%E5%A5%97%E4%BB%B6%E8%A7%A3%E8%80%A6%E8%A8%88%E7%95%AB.md) | New `com.yu5h1.uitoolkit`, plus motion/geometry extraction into `animation`/`common`/`inputsystem`, validated in `W:/UnityProject/Yu5h1LibTest`. Requirements and remaining scope live in HealthAI; what has been delivered is documented in `Documentation/運動系統.md` and `Documentation/指標互動與世界橋接.md` |
+| `preferences` | [偏好設定](../Documentation/偏好設定.md) | PlayerPrefs persistence: `Preferences` UI binding, `ObservablePref` typed values, adapter coverage, known defects, and the UI Toolkit analysis handed to `com.yu5h1.uitoolkit`. Absorbs the completed `bindable-adapter-factory` design record. Usage skill: [preferences](skills/preferences.md) |
 | `component-convergence` | [Component_Convergence](plans/Component_Convergence.md) | Overlapping material-control components, half-designed components, and naming collisions awaiting convergence |
 
 ## Unity application validation routes

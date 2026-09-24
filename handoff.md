@@ -28,6 +28,7 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 - Continue adoption and extension evaluation from [Agent friendly workflow](Documentation/Agent%20friendly%20workflow%20Yu5h1Lib.UnityExtension.md#待討論決策); locate the existing chat panel and custom UI for comparison.
 
+- Validate [preferences](.agents/skills/preferences.md) on a real scene over MCP: its `execute_code` registration snippet has not been run yet. The defects in [偏好設定 — 已知問題](Documentation/偏好設定.md#已知問題) marked 推導 (E1/E2) come from reading the code and have not been reproduced.
 - Continue [文字結構同步 — 待討論決策](Documentation/文字結構同步.md#待討論決策) to settle identity storage, completion-marker transport and omitted-field semantics before implementation. The user authorized the design document and report update; synchronization implementation has not started.
 
 1. Decide whether `DraggableDesktop` should exist at all. The plan lists it for step 7, but there is no such control in HealthAI to port: the desktop lives inside `SignalClusterController` (843 lines) woven together with tiles, features, desktop modes, preference saving, hints, the Apps panel and the menu. Every reusable part of it is already extracted - `GroupDragLayout` holds the positions, group drag, inertia and obstacle avoidance; `Reaction.Throw` holds the fling; `PointerVelocity` and `SweptContact` are what its drag and hit tests call; `ElementTarget` bridges to elements. What is left is composition, and the user's own framing was that the Apps desktop is a consumer of the system rather than the system itself. Building the control anyway would mean inventing a shape no second consumer has tested. Recommend dropping it from the plan and recording why.
@@ -38,7 +39,7 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 2. Identify reusable capabilities currently trapped in application projects.
 3. Plan package destinations for those reusable capabilities.
 4. Add focused Documentation guides for important systems as they become clearer.
-5. Decide what to do about the duplicated Core sources. `TypeRestrictionAttribute.cs`, `ComponentController.cs` and `TypeRestrictionDrawer.cs` each exist as two independent physical files - one under `Unity/Runtime` or `Unity/Editor`, one under `Unity/UnityExtension` - with identical content, different inodes, no symlink, and separate git repos. Every edit has to be written twice or the copies drift. Why they exist (presumably the csproj glob linking described in `.agents/build-notes.md`) was not traced.
+5. Decide what to do about the duplicated Core sources. `TypeRestrictionAttribute.cs`, `ComponentController.cs`, `TypeRestrictionDrawer.cs`, `PlayerPrefsAdvanced.cs` and `ObservablePref.cs` each exist as two independent physical files - one under `Unity/Runtime` or `Unity/Editor`, one under `Unity/UnityExtension` - with identical content, different inodes, no symlink, and separate git repos. Every edit has to be written twice or the copies drift. Why they exist (presumably the csproj glob linking described in `.agents/build-notes.md`) was not traced.
 
 
 ## Recent Work
@@ -86,6 +87,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 - [Agent friendly workflow — 待討論決策](Documentation/Agent%20friendly%20workflow%20Yu5h1Lib.UnityExtension.md#待討論決策).
 
 - [文字結構同步 — 待討論決策](Documentation/文字結構同步.md#待討論決策).
+
+- [偏好設定 — 待討論決策](Documentation/偏好設定.md#待討論決策).
 
 ## Ruled-out directions
 
