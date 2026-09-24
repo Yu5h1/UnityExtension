@@ -4,19 +4,16 @@ Persist settings to PlayerPrefs with what Yu5h1Lib already ships. Load this befo
 
 Members, design decisions, known defects, weaknesses, and open decisions: [偏好設定](../../Documentation/偏好設定.md). Load it only when changing the system, hitting a trap listed below, or extending it. Code-level invariants for editing the binding source live in `yu5h1lib-conventions` (`csharp-core.md`).
 
-## Choose the tier
-
-The two tiers store differently and do not share keys. Pick one per value; do not persist the same setting through both.
+## Choose the approach
 
 | Situation | Use |
 |---|---|
-| A uGUI `Toggle`, `Slider`, `InputField`, `TMP_InputField`, or an `OptionSet` edits the value | UI binding: [scene procedure](#scene-procedure-mcp) below |
-| Code owns the value (no control edits it), needs a type and a change event | `[SerializeField] ObservablePref<T>` with `key` + `defaultValue`; call `Init()` at startup. Wire `init`/`changed` in the Inspector to apply it without code |
-| One setting shared by several scenes | `PlayerPrefObject<T>` asset (e.g. `PlayerPrefBoolObject`) referenced from each scene |
-| BGM／SFX／voice volume and a BGM on/off switch | Existing `AudioVolumePrefs` component; read its static properties |
+| A uGUI `Toggle`, `Slider`, `InputField`, `TMP_InputField`, or an `OptionSet` edits the value | `Preferences`: [scene procedure](#scene-procedure-mcp) below |
+| Code owns the value and no control edits it | Call `PlayerPrefs` directly (`JsonUtility` for complex types). Do not add a per-value wrapper type |
+| `ObservablePref<T>`, `PlayerPrefValue<T>`, `PlayerPrefObject<T>`, `AudioVolumePrefs` | Deprecated and scheduled for removal. Never use them in new work; plan § 移除計畫 |
 | `Dropdown` / `TMP_Dropdown` | Not bindable yet (silently ignored). Plan decision D3 |
 | UI Toolkit control | Not supported. Report the gap and route to plan § UI Toolkit 適用分析; do not hand-write a replacement |
-| Password, token, or other secret | Neither tier: PlayerPrefs is plaintext |
+| Password, token, or other secret | Not in PlayerPrefs: it is plaintext |
 | A new uGUI control type must bind | Write one adapter (copy `ToggleAdapter`); `Preferences` needs no change |
 
 ## Scene procedure (MCP)
@@ -79,7 +76,7 @@ The two tiers store differently and do not share keys. Pick one per value; do no
 ## Consuming the values
 
 - Code: `PlayerPreferences.instance.current.TryGetValue("MasterVolume", out string raw)`, then parse with the adapter's format (plan § 可綁控件: bool is `"true"`/`"false"`, float is current-culture). Subscribe to `changed` for live updates. Prefer `TryGetValue`: the indexer throws on a missing key.
-- No code: wire the control's own `onValueChanged` to the target in the Inspector. On load the stored value is written into the control, which fires `onValueChanged` only if it differs from the scene value. So a target that must be applied at startup also needs its initial state to match the control's scene value, or a code read at start. If that is not acceptable, the value belongs to the `ObservablePref` tier, whose `init` event fires unconditionally.
+- No code: wire the control's own `onValueChanged` to the target in the Inspector. On load the stored value is written into the control, which fires `onValueChanged` only if it differs from the scene value. So a target that must be applied at startup also needs its initial state to match the control's scene value, or a code read at start. `Preferences` has no unconditional on-load notification yet (plan decision R1).
 
 ## Verify
 
