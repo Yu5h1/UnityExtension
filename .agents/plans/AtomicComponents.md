@@ -1,5 +1,7 @@
 # Yu5h1Lib 原子組件（Atomic Components）
 
+> Task ID: atomic-components
+
 > Yu5h1Lib 核心概念 — 「橋樑型 abstraction」。先建空殼介面，使用者依賴 interface，實作隨用隨補。
 
 ---

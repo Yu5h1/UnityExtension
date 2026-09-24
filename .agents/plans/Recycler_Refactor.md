@@ -1,5 +1,7 @@
 # Recycler 重構計畫（Pool / Spawn 系列統合）
 
+> Task ID: recycler-refactor
+
 > 階段：**問題盤點**。架構、抽象、命名的方案**不在本文件討論** — 留待後續 session。
 > 使用者偏好以 **Recycler** 取代 Pool 作為主要命名（最終決議待後續）。
 

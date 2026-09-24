@@ -133,6 +133,8 @@ PromptUGUI 的公開定位是 UI，不能據此推定它能完整管理一般物
 
 ## 文字結構同步
 
+> Task ID: agent-scene-workflow
+
 Agent 完成文本編輯後發布標記，由 Unity 更新指定階層並回報版本結果。Component、Editor 與 Runtime 的責任、管理權、衝突處理及驗收由 [文字結構同步](文字結構同步.md) 統一擁有。本文件繼續負責既有方案採用、格式及術語擴充。
 
 ## Markdown 格式草案

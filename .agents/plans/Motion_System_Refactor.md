@@ -1,5 +1,7 @@
 # Motion System Refactor
 
+> Task ID: motion-system
+
 > Audience: Claude（跨 session 持續記憶）。使用者是驗證者。本檔是單一真相。
 > 取代並合併 `Tween_Refactor.md` + 舊 `Motion System Refactor Plan.md`（作廢）。
 > **狀態：📐 架構設計中。2026-06-09 大幅收斂 → 殼優先 + 巢狀架構。尚未寫 code。**

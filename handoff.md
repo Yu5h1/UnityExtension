@@ -1,5 +1,7 @@
 # UnityExtension Handoff
 
+> Task ID: solution-inventory
+
 ## Current Direction
 
 Yu5h1's UnityExtension is a Unity application-extension solution from Yu5h1's development perspective. It collects reusable systems, tools, packages, and workflows so Unity projects can be built in a more efficient, low-waste, user-friendly way.

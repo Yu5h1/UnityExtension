@@ -1,5 +1,7 @@
 # Yu5h1Lib.Transmission — 結案:保留投遞層
 
+> Task ID: unity-event-transmission
+
 > Status: **closed / usable**  
 > Date: 2026-07-06  
 > Final implementation direction: Transmission 只負責 **message routing + payload delivery**。  

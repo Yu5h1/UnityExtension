@@ -1,5 +1,7 @@
 # Yu5h1Lib Unity ScriptableObject Architecture — ParameterObject 系列
 
+> Task ID: data-architecture
+
 > 本文件記錄 Yu5h1Lib 中以 ScriptableObject 為基礎、由 `ParameterObject` 衍生的整套架構。
 > Future Claude / Developer 讀本文即可理解系統設計、應用範圍與待處理議題。
 
