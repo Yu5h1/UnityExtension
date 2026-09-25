@@ -26,7 +26,7 @@ House rules for every new ScriptableObject, including ones outside the data arch
 - `InvocationObject` composes method invocation data and its parameter sub-assets.
 - `GenericComponentPresetObject` is a ParameterObject for component preset data.
 - `Theme` groups reusable parameter data for application to targets.
-- `ValuePort` bridges Unity components to the Core MVVM `IValuePort` contract.
+- `ValuePortBase` bridges our own MonoBehaviours to the Core MVVM `IValuePort` contract as a string port; subclasses override only the string value and parser. `ValuePort` is its plain-string concrete form.
 - `ValuePortAdapter<T, TValue>` adapts existing Unity Components without requiring wrapper components.
 
 ## Working rules

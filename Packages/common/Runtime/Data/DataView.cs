@@ -44,7 +44,7 @@ namespace Yu5h1Lib.Serialization
             var fieldName = port.GetFieldName();
             var bindingValue = port.GetValue();
 
-            if (ContainsKey(fieldName) && this[fieldName].Equals(bindingValue))
+            if (ContainsKey(fieldName) && string.Equals(this[fieldName], bindingValue))
                 return;
 
             this[fieldName] = bindingValue;
@@ -87,7 +87,7 @@ namespace Yu5h1Lib.Serialization
             var fieldName = port.GetFieldName();
             var bindingValue = port.GetValue();
 
-            if (ContainsKey(fieldName) && this[fieldName].Equals(bindingValue))
+            if (ContainsKey(fieldName) && string.Equals(this[fieldName], bindingValue))
                 return false;
 
             this[fieldName] = bindingValue;

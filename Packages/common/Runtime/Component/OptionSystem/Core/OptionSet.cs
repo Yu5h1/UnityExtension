@@ -6,7 +6,7 @@ using Yu5h1Lib.Serialization;
 
 namespace Yu5h1Lib
 {
-    public abstract class OptionSet : ValuePort
+    public abstract class OptionSet : ValuePortBase
     {
         [SerializeField] protected OptionSelector selector;
         public abstract int Count { get; }
@@ -21,7 +21,7 @@ namespace Yu5h1Lib
         protected abstract void OnSelected(int index);
         public abstract bool CanSelect(int index);
         public abstract bool TryGetItemText(int index,out string text);
-        public void print(ValuePort port) => $"OptionSet: {gameObject.name} Value: {port.GetValue()}".print();
+        public void print(ValuePortBase port) => $"OptionSet: {gameObject.name} Value: {port.GetValue()}".print();
     }
     public abstract class OptionSet<TValue> : OptionSet , IValuePort<TValue>
     {
@@ -43,18 +43,12 @@ namespace Yu5h1Lib
         public virtual List<TValue> Items { get => _Items; protected set => _Items = value; }
 
         [SerializeField] private UnityEvent<TValue> _OptionChanged;
-        private UnityAction _optionChanged;
         public event UnityAction<TValue> optionChanged
         {
             add => _OptionChanged.AddListener(value);
             remove => _OptionChanged.RemoveListener(value);
         }
 
-        //public override event UnityAction ChangedCallback
-        //{
-        //    add => _optionChanged += value;
-        //    remove => _optionChanged -= value;
-        //}
         public override int Count => Items.Count;
 
         #region ValuePort
@@ -70,7 +64,7 @@ namespace Yu5h1Lib
         protected override void OnSelected(int index)
         {
             _OptionChanged?.Invoke(Items[index]);
-            _optionChanged?.Invoke();
+            NotifyValueChanged();
             if (TryGetItemText(index, out string text))
                 CurrentItemDisplayName = text;
         }

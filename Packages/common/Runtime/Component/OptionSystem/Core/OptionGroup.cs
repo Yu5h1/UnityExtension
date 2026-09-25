@@ -22,8 +22,6 @@ namespace Yu5h1Lib
 
         [SerializeField] private MinMax.Option rangeOption;
 
-        //public override event UnityAction ChangedCallback;
-
         public override int Count => rangeOption == MinMax.Option.Min ? MinCount : MaxCount;
 
 
@@ -61,14 +59,9 @@ namespace Yu5h1Lib
             
         }
 
-        public override string GetValue()
-        {
-            throw new NotImplementedException();
-        }
+        public override string GetValue() => string.Empty;
 
         public override void SetValue(string value, StringComparison comparision)
-        {
-            throw new NotImplementedException();
-        }
+            => $"{name}: OptionGroup has no value to set.".printWarning();
     } 
 }

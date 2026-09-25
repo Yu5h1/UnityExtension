@@ -9,7 +9,7 @@ namespace Yu5h1Lib
         event UnityAction<TValue> ChangedCallback;
     }
 
-    public abstract class ValuePort : BaseMonoBehaviour, IValuePort
+    public abstract class ValuePortBase : BaseMonoBehaviour, IValuePort
     {
         [SerializeField] private System.StringComparison _searchComparison = System.StringComparison.OrdinalIgnoreCase;
 
@@ -36,31 +36,34 @@ namespace Yu5h1Lib
         }
 
 
-        //public abstract event UnityAction ChangedCallback;
         private UnityAction ReadFromThis;
         public void BindTo(IDataView dataview)
         {
             Unbind();
             ReadFromThis = () => dataview.ReadFrom(this);
-            //ChangedCallback += ReadFromThis;
         }
-        public void Unbind()
-        {
-            if (ReadFromThis == null) return;
-            //ChangedCallback -= ReadFromThis;
-            ReadFromThis = null;
-        }
+        public void Unbind() => ReadFromThis = null;
+
+        /// <summary>
+        /// Call when the value changes so a bound DataView reads it back. Deliberately not named
+        /// ChangedCallback: that name belongs to the typed <see cref="UValuePort{TValue}"/> event,
+        /// which this non-generic string layer cannot match.
+        /// </summary>
+        protected void NotifyValueChanged() => ReadFromThis?.Invoke();
         protected virtual void OnDestroy() => Unbind();
     }
-    public abstract class ValuePort<T> : ValuePort
-    {
-        public abstract T value { get; set; }
-        [SerializeField] private UnityEvent<T> _ValueChanged;
-        public event UnityAction<T> valueChanged 
-        {
-            add { _ValueChanged.AddListener(value); }
-            remove { _ValueChanged.RemoveListener(value); }
-        }
 
+    /// <summary>Plain string-valued <see cref="IValuePort"/>. Interactive components own their own type parsing; this only holds the wire value.</summary>
+    public class ValuePort : ValuePortBase
+    {
+        [SerializeField] private string _value;
+
+        public override string GetValue() => _value;
+        public override void SetValue(string value, System.StringComparison comparision)
+        {
+            if (_value == value) return;
+            _value = value;
+            NotifyValueChanged();
+        }
     }
 }

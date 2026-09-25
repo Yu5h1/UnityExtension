@@ -32,6 +32,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 - Validate [preferences](.agents/skills/preferences.md) on a real scene over MCP: its `execute_code` registration snippet has not been run yet. The defects in [偏好設定 — 已知問題](Documentation/偏好設定.md#已知問題) marked 推導 (E1/E2) come from reading the code and have not been reproduced.
 
+- Confirm `MessageSender.SetTarget` still receives the selected GameObject from a `GameObjectOption`; `OptionSet` regained `IGetter<T>` on 2026-09-25 but that path was not exercised.
+
 - `ObservablePref` family removal is planned, not started: [偏好設定 — 移除計畫](Documentation/偏好設定.md#移除計畫observablepref-系列). It is blocked on decision R1 and on Virtual-Chat-Partner migrating its four usages first (that project's own work); deleting earlier breaks its compile and scenes.
 - Continue [文字結構同步 — 待討論決策](Documentation/文字結構同步.md#待討論決策) to settle identity storage, completion-marker transport and omitted-field semantics before implementation. The user authorized the design document and report update; synchronization implementation has not started.
 
@@ -47,6 +49,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 
 ## Recent Work
+
+- 2026-09-25: ValuePort binding reworked; the user verified in the Editor that option changes now write back and persist. The abstract `ValuePort` is now `ValuePortBase`; `ValuePort` is a new concrete plain-string port; the unused generic `ValuePort<T>` is gone. E4 is fixed in the base: `BindTo` fires through `protected NotifyValueChanged()`, called by `ValuePort.SetValue` and `OptionSet<T>.OnSelected`. The original non-generic `ChangedCallback` had been commented out on 2026-06-08 because it could not match the typed `UValuePort<T>.ChangedCallback` after the Core interface refactor; that name is now reserved for the typed side (constraint recorded in [偏好設定 — 設計決策](Documentation/偏好設定.md#設計決策)). `OptionSelector` implements `UValuePort<int>` and binds its index. `OptionGroup` no longer throws: `GetValue` returns empty and `SetValue` warns. `OptionSet`, `StringOption` and `OptionGroup` otherwise match master. The first real E4 run hit an NRE at `DataView.ReadFrom`: on first bind with no save, `StringOption.GetValue` returned a null `current` (selector at -1), `BindAll` stored it, and the later selection's write-back called `.Equals` on it. `ReadFrom`/`TryReadFrom` now compare with `string.Equals`, and `StringOption.GetValue` returns empty instead of null.
 
 - 2026-09-16: Cleared the package-hygiene items the decoupling work had surfaced. Splines is now optional rather than undeclared: `Yu5h1Lib.Animation.asmdef` carries a `versionDefines` entry for `com.unity.splines`, and the two components that need it compile only under `YU5H1_SPLINES`. Verified by removing the package from the test project entirely - the animation assembly still builds and 180/180 EditMode tests pass, so an asmdef reference to an absent package's assembly does not break the assembly. The other ten components no longer drag Splines in.
 
@@ -97,5 +101,9 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 ## Ruled-out directions
 
 - A standalone Log example window and menu were removed at the user's request: a dedicated permanent preview for this one control adds unnecessary UI. Keep the minimal API usage in the Editor tooling guide; verify through consuming panels, an existing shared UI viewer when available, or a temporary host.
+
+- Binding `OptionSet` through runtime adapters (one `[AdapterRegistration]` leaf per `TValue`) was tried and reverted on 2026-09-25. Adapters exist for components we cannot modify; for our own component they only added boilerplate, and registering a whole `TValue` made every `OptionSet<T>` bindable, including `UnityEvent` and `Validator` sets whose items have no persistable string identity. Removing `IValuePort<T>` from `OptionSet` also silently broke `MessageSender.SetTarget`, which reads a `GameObjectOption` as `IGetter<GameObject>`.
+
+- Having `OptionSelector` read and persist `OptionSet`'s value was rejected: the selector only knows the int index, and `T` belongs to `OptionSet<T>`. Each binds its own type.
 
 - Raised-tab contours and mirrored toolbar backgrounds were retired: the user chose the standard flat Console toolbar with search. Retain an explicit top border for the embedded panel.

@@ -9,6 +9,7 @@ Members, design decisions, known defects, weaknesses, and open decisions: [偏�
 | Situation | Use |
 |---|---|
 | A uGUI `Toggle`, `Slider`, `InputField`, `TMP_InputField`, or an `OptionSet` edits the value | `Preferences`: [scene procedure](#scene-procedure-mcp) below |
+| An option switched by `OptionSelector` | Bind the `OptionSet` to save the item's value, or the `OptionSelector` to save the index. Only one per GameObject: both use the GameObject name as key |
 | Code owns the value and no control edits it | Call `PlayerPrefs` directly (`JsonUtility` for complex types). Do not add a per-value wrapper type |
 | `ObservablePref<T>`, `PlayerPrefValue<T>`, `PlayerPrefObject<T>`, `AudioVolumePrefs` | Deprecated and scheduled for removal. Never use them in new work; plan § 移除計畫 |
 | `Dropdown` / `TMP_Dropdown` | Not bindable yet (silently ignored). Plan decision D3 |
@@ -86,7 +87,8 @@ Enter Play mode, change a control, exit, re-enter: the value should persist. Ins
 
 Details and status in plan § 已知問題 / § 弊端評估.
 
-- `ValuePort` and `OptionSet` load saved values but do not write changes back (E4).
+- `DataViewBinding` loads saved values but does not write changes back: its value lives in another DataView with no change source (E4).
+- A GameObject holding both `OptionSelector` and `OptionSet` has two `IValuePort` components; the register snippet binds whichever `GetComponents` returns first. Bind the intended one explicitly.
 - InputField text containing `,` or `"`, and Slider values in comma-decimal locales, may corrupt on reload (E1/E2).
 - The first run always logs `Failed to parse preferences`; this is expected, not an error (E3).
 - Controls instantiated after the host's `Awake` are not bound until `BindAll()` is called.

@@ -10,7 +10,7 @@ using Yu5h1Lib.Runtime;
 namespace Yu5h1Lib
 {
     [DisallowMultipleComponent]
-    public class OptionSelector : BaseMonoBehaviour
+    public class OptionSelector : BaseMonoBehaviour, UValuePort<int>
     {
         [SerializeField] private OptionSet _OptionSet;
         public OptionSet optionSet { get => _OptionSet; set => _OptionSet = value; }
@@ -71,6 +71,42 @@ namespace Yu5h1Lib
             add => _selectionChanged.AddListener(value);
             remove => _selectionChanged.RemoveListener(value);
         }
+
+        #region ValuePort
+        public int value { get => current; set => current = value; }
+        public int Get() => current;
+        public void Set(int value) => current = value;
+        public event UnityAction<int> ChangedCallback
+        {
+            add => selectionChanged += value;
+            remove => selectionChanged -= value;
+        }
+
+        public string GetFieldName() => gameObject.name;
+        public string GetValue() => current.ToString();
+        public void SetValue(string value)
+        {
+            // -1 means unselected; a negative index would otherwise wrap to the last item.
+            if (int.TryParse(value, out int index) && index >= 0)
+                current = index;
+        }
+        public void SetValue(IValuePort port) => SetValue(port.GetValue());
+
+        private UnityAction<int> ReadFromThis;
+        public void BindTo(IDataView dataview)
+        {
+            Unbind();
+            ReadFromThis = _ => dataview.ReadFrom(this);
+            ChangedCallback += ReadFromThis;
+        }
+        public void Unbind()
+        {
+            if (ReadFromThis == null) return;
+            ChangedCallback -= ReadFromThis;
+            ReadFromThis = null;
+        }
+        protected virtual void OnDestroy() => Unbind();
+        #endregion
         private bool TryFindNextValidIndex(int startIndex,out int result, int interval = 1)
         {
             result = startIndex;

@@ -40,6 +40,6 @@ namespace  Yu5h1Lib
         //    }
         //    return false;
         //}
-        public override string GetValue() => overrideSet == null ? current : overrideSet.TryGetItemText(selector.current, out string text) ? text : current;
+        public override string GetValue() => (overrideSet != null && overrideSet.TryGetItemText(selector.current, out string text) ? text : current) ?? string.Empty;
     } 
 }
