@@ -29,11 +29,7 @@ namespace Yu5h1Lib
             if (bindable is IValuePort Ibindable)
                 SetValue(Ibindable);
         }
-        public void SetValue(IValuePort Ibindable)
-        {
-            Ibindable.GetValue().print();
-            SetValue(Ibindable.GetValue());
-        }
+        public void SetValue(IValuePort Ibindable) => SetValue(Ibindable.GetValue());
 
 
         private UnityAction ReadFromThis;

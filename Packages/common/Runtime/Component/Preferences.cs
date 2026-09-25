@@ -26,8 +26,6 @@ namespace Yu5h1Lib
                 isCurrentLoaded = true;
                 bool loaded = TryLoadCurrent(out DataView data);
                 _current = loaded ? new DataView(data) : (defaultSetting == null ? new DataView() : new DataView(defaultSetting));
-                if (!loaded)
-                    $"Failed to parse preferences from PlayerPrefs with key [{KEY}]".printWarning();
                 _current.Changed += Current_Changed;
                 if (loaded && defaultSetting != null)
                     foreach (var pair in defaultSetting)

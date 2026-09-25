@@ -78,7 +78,6 @@ Details and status in plan § 已知問題 / § 弊端評估.
 - `DataViewBinding` loads saved values but does not write changes back: its value lives in another DataView with no change source (E4).
 - A GameObject holding both `OptionSelector` and `OptionSet` has two `IValuePort` components; `ResolveBindableComponent`/`ResolvePort` bind whichever `GetComponents` returns first. Bind the intended one explicitly.
 - InputField text containing `,` or `"`, and Slider values in comma-decimal locales, may corrupt on reload (E1/E2).
-- `Failed to parse preferences` is logged whenever PlayerPrefs has no entry for the host's KEY yet; it means "no save", not an error (E3).
 - A component that cannot bind (Dropdown, or `TMP_InputField` without `com.yu5h1.tmpextension`) is skipped; `BindAll` logs a Warning naming the object and its component type, and `PreferencesBindingUtility.BindSelected`/the `_bindings` drawer report it as `Unbindable` at bind time.
 - Two GameObjects with the same name under one host share one field and overwrite each other; `BindAll` warns on the exact duplicate and logs a lighter hint when a field name looks like a Unity default (`Toggle`, `Slider (1)`, ...). The drawer and `BindSelected` catch it earlier, at bind time, but only for entries added through them.
 - Controls instantiated after the host's `Awake` are not bound until `BindAll()` is called.
