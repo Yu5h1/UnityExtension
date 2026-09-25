@@ -93,24 +93,7 @@ namespace Yu5h1Lib.Serialization
             this[fieldName] = bindingValue;
             return true;
         }
-        public string ToJson()
-        {
-            var json = JsonUtility.ToJson(this).TrimBefore("[", true).TrimAfter("]", true);
-            var items = json.Split("},{");
-            if (items.Length <= 0)
-                return "";
-            var parameters = new List<string>();
-            foreach (var item in items)
-            {
-                if (item.IsEmpty())
-                    continue;
-                var keyValue = item.Split(",");
-                var key = keyValue[0].Trim('{', '}').TrimBefore(":", true).Trim('"');
-                var value = keyValue[1].Trim('{', '}').TrimBefore(":", true).Trim('"');
-                parameters.Add($"\"{key}\":\"{value}\"");
-            }
-            return parameters.IsEmpty() ? "" : $"{{{parameters.Join(",")}}}";
-        }
+        public string ToJson() => JsonUtility.ToJson(this);
         public static bool TryParseFromJson(string json, out DataView result) 
         {
             result = null;
@@ -134,7 +117,6 @@ namespace Yu5h1Lib.Serialization
                 var value = item.TrimBefore(":", true).Trim('"');
                 parameters.Add(new KeyValue<string, string>(item.TrimAfter(":", true).Trim('"'),
                     item.TrimBefore(":", true).Trim('"')));
-                //result.entries.Add();
             }
             result.CopyFrom(parameters);
             return result.Entries.Count > 0;
