@@ -50,6 +50,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 ## Recent Work
 
+- 2026-09-25: Wrote the UI Toolkit implementation plan into [偏好設定.md § 實作步驟](Documentation/偏好設定.md#實作步驟規劃未核定) (6 ordered steps, gated on D3/D4 being settled first) at the user's request, rather than starting UI Toolkit work — the user wants the core system's own open issues cleaned up first. Also recorded, in [風險待驗證](Documentation/偏好設定.md#風險待驗證), that repeated `BindAll()` calls without an intervening `UnbindAll()` measurably stack a listener per call (reproduced during the I1–I3 verification below); this is a different trigger than the existing shell+factory double-wrap risk already listed there.
+
 - 2026-09-25: Verified [偏好設定](Documentation/偏好設定.md#設計決策) I1–I3 over MCP in `W:/UnityProject/Yu5h1LibTest`, scene `Assets/Scenes/PlayerPreferencesDemo.unity`. First `refresh_unity` caught a real compile error: adding `using System;` to `Preferences.cs` and to `PreferencesBindingUtility.cs` (both already had `using UnityEngine;`) made bare `Object` ambiguous (CS0104). Fixed by dropping the `using System;` in both files and qualifying `System.StringComparer`/`System.StringComparison` at each call site; recompiled clean (only 4 pre-existing UAC1002/UAC1009 serialization-analyzer warnings remained, unrelated to this change).
 
   I1: called `PreferencesBindingUtility.BindSelected` directly (the same method the CONTEXT menu and the skill's MCP step call) against the live `PlayerPreferences` host with an unbindable object, a fresh Slider, a GameObject named `MasterVolume` (colliding with the existing bound Slider), and an already-bound Toggle — got exactly `Unbindable`, `Bound`, `DuplicateName`, `AlreadyBound`.
