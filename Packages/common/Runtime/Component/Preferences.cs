@@ -10,7 +10,7 @@ namespace Yu5h1Lib
     public abstract class Preferences<T> : SingletonBehaviour<T> where T : Preferences<T>
     {
         public virtual string KEY => GetType().Name;
-        [SerializeField,TypeRestriction(typeof(Component))] private List<Object> _bindings;
+        [SerializeField, PreferencesBinding] private List<Object> _bindings;
         public IReadOnlyList<Object> bindings => _bindings;
 
         [SerializeField] protected DataView defaultSetting;
@@ -24,14 +24,15 @@ namespace Yu5h1Lib
                 if (isCurrentLoaded)
                     return _current;
                 isCurrentLoaded = true;
-                if (TryLoadCurrent(out DataView data))
-                    _current = new DataView(data);
-                else
-                {
+                bool loaded = TryLoadCurrent(out DataView data);
+                _current = loaded ? new DataView(data) : (defaultSetting == null ? new DataView() : new DataView(defaultSetting));
+                if (!loaded)
                     $"Failed to parse preferences from PlayerPrefs with key [{KEY}]".printWarning();
-                    _current = defaultSetting == null ? new DataView() : new DataView(defaultSetting);
-                }
                 _current.Changed += Current_Changed;
+                if (loaded && defaultSetting != null)
+                    foreach (var pair in defaultSetting)
+                        if (!_current.ContainsKey(pair.Key))
+                            _current[pair.Key] = pair.Value;
                 return _current;
             }
         }
@@ -48,16 +49,7 @@ namespace Yu5h1Lib
         /// <summary>Resolved map from each binding Object to its IValuePort. Built during BindAll.</summary>
         private readonly Dictionary<Object, IValuePort> _portMap = new Dictionary<Object, IValuePort>();
 
-        IValuePort ResolvePort(Object obj)
-        {
-            if (obj is IValuePort port) return port;
-            if (obj is IAdapterShell shell && shell.adapter is IValuePort shellPort) return shellPort;
-            if (obj is Component c &&
-                AdapterFactory<Component>.TryCreate(c, out IAdapter<Component> adapter) &&
-                adapter is IValuePort adapterPort)
-                return adapterPort;
-            return null;
-        }
+        IValuePort ResolvePort(Object obj) => ValuePortResolver.Resolve(obj);
 
         public bool TryGetValueFromBindings(string key, out string value)
         {
@@ -94,19 +86,38 @@ namespace Yu5h1Lib
         public void BindAll()
         {
             _portMap.Clear();
+            var seenFieldNames = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < _bindings.Count; i++)
             {
                 var obj = _bindings[i];
                 if (obj == null) continue;
                 var port = ResolvePort(obj);
-                if (port == null) continue;
+                if (port == null)
+                {
+                    $"BindAll on {name}: {obj.name} ({obj.GetType().Name}) has no IValuePort and no registered Adapter.".printWarning();
+                    continue;
+                }
                 _portMap[obj] = port;
-                if (!current.ContainsKey(port.GetFieldName()))
-                    current[port.GetFieldName()] = port.GetValue();
+                var fieldName = port.GetFieldName();
+                if (!seenFieldNames.Add(fieldName))
+                    $"BindAll on {name}: field name '{fieldName}' is bound by more than one control; they will overwrite each other.".printWarning();
+                else if (obj is Component boundComponent && LooksLikeDefaultName(fieldName, boundComponent))
+                    $"BindAll on {name}: '{fieldName}' looks like a Unity default name; renaming the GameObject later will orphan its saved value.".print();
+                if (!current.ContainsKey(fieldName))
+                    current[fieldName] = defaultSetting != null && defaultSetting.TryGetValue(fieldName, out string fallback)
+                        ? fallback
+                        : port.GetValue();
             }
             WriteToBindings();
             foreach (var port in _portMap.Values)
                 port.BindTo(current);
+        }
+
+        private static bool LooksLikeDefaultName(string fieldName, Component component)
+        {
+            var typeName = component.GetType().Name;
+            if (fieldName == typeName) return true;
+            return fieldName.StartsWith(typeName + " (", System.StringComparison.Ordinal) && fieldName.EndsWith(")");
         }
 
         public void UnbindAll()
