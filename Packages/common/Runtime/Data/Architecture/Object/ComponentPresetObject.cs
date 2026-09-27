@@ -20,6 +20,7 @@ namespace Yu5h1Lib
             return true;
         }
     }
+    [Serializable]
     public abstract class ComponentPreset<T> : ComponentPreset where T : Component
     {
         public sealed override bool ApplyTo(Component component)

@@ -52,6 +52,12 @@ namespace Yu5h1Lib
         /// <summary>True while the group still carries enough momentum to be worth ticking.</summary>
         public bool IsMoving => groupVelocity.sqrMagnitude > 1 || Mathf.Abs(angularVelocity) > .01f;
 
+        /// <summary>
+        /// Multiplies the radius of the seed ring new, uncached items scatter onto. Raising it spreads a
+        /// freshly-populated desktop out wider; it does not move an item that already has a remembered spot.
+        /// </summary>
+        public float Spread { get; set; } = 1;
+
         /// <param name="scatterSize">Item size while scattered.</param>
         /// <param name="sortedSize">Item size in the sorted grid.</param>
         /// <param name="sortedStride">Grid pitch. Deliberately independent of <paramref name="sortedSize"/>:
@@ -170,7 +176,8 @@ namespace Yu5h1Lib
                     float angle = (ids.Count == 1 ? 90 : -30 + 240f * i / (ids.Count - 1)) * Mathf.Deg2Rad;
                     Vector2 center = origin ?? bounds.center;
                     if (!center.IsFinite()) center = bounds.center;
-                    float radius = Mathf.Max(scatterSize, Mathf.Min(bounds.width, bounds.height) * RadialScale);
+                    float radius = Mathf.Max(scatterSize, Mathf.Min(bounds.width, bounds.height) * RadialScale)
+                        * Mathf.Max(.1f, Spread);
                     Vector2 candidate = cache.TryGetValue(id, out var saved) && saved.IsFinite()
                         ? bounds.min + Vector2.Scale(saved, bounds.size)
                         : center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
@@ -207,6 +214,33 @@ namespace Yu5h1Lib
             if (!TryPlace(desired, Bounds, scatterClearance, obstacles, out var position)) return false;
             Positions[id] = position;
             obstacles.Add(new Rect(position - Vector2.one * scatterRadius, Vector2.one * (scatterRadius * 2)));
+            return true;
+        }
+
+        /// <summary>
+        /// Draws one item toward <paramref name="target"/> by an exponentially-closing step, through the same
+        /// <see cref="Resolve"/>/<see cref="Commit"/> path a drag would use, so it keeps every obstacle clear
+        /// exactly as dragging does. Only ever sets a nearer target - the item's own motion between frames,
+        /// and whatever "close enough" should trigger, are entirely the caller's.
+        /// </summary>
+        /// <param name="current">
+        /// Where the caller currently considers <paramref name="id"/> to be - typically its actual on-screen
+        /// position, which may lag the resolved <see cref="Positions"/> entry while a spring catches up.
+        /// </param>
+        /// <param name="radius">Distance from <paramref name="target"/> beyond which nothing is pulled.</param>
+        /// <param name="force">Exponential closing rate; higher pulls faster.</param>
+        /// <returns>False when <paramref name="current"/> is farther than <paramref name="radius"/> from
+        /// <paramref name="target"/>, the group is compact, or an input is not finite - nothing is moved.</returns>
+        public bool Pull(string id, Vector2 current, Vector2 target, float radius, float force, float dt,
+            IReadOnlyList<string> ids, Rect bounds, IReadOnlyList<Rect> obstacles, Vector2? origin = null)
+        {
+            if (Compact || radius <= 0 || force <= 0 || dt <= 0) return false;
+            if (!current.IsFinite() || !target.IsFinite()) return false;
+            if (Vector2.Distance(current, target) > radius) return false;
+            float closing = 1 - Mathf.Exp(-force * dt);
+            Vector2 desired = Vector2.Lerp(current, target, closing);
+            Resolve(ids, bounds, obstacles, compact: false, active: id, desired: desired, origin: origin);
+            Commit();
             return true;
         }
 

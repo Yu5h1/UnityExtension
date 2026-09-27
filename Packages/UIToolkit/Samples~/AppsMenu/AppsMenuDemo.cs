@@ -54,6 +54,19 @@ namespace Yu5h1LibTest
         [Tooltip("How far the pointer may wander before a hold is abandoned. App 0 ignores this.")]
         [Min(0)] public float moveTolerance = 6;
 
+        [Header("Vacuum")]
+        [Tooltip("Distance from the dragged Apps button within which a desktop app starts drawing toward it.")]
+        [Min(0)] public float vacuumRadius = 170;
+
+        [Tooltip("How fast a caught app closes the distance once it is within range. Higher pulls faster.")]
+        [Min(0)] public float vacuumForce = 5;
+
+        [Tooltip("Pointer travel before an Apps-button press turns into a vacuum drag rather than a tap.")]
+        [Min(0)] public float vacuumDragThreshold = 8;
+
+        [Tooltip("Seed-ring multiplier used to scatter every app back out when the emptied Apps button is released.")]
+        [Min(.1f)] public float releaseSpread = 1.6f;
+
         [Header("Diagnostics")]
         public bool trace;
 
@@ -78,6 +91,7 @@ namespace Yu5h1LibTest
         private readonly HashSet<string> marked = new HashSet<string>();
         private readonly Dictionary<string, VisualElement> icons = new Dictionary<string, VisualElement>();
         private readonly List<string> desktopOrder = new List<string>();
+        private readonly List<string> caughtByVacuum = new List<string>();
 
         // --- gesture state (policy) -----------------------------------------
         private int pointer = -1;
@@ -86,6 +100,8 @@ namespace Yu5h1LibTest
         private Vector2 dragSample, dragVelocity, groupLast, pressAt;
         private float dragSampleTime;
         private bool appsPressed, catchArmed;
+        private bool vacuumDragging;
+        private Vector2 vacuumPressLocal, vacuumCenter;
         private string slotTarget;
         private VisualElement spacer;
         private int clicks, holds, stashes;
@@ -184,15 +200,13 @@ namespace Yu5h1LibTest
             appsButton.Add(Center("Apps", new Color(.86f, .92f, .90f)));
             // The Apps button owns its own press, so it consumes it. Letting it through would start the
             // desktop's background gesture underneath, and the button would never see its own release.
-            appsButton.RegisterCallback<PointerDownEvent>(e => { appsPressed = true; e.StopPropagation(); });
-            appsButton.RegisterCallback<PointerUpEvent>(e =>
-            {
-                if (!appsPressed) return;
-                appsPressed = false;
-                TogglePanel();
-                e.StopPropagation();
-            });
-            appsButton.RegisterCallback<PointerLeaveEvent>(_ => appsPressed = false);
+            // A short press is still a tap (toggle the panel); travelling past the threshold turns the same
+            // press into a vacuum drag instead - one gesture, decided by how far it goes, same as the rest
+            // of this file's "the owner decides" rule.
+            appsButton.RegisterCallback<PointerDownEvent>(OnAppsButtonDown);
+            appsButton.RegisterCallback<PointerMoveEvent>(OnAppsButtonMove);
+            appsButton.RegisterCallback<PointerUpEvent>(OnAppsButtonUp);
+            appsButton.RegisterCallback<PointerCaptureOutEvent>(OnCaptureLost);
             appsButton.RegisterCallback<PointerCancelEvent>(_ => appsPressed = false);
             desktop.Add(appsButton);
 
@@ -326,7 +340,7 @@ namespace Yu5h1LibTest
         /// Reparents every app to wherever it lives and re-resolves the desktop. Panel items lay out in
         /// flow; desktop apps are positioned absolutely by <see cref="GroupDragLayout"/>.
         /// </summary>
-        private void Sync(string active = null, Vector2? desired = null)
+        private void Sync(string active = null, Vector2? desired = null, Vector2? origin = null)
         {
             desktopOrder.Clear();
             foreach (string id in apps)
@@ -354,7 +368,7 @@ namespace Yu5h1LibTest
                 }
             }
             RaiseChrome();
-            Resolve(active, desired);
+            Resolve(active, desired, origin);
         }
 
         /// <summary>
@@ -374,13 +388,13 @@ namespace Yu5h1LibTest
             UpdateHint($"{id} stashed in Apps");
         }
 
-        private void Resolve(string active = null, Vector2? desired = null)
+        private void Resolve(string active = null, Vector2? desired = null, Vector2? origin = null)
         {
             if (desktop == null || desktop.panel == null) return;
             Rect bounds = new Rect(0, 0, desktop.layout.width, desktop.layout.height);
             if (!bounds.IsValid()) return;
 
-            layout.Resolve(desktopOrder, bounds, Obstacles, compact: false, active, desired);
+            layout.Resolve(desktopOrder, bounds, Obstacles, compact: false, active, desired, origin);
             Apply();
         }
 
@@ -486,6 +500,104 @@ namespace Yu5h1LibTest
         }
 
         // ====================================================================
+        // Vacuum - dragging the Apps button itself pulls nearby desktop apps in
+        // ====================================================================
+
+        private void OnAppsButtonDown(PointerDownEvent e)
+        {
+            if (Busy || e.button != 0) return;
+            appsPressed = true;
+            vacuumDragging = false;
+            vacuumPressLocal = desktop.WorldToLocal(e.position);
+            Begin(appsButton, e.pointerId, e.position);
+            e.StopPropagation();
+        }
+
+        private void OnAppsButtonMove(PointerMoveEvent e)
+        {
+            if (e.pointerId != pointer || owner != appsButton) return;
+            Sample(e.position);
+            Vector2 local = desktop.WorldToLocal(e.position);
+            Vector2 carried = local - vacuumPressLocal;
+
+            if (!vacuumDragging)
+            {
+                if (carried.sqrMagnitude < vacuumDragThreshold * vacuumDragThreshold) return;
+                vacuumDragging = true;
+                appsPressed = false;   // travelled too far to still count as a tap
+                UpdateHint("dragging Apps - nearby desktop apps are drawn toward it");
+            }
+
+            // The carry offset is only a drawing trick, same as a dragged panel item; the layout obstacle
+            // for appsButton stays at its resting spot, which is fine - it is not a static obstacle to
+            // avoid right now, it is the thing doing the pulling.
+            appsButton.style.translate = new Translate(carried.x, carried.y);
+            vacuumCenter = appsButton.layout.center + carried;
+            e.StopPropagation();
+        }
+
+        private void OnAppsButtonUp(PointerUpEvent e)
+        {
+            if (e.pointerId != pointer || owner != appsButton) return;
+            e.StopPropagation();
+            bool wasVacuuming = vacuumDragging;
+            bool wasTap = appsPressed;
+            Vector2 dropLocal = desktop.WorldToLocal(e.position);
+            End();
+            appsButton.style.translate = StyleKeyword.Null;
+            vacuumDragging = false;
+
+            if (wasVacuuming) EndVacuum(dropLocal);
+            else if (wasTap) { appsPressed = false; TogglePanel(); }
+        }
+
+        /// <summary>
+        /// Pulls every desktop app within <see cref="vacuumRadius"/> of the dragged button toward it, and
+        /// stashes the ones close enough to count as caught. Only sets each app a nearer target through
+        /// <see cref="GroupDragLayout.Pull"/> - the visible motion is the same spring-driven placement every
+        /// other desktop app already uses via <see cref="Apply"/>.
+        /// </summary>
+        private void TickVacuum(float deltaTime)
+        {
+            if (!vacuumDragging || desktop.panel == null) return;
+            Rect bounds = new Rect(0, 0, desktop.layout.width, desktop.layout.height);
+            float catchRadius = layout.Size * .6f;
+
+            caughtByVacuum.Clear();
+            foreach (string id in desktopOrder)
+            {
+                if (!layout.Positions.TryGetValue(id, out var current)) continue;
+                if (Vector2.Distance(current, vacuumCenter) <= catchRadius) { caughtByVacuum.Add(id); continue; }
+                layout.Pull(id, current, vacuumCenter, vacuumRadius, vacuumForce, deltaTime,
+                    desktopOrder, bounds, Obstacles);
+            }
+            foreach (string id in caughtByVacuum) Stash(id);
+            Apply();
+        }
+
+        /// <summary>
+        /// Dropping the bag: if it is still carrying any desktop app, it just falls back to its resting spot.
+        /// Only once nothing is left on the desktop does letting go mean anything - the emptied button
+        /// releases everything it is holding, scattered back out from the drop point.
+        /// </summary>
+        private void EndVacuum(Vector2 dropLocal)
+        {
+            if (onDesktop.Count > 0)
+            {
+                UpdateHint($"released Apps - {onDesktop.Count} app(s) still on the desktop");
+                return;
+            }
+
+            foreach (string id in apps) onDesktop.Add(id);
+            layout.ResetScatter();
+            float spread = layout.Spread;
+            layout.Spread = releaseSpread;
+            Sync(origin: dropLocal);
+            layout.Spread = spread;
+            UpdateHint($"released Apps - {apps.Count} app(s) scattered back onto the desktop");
+        }
+
+        // ====================================================================
         // Gesture plumbing - one owner per gesture
         // ====================================================================
 
@@ -521,6 +633,9 @@ namespace Yu5h1LibTest
             if (e.target != owner) return;
             if (trace) Debug.Log($"[trace] capture lost from {(e.target as VisualElement)?.name}");
             appsButton.RemoveFromClassList("hinting");
+            if (vacuumDragging) appsButton.style.translate = StyleKeyword.Null;
+            vacuumDragging = false;
+            appsPressed = false;
             MarkSlot(null);
             DropStandIn();
             owner = null;
@@ -811,6 +926,7 @@ namespace Yu5h1LibTest
                 Apply();
             }
 
+            TickVacuum(deltaTime);
             TickFlight(deltaTime);
             shake.Tick(deltaTime);
         }
@@ -826,6 +942,8 @@ namespace Yu5h1LibTest
                 "into Apps only by: dropping on the panel, dropping on the Apps icon,\n" +
                 "  or a throw whose inertia carries it there\n" +
                 "drag an app out of the panel and release = place it on the desktop\n" +
+                "drag Apps itself = vacuum nearby desktop apps in; release once the desktop is\n" +
+                "  empty to scatter every app back out from the drop point\n" +
                 "hold an app = mark it (app 0 ignores movement)\n" +
                 $"desktop {onDesktop.Count}/{apps.Count}   clicks {clicks}   holds {holds}   stashed {stashes}";
         }
