@@ -41,7 +41,6 @@ namespace Yu5h1Lib
             add => _changed.AddListener(value);
             remove => _changed.RemoveListener(value);
         }
-        public int delayBindAllFrames = 0;
         public bool SaveOnChanged = true;
 
         /// <summary>Resolved map from each binding Object to its IValuePort. Built during BindAll.</summary>
@@ -68,9 +67,11 @@ namespace Yu5h1Lib
 
         protected override void OnInstantiated() {}
 
-        protected override void OnInitializing()
+        protected override void OnInitializing() {}
+
+        protected virtual void Start()
         {
-            this.DelayInvoke(BindAll, delayBindAllFrames);
+            BindAll();
         }
         protected virtual void OnDestroy() => UnbindAll();
 
