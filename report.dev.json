@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "report_id": "unity-extension-progress",
-  "updated_at": "2026-09-28T17:49:24.876552+00:00",
+  "updated_at": "2026-09-28T17:59:36.096179+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -100,7 +100,7 @@
     },
     {
       "id": "preferences",
-      "next_step": "UI Toolkit 支援計畫（步驟 1–5）全部完成，無待辦事項。剩下唯一項目：IL2CPP [Preserve] 存活性驗證，使用者選擇延後，不卡任何東西。",
+      "next_step": "UI Toolkit 支援計畫（步驟 1–5）全部完成，無待辦事項。唯一項目：IL2CPP [Preserve] 存活性驗證——2026-09-29 嘗試跑了一次，Unity 端 IL2CPP 模組沒問題，但卡在機器缺 Visual Studio C++ 工作負載與 Windows SDK 10.0.19041+（IL2CPP 需要的 C++ 編譯工具鏈），build 在編譯 C++ 階段失敗。要繼續得先裝這兩個（數 GB 系統層級安裝），由使用者決定要不要裝。",
       "decisions": [
         {
           "summary": "移除計畫完成：ObservablePref／ObservableValue／PlayerPrefValue 保留（欄位取向、任意型別、跟 Preferences 解不同問題），疊在外面的 PlayerPrefObject 系列（零消費者）已於 2026-09-28 刪除。",
@@ -122,6 +122,9 @@
           "summary": "D4：UI Toolkit 綁定用 UIDocument 旁元件（非讓 Preferences 認得「一物件多 port」），Preferences 完全不需要知道 UI Toolkit 存在。",
           "reference": "Documentation/偏好設定.md#設計決策"
         }
+      ],
+      "blockers": [
+        "IL2CPP [Preserve] 驗證需要先在機器上裝 Visual Studio（C++ 工作負載）與 Windows SDK 10.0.19041+，目前都沒裝；使用者尚未決定是否要裝。"
       ]
     }
   ]

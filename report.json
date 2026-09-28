@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-09-28T17:49:24.876552+00:00",
+  "updated_at": "2026-09-28T17:59:36.096179+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -419,7 +419,7 @@
       "pending_items": [
         {
           "id": "item-preferences-todo-3",
-          "title": "IL2CPP [Preserve] 存活性驗證，使用者選擇延後",
+          "title": "IL2CPP [Preserve] 存活性驗證：2026-09-29 嘗試過，被機器缺 C++ 工具鏈卡住（需要 Visual Studio C++ 工作負載＋Windows SDK 10.0.19041+，兩者都沒裝），驗證腳本設計已記錄，之後可直接重跑",
           "priority": 4
         }
       ],
