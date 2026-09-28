@@ -8,14 +8,13 @@ Members, design decisions, known defects, weaknesses, and open decisions: [偏�
 
 | Situation | Use |
 |---|---|
-| A uGUI `Toggle`, `Slider`, `InputField`, `TMP_InputField`, or an `OptionSet` edits the value | `Preferences`: [scene procedure](#scene-procedure-mcp) below. `TMP_InputField` binds only when the project references `com.yu5h1.tmpextension` (`Packages/Plugins/TMP`); without it the control is silently skipped |
+| A uGUI `Toggle`, `Slider`, `InputField`, `TMP_InputField`, `Dropdown`, `TMP_Dropdown`, or an `OptionSet` edits the value | `Preferences`: [scene procedure](#scene-procedure-mcp) below. `TMP_InputField`/`TMP_Dropdown` bind only when the project references `com.yu5h1.tmpextension` (`Packages/Plugins/TMP`); without it the control is silently skipped |
 | An option switched by `OptionSelector` | Bind the `OptionSet` to save the item's value, or the `OptionSelector` to save the index. Only one per GameObject: both use the GameObject name as key |
+| A UI Toolkit `Toggle`, `Slider`, `SliderInt`, `TextField`, or `DropdownField` (via `UIDocument`) edits the value | `PreferencesBinder`: [UI Toolkit scene procedure](#ui-toolkit-scene-procedure) below. Same `Preferences` host as uGUI — one save file works with either UI. `EnumField` is not supported yet (silently skipped), see plan § UI Toolkit 適用分析 |
 | Code owns the value, no control edits it, no `changed`/`init` notification needed | Call `PlayerPrefs` directly (`JsonUtility` for complex types). Don't reach for `ObservablePref<T>` just to hold a value nothing listens to |
 | Code owns the value (any type, incl. complex), declared as a field on any class, wants `changed`/`init` events or a swappable serializer | `ObservablePref<T>` / `PlayerPrefValue<T>` (`Runtime/ObservablePref.cs`, `Runtime/PlayerPrefsAdvanced.cs`). **Not deprecated** — solves a different problem than `Preferences` (field-owned, no scene host, any T) — 2026-09-27 correction, see plan's 成員總覽. If the value actually has a UI control to edit it, prefer `Preferences` instead |
 | `PlayerPrefObject<T>`, `PlayerPrefBoolObject` | Deleted 2026-09-28 (had no consumers anywhere). The `ObservablePref` it wrapped is fine on its own, this SO layer just wasn't. Don't reference either type. |
 | `AudioVolumePrefs` | Already deleted (2026-09-27), no replacement built. Don't reference it; plan § 已知問題 E9 |
-| `Dropdown` / `TMP_Dropdown` | Not bindable yet (silently ignored). Plan decision D3 |
-| UI Toolkit control | Not supported. Report the gap and route to plan § UI Toolkit 適用分析; do not hand-write a replacement |
 | Password, token, or other secret | Not in PlayerPrefs: it is plaintext |
 | A new uGUI control type must bind | Write one adapter (copy `ToggleAdapter`); `Preferences` needs no change |
 
@@ -64,10 +63,23 @@ Members, design decisions, known defects, weaknesses, and open decisions: [偏�
 
 5. **Save** the scene or prefab. Report every `SKIP`, `DuplicateName`, `AlreadyBound`, and `Unbindable` line to the user rather than working around it.
 
+## UI Toolkit scene procedure
+
+`Packages/UIToolkit/Runtime/Preferences/` (`com.yu5h1.uitoolkit`, D4). Same `Preferences` host as the uGUI path above — `Preferences` itself has no idea UI Toolkit exists; one save file works with either UI, and a project can mix both in different scenes.
+
+1. **Host.** Same as [scene procedure](#scene-procedure-mcp) step 1 — reuse the existing `PlayerPreferences` (or project subclass) host. Don't create a second one just because this GameObject uses UI Toolkit.
+2. **Binder.** Add `Yu5h1Lib.UIToolkit.PreferencesBinder` to the same GameObject as the `UIDocument` (it has `[RequireComponent(typeof(UIDocument))]`, so Unity adds a bare `UIDocument` if one isn't already there — set its `visualTreeAsset`/`panelSettings` afterward). Assign the binder's `_preferences` field to the host, e.g. `manage_components set_property` an `Object` reference, or drag it in the Inspector — the field is restricted to `IPreferences` via `[TypeRestriction]`, so a GameObject without a `Preferences<T>` component is rejected.
+3. **Keys.** Not the GameObject name — each control's **`binding-path`** UXML attribute is the saved key (`<ui:Toggle binding-path="sound" .../>`), read at runtime through `IBindable.bindingPath`. Set it in the `.uxml` source. A control with no `binding-path` (or one that isn't `IBindable`) is silently skipped, same as an unsupported control type.
+4. **Supported controls.** `Toggle`, `Slider`, `SliderInt`, `TextField`, `DropdownField` (see `VisualElementPortFactory`) — each matches the string format its uGUI adapter counterpart uses (plan § 需先驗證 has the full correspondence table), so the same save file round-trips through either UI. `EnumField` is recognized by UI Toolkit but has no `IValuePort` yet — silently skipped, same as `Scrollbar` on the uGUI side; don't hand-write one, route the gap to the plan instead.
+5. **Defaults.** Same `defaultSetting` on the host as the uGUI path (scene procedure step 3) — no separate UI Toolkit default mechanism.
+6. **Save** the scene or prefab.
+
+No CONTEXT-menu batch-bind step exists for this path (`bindingPath` lives in the `.uxml` asset, not on a scene control) — editing the UXML is the whole registration step.
+
 ## Consuming the values
 
 - Code: `PlayerPreferences.instance.current.TryGetValue("MasterVolume", out string raw)`, then parse with the adapter's format (plan § 可綁控件: bool is `"true"`/`"false"`, float is current-culture). Subscribe to `changed` for live updates. Prefer `TryGetValue`: the indexer throws on a missing key.
-- No code: wire the control's own `onValueChanged` to the target in the Inspector. On load the stored value is written into the control, which fires `onValueChanged` only if it differs from the scene value. So a target that must be applied at startup also needs its initial state to match the control's scene value, or a code read at start. `Preferences` has no unconditional on-load notification yet (plan decision R1).
+- No code: wire the control's own `onValueChanged` to the target in the Inspector. `BindAll`/`BindPort` fire an unconditional notify right after loading (R1, 2026-09-28) — the target's listener runs once at bind time regardless of whether the loaded value equals the control's scene value, so nothing extra is needed to apply a saved value at startup.
 
 ## Verify
 
@@ -80,7 +92,8 @@ Details and status in plan § 已知問題 / § 弊端評估.
 - `DataViewBinding` loads saved values but does not write changes back: its value lives in another DataView with no change source (E4).
 - A GameObject holding both `OptionSelector` and `OptionSet` has two `IValuePort` components; `ResolveBindableComponent`/`ResolvePort` bind whichever `GetComponents` returns first. Bind the intended one explicitly.
 - Storage is JSON entries via `JsonUtility` (not hand-split anymore); a value with `,` or `"` round-trips correctly (E1/E2 fixed). An old save still on disk in the pre-migration flat format still loads fine too. `SliderAdapter` writes and reads `InvariantCulture` (falls back to `CurrentCulture` on read, so an old comma-decimal save still loads).
-- A component that cannot bind (Dropdown, or `TMP_InputField` without `com.yu5h1.tmpextension`) is skipped; `BindAll` logs a Warning naming the object and its component type, and `PreferencesBindingUtility.BindSelected`/the `_bindings` drawer report it as `Unbindable` at bind time.
+- A component that cannot bind (`Scrollbar`, `EnumField`, or `TMP_InputField`/`TMP_Dropdown` without `com.yu5h1.tmpextension`) is skipped; `BindAll` logs a Warning naming the object and its component type, and `PreferencesBindingUtility.BindSelected`/the `_bindings` drawer report it as `Unbindable` at bind time.
 - Two GameObjects with the same name under one host share one field and overwrite each other; `BindAll` warns on the exact duplicate and logs a lighter hint when a field name looks like a Unity default (`Toggle`, `Slider (1)`, ...). The drawer and `BindSelected` catch it earlier, at bind time, but only for entries added through them.
 - Controls instantiated after the host's `Start` are not bound until `BindAll()` is called.
 - Every change writes to disk; heavy Slider dragging is costly, especially on WebGL.
+- `PreferencesBinder` (UI Toolkit) rebinds on every `OnEnable`, not once like the uGUI host's `Start` — `UIDocument` rebuilds `rootVisualElement` every time it's re-enabled, so a panel toggled off/on mid-game re-scans and re-binds correctly each time, but a script that assumes "bound once at startup" (true for the uGUI host) is wrong for this path.
