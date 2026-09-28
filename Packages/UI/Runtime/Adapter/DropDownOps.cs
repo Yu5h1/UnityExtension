@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using Yu5h1Lib.Common;
+using Yu5h1Lib.MVVM;
 
 namespace Yu5h1Lib.UI
 {
@@ -12,12 +13,12 @@ namespace Yu5h1Lib.UI
         string currentItem { get; set; }
         string this[int index] { get; set; }
         event UnityAction<int> valueChanged;
-        
+
         void Add(IList<string> options);
         void Sync(IList<string> options);
         void InvokeChangedCallback();
-    }    
-    public abstract class DropDownOps<TDropDown, TOptionData> : OpsBase<TDropDown>, IDropDownOps, IList<string> where TDropDown : Selectable
+    }
+    public abstract class DropDownOps<TDropDown, TOptionData> : OpsBase<TDropDown>, IDropDownOps, IValuePort, IList<string> where TDropDown : Selectable
     {
         protected DropDownOps(TDropDown component) : base(component) { }
 
@@ -124,6 +125,28 @@ namespace Yu5h1Lib.UI
             currentItem = curText;
             Refresh();
         }
-        
+
+        // ── IValuePort (D3: stores the selected option's text, not its index) ──
+        public string GetFieldName() => Raw.gameObject.name;
+        public string GetValue() => currentItem;
+        public void SetValue(string value) => currentItem = value;
+        public void SetValue(IValuePort Ibindable) => SetValue(Ibindable.GetValue());
+        public void NotifyValueChanged() => InvokeChangedCallback();
+
+        private UnityAction<int> readFromThis;
+        public void BindTo(IDataView dataview)
+        {
+            Unbind();
+            readFromThis = _ => dataview.ReadFrom(this);
+            valueChanged += readFromThis;
+            dataview.WriteTo(this);
+            NotifyValueChanged();
+        }
+        public void Unbind()
+        {
+            if (readFromThis == null) return;
+            valueChanged -= readFromThis;
+            readFromThis = null;
+        }
     }
 }
