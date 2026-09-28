@@ -228,6 +228,26 @@ Do not create a convenience command that merely duplicates a discoverable native
 - Preserve Undo for user-visible asset and serialized-object changes.
 - Mark modified objects dirty only when needed; save assets deliberately rather than as an incidental side effect.
 
+## Reading a collection's selection
+
+A serialized collection is drawn by one of two controls, each keeping its own selection. Handle both:
+checking only one works on some inspectors and silently falls back to a single element on the rest.
+`contextualPropertyMenu` fires for both, so the property alone does not say which one drew it.
+
+- **IMGUI `ReorderableList`** — inspectors on `Editor<T>` (`ReorderableListEnhanced`) and other IMGUI
+  hosts. No public API maps a `SerializedProperty` to its list; the internal static
+  `ReorderableList.s_Instances` (weak references) holds every live one. Match on the internal
+  `m_SerializedObject.targetObject` and `m_PropertyPath`, not on `serializedProperty`: that returns
+  the object it was given, and a drawing iterator given to it has moved to another path by the time
+  a menu runs.
+- **UI Toolkit `ListView`** — any component or asset without a custom IMGUI editor, including when
+  its elements use an IMGUI `PropertyDrawer`. It never enters `s_Instances`. Find it under
+  `EditorWindow.mouseOverWindow.rootVisualElement` where its `bindingPath`, or its nearest ancestor
+  `PropertyField`'s, equals the array's path, and read `selectedIndices`.
+
+Right-clicking an element changes neither selection. Worked example:
+[CollectionElementMenu.cs](../../Packages/common/Editor/MenuItem/CollectionElementMenu.cs).
+
 ## Existing helpers
 
 - `Unity/UnityExtension/Editor/Source/EditorAdvanced.cs` — `EditorAdvanced` and
