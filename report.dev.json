@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "report_id": "unity-extension-progress",
-  "updated_at": "2026-09-28T12:17:27.667679+00:00",
+  "updated_at": "2026-09-28T17:23:44.058011+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -100,10 +100,7 @@
     },
     {
       "id": "preferences",
-      "next_step": "D4（UI Toolkit 綁定形狀）定案後才能推進 UI Toolkit 實作步驟（D3 已於 2026-09-28 定案：Dropdown 存文字；D4 的「需先驗證」兩項也已於 2026-09-28 驗證完成，見偏好設定.md）。Create Mixer 產生器已完成，其餘（IL2CPP 驗證）不卡任何東西，隨時可做。",
-      "blockers": [
-        "D4 未定案，Documentation/偏好設定.md 的 UI Toolkit 實作步驟無法開始（步驟 3 起）。"
-      ],
+      "next_step": "UI Toolkit 實作步驟 4（Dropdown／TMP_Dropdown 補 IValuePort）跟步驟 5（skill 文件補場景配置說明）。IL2CPP 驗證不卡任何東西，隨時可做。",
       "decisions": [
         {
           "summary": "移除計畫完成：ObservablePref／ObservableValue／PlayerPrefValue 保留（欄位取向、任意型別、跟 Preferences 解不同問題），疊在外面的 PlayerPrefObject 系列（零消費者）已於 2026-09-28 刪除。",
@@ -115,6 +112,14 @@
         },
         {
           "summary": "D1：DataView.ToJson 改回傳 JsonUtility.ToJson 的 entries 格式，不再手動拼接扁平字串，修正 E1／E2。",
+          "reference": "Documentation/偏好設定.md#設計決策"
+        },
+        {
+          "summary": "D3：Dropdown 存文字，不存索引——DropdownField.value 本身就是字串、沒有對應索引，跟 DropdownField.value 及 OptionSet 的字串化一致。",
+          "reference": "Documentation/偏好設定.md#設計決策"
+        },
+        {
+          "summary": "D4：UI Toolkit 綁定用 UIDocument 旁元件（非讓 Preferences 認得「一物件多 port」），Preferences 完全不需要知道 UI Toolkit 存在。",
           "reference": "Documentation/偏好設定.md#設計決策"
         }
       ]

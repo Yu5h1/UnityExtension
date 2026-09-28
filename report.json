@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-09-28T12:17:27.667679+00:00",
+  "updated_at": "2026-09-28T17:23:44.058011+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -341,8 +341,26 @@
       "id": "preferences",
       "title": "偏好設定（PlayerPrefs 持久化）",
       "status": "in_progress",
-      "summary": "UI 綁定層（Preferences／DataView／adapter）已完整實作並驗證，已知問題 E1–E9 全部修復。I1–I3、D1、R1 皆已定案完成。VCP 的 AudioVolumePrefs 已刪除並改用 Preferences 綁定＋AudioMixerProxy，使用者確認可用。移除計畫已完成：ObservablePref／ObservableValue／PlayerPrefValue 判定保留（跟 Preferences 解不同問題），PlayerPrefObject／PlayerPrefBoolObject 已於 2026-09-28 刪除。AudioMixerProxy 的「Create Mixer」Editor 產生器已於 2026-09-28 完成。D3 已於 2026-09-28 定案（Dropdown 存文字），D4 未定案，UI Toolkit 支援尚未開始。",
+      "summary": "UI 綁定層（Preferences／DataView／adapter）已完整實作並驗證，已知問題 E1–E9 全部修復。I1–I3、D1、R1、D3、D4 皆已定案完成。VCP 的 AudioVolumePrefs 已刪除並改用 Preferences 綁定＋AudioMixerProxy，使用者確認可用。移除計畫已完成：ObservablePref／ObservableValue／PlayerPrefValue 判定保留（跟 Preferences 解不同問題），PlayerPrefObject／PlayerPrefBoolObject 已於 2026-09-28 刪除。AudioMixerProxy 的「Create Mixer」Editor 產生器已於 2026-09-28 完成。UI Toolkit 實作步驟 1–3（IPreferences、BindPort、PreferencesBinder）已完成並實測；步驟 4（Dropdown 補 IValuePort）與步驟 5（skill 文件）尚未開始。",
       "completed_items": [
+        {
+          "id": "item-preferences-done-9",
+          "title": "UI Toolkit 實作步驟 1–3：IPreferences 介面、Preferences.BindPort、PreferencesBinder 綁定元件已完成並以 MCP Play Mode 實測驗證（2026-09-28）",
+          "priority": 4,
+          "status": "done"
+        },
+        {
+          "id": "item-preferences-done-8",
+          "title": "D4：UI Toolkit 綁定用 UIDocument 旁元件，Preferences 不需知道 UI Toolkit 存在（2026-09-28 定案）",
+          "priority": 4,
+          "status": "done"
+        },
+        {
+          "id": "item-preferences-done-7",
+          "title": "D3：Dropdown 存文字，與 DropdownField.value／OptionSet 字串化一致（2026-09-28 定案）",
+          "priority": 4,
+          "status": "done"
+        },
         {
           "id": "item-preferences-done-1",
           "title": "UI 綁定層完整實作，E1–E9 全部修復並以 MCP 實測驗證",
@@ -389,13 +407,19 @@
       "pending_items": [
         {
           "id": "item-preferences-todo-2",
-          "title": "D4（UI Toolkit 綁定形狀）待拍板，卡住 UI Toolkit 整個實作步驟；D3 已於 2026-09-28 定案（Dropdown 存文字）",
+          "title": "UI Toolkit 實作步驟 4：Dropdown／TMP_Dropdown 補 IValuePort（D3 已定案的文字格式）",
           "priority": 4
         },
         {
           "id": "item-preferences-todo-3",
           "title": "IL2CPP [Preserve] 存活性驗證，使用者選擇延後",
           "priority": 4
+        },
+        {
+          "id": "item-preferences-todo-5",
+          "title": "UI Toolkit 實作步驟 5：preferences skill 補一節「UI Toolkit 場景怎麼配置」",
+          "priority": 4,
+          "status": "planned"
         }
       ],
       "priority": 1
