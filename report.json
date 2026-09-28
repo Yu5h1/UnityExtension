@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-09-28T17:23:44.058011+00:00",
+  "updated_at": "2026-09-28T17:26:31.543444+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -357,7 +357,7 @@
         },
         {
           "id": "item-preferences-done-7",
-          "title": "D3：Dropdown 存文字，與 DropdownField.value／OptionSet 字串化一致（2026-09-28 定案）",
+          "title": "D3（僅決策，Dropdown 本身尚未實作 IValuePort，見步驟 4）：格式定為文字，與 DropdownField.value／OptionSet 字串化一致（2026-09-28 定案）",
           "priority": 4,
           "status": "done"
         },
