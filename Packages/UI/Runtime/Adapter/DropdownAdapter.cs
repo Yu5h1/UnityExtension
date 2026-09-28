@@ -8,9 +8,9 @@ using UnityEngine.UI;
 namespace Yu5h1Lib.UI
 {
     [AdapterRegistration(typeof(Dropdown), typeof(IDropDownOps))]
-    public class UI_DropDownOps : DropDownOps<Dropdown,Dropdown.OptionData>, IDropDownOps
+    public class DropdownAdapter : DropDownOps<Dropdown,Dropdown.OptionData>, IDropDownOps
     {
-        [Preserve] public UI_DropDownOps(Dropdown d) : base(d) {}
+        [Preserve] public DropdownAdapter(Dropdown d) : base(d) {}
 
         public override int current { get => c.value; set => c.value = value; }
         public override List<Dropdown.OptionData> options => c.options;

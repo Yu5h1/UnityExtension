@@ -8,9 +8,9 @@ using UnityEngine.Events;
 namespace Yu5h1Lib.UI
 {
     [Preserve,AdapterRegistration(typeof(TMP_Dropdown), typeof(IDropDownOps))]
-    public class TMP_DropDownOps : DropDownOps<TMP_Dropdown, TMP_Dropdown.OptionData>, IDropDownOps
+    public class TMP_DropdownAdapter : DropDownOps<TMP_Dropdown, TMP_Dropdown.OptionData>, IDropDownOps
     {
-        [Preserve] public TMP_DropDownOps(TMP_Dropdown dropdown) : base(dropdown) { }
+        [Preserve] public TMP_DropdownAdapter(TMP_Dropdown dropdown) : base(dropdown) { }
 
         public override int current { get => c.value; set => c.value = value;}
 
