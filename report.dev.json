@@ -100,9 +100,9 @@
     },
     {
       "id": "preferences",
-      "next_step": "D3（Dropdown 值格式）與 D4（UI Toolkit 綁定形狀）定案後才能推進 UI Toolkit 實作步驟；Create Mixer 產生器已完成，其餘（IL2CPP 驗證）不卡任何東西，隨時可做。",
+      "next_step": "D4（UI Toolkit 綁定形狀）定案後才能推進 UI Toolkit 實作步驟（D3 已於 2026-09-28 定案：Dropdown 存文字；D4 的「需先驗證」兩項也已於 2026-09-28 驗證完成，見偏好設定.md）。Create Mixer 產生器已完成，其餘（IL2CPP 驗證）不卡任何東西，隨時可做。",
       "blockers": [
-        "D3、D4 未定案，Documentation/偏好設定.md 的 UI Toolkit 實作步驟無法開始。"
+        "D4 未定案，Documentation/偏好設定.md 的 UI Toolkit 實作步驟無法開始（步驟 3 起）。"
       ],
       "decisions": [
         {

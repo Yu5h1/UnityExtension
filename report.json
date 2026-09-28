@@ -341,7 +341,7 @@
       "id": "preferences",
       "title": "偏好設定（PlayerPrefs 持久化）",
       "status": "in_progress",
-      "summary": "UI 綁定層（Preferences／DataView／adapter）已完整實作並驗證，已知問題 E1–E9 全部修復。I1–I3、D1、R1 皆已定案完成。VCP 的 AudioVolumePrefs 已刪除並改用 Preferences 綁定＋AudioMixerProxy，使用者確認可用。移除計畫已完成：ObservablePref／ObservableValue／PlayerPrefValue 判定保留（跟 Preferences 解不同問題），PlayerPrefObject／PlayerPrefBoolObject 已於 2026-09-28 刪除。AudioMixerProxy 的「Create Mixer」Editor 產生器已於 2026-09-28 完成。D3、D4 未定案，UI Toolkit 支援尚未開始。",
+      "summary": "UI 綁定層（Preferences／DataView／adapter）已完整實作並驗證，已知問題 E1–E9 全部修復。I1–I3、D1、R1 皆已定案完成。VCP 的 AudioVolumePrefs 已刪除並改用 Preferences 綁定＋AudioMixerProxy，使用者確認可用。移除計畫已完成：ObservablePref／ObservableValue／PlayerPrefValue 判定保留（跟 Preferences 解不同問題），PlayerPrefObject／PlayerPrefBoolObject 已於 2026-09-28 刪除。AudioMixerProxy 的「Create Mixer」Editor 產生器已於 2026-09-28 完成。D3 已於 2026-09-28 定案（Dropdown 存文字），D4 未定案，UI Toolkit 支援尚未開始。",
       "completed_items": [
         {
           "id": "item-preferences-done-1",
@@ -389,7 +389,7 @@
       "pending_items": [
         {
           "id": "item-preferences-todo-2",
-          "title": "D3（Dropdown 值格式）與 D4（UI Toolkit 綁定形狀）待拍板，卡住 UI Toolkit 整個實作步驟",
+          "title": "D4（UI Toolkit 綁定形狀）待拍板，卡住 UI Toolkit 整個實作步驟；D3 已於 2026-09-28 定案（Dropdown 存文字）",
           "priority": 4
         },
         {
