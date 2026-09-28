@@ -10,7 +10,7 @@ namespace Yu5h1Lib
     public abstract class Preferences<T> : SingletonBehaviour<T> where T : Preferences<T>
     {
         public virtual string KEY => GetType().Name;
-        [SerializeField, PreferencesBinding] private List<Object> _bindings;
+        [SerializeField, TypeRestriction(typeof(Component), filter = typeof(ValuePortResolver))] private List<Object> _bindings;
         public IReadOnlyList<Object> bindings => _bindings;
 
         [SerializeField] protected DataView defaultSetting;

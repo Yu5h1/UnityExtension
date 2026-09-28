@@ -29,7 +29,7 @@ namespace Yu5h1Lib.EditorExtension
 
     /// <summary>
     /// Editor-side binding logic for a Preferences host's `_bindings` list. Shared by the
-    /// `CONTEXT/Component` bind command, <see cref="PreferencesBindingDrawer"/>, and MCP `execute_code`,
+    /// `CONTEXT/Component` bind command, <see cref="PreferencesBindingFilter"/>, and MCP `execute_code`,
     /// so the three entry points cannot drift on what counts as bindable or as a name collision.
     /// </summary>
     public static class PreferencesBindingUtility
