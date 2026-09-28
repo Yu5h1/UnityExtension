@@ -561,7 +561,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4a080d8704d511748a8dcba5f45f4ac0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Yu5h1Lib.UI::Yu5h1Lib.UI.TextAdapter
+  m_EditorClassIdentifier: Yu5h1Lib.UI::Yu5h1Lib.UI.TextAddon
   _rectTransform: {fileID: 2972192103240690806}
   _ui: {fileID: 8423351749860536718}
   CharactersToTrim: '\n\r\t '
@@ -697,7 +697,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 3854926201920039422}
-        m_TargetAssemblyTypeName: Yu5h1Lib.UI.TextAdapter, Yu5h1Lib.UI
+        m_TargetAssemblyTypeName: Yu5h1Lib.UI.TextAddon, Yu5h1Lib.UI
         m_MethodName: set_text
         m_Mode: 0
         m_Arguments:

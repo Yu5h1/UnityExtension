@@ -5,7 +5,7 @@ using UnityEngine.Events;
 
 namespace Yu5h1Lib.UI
 {
-    public class DropdownAdapter : UI_Adapter<IDropDownOps>, IDropDownOps
+    public class DropdownAddon : UI_Adapter<IDropDownOps>, IDropDownOps
     {
         #region Ops
         public string currentItem { get => adapter.currentItem; set => adapter.currentItem = value; }

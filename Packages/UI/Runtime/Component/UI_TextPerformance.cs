@@ -7,7 +7,7 @@ using Yu5h1Lib.UI;
 
 public class UI_TextPerformance : MonoBehaviour
 {
-    public TextAdapter textAdapter;
+    public TextAddon textAdapter;
     private Timer timer = new Timer();
     private Coroutine coroutine;
     //public float a;

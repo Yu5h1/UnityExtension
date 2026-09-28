@@ -6,7 +6,7 @@ using Yu5h1Lib.MVVM;
 
 namespace Yu5h1Lib.UI
 {
-    public class InputFieldAdapter : UI_Adapter<IInputFieldOps>, IInputFieldOps
+    public class InputFieldAddon : UI_Adapter<IInputFieldOps>, IInputFieldOps
         , IScrollHandler
     {
         [SerializeField] private Toggle _PasswordMaskToggle;
@@ -36,7 +36,7 @@ namespace Yu5h1Lib.UI
         public string text { get => adapter.text; set => adapter.text = value; }
         public string placeholder { get => adapter.placeholder; set => adapter.placeholder = value; }
         public Component textComponent => adapter.textComponent;
-        public TextAdapter textAdapter => adapter.textAdapter;
+        public TextAddon textAdapter => adapter.textAdapter;
         public int lineCount => adapter.lineCount;
         public int lineType { get => adapter.lineType; set => adapter.lineType = value; } 
         public bool MaskPassword { get => adapter.MaskPassword; set => adapter.MaskPassword = value; }
@@ -362,7 +362,7 @@ namespace Yu5h1Lib.UI
         //    Input.imeCompositionMode = IMECompositionMode.;
         //}
 
-        public bool TryGetTipComponent(out TextAdapter tip)
+        public bool TryGetTipComponent(out TextAddon tip)
         {
             tip = null;
             if (transform.TryFind("Text Area/tip", out Transform t))

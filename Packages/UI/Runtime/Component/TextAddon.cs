@@ -6,7 +6,7 @@ using Yu5h1Lib.Runtime;
 namespace Yu5h1Lib.UI
 {
     [DisallowMultipleComponent]
-    public class TextAdapter : UI_Adapter<ITextOps>, ITextOps, ITextAttribute
+    public class TextAddon : UI_Adapter<ITextOps>, ITextOps, ITextAttribute
     {
         public string CharactersToTrim;
         public string text { get => adapter.text.Trim(Regex.Unescape(CharactersToTrim).ToCharArray()); set => adapter.text = value; }
@@ -42,7 +42,7 @@ namespace Yu5h1Lib.UI
         }
 #if UNITY_EDITOR
         [ContextMenu(nameof(Test))]
-        public void Test() => $"TextAdapter Test: {text}".print();
+        public void Test() => $"TextAddon Test: {text}".print();
 #endif
 
         public void SetText(Object obj) => text = obj?.ToString() ?? string.Empty;

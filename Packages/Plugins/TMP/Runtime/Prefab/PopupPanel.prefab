@@ -1077,7 +1077,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 3166998465740293152}
-        m_TargetAssemblyTypeName: Yu5h1Lib.UI.InputFieldAdapter, com.yu5h1.ui
+        m_TargetAssemblyTypeName: Yu5h1Lib.UI.InputFieldAddon, com.yu5h1.ui
         m_MethodName: set_MaskPassword
         m_Mode: 0
         m_Arguments:
@@ -2105,7 +2105,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4a080d8704d511748a8dcba5f45f4ac0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: com.yu5h1.ui::Yu5h1Lib.UI.TextAdapter
+  m_EditorClassIdentifier: com.yu5h1.ui::Yu5h1Lib.UI.TextAddon
   _rectTransform: {fileID: 0}
   _ui: {fileID: 0}
   CharactersToTrim: 

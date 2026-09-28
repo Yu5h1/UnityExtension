@@ -13,7 +13,7 @@ public interface IInputFieldOps : IValuePortAdapter<string>
     int selectionAnchorPosition { get; set; }
     int selectionFocusPosition { get; set; }
     Component textComponent { get; }
-    TextAdapter textAdapter { get; }
+    TextAddon textAdapter { get; }
     int lineCount { get; }
     int lineType { get; set; }
     int characterLimit { get; set; }
@@ -64,16 +64,16 @@ public abstract class InputFieldOps<T> : ValuePortAdapter<T,string>, IInputField
 
 
 
-    [SerializeField, ReadOnly] private TextAdapter _textAdapter;
-    public TextAdapter textAdapter 
-    { 
+    [SerializeField, ReadOnly] private TextAddon _textAdapter;
+    public TextAddon textAdapter
+    {
         get
         {
             if (_textAdapter == null && textComponent != null)
-            { 
+            {
                 if (!textComponent.TryGetComponent(out _textAdapter))
-                    _textAdapter = textComponent.gameObject.AddComponent<TextAdapter>();
-            }            
+                    _textAdapter = textComponent.gameObject.AddComponent<TextAddon>();
+            }
             return _textAdapter;
         }
     }

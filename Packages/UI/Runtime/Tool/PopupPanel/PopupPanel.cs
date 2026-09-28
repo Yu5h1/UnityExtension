@@ -19,7 +19,7 @@ namespace Yu5h1Lib.UI
             IEnumerator waitResult { get; set; }
             IEnumerator BuildRoutine();
             Result GetResult(object sender);
-            void Init(PopupPanel panel,InputFieldAdapter input, int index);
+            void Init(PopupPanel panel,InputFieldAddon input, int index);
             void Report(Result result);
             public void Close(bool canceled);
         }
@@ -42,7 +42,7 @@ namespace Yu5h1Lib.UI
             public void Report(Result result)
                => _reported?.Invoke(result ?? false, result == null ? "The result is a null value" : result.Content);
 
-            public virtual void Init(PopupPanel panel, InputFieldAdapter input, int index)
+            public virtual void Init(PopupPanel panel, InputFieldAddon input, int index)
             {
                 input.gameObject.SetActive(true);
                 input.text = "";
@@ -50,7 +50,7 @@ namespace Yu5h1Lib.UI
                 input.characterLimit = settings[index].characterLimit;
                 input.showPasswordMaskToggle = settings[index].usePasswordMask;
                 input.MaskPassword = settings[index].usePasswordMask;
-                if (input.TryGetTipComponent(out TextAdapter tip))
+                if (input.TryGetTipComponent(out TextAddon tip))
                     tip.text = "";
                 settings[index].init?.Invoke(input);
             }
@@ -69,7 +69,7 @@ namespace Yu5h1Lib.UI
         //    public override IEnumerator BuildRoutine() => data.BuildRoutine();
         //    public override Result GetResult(object sender) => data.GetResult(sender);
         //    public override void Report(Result result) => data.Report(result);
-        //    public override void Init(InputFieldAdapter input, int index) => data.Init(input, index);
+        //    public override void Init(InputFieldAddon input, int index) => data.Init(input, index);
         //}
         public abstract class LogicObject : ScriptableObject , ILogic
         {
@@ -90,7 +90,7 @@ namespace Yu5h1Lib.UI
                => _reported?.Invoke(result ?? false, result == null ? "The result is a null value" : result.Content);
 
 
-            public virtual void Init(PopupPanel panel,InputFieldAdapter input,int index)
+            public virtual void Init(PopupPanel panel,InputFieldAddon input,int index)
             {
                 input.gameObject.SetActive(true);
                 input.text = "";
@@ -98,7 +98,7 @@ namespace Yu5h1Lib.UI
                 input.characterLimit = settings[index].characterLimit;
                 input.showPasswordMaskToggle = settings[index].usePasswordMask;
                 input.MaskPassword = settings[index].usePasswordMask;
-                if (input.TryGetTipComponent(out TextAdapter tip))
+                if (input.TryGetTipComponent(out TextAddon tip))
                     tip.text = "";
                 settings[index].init?.Invoke(input);      
                 
@@ -118,10 +118,10 @@ namespace Yu5h1Lib.UI
 
         #region Fields
 
-        [SerializeField] private InputFieldAdapter[] _fields; 
+        [SerializeField] private InputFieldAddon[] _fields; 
         [SerializeField] private string[] ignoredMessages;
         #endregion
-        public InputFieldAdapter[] fields { get => _fields; private set => _fields = value; }
+        public InputFieldAddon[] fields { get => _fields; private set => _fields = value; }
 
         public ILogic rule { get; private set; }
         public InputFieldSetting[] settings => rule == null ? null : rule.settings;
@@ -139,7 +139,7 @@ namespace Yu5h1Lib.UI
         [SerializeField] private Transform fieldsRoot;
         [SerializeField] private Transform buttonsRoot;
         [SerializeField] private Transform messageRoot;
-        [SerializeField] private TextAdapter messageText;
+        [SerializeField] private TextAddon messageText;
 
         public Transform[] groups => new Transform[] { frameBackground.transform, fieldsRoot, buttonsRoot, messageRoot };
 
@@ -173,7 +173,7 @@ namespace Yu5h1Lib.UI
         #region caches
         public ResultHandler Validator;
         private System.Func<IEnumerator> BuildWaitResult;
-        private InputFieldAdapter verifedInputField;
+        private InputFieldAddon verifedInputField;
         #endregion
 
         protected override void OnInstantiated() {}
@@ -215,7 +215,7 @@ namespace Yu5h1Lib.UI
 
         public void Verify() => this.StartCoroutine(ref WaitResultRoutine, BuildWaitResultRoutine());
         
-        public void Verify(InputFieldAdapter inputField)
+        public void Verify(InputFieldAddon inputField)
         {
             if (inputField.characterLimit > 0 && inputField.text.Length != inputField.characterLimit)
                 return;
@@ -240,7 +240,7 @@ namespace Yu5h1Lib.UI
             _callbacks.Invoke(result, result.Content);
             if (result)
                 Hide();
-            else if (verifedInputField != null && verifedInputField.TryGetTipComponent(out TextAdapter tip))
+            else if (verifedInputField != null && verifedInputField.TryGetTipComponent(out TextAddon tip))
                 tip.text = result.Content;
 
 #if UNITY_EDITOR

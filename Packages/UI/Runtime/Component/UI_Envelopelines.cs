@@ -14,7 +14,7 @@ namespace Yu5h1Lib.UI
         public float lineThickness = 1f;
 
         [Header("Text Integration")]
-        public TextAdapter adapter;
+        public TextAddon adapter;
         public bool followTextSettings = true;
         public float lineSpacingMultiplier = 1f;
 

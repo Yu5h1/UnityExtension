@@ -7,7 +7,7 @@ using Yu5h1Lib.UI;
 /// <summary>
 ///  component.text = $"{component.name}{percentage * 100:0.0}%";
 /// </summary>
-public class LoadAsyncText : LoadAsyncBehaviour<TextAdapter>
+public class LoadAsyncText : LoadAsyncBehaviour<TextAddon>
 {
     public override void OnProcessing(float percentage)
         => component.text = $"{component.name}{percentage * 100:0.0}%";

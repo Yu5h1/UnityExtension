@@ -11,8 +11,8 @@ namespace Yu5h1Lib.UI
         public int characterLimit;
         public int characterValidatation;
         public bool verifyOnEndEdit;
-        public UnityEvent<InputFieldAdapter> init;
-        public UnityEvent<InputFieldAdapter> textChanged;
-        public UnityEvent<InputFieldAdapter> submit;
+        public UnityEvent<InputFieldAddon> init;
+        public UnityEvent<InputFieldAddon> textChanged;
+        public UnityEvent<InputFieldAddon> submit;
     }
 }
