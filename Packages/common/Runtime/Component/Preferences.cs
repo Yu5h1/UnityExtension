@@ -103,13 +103,22 @@ namespace Yu5h1Lib
                     $"BindAll on {name}: field name '{fieldName}' is bound by more than one control; they will overwrite each other.".printWarning();
                 else if (obj is Component boundComponent && LooksLikeDefaultName(fieldName, boundComponent))
                     $"BindAll on {name}: '{fieldName}' looks like a Unity default name; renaming the GameObject later will orphan its saved value.".printWarning();
-                if (!current.ContainsKey(fieldName))
-                    current[fieldName] = defaultSetting != null && defaultSetting.TryGetValue(fieldName, out string fallback)
-                        ? fallback
-                        : port.GetValue();
             }
             foreach (var port in _portMap.Values)
-                port.BindTo(current);
+                BindPort(port);
+        }
+
+        /// <summary>Fills <paramref name="port"/>'s field from <c>defaultSetting</c> (or its own current
+        /// value) the first time it's seen, then binds it. The per-port half of <see cref="BindAll"/>;
+        /// a UI Toolkit binding component calls this directly for ports it resolves itself.</summary>
+        public void BindPort(IValuePort port)
+        {
+            var fieldName = port.GetFieldName();
+            if (!current.ContainsKey(fieldName))
+                current[fieldName] = defaultSetting != null && defaultSetting.TryGetValue(fieldName, out string fallback)
+                    ? fallback
+                    : port.GetValue();
+            port.BindTo(current);
         }
 
         private static bool LooksLikeDefaultName(string fieldName, Component component)

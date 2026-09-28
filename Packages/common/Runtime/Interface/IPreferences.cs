@@ -9,5 +9,9 @@ namespace Yu5h1Lib
     public interface IPreferences
     {
         IDataView current { get; }
+
+        /// <summary>Fills the port's field from <c>defaultSetting</c> (or its own current value) the
+        /// first time it's seen, then binds it — the per-port half of what <c>BindAll</c> loops over.</summary>
+        void BindPort(IValuePort port);
     }
 }
