@@ -6,9 +6,9 @@ using TMPro;
 namespace Yu5h1Lib.UI
 {
     [AdapterRegistration(typeof(TMP_InputField), typeof(IInputFieldOps))]
-    public sealed class TMP_InputFieldOps : InputFieldOps<TMP_InputField>
+    public sealed class TMP_InputFieldAdapter : InputFieldOps<TMP_InputField>
     {
-        [Preserve] public TMP_InputFieldOps(TMP_InputField input) : base(input) { }
+        [Preserve] public TMP_InputFieldAdapter(TMP_InputField input) : base(input) { }
 
         public override string text { get => c.text; set => c.text = value; }
         public override string placeholder

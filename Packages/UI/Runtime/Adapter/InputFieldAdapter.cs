@@ -6,9 +6,9 @@ using Yu5h1Lib;
 using Yu5h1Lib.Common;
 
 [AdapterRegistration(typeof(InputField), typeof(IInputFieldOps))]
-public sealed class UIInputFieldOps : InputFieldOps<InputField> , IInputFieldOps
+public sealed class InputFieldAdapter : InputFieldOps<InputField> , IInputFieldOps
 {
-    [Preserve] public UIInputFieldOps(InputField input) : base(input) { }
+    [Preserve] public InputFieldAdapter(InputField input) : base(input) { }
 
     public override string text { get => c.text; set => c.text = value; }
     public override string placeholder
@@ -57,6 +57,6 @@ public sealed class UIInputFieldOps : InputFieldOps<InputField> , IInputFieldOps
     //[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     //private static void Register()
     //{
-    //    OpsFactory.Register<InputField, IInputFieldOps>(c => new UIInputFieldOps(c));
+    //    OpsFactory.Register<InputField, IInputFieldOps>(c => new InputFieldAdapter(c));
     //}
 }
