@@ -7,7 +7,7 @@ using Yu5h1Lib.Serialization;
 
 namespace Yu5h1Lib
 {
-    public abstract class Preferences<T> : SingletonBehaviour<T> where T : Preferences<T>
+    public abstract class Preferences<T> : SingletonBehaviour<T>, IPreferences where T : Preferences<T>
     {
         public virtual string KEY => GetType().Name;
         [SerializeField, TypeRestriction(typeof(Component), filter = typeof(ValuePortResolver))] private List<Object> _bindings;
@@ -34,6 +34,7 @@ namespace Yu5h1Lib
                 return _current;
             }
         }
+        IDataView IPreferences.current => current;
 
         [SerializeField] private UnityEvent _changed;
         public event UnityAction changed
