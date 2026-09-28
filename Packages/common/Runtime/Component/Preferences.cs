@@ -41,7 +41,7 @@ namespace Yu5h1Lib
             add => _changed.AddListener(value);
             remove => _changed.RemoveListener(value);
         }
-
+        public int delayBindAllFrames = 0;
         public bool SaveOnChanged = true;
 
         /// <summary>Resolved map from each binding Object to its IValuePort. Built during BindAll.</summary>
@@ -70,7 +70,7 @@ namespace Yu5h1Lib
 
         protected override void OnInitializing()
         {
-            BindAll();
+            this.DelayInvoke(BindAll, delayBindAllFrames);
         }
         protected virtual void OnDestroy() => UnbindAll();
 
@@ -100,13 +100,12 @@ namespace Yu5h1Lib
                 if (!seenFieldNames.Add(fieldName))
                     $"BindAll on {name}: field name '{fieldName}' is bound by more than one control; they will overwrite each other.".printWarning();
                 else if (obj is Component boundComponent && LooksLikeDefaultName(fieldName, boundComponent))
-                    $"BindAll on {name}: '{fieldName}' looks like a Unity default name; renaming the GameObject later will orphan its saved value.".print();
+                    $"BindAll on {name}: '{fieldName}' looks like a Unity default name; renaming the GameObject later will orphan its saved value.".printWarning();
                 if (!current.ContainsKey(fieldName))
                     current[fieldName] = defaultSetting != null && defaultSetting.TryGetValue(fieldName, out string fallback)
                         ? fallback
                         : port.GetValue();
             }
-            WriteToBindings();
             foreach (var port in _portMap.Values)
                 port.BindTo(current);
         }
@@ -123,12 +122,6 @@ namespace Yu5h1Lib
             foreach (var port in _portMap.Values)
                 port.Unbind();
             _portMap.Clear();
-        }
-
-        public void WriteToBindings()
-        {
-            foreach (var port in _portMap.Values)
-                current.WriteTo(port);
         }
 
         public void ReadFromBindings()

@@ -26,6 +26,8 @@ namespace Yu5h1Lib.UI
         public void SetValue(string value) => adapter.SetValue(value);
         public void SetValue(IValuePort Ibindable) => adapter.SetValue(Ibindable);
         public void BindTo(IDataView other) => adapter.BindTo(other);
+        public void NotifyValueChanged() => adapter.NotifyValueChanged();
+
         public void Unbind() => adapter.Unbind();
         public string Get() => adapter.Get();
         public void Set(string value) => adapter.Set(value);

@@ -26,6 +26,8 @@ namespace Yu5h1Lib.UI
                 float.TryParse(valueText, NumberStyles.Float, CultureInfo.CurrentCulture, out val))
                 value = val;
         }
+
+        public override void NotifyValueChanged() => c.onValueChanged?.Invoke(c.value);
     }
 
 }

@@ -98,6 +98,8 @@ namespace Yu5h1Lib
             Unbind();
             ReadFromThis = _ => dataview.ReadFrom(this);
             ChangedCallback += ReadFromThis;
+            dataview.WriteTo(this);
+            NotifyValueChanged();
         }
         public void Unbind()
         {
@@ -105,6 +107,8 @@ namespace Yu5h1Lib
             ChangedCallback -= ReadFromThis;
             ReadFromThis = null;
         }
+        public void NotifyValueChanged() => _selectionChanged?.Invoke(current);
+
         protected virtual void OnDestroy() => Unbind();
         #endregion
         private bool TryFindNextValidIndex(int startIndex,out int result, int interval = 1)

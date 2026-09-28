@@ -15,6 +15,8 @@ namespace Yu5h1Lib.UI
 
         public override bool value { get => c.isOn ; set => c.isOn = value; }
 
+        public override void NotifyValueChanged() => c.onValueChanged?.Invoke(c.isOn);
+
         public override event UnityAction<bool> ChangedCallback
         {
             add => c.onValueChanged.AddListener(value);

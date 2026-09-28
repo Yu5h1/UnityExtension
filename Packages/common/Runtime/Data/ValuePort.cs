@@ -37,15 +37,18 @@ namespace Yu5h1Lib
         {
             Unbind();
             ReadFromThis = () => dataview.ReadFrom(this);
+            dataview.WriteTo(this);
+            NotifyValueChanged();
         }
         public void Unbind() => ReadFromThis = null;
+
 
         /// <summary>
         /// Call when the value changes so a bound DataView reads it back. Deliberately not named
         /// ChangedCallback: that name belongs to the typed <see cref="UValuePort{TValue}"/> event,
         /// which this non-generic string layer cannot match.
         /// </summary>
-        protected void NotifyValueChanged() => ReadFromThis?.Invoke();
+        public void NotifyValueChanged() => ReadFromThis?.Invoke();
         protected virtual void OnDestroy() => Unbind();
     }
 

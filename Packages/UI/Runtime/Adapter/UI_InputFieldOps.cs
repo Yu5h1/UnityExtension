@@ -52,6 +52,8 @@ public sealed class UIInputFieldOps : InputFieldOps<InputField> , IInputFieldOps
         remove => c.onEndEdit.RemoveListener(value);
     }
 
+    public override void NotifyValueChanged() => c.onValueChanged?.Invoke(c.text);
+
     //[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     //private static void Register()
     //{

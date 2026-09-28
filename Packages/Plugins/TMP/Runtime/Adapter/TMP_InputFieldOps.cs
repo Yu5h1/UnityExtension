@@ -58,5 +58,7 @@ namespace Yu5h1Lib.UI
             add => c.onEndEdit.AddListener(value);
             remove => c.onEndEdit.RemoveListener(value);
         }
+
+        public override void NotifyValueChanged() => c.onValueChanged?.Invoke(c.text);
     }
 }

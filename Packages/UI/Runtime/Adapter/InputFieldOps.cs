@@ -20,7 +20,7 @@ public interface IInputFieldOps : IValuePortAdapter<string>
     bool MaskPassword { get; set; }
     bool isFocused { get;}
 
-    void SetTextWithoutNotify(string value);
+    void SetTextWithoutNotify(string value);    
     void DeactivateInputField();
     void ActivateInputField();
 

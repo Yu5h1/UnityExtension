@@ -19,13 +19,16 @@ namespace Yu5h1Lib
         public virtual string GetValue() => value.ToString();
         public abstract void SetValue(string value);
         public abstract event UnityAction<TValue> ChangedCallback;
+        public abstract void NotifyValueChanged();
 
         private UnityAction<TValue> ReadFromThis;
         public void BindTo(IDataView dataview)
         {
-            Unbind();
+            Unbind();            
             ReadFromThis = _ => dataview.ReadFrom(this);
             ChangedCallback += ReadFromThis;
+            dataview.WriteTo(this);
+            NotifyValueChanged();
         }
         public void Unbind()
         {
