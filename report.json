@@ -341,7 +341,7 @@
       "id": "preferences",
       "title": "偏好設定（PlayerPrefs 持久化）",
       "status": "in_progress",
-      "summary": "UI 綁定層（Preferences／DataView／adapter）已完整實作並驗證，已知問題 E1–E9 全部修復。I1–I3、D1、R1 皆已定案完成。VCP 的 AudioVolumePrefs 已刪除並改用 Preferences 綁定＋AudioMixerProxy，使用者確認可用。移除計畫已完成：ObservablePref／ObservableValue／PlayerPrefValue 判定保留（跟 Preferences 解不同問題），PlayerPrefObject／PlayerPrefBoolObject 已於 2026-09-28 刪除。D3、D4 未定案，UI Toolkit 支援尚未開始。",
+      "summary": "UI 綁定層（Preferences／DataView／adapter）已完整實作並驗證，已知問題 E1–E9 全部修復。I1–I3、D1、R1 皆已定案完成。VCP 的 AudioVolumePrefs 已刪除並改用 Preferences 綁定＋AudioMixerProxy，使用者確認可用。移除計畫已完成：ObservablePref／ObservableValue／PlayerPrefValue 判定保留（跟 Preferences 解不同問題），PlayerPrefObject／PlayerPrefBoolObject 已於 2026-09-28 刪除。AudioMixerProxy 的「Create Mixer」Editor 產生器已於 2026-09-28 完成。D3、D4 未定案，UI Toolkit 支援尚未開始。",
       "completed_items": [
         {
           "id": "item-preferences-done-1",
@@ -378,6 +378,12 @@
           "title": "刪除 PlayerPrefObject／PlayerPrefBoolObject（零消費者，可直接執行）",
           "priority": 4,
           "status": "done"
+        },
+        {
+          "id": "item-preferences-todo-4",
+          "title": "AudioMixerProxy 的「Create Mixer」Editor 產生器：CustomEditor inline 按鈕＋AudioMixerBuilder（反射 UnityEditor.Audio.AudioMixerController）已實作並以 MCP Play Mode 實測驗證",
+          "priority": 4,
+          "status": "done"
         }
       ],
       "pending_items": [
@@ -389,11 +395,6 @@
         {
           "id": "item-preferences-todo-3",
           "title": "IL2CPP [Preserve] 存活性驗證，使用者選擇延後",
-          "priority": 4
-        },
-        {
-          "id": "item-preferences-todo-4",
-          "title": "AudioMixerProxy 的「Create Mixer」Editor 產生器尚未實作",
           "priority": 4
         }
       ],
