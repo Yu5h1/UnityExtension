@@ -12,7 +12,7 @@ Members, design decisions, known defects, weaknesses, and open decisions: [偏�
 | An option switched by `OptionSelector` | Bind the `OptionSet` to save the item's value, or the `OptionSelector` to save the index. Only one per GameObject: both use the GameObject name as key |
 | Code owns the value, no control edits it, no `changed`/`init` notification needed | Call `PlayerPrefs` directly (`JsonUtility` for complex types). Don't reach for `ObservablePref<T>` just to hold a value nothing listens to |
 | Code owns the value (any type, incl. complex), declared as a field on any class, wants `changed`/`init` events or a swappable serializer | `ObservablePref<T>` / `PlayerPrefValue<T>` (`Runtime/ObservablePref.cs`, `Runtime/PlayerPrefsAdvanced.cs`). **Not deprecated** — solves a different problem than `Preferences` (field-owned, no scene host, any T) — 2026-09-27 correction, see plan's 成員總覽. If the value actually has a UI control to edit it, prefer `Preferences` instead |
-| `PlayerPrefObject<T>`, `PlayerPrefBoolObject` | Deprecated and scheduled for removal (no consumers anywhere); the `ObservablePref` it wraps is fine on its own, this SO layer just isn't. Never use in new work; plan § 移除計畫 |
+| `PlayerPrefObject<T>`, `PlayerPrefBoolObject` | Deleted 2026-09-28 (had no consumers anywhere). The `ObservablePref` it wrapped is fine on its own, this SO layer just wasn't. Don't reference either type. |
 | `AudioVolumePrefs` | Already deleted (2026-09-27), no replacement built. Don't reference it; plan § 已知問題 E9 |
 | `Dropdown` / `TMP_Dropdown` | Not bindable yet (silently ignored). Plan decision D3 |
 | UI Toolkit control | Not supported. Report the gap and route to plan § UI Toolkit 適用分析; do not hand-write a replacement |

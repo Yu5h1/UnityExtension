@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-09-09T02:20:00+08:00",
+  "updated_at": "2026-09-28T12:07:50.501Z",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -11,14 +11,38 @@
       "status": "planned",
       "summary": "已記錄需求分類、比對 Yu5h1Lib 能力、列出匹配方案再定案的技能草案；優先重用 Prefab 與資料配置，保留編輯時預覽及微調。正式技能尚未建立。",
       "completed_items": [
-        "記錄分析流程、候選方案表格與經驗回流方向",
-        "列出技能歸屬、啟用範圍、定案方式與試行案例等待討論事項"
+        {
+          "id": "item-project-system-analysis-done-1",
+          "title": "記錄分析流程、候選方案表格與經驗回流方向",
+          "priority": 4
+        },
+        {
+          "id": "item-project-system-analysis-done-2",
+          "title": "列出技能歸屬、啟用範圍、定案方式與試行案例等待討論事項",
+          "priority": 4
+        }
       ],
       "pending_items": [
-        "收斂技能歸屬及與既有工作路由、設計技能的分工",
-        "決定消費專案如何從需求找到庫能力與驗證證據",
-        "挑選真實需求試行，驗證重用成果及可編輯性",
-        "依試行結果收斂格式，再建立正式技能與啟用入口"
+        {
+          "id": "item-project-system-analysis-todo-1",
+          "title": "收斂技能歸屬及與既有工作路由、設計技能的分工",
+          "priority": 4
+        },
+        {
+          "id": "item-project-system-analysis-todo-2",
+          "title": "決定消費專案如何從需求找到庫能力與驗證證據",
+          "priority": 4
+        },
+        {
+          "id": "item-project-system-analysis-todo-3",
+          "title": "挑選真實需求試行，驗證重用成果及可編輯性",
+          "priority": 4
+        },
+        {
+          "id": "item-project-system-analysis-todo-4",
+          "title": "依試行結果收斂格式，再建立正式技能與啟用入口",
+          "priority": 4
+        }
       ]
     },
     {
@@ -27,15 +51,43 @@
       "status": "planned",
       "summary": "已完成獨立的文字結構同步設計：Edit Mode 優先、Component 綁定、版本完成標記及衝突處理；Runtime 分階段加入。既有方案與格式仍待評估，同步實作尚未開始。",
       "completed_items": [
-        "整理既有方案的公開能力、差異與待驗證範圍",
-        "記錄既有聊天面板、自製 UI 的擴充案例與同步限制",
-        "完成文字結構同步設計文件，定義責任、版本流程、人工修改及原型驗收"
+        {
+          "id": "item-agent-scene-workflow-done-1",
+          "title": "整理既有方案的公開能力、差異與待驗證範圍",
+          "priority": 4
+        },
+        {
+          "id": "item-agent-scene-workflow-done-2",
+          "title": "記錄既有聊天面板、自製 UI 的擴充案例與同步限制",
+          "priority": 4
+        },
+        {
+          "id": "item-agent-scene-workflow-done-3",
+          "title": "完成文字結構同步設計文件，定義責任、版本流程、人工修改及原型驗收",
+          "priority": 4
+        }
       ],
       "pending_items": [
-        "定位聊天面板與自製 UI，驗證既有元件接入成本",
-        "釐清一般物件與骨架範圍，完成採用、擴充或自製評估",
-        "選定首個案例，收斂身分保存、完成標記形式及省略欄位語意",
-        "驗證階層同步、引用保留、Undo 與人工編輯往返"
+        {
+          "id": "item-agent-scene-workflow-todo-1",
+          "title": "定位聊天面板與自製 UI，驗證既有元件接入成本",
+          "priority": 4
+        },
+        {
+          "id": "item-agent-scene-workflow-todo-2",
+          "title": "釐清一般物件與骨架範圍，完成採用、擴充或自製評估",
+          "priority": 4
+        },
+        {
+          "id": "item-agent-scene-workflow-todo-3",
+          "title": "選定首個案例，收斂身分保存、完成標記形式及省略欄位語意",
+          "priority": 4
+        },
+        {
+          "id": "item-agent-scene-workflow-todo-4",
+          "title": "驗證階層同步、引用保留、Undo 與人工編輯往返",
+          "priority": 4
+        }
       ]
     },
     {
@@ -44,14 +96,38 @@
       "status": "planned",
       "summary": "已記錄降低逐件精工製作 3D 資產依賴的探索草案；程序配方、永久變形與世界保存仍屬候選方向，尚未選定原型或後端。",
       "completed_items": [
-        "整理世界形成、形狀資料、永久修改與保存的候選責任",
-        "區分既有 Unified-Solver 探索經驗與尚未實現的世界能力"
+        {
+          "id": "item-deformable-world-assets-done-1",
+          "title": "整理世界形成、形狀資料、永久修改與保存的候選責任",
+          "priority": 4
+        },
+        {
+          "id": "item-deformable-world-assets-done-2",
+          "title": "區分既有 Unified-Solver 探索經驗與尚未實現的世界能力",
+          "priority": 4
+        }
       ],
       "pending_items": [
-        "從魚、彈跳及群體互動經驗辨識具體內容製作負擔",
-        "選擇第一個原型與物理、性能、保存驗收範圍",
-        "比較表示與既有資源，驗證本機修改及保存往返",
-        "依結果評估 PhysicsParticle 契約擴充與雲端保存"
+        {
+          "id": "item-deformable-world-assets-todo-1",
+          "title": "從魚、彈跳及群體互動經驗辨識具體內容製作負擔",
+          "priority": 4
+        },
+        {
+          "id": "item-deformable-world-assets-todo-2",
+          "title": "選擇第一個原型與物理、性能、保存驗收範圍",
+          "priority": 4
+        },
+        {
+          "id": "item-deformable-world-assets-todo-3",
+          "title": "比較表示與既有資源，驗證本機修改及保存往返",
+          "priority": 4
+        },
+        {
+          "id": "item-deformable-world-assets-todo-4",
+          "title": "依結果評估 PhysicsParticle 契約擴充與雲端保存",
+          "priority": 4
+        }
       ]
     },
     {
@@ -60,11 +136,28 @@
       "status": "planned",
       "summary": "UnityExtension 已確立為 Yu5h1Lib 的 Unity 共用能力擁有者；下一階段是盤點現有 packages、依賴方向及應用專案中的可回收能力。",
       "pending_items": [
-        "盤點現有 package 的責任與依賴方向",
-        "辨識仍留在應用專案中的可重用能力",
-        "規劃共用能力的 package 歸屬",
-        "為重要系統補齊 Documentation 指南"
-      ]
+        {
+          "id": "item-solution-inventory-todo-1",
+          "title": "盤點現有 package 的責任與依賴方向",
+          "priority": 4
+        },
+        {
+          "id": "item-solution-inventory-todo-2",
+          "title": "辨識仍留在應用專案中的可重用能力",
+          "priority": 4
+        },
+        {
+          "id": "item-solution-inventory-todo-3",
+          "title": "規劃共用能力的 package 歸屬",
+          "priority": 4
+        },
+        {
+          "id": "item-solution-inventory-todo-4",
+          "title": "為重要系統補齊 Documentation 指南",
+          "priority": 4
+        }
+      ],
+      "completed_items": []
     },
     {
       "id": "recycler-refactor",
@@ -72,14 +165,38 @@
       "status": "in_progress",
       "summary": "Core Recycler 四個主要檔案已落地；Unity Phase 1.5、Core 單元測試及既有 Pool callsite 遷移仍待完成。",
       "completed_items": [
-        "完成 IRecyclable、IRecycler、Recycler 與 Recycler<T> Core 實作",
-        "保留現有 SpawnPool、SpawnPoolProxy 與 SpawnPoolRegistry 作為 Unity 端整併來源"
+        {
+          "id": "item-recycler-refactor-done-1",
+          "title": "完成 IRecyclable、IRecycler、Recycler 與 Recycler<T> Core 實作",
+          "priority": 4
+        },
+        {
+          "id": "item-recycler-refactor-done-2",
+          "title": "保留現有 SpawnPool、SpawnPoolProxy 與 SpawnPoolRegistry 作為 Unity 端整併來源",
+          "priority": 4
+        }
       ],
       "pending_items": [
-        "補 Core lazy build、容量通知、discard 與 callback 單元測試",
-        "討論 IRecyclable 最小注入與預設行為",
-        "實作 UnityObjectPoolAdapter、Recyclable、RecyclerEx 與 Unity reset/bootstrap",
-        "規劃 V1、V2、V3 callsite 遷移"
+        {
+          "id": "item-recycler-refactor-todo-1",
+          "title": "補 Core lazy build、容量通知、discard 與 callback 單元測試",
+          "priority": 4
+        },
+        {
+          "id": "item-recycler-refactor-todo-2",
+          "title": "討論 IRecyclable 最小注入與預設行為",
+          "priority": 4
+        },
+        {
+          "id": "item-recycler-refactor-todo-3",
+          "title": "實作 UnityObjectPoolAdapter、Recyclable、RecyclerEx 與 Unity reset/bootstrap",
+          "priority": 4
+        },
+        {
+          "id": "item-recycler-refactor-todo-4",
+          "title": "規劃 V1、V2、V3 callsite 遷移",
+          "priority": 4
+        }
       ]
     },
     {
@@ -88,14 +205,38 @@
       "status": "in_progress",
       "summary": "ParameterObject 與 ParameterBehaviour 等核心資料型別存在；舊計畫記載的 Parameter Timeline 整合已從目前程式樹移除，現行 Timeline 採 EventSignal/EventSignalReceiver，需同步設計文件與命名決策。",
       "completed_items": [
-        "建立 ParameterObject 與 ParameterBehaviour 資料模型",
-        "建立 ParameterObject 的 Editor discovery 與相關 Inspector 工具",
-        "現行 Timeline 已提供 EventSignal 與 EventSignalReceiver"
+        {
+          "id": "item-data-architecture-done-1",
+          "title": "建立 ParameterObject 與 ParameterBehaviour 資料模型",
+          "priority": 4
+        },
+        {
+          "id": "item-data-architecture-done-2",
+          "title": "建立 ParameterObject 的 Editor discovery 與相關 Inspector 工具",
+          "priority": 4
+        },
+        {
+          "id": "item-data-architecture-done-3",
+          "title": "現行 Timeline 已提供 EventSignal 與 EventSignalReceiver",
+          "priority": 4
+        }
       ],
       "pending_items": [
-        "對齊架構計畫與目前 Timeline 實作",
-        "決定是否保留 ParameterObject 歷史命名並補文件說明",
-        "釐清 ParameterObject 與 EventSignal 的現行整合邊界"
+        {
+          "id": "item-data-architecture-todo-1",
+          "title": "對齊架構計畫與目前 Timeline 實作",
+          "priority": 4
+        },
+        {
+          "id": "item-data-architecture-todo-2",
+          "title": "決定是否保留 ParameterObject 歷史命名並補文件說明",
+          "priority": 4
+        },
+        {
+          "id": "item-data-architecture-todo-3",
+          "title": "釐清 ParameterObject 與 EventSignal 的現行整合邊界",
+          "priority": 4
+        }
       ]
     },
     {
@@ -104,11 +245,28 @@
       "status": "planned",
       "summary": "Motion 的抽象方向與遷移階段已有設計，但目前未找到 IHandle、ISettings、IRunner 或 Motion facade 的實作。",
       "pending_items": [
-        "確認 Phase A 的契約與 Core 放置位置",
-        "實作不綁定引擎的 Motion 抽象殼",
-        "後續以 DOTweenRunner 驗證抽象",
-        "再規劃 MotionBehaviour 與既有組件遷移"
-      ]
+        {
+          "id": "item-motion-system-todo-1",
+          "title": "確認 Phase A 的契約與 Core 放置位置",
+          "priority": 4
+        },
+        {
+          "id": "item-motion-system-todo-2",
+          "title": "實作不綁定引擎的 Motion 抽象殼",
+          "priority": 4
+        },
+        {
+          "id": "item-motion-system-todo-3",
+          "title": "後續以 DOTweenRunner 驗證抽象",
+          "priority": 4
+        },
+        {
+          "id": "item-motion-system-todo-4",
+          "title": "再規劃 MotionBehaviour 與既有組件遷移",
+          "priority": 4
+        }
+      ],
+      "completed_items": []
     },
     {
       "id": "atomic-components",
@@ -116,14 +274,38 @@
       "status": "in_progress",
       "summary": "Resolver 基底、Repeater、可注入 Random backend、RandomResolver 與 Unity ScriptableObject wrappers 已存在；仍待完整重建與 Unity 驗證，再進入 ShuffleResolver。",
       "completed_items": [
-        "完成 IResolver、Resolver<T> 與 Repeater",
-        "完成 IRandomSource、SystemRandomSource 與 RandomResolver",
-        "完成 UnityRandomSource、ResolverObject、RepeaterObject 與 RandomResolverObject"
+        {
+          "id": "item-atomic-components-done-1",
+          "title": "完成 IResolver、Resolver<T> 與 Repeater",
+          "priority": 4
+        },
+        {
+          "id": "item-atomic-components-done-2",
+          "title": "完成 IRandomSource、SystemRandomSource 與 RandomResolver",
+          "priority": 4
+        },
+        {
+          "id": "item-atomic-components-done-3",
+          "title": "完成 UnityRandomSource、ResolverObject、RepeaterObject 與 RandomResolverObject",
+          "priority": 4
+        }
       ],
       "pending_items": [
-        "執行 Visual Studio rebuild 與 Unity 端驗證",
-        "實作重用 IRandomSource 的 ShuffleResolver",
-        "後續設計 affine Operator 與 SO 組合"
+        {
+          "id": "item-atomic-components-todo-1",
+          "title": "執行 Visual Studio rebuild 與 Unity 端驗證",
+          "priority": 4
+        },
+        {
+          "id": "item-atomic-components-todo-2",
+          "title": "實作重用 IRandomSource 的 ShuffleResolver",
+          "priority": 4
+        },
+        {
+          "id": "item-atomic-components-todo-3",
+          "title": "後續設計 affine Operator 與 SO 組合",
+          "priority": 4
+        }
       ]
     },
     {
@@ -132,11 +314,89 @@
       "status": "done",
       "summary": "目前以原生 UnityEvent 保存 target、method 與 listener，ArgumentInfo／UnityEventEx 負責持久化參數覆寫，Transmission 僅處理訊息路由與 payload 傳遞。",
       "completed_items": [
-        "完成 ArgumentInfo 與 UnityEventEx.LoadArgument",
-        "完成 MessageSender 與 MessageReceiver 傳遞流程",
-        "關閉以獨立 Invocation framework 取代 UnityEvent 的設計路線",
-        "補齊 ArgumentInfo 的 Editor menu 與 PropertyDrawer"
-      ]
+        {
+          "id": "item-unity-event-transmission-done-1",
+          "title": "完成 ArgumentInfo 與 UnityEventEx.LoadArgument",
+          "priority": 4
+        },
+        {
+          "id": "item-unity-event-transmission-done-2",
+          "title": "完成 MessageSender 與 MessageReceiver 傳遞流程",
+          "priority": 4
+        },
+        {
+          "id": "item-unity-event-transmission-done-3",
+          "title": "關閉以獨立 Invocation framework 取代 UnityEvent 的設計路線",
+          "priority": 4
+        },
+        {
+          "id": "item-unity-event-transmission-done-4",
+          "title": "補齊 ArgumentInfo 的 Editor menu 與 PropertyDrawer",
+          "priority": 4
+        }
+      ],
+      "pending_items": []
+    },
+    {
+      "id": "preferences",
+      "title": "偏好設定（PlayerPrefs 持久化）",
+      "status": "in_progress",
+      "summary": "UI 綁定層（Preferences／DataView／adapter）已完整實作並驗證，已知問題 E1–E9 全部修復。I1–I3（Editor 綁定入口與驗證、BindAll 警告、逐欄位存檔優先順序）、D1（JSON 格式改用 entries）、R1（啟動套用改到 Start 並無條件通知）皆已定案完成。VCP 的 AudioVolumePrefs 已刪除並改用 Preferences 綁定＋AudioMixerProxy，使用者確認可用。移除計畫縮小範圍：ObservablePref／ObservableValue／PlayerPrefValue 判定保留（跟 Preferences 解不同問題），只有 PlayerPrefObject 系列判定移除，尚未執行。D3、D4 未定案，UI Toolkit 支援尚未開始。",
+      "completed_items": [
+        {
+          "id": "item-preferences-done-1",
+          "title": "UI 綁定層完整實作，E1–E9 全部修復並以 MCP 實測驗證",
+          "priority": 4
+        },
+        {
+          "id": "item-preferences-done-2",
+          "title": "I1–I3：Editor 綁定入口（PreferencesBindingUtility 等）、BindAll 警告、逐欄位存檔優先順序",
+          "priority": 4
+        },
+        {
+          "id": "item-preferences-done-3",
+          "title": "D1：DataView.ToJson 改用 JsonUtility entries 格式，修正逗號／引號解析錯誤，Slider 改用 InvariantCulture",
+          "priority": 4
+        },
+        {
+          "id": "item-preferences-done-4",
+          "title": "R1：BindAll 從 Awake 改到 Start 並無條件觸發 NotifyValueChanged，解決消費端收不到初始值的問題",
+          "priority": 4
+        },
+        {
+          "id": "item-preferences-done-5",
+          "title": "VCP 的 AudioVolumePrefs 替代方案（Preferences 綁定＋更名後的 AudioMixerProxy）已確認可用",
+          "priority": 4
+        },
+        {
+          "id": "item-preferences-done-6",
+          "title": "移除計畫重新檢討：ObservablePref 家族改判保留，移除範圍縮小為僅 PlayerPrefObject 系列",
+          "priority": 4
+        }
+      ],
+      "pending_items": [
+        {
+          "id": "item-preferences-todo-1",
+          "title": "刪除 PlayerPrefObject／PlayerPrefBoolObject（零消費者，可直接執行）",
+          "priority": 4
+        },
+        {
+          "id": "item-preferences-todo-2",
+          "title": "D3（Dropdown 值格式）與 D4（UI Toolkit 綁定形狀）待拍板，卡住 UI Toolkit 整個實作步驟",
+          "priority": 4
+        },
+        {
+          "id": "item-preferences-todo-3",
+          "title": "IL2CPP [Preserve] 存活性驗證，使用者選擇延後",
+          "priority": 4
+        },
+        {
+          "id": "item-preferences-todo-4",
+          "title": "AudioMixerProxy 的「Create Mixer」Editor 產生器尚未實作",
+          "priority": 4
+        }
+      ],
+      "priority": 1
     }
   ]
 }

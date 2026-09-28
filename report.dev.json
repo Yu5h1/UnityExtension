@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "report_id": "unity-extension-progress",
-  "updated_at": "2026-09-09T02:20:00+08:00",
+  "updated_at": "2026-09-28T11:55:53.607039+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -95,6 +95,27 @@
         {
           "summary": "Transmission 僅負責 message routing 與 payload delivery；實際呼叫由 UnityEvent 執行。",
           "reference": ".agents/plans/Transmission_設計.md；.agents/plans/Invocation_設計.md"
+        }
+      ]
+    },
+    {
+      "id": "preferences",
+      "next_step": "先刪除零消費者的 PlayerPrefObject／PlayerPrefBoolObject；D3／D4 定案後才能推進 UI Toolkit 實作步驟。",
+      "blockers": [
+        "D3、D4 未定案，Documentation/偏好設定.md 的 UI Toolkit 實作步驟無法開始。"
+      ],
+      "decisions": [
+        {
+          "summary": "移除計畫縮小範圍：ObservablePref／ObservableValue／PlayerPrefValue 保留（欄位取向、任意型別、跟 Preferences 解不同問題），只有疊在外面的 PlayerPrefObject 系列（零消費者）判定移除。",
+          "reference": "Documentation/偏好設定.md#移除計畫playerprefobject-系列"
+        },
+        {
+          "summary": "R1：Preferences.BindAll 從 Awake 改到 Start 執行，且每個 port 一律無條件觸發原生變更通知，解決消費端收不到初始載入值的問題。",
+          "reference": "Documentation/偏好設定.md#設計決策"
+        },
+        {
+          "summary": "D1：DataView.ToJson 改回傳 JsonUtility.ToJson 的 entries 格式，不再手動拼接扁平字串，修正 E1／E2。",
+          "reference": "Documentation/偏好設定.md#設計決策"
         }
       ]
     }
