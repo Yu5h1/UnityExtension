@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-09-28T17:59:36.096179+00:00",
+  "updated_at": "2026-09-28T18:54:45.778818+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -419,7 +419,7 @@
       "pending_items": [
         {
           "id": "item-preferences-todo-3",
-          "title": "IL2CPP [Preserve] 存活性驗證：2026-09-29 嘗試過，被機器缺 C++ 工具鏈卡住（需要 Visual Studio C++ 工作負載＋Windows SDK 10.0.19041+，兩者都沒裝），驗證腳本設計已記錄，之後可直接重跑",
+          "title": "IL2CPP [Preserve] 存活性驗證：2026-09-29 實跑一次，發現待釐清——uGUI adapter 全過，TMP_DropdownAdapter 沒解析出來，link.xml 只從 Assets/ 生效（非 Packages/），但使用者過去專案沒遇過類似問題、對是否通用存疑，已依使用者要求停止本輪，不下定論、不動 code，之後重測",
           "priority": 4
         }
       ],
