@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-09-29T08:04:57.590077+00:00",
+  "updated_at": "2026-09-29T08:11:05.434843+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -431,6 +431,18 @@
         {
           "id": "item-preferences-todo-7",
           "title": "P1：序列化物件成員綁定（待討論決策新章節，2026-09-29 使用者提出）——待定寫回來源 (a)/(b)/(c) 與物件參照＋成員路徑的綁定方式",
+          "priority": 4,
+          "status": "planned"
+        },
+        {
+          "id": "item-preferences-todo-8",
+          "title": "改善方向 6：清理舊 key 的 Editor 工具（列出存檔中沒有任何綁定、也不在 defaultSetting 的 key，使用者確認後刪除；不做自動刪除）",
+          "priority": 4,
+          "status": "planned"
+        },
+        {
+          "id": "item-preferences-todo-9",
+          "title": "改善方向 7：BindPort 補上重名檢查，和 BindAll 共用同一份判定，讓 uGUI 與 UI Toolkit 之間撞名也會警告",
           "priority": 4,
           "status": "planned"
         }
