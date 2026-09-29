@@ -144,6 +144,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 - [文字結構同步 — 待討論決策](Documentation/文字結構同步.md#待討論決策).
 
+- [偏好設定 — 待討論決策](Documentation/偏好設定.md#待討論決策): P1, binding members of serialized objects (write-back source; object reference + member path vs. lookup by class name).
+
 - [Editor 擴充 — 尚未決定](Documentation/Editor擴充.md#尚未決定): whether `EnhanceCollectionField` replaces `Editor<T>`'s auto-wrapping; the user deferred it until the attribute passes acceptance.
 
 ## Ruled-out directions
