@@ -25,7 +25,7 @@
 
 | 版本 | 檔案 | 年代 | 狀態 |
 |------|------|------|------|
-| V1 | `Yu5h1Lib/Unity/Runtime/Base/Unorganized/Singleton/Recycler.cs` | 2017 | 仍存在，包含 `Recyclable` / `RecyclableByEnumerator` / `RecyclableParticleSystems` / `RecyclableBySeconds` |
+| V1 | `Yu5h1Lib/Unity/Core/Runtime/Unorganized/Singleton/Recycler.cs` | 2017 | 仍存在，包含 `Recyclable` / `RecyclableByEnumerator` / `RecyclableParticleSystems` / `RecyclableBySeconds` |
 | V2 | `Yu5h1Lib/Unity/CombatAesthetic/Runtime/Pattern/Pool/PooL.cs` | 2024 | **整檔註解掉** — V2 的廢棄前身 |
 | V2 | `Yu5h1Lib/Unity/CombatAesthetic/Runtime/Pattern/Pool/ComponentPooL.cs` | 2024 | 主實作 (`ComponentPool` + `Pool<T>`) |
 | V2 | `Yu5h1Lib/Unity/CombatAesthetic/Runtime/Pattern/Pool/PoolManager.cs` | 2024 | Singleton + 三套靜態字典 |

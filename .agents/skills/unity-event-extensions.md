@@ -63,7 +63,7 @@ Relevant files:
 - `Packages/common/Editor/Utility/ParameterObjectUtility.cs`
 - `Internal/com.yu5h1.Internal/Editor/PropertyDrawer/UnityEventCompactDrawer.cs`
 - `Internal/com.yu5h1.Internal/Editor/MenuItem/UnityEventPropertyMenu.cs`
-- `Editor/Base/Source/Extension/SerializedPropertyEx.cs`
+- `Core/Editor/Source/Extension/SerializedPropertyEx.cs`
 
 ### Responsibility boundary
 

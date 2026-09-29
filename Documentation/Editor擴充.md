@@ -10,7 +10,7 @@
 
 ```text
 Yu5h1Lib Editor 擴充
-├─ Core Editor（Unity/Editor，編譯成 Yu5h1Lib.Editor.dll）
+├─ Core Editor（Unity/Core/Editor，編譯成 Yu5h1Lib.Editor.dll）
 │  ├─ Editor<T>：所有自訂 Inspector 的基底，把陣列包成 ReorderableListEnhanced
 │  ├─ ReorderableListEnhanced：過濾、size 欄位的 IMGUI 集合
 │  └─ PropertyDrawer（TypeRestriction、ReadOnly、MinMax…）

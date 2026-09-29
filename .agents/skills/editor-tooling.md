@@ -5,7 +5,7 @@ Use this skill for Yu5h1Lib Inspector, PropertyDrawer, EditorWindow, context-men
 ## Derive from `Editor<T>`, never from `UnityEditor.Editor`
 
 Every custom inspector derives from `Yu5h1Lib.EditorExtension.Editor<TargetType>`
-(`Unity/UnityExtension/Editor/Source/EditorAdvanced.cs`). It ships inside the
+(`Unity/Core/Editor/Source/EditorAdvanced.cs`). It ships inside the
 precompiled `Packages/Core/Editor/Yu5h1Lib.Editor.dll`, which every asmdef
 auto-references, so there is nothing to add to `references` — just
 `using Yu5h1Lib.EditorExtension;`. `Editor<T>` and `UnityEditor.Editor` differ in
@@ -250,7 +250,7 @@ Right-clicking an element changes neither selection. Worked example:
 
 ## Existing helpers
 
-- `Unity/UnityExtension/Editor/Source/EditorAdvanced.cs` — `EditorAdvanced` and
+- `Unity/Core/Editor/Source/EditorAdvanced.cs` — `EditorAdvanced` and
   `Editor<TargetType>`, the base class every inspector uses. See the first
   section.
 - `Packages/common/Editor/Utility/SubAssetUtility.cs` — main/sub-asset creation, lookup, and removal.

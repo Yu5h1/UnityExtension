@@ -212,8 +212,8 @@ Component/Resolver/       → Component/Driver/
 
 `TypeRestrictionDrawer` 的 `Mode.Exact` 用 `t == objType` 比對，`objType` 是拖入物件的實際型別，介面型別永遠不等於類別型別，因此 `Exact` 配介面會把任何拖入的物件清成 null，看起來像 bug 而非設定錯誤。`Include` / `Exclude` 走 `IsAssignableFrom`，對介面正常。
 
-在 `TypeRestrictionAttribute` 的 `<summary>` 註明此限制即可。加執行期檢查需改 `Unity/Runtime/Base/Source/Attribute/`，屬 Core，成本不值。
-⚠️ 即使只加 summary 也動到 Core，**需使用者授權**；且 `Unity/UnityExtension/Runtime/Attribute/` 下有同名檔案，要確認兩者是連結來源還是各自一份。
+在 `TypeRestrictionAttribute` 的 `<summary>` 註明此限制即可。加執行期檢查需改 `Unity/Core/Runtime/Source/Attribute/`，屬 Core，成本不值。
+⚠️ 即使只加 summary 也動到 Core，**需使用者授權**。`Unity/UnityExtension/Runtime/Attribute/` 下的同名檔是備份，不必同步（見 [introduction.md § Core source and backups](../introduction.md#core-source-and-backups)）。
 
 **B6 — `TypeRestriction` 的 array 聚合 drawer 不做。** 泛型 drawer 成本高；若對象限定 SO 還可直接畫 SO inspector，但此欄位的對象不一定是 SO。逐格驗證現況已可用。
 
@@ -528,10 +528,8 @@ Proof:     需 Unity 編譯 + 測試場景手動驗證 + trail 需編輯器實�
   - 7.4 `PopupPanel.prefab` 的 `m_EditorClassIdentifier` 依決議不動。
   - B5 `TypeRestrictionAttribute` 的 `Mode` enum 補上「`Exact` 配介面必定不成立」的 `<summary>`，不加執行期檢查。
 
-  **B5 的兩份檔案問題已查明**：`Unity/Runtime/Base/Source/Attribute/` 與 `Unity/UnityExtension/Runtime/Attribute/`
-  下的 `TypeRestrictionAttribute.cs` 是**各自獨立的實體檔**（inode 不同、非 symlink/hardlink、內容 byte 相同、分屬兩個 repo），
-  不是連結來源。因此註解寫進兩份，各自提交。同樣的重複也存在於 `ComponentController.cs` 與 `TypeRestrictionDrawer.cs`，
-  是整片現象而非單一檔案的意外——**其成因（csproj glob 機制）未追查，不屬本計畫範圍**。
+  **B5 的兩份檔案**：`Unity/UnityExtension/Runtime/Attribute/` 下的 `TypeRestrictionAttribute.cs` 是備份，
+  只改 `Unity/Core/Runtime/Source/Attribute/` 那份（見 [introduction.md § Core source and backups](../introduction.md#core-source-and-backups)）。
 
 - 2026-08-19：步驟 1-4 與 5.1 全部落地（agent），未編譯驗證。
   - 新增 `MaterialArrayObject`（`Data/Architecture/Object/`），刪除 `AssetSequence` / `MaterialSequence`。

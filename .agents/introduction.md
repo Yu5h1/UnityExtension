@@ -18,6 +18,12 @@ Read before writing any Unity code in this tree. These two get written wrong mos
 
 Reasoning for the first two is in [data-architecture.md](skills/data-architecture.md).
 
+## Core source and backups
+
+- **Core source lives outside this tree**, in the `Unity/Core` repository: `Unity/Core/Runtime/Source` and `Unity/Core/Editor/Source`. Building `Unity/Core/Yu5h1LibForUnity.sln` produces `Packages/Core/Runtime/Yu5h1Lib.Runtime.dll` and `Packages/Core/Editor/Yu5h1Lib.Editor.dll`, and those DLLs are what every package here compiles against. A Core change reaches Unity only after that build. Changing Core needs user authorization; see the shared `yu5h1lib-conventions` skill, `references/csharp-core.md`.
+- **`Unity/UnityExtension/Runtime/` and `Unity/UnityExtension/Editor/` are backup copies.** They hold same-named types (`EditorScopes`, `EditorAdvanced`, `ReorderableListEnhanced`, `TypeRestrictionAttribute`, …) but are not what ships. Never read them as the source, never edit them, and never keep them in sync with Core. When a type exists in both places, the `Unity/Core` copy is the one to read and change.
+- Removing the backups is tracked in [handoff.md § Next Steps](../handoff.md#next-steps), the backup-cleanup item.
+
 ## Entry points
 
 - Current UnityExtension state and next steps: [handoff.md](../handoff.md).
