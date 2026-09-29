@@ -39,6 +39,10 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
   - Everything else (save throttling, B1's remaining safety mechanisms, `OptionGroup` port, `PlayerPrefValue`/`ObservableValue` polish) is lower-priority backlog already tracked in the doc's 改善方向.
 - Continue [文字結構同步 — 待討論決策](Documentation/文字結構同步.md#待討論決策) to settle identity storage, completion-marker transport and omitted-field semantics before implementation. The user authorized the design document and report update; synchronization implementation has not started.
 
+- Implement [EnhanceCollectionField](Documentation/Editor擴充.md#enhancecollectionfield更新計畫) (plan written 2026-09-29, not started). Start with the doc's 實作前要實測 items: the `applyToCollection` constructor, and whether the header's `PropertyField(headRect, property, false)` recurses into its own drawer. The user chose coexistence, which authorizes the one Core change it needs: `EditorAdvanced.TryPrepareList` (`Unity/Editor/Base/Source/EditorAdvanced.cs:54`) skips fields carrying the attribute.
+
+- Finish the [Editor 擴充 inventory](Documentation/Editor擴充.md#其他類別): only the collection category is written. Sources are `Unity/Editor/Base/Source` and `Packages/common/Editor`; read each file before listing it rather than inferring from names.
+
 1. Decide whether `DraggableDesktop` should exist at all. The plan lists it for step 7, but there is no such control in HealthAI to port: the desktop lives inside `SignalClusterController` (843 lines) woven together with tiles, features, desktop modes, preference saving, hints, the Apps panel and the menu. Every reusable part of it is already extracted - `GroupDragLayout` holds the positions, group drag, inertia and obstacle avoidance; `Reaction.Throw` holds the fling; `PointerVelocity` and `SweptContact` are what its drag and hit tests call; `ElementTarget` bridges to elements. What is left is composition, and the user's own framing was that the Apps desktop is a consumer of the system rather than the system itself. Building the control anyway would mean inventing a shape no second consumer has tested. Recommend dropping it from the plan and recording why.
 
 1. Verify the shared log through **HealthAI > Interaction Debug Window** and `W:\UnityProject\HealthAI\Assets\HealthAI\Editor\HealthAIInteractionDebugWindow.cs` in Unity: multi-line selection/copy/select-all, rejected edits, normal wheel scrolling, independent Ctrl+wheel zoom, Ctrl+middle-click reset to 12 pt, nested clipping, reflow, final-line scrolling, external foldout title, flat Clear toolbar, right-side search and its clear control, collapse retention and bottom-edge resizing with release outside the grip. The acceptance owner and integrated application caller are in `W:\UnityProject\HealthAI\docs\unity\Requirements.UnityExtension.md`; that project retains the Outstanding statuses until interactive acceptance passes.
@@ -139,6 +143,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 - [Agent friendly workflow — 待討論決策](Documentation/Agent%20friendly%20workflow%20Yu5h1Lib.UnityExtension.md#待討論決策).
 
 - [文字結構同步 — 待討論決策](Documentation/文字結構同步.md#待討論決策).
+
+- [Editor 擴充 — 尚未決定](Documentation/Editor擴充.md#尚未決定): whether `EnhanceCollectionField` replaces `Editor<T>`'s auto-wrapping; the user deferred it until the attribute passes acceptance.
 
 ## Ruled-out directions
 
