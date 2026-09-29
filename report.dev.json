@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "report_id": "unity-extension-progress",
-  "updated_at": "2026-09-28T18:54:45.778818+00:00",
+  "updated_at": "2026-09-29T08:04:57.590077+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -100,7 +100,7 @@
     },
     {
       "id": "preferences",
-      "next_step": "UI Toolkit 支援計畫全部完成。剩 IL2CPP [Preserve] 驗證：工具鏈已裝好，build 成功，uGUI adapter 全過，但 TMP_DropdownAdapter 沒被解析出來，link.xml 只從 Assets/ 生效（詳見偏好設定.md）。使用者存疑是否通用，要求先擱置、之後再測，未動 code。",
+      "next_step": "待討論決策新增 P1（序列化物件成員綁定），尚待定案：寫回來源選 (a)/(b)/(c)，及是否接受物件參照＋成員路徑找值。另有 E10（JsonUtility 對 double／陣列／List<T> 靜默遺失資料）待修。IL2CPP [Preserve] 驗證仍延後，使用者存疑是否通用。",
       "decisions": [
         {
           "summary": "移除計畫完成：ObservablePref／ObservableValue／PlayerPrefValue 保留（欄位取向、任意型別、跟 Preferences 解不同問題），疊在外面的 PlayerPrefObject 系列（零消費者）已於 2026-09-28 刪除。",

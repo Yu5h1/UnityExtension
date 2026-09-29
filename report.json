@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-09-28T18:54:45.778818+00:00",
+  "updated_at": "2026-09-29T08:04:57.590077+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -341,7 +341,7 @@
       "id": "preferences",
       "title": "偏好設定（PlayerPrefs 持久化）",
       "status": "in_progress",
-      "summary": "UI 綁定層（Preferences／DataView／adapter）已完整實作並驗證，已知問題 E1–E9 全部修復。I1–I3、D1、R1、D3、D4 皆已定案完成。VCP 的 AudioVolumePrefs 已刪除並改用 Preferences 綁定＋AudioMixerProxy，使用者確認可用。移除計畫已完成：ObservablePref／ObservableValue／PlayerPrefValue 判定保留（跟 Preferences 解不同問題），PlayerPrefObject／PlayerPrefBoolObject 已於 2026-09-28 刪除。AudioMixerProxy 的「Create Mixer」Editor 產生器已於 2026-09-28 完成。UI Toolkit 實作步驟 1–5 全部完成並實測（IPreferences、BindPort、PreferencesBinder、Dropdown 的 IValuePort、preferences skill 場景配置文件），支援計畫已無待辦事項。唯一剩下的是另外追蹤、使用者選擇延後的 IL2CPP [Preserve] 存活性驗證。",
+      "summary": "UI 綁定層（Preferences／DataView／adapter）已完整實作並驗證，已知問題 E1–E9 全部修復，E10 新發現、未修。I1–I3、D1、R1、D3、D4 皆已定案完成。UI Toolkit 支援計畫（步驟 1–5）全部完成並實測。VCP 的 AudioVolumePrefs 已刪除並改用 Preferences 綁定＋AudioMixerProxy，使用者確認可用。PlayerPrefObject／PlayerPrefBoolObject 已於 2026-09-28 刪除。AudioMixerProxy 的「Create Mixer」Editor 產生器已於 2026-09-28 完成。待討論決策新增 P1（序列化物件成員綁定），尚待定案。IL2CPP [Preserve] 存活性驗證延後。",
       "completed_items": [
         {
           "id": "item-preferences-todo-5",
@@ -421,9 +421,21 @@
           "id": "item-preferences-todo-3",
           "title": "IL2CPP [Preserve] 存活性驗證：2026-09-29 實跑一次，發現待釐清——uGUI adapter 全過，TMP_DropdownAdapter 沒解析出來，link.xml 只從 Assets/ 生效（非 Packages/），但使用者過去專案沒遇過類似問題、對是否通用存疑，已依使用者要求停止本輪，不下定論、不動 code，之後重測",
           "priority": 4
+        },
+        {
+          "id": "item-preferences-todo-6",
+          "title": "E10：PlayerPrefJsonSerializer.CanHandle 誤判 double／陣列／List<T> 可處理，JsonUtility 實際序列化成 {}，資料悄悄遺失（2026-09-29 MCP 實測確認，未修）",
+          "priority": 4,
+          "status": "planned"
+        },
+        {
+          "id": "item-preferences-todo-7",
+          "title": "P1：序列化物件成員綁定（待討論決策新章節，2026-09-29 使用者提出）——待定寫回來源 (a)/(b)/(c) 與物件參照＋成員路徑的綁定方式",
+          "priority": 4,
+          "status": "planned"
         }
       ],
-      "priority": 1
+      "priority": 2
     }
   ]
 }
