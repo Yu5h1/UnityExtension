@@ -55,7 +55,12 @@ namespace Yu5h1Lib.UIToolkit
         private void OnDisable()
         {
             foreach (var port in boundPorts)
-                port.Unbind();
+            {
+                if (preferences != null)
+                    preferences.UnbindPort(port);
+                else
+                    port.Unbind();
+            }
             boundPorts.Clear();
         }
     }

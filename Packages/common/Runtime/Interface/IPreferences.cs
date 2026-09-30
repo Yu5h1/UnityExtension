@@ -13,5 +13,9 @@ namespace Yu5h1Lib
         /// <summary>Fills the port's field from <c>defaultSetting</c> (or its own current value) the
         /// first time it's seen, then binds it — the per-port half of what <c>BindAll</c> loops over.</summary>
         void BindPort(IValuePort port);
+
+        /// <summary>Unbinds a port bound through <see cref="BindPort"/> and releases its field name, so
+        /// rebinding later is not reported as a conflict.</summary>
+        void UnbindPort(IValuePort port);
     }
 }

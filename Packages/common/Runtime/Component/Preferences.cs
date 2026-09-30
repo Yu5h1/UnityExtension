@@ -47,18 +47,21 @@ namespace Yu5h1Lib
         /// <summary>Resolved map from each binding Object to its IValuePort. Built during BindAll.</summary>
         private readonly Dictionary<Object, IValuePort> _portMap = new Dictionary<Object, IValuePort>();
 
+        /// <summary>Every port currently bound through <see cref="BindPort"/>, by field name, whichever path
+        /// bound it (uGUI <c>BindAll</c>, UI Toolkit binder, ...). A list per name because conflicting ports
+        /// stay bound; unbinding one must not hide the other.</summary>
+        private readonly Dictionary<string, List<IValuePort>> _boundPorts =
+            new Dictionary<string, List<IValuePort>>(System.StringComparer.OrdinalIgnoreCase);
+
         IValuePort ResolvePort(Object obj) => ValuePortResolver.Resolve(obj);
 
         public bool TryGetValueFromBindings(string key, out string value)
         {
             value = default;
-            foreach (var port in _portMap.Values)
+            if (_boundPorts.TryGetValue(key, out var ports) && ports.Count > 0)
             {
-                if (port.GetFieldName() == key)
-                {
-                    value = port.GetValue();
-                    return true;
-                }
+                value = ports[0].GetValue();
+                return true;
             }
             $"Key [{key}] not found in bindings.".printWarning();
             return false;
@@ -85,8 +88,9 @@ namespace Yu5h1Lib
 
         public void BindAll()
         {
+            foreach (var port in _portMap.Values)
+                UnbindPort(port);
             _portMap.Clear();
-            var seenFieldNames = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < _bindings.Count; i++)
             {
                 var obj = _bindings[i];
@@ -99,9 +103,7 @@ namespace Yu5h1Lib
                 }
                 _portMap[obj] = port;
                 var fieldName = port.GetFieldName();
-                if (!seenFieldNames.Add(fieldName))
-                    $"BindAll on {name}: field name '{fieldName}' is bound by more than one control; they will overwrite each other.".printWarning();
-                else if (obj is Component boundComponent && LooksLikeDefaultName(fieldName, boundComponent))
+                if (obj is Component boundComponent && LooksLikeDefaultName(fieldName, boundComponent))
                     $"BindAll on {name}: '{fieldName}' looks like a Unity default name; renaming the GameObject later will orphan its saved value.".printWarning();
             }
             foreach (var port in _portMap.Values)
@@ -110,10 +112,19 @@ namespace Yu5h1Lib
 
         /// <summary>Fills <paramref name="port"/>'s field from <c>defaultSetting</c> (or its own current
         /// value) the first time it's seen, then binds it. The per-port half of <see cref="BindAll"/>;
-        /// a UI Toolkit binding component calls this directly for ports it resolves itself.</summary>
+        /// a UI Toolkit binding component calls this directly for ports it resolves itself.
+        /// Warns when another port already holds the same field name, whichever path bound it.</summary>
         public void BindPort(IValuePort port)
         {
             var fieldName = port.GetFieldName();
+            if (!_boundPorts.TryGetValue(fieldName, out var ports))
+                _boundPorts[fieldName] = ports = new List<IValuePort>();
+            if (!ports.Contains(port))
+            {
+                if (ports.Count > 0)
+                    $"Preferences on {name}: field name '{fieldName}' is bound by more than one control; they will overwrite each other.".printWarning();
+                ports.Add(port);
+            }
             if (!current.ContainsKey(fieldName))
                 current[fieldName] = defaultSetting != null && defaultSetting.TryGetValue(fieldName, out string fallback)
                     ? fallback
@@ -128,17 +139,30 @@ namespace Yu5h1Lib
             return fieldName.StartsWith(typeName + " (", System.StringComparison.Ordinal) && fieldName.EndsWith(")");
         }
 
+        /// <summary>Unbinds <paramref name="port"/> and drops it from the conflict registry. Call this
+        /// instead of <c>port.Unbind()</c> for anything bound through <see cref="BindPort"/>, or a later
+        /// rebind is misreported as a conflict.</summary>
+        public void UnbindPort(IValuePort port)
+        {
+            foreach (var ports in _boundPorts.Values)
+                ports.Remove(port);
+            port.Unbind();
+        }
+
         public void UnbindAll()
         {
-            foreach (var port in _portMap.Values)
-                port.Unbind();
+            foreach (var ports in _boundPorts.Values)
+                foreach (var port in ports)
+                    port.Unbind();
+            _boundPorts.Clear();
             _portMap.Clear();
         }
 
         public void ReadFromBindings()
         {
-            foreach (var port in _portMap.Values)
-                current.ReadFrom(port);
+            foreach (var ports in _boundPorts.Values)
+                foreach (var port in ports)
+                    current.ReadFrom(port);
         }
 
 
