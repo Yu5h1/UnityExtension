@@ -1,4 +1,5 @@
 using Yu5h1Lib.MVVM;
+using Yu5h1Lib.Serialization;
 
 namespace Yu5h1Lib
 {
@@ -8,7 +9,15 @@ namespace Yu5h1Lib
     /// </summary>
     public interface IPreferences
     {
+        /// <summary>Identifies the saved data this host reads and writes; hosts sharing a KEY share one save.</summary>
+        string KEY { get; }
+
         IDataView current { get; }
+
+        /// <summary>Reads the saved data from storage, bypassing <see cref="current"/>.</summary>
+        bool TryLoadCurrent(out DataView output);
+
+        bool TryGetDefault(string key, out string value);
 
         /// <summary>Fills the port's field from <c>defaultSetting</c> (or its own current value) the
         /// first time it's seen, then binds it — the per-port half of what <c>BindAll</c> loops over.</summary>

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "report_id": "unity-extension-progress",
-  "updated_at": "2026-09-30T13:07:18.547911+00:00",
+  "updated_at": "2026-09-30T14:12:40.727271+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -100,7 +100,7 @@
     },
     {
       "id": "preferences",
-      "next_step": "剩下的待處理：改善方向 6（清理舊 key 的 Editor 工具）；IL2CPP [Preserve] 驗證仍延後，使用者存疑是否通用。",
+      "next_step": "偏好設定剩 IL2CPP [Preserve] 存活性驗證，使用者要求延後、存疑是否通用；其餘改善方向（1、2、4、5）未排程。",
       "decisions": [
         {
           "summary": "移除計畫完成：ObservablePref／ObservableValue／PlayerPrefValue 保留（欄位取向、任意型別、跟 Preferences 解不同問題），疊在外面的 PlayerPrefObject 系列（零消費者）已於 2026-09-28 刪除。",

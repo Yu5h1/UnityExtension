@@ -5,40 +5,64 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Yu5h1Lib.MVVM;
 using Yu5h1Lib.UIToolkit;
-using Object = UnityEngine.Object;
 
 namespace Yu5h1Lib.EditorExtension
 {
     /// <summary>
-    /// Shows every <c>binding-path</c> the binder's UXML produces, outlines the ones that share a field
-    /// name with another binding on the same Preferences host (this UXML, another binder, or the host's
-    /// uGUI <c>_bindings</c>), and renames a binding by writing the new value back into the UXML file.
+    /// Shows every <c>binding-path</c> the binder's UXML produces with whether the save and
+    /// <c>defaultSetting</c> hold it, outlines the ones sharing a field name with another consumer of the
+    /// same save (<see cref="PreferencesConsumerRegistry"/>), and renames a binding by writing the new
+    /// value back into the UXML file. Also registers UXML bindings as consumers for the Preferences inspector.
     /// </summary>
     [CustomEditor(typeof(PreferencesBinder))]
     public class PreferencesBinderEditor : Editor<PreferencesBinder>
     {
-        private const string PreferencesPropertyName = "_preferences";
-        private const string BindingsPropertyName = "_bindings";
         private static readonly Color ConflictColor = new Color(1f, 0.76f, 0.03f);
 
         private string scannedAsset;
         private readonly Dictionary<string, DateTime> scannedStamps = new Dictionary<string, DateTime>();
         private List<UxmlBinding> entries = new List<UxmlBinding>();
         private readonly Dictionary<UxmlBinding, string> conflicts = new Dictionary<UxmlBinding, string>();
+        private readonly Dictionary<UxmlBinding, string> storage = new Dictionary<UxmlBinding, string>();
         private readonly List<string> sharedTemplateHints = new List<string>();
         private bool conflictsDirty = true;
+
+        [InitializeOnLoadMethod]
+        private static void RegisterConsumers() => PreferencesConsumerRegistry.Register(CollectUxmlBindings);
+
+        private static IEnumerable<PreferencesConsumer> CollectUxmlBindings(string storageKey)
+        {
+            foreach (var binder in ObjectUtility.FindObjects<PreferencesBinder>())
+            {
+                if (binder.preferences == null || binder.preferences.KEY != storageKey)
+                    continue;
+                var path = GetAssetPath(binder);
+                if (string.IsNullOrEmpty(path))
+                    continue;
+                foreach (var entry in UxmlBindingScanner.Scan(path))
+                    yield return new PreferencesConsumer(entry.BindingPath,
+                        $"UXML {entry.DisplayName} ({Path.GetFileName(entry.DefinedIn)}:{entry.Line}) via '{binder.name}'");
+            }
+        }
+
+        private static string GetAssetPath(PreferencesBinder binder)
+        {
+            var asset = binder.GetComponent<UIDocument>()?.visualTreeAsset;
+            return asset == null ? null : AssetDatabase.GetAssetPath(asset);
+        }
 
         private void OnEnable()
         {
             EditorApplication.hierarchyChanged += MarkConflictsDirty;
+            EditorApplication.projectChanged += MarkConflictsDirty;
             Undo.undoRedoPerformed += MarkConflictsDirty;
         }
 
         protected override void OnDisable()
         {
             EditorApplication.hierarchyChanged -= MarkConflictsDirty;
+            EditorApplication.projectChanged -= MarkConflictsDirty;
             Undo.undoRedoPerformed -= MarkConflictsDirty;
             base.OnDisable();
         }
@@ -58,8 +82,7 @@ namespace Yu5h1Lib.EditorExtension
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("UXML Bindings", EditorStyles.boldLabel);
 
-            var asset = targetObject.GetComponent<UIDocument>()?.visualTreeAsset;
-            var assetPath = asset == null ? null : AssetDatabase.GetAssetPath(asset);
+            var assetPath = GetAssetPath(targetObject);
             if (string.IsNullOrEmpty(assetPath))
             {
                 EditorGUILayout.HelpBox("The UIDocument has no Source Asset.", MessageType.Info);
@@ -78,20 +101,27 @@ namespace Yu5h1Lib.EditorExtension
             foreach (var entry in entries)
             {
                 conflicts.TryGetValue(entry, out var conflict);
+                storage.TryGetValue(entry, out var stored);
                 var tooltip = $"{entry.ElementType} · {entry.DefinedIn}:{entry.Line}" + (entry.FromOverride ? " (AttributeOverrides)" : "")
                     + (conflict == null ? "" : "\n" + conflict);
-                var value = EditorGUILayout.DelayedTextField(new GUIContent(entry.DisplayName, tooltip), entry.BindingPath);
-                if (conflict != null)
-                    DrawOutline(GUILayoutUtility.GetLastRect());
-                if (value != entry.BindingPath)
+                using (new EditorGUILayout.HorizontalScope())
                 {
-                    renamed = entry;
-                    newValue = value;
+                    var value = EditorGUILayout.DelayedTextField(new GUIContent(entry.DisplayName, tooltip), entry.BindingPath);
+                    if (conflict != null)
+                        DrawOutline(GUILayoutUtility.GetLastRect());
+                    EditorGUILayout.LabelField(stored, EditorStyles.miniLabel, GUILayout.Width(90));
+                    if (value != entry.BindingPath)
+                    {
+                        renamed = entry;
+                        newValue = value;
+                    }
                 }
             }
 
+            if (targetObject.preferences == null)
+                EditorGUILayout.HelpBox("Assign Preferences to check these against its save and its other bindings.", MessageType.Info);
             if (conflicts.Count > 0)
-                EditorGUILayout.HelpBox("Outlined fields share a field name with another binding on the same Preferences; they will overwrite each other at runtime. Hover a field to see what it collides with.", MessageType.Warning);
+                EditorGUILayout.HelpBox("Outlined fields share a field name with another binding on the same save; they will overwrite each other at runtime. Hover a field to see what it collides with.", MessageType.Warning);
             foreach (var hint in sharedTemplateHints)
                 EditorGUILayout.HelpBox(hint, MessageType.Warning);
 
@@ -141,45 +171,34 @@ namespace Yu5h1Lib.EditorExtension
         {
             conflictsDirty = false;
             conflicts.Clear();
+            storage.Clear();
             sharedTemplateHints.Clear();
 
-            var sources = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
-            void Add(string fieldName, string source)
-            {
-                if (string.IsNullOrEmpty(fieldName)) return;
-                if (!sources.TryGetValue(fieldName, out var list))
-                    sources[fieldName] = list = new List<string>();
-                list.Add(source);
-            }
-
-            foreach (var entry in entries)
-                Add(entry.BindingPath, $"this UXML: {entry.DisplayName} ({Path.GetFileName(entry.DefinedIn)}:{entry.Line})");
-
-            var preferences = serializedObject.FindProperty(PreferencesPropertyName)?.objectReferenceValue;
-            if (preferences != null)
-            {
-                foreach (var other in ObjectUtility.FindObjects<PreferencesBinder>())
-                {
-                    if (other == targetObject || !ReferenceEquals(other.preferences, preferences))
-                        continue;
-                    var otherAsset = other.GetComponent<UIDocument>()?.visualTreeAsset;
-                    var otherPath = otherAsset == null ? null : AssetDatabase.GetAssetPath(otherAsset);
-                    if (string.IsNullOrEmpty(otherPath))
-                        continue;
-                    foreach (var entry in UxmlBindingScanner.Scan(otherPath))
-                        Add(entry.BindingPath, $"PreferencesBinder '{other.name}': {entry.DisplayName}");
-                }
-
-                var bindings = new SerializedObject(preferences).FindProperty(BindingsPropertyName);
-                if (bindings != null)
-                    for (int i = 0; i < bindings.arraySize; i++)
-                        if (bindings.GetArrayElementAtIndex(i).objectReferenceValue is Component control)
-                            Add(control is IValuePort port ? port.GetFieldName() : control.gameObject.name, $"uGUI '{control.name}'");
-            }
-
+            var preferences = targetObject.preferences;
+            // The registry already includes this binder's own UXML when a Preferences is assigned.
+            var consumers = preferences != null
+                ? PreferencesConsumerRegistry.Collect(preferences.KEY)
+                : entries.Select(e => new PreferencesConsumer(e.BindingPath, $"UXML {e.DisplayName} ({Path.GetFileName(e.DefinedIn)}:{e.Line})")).ToList();
+            var sources = consumers
+                .GroupBy(c => c.Key, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.Select(c => c.Source).ToList(), StringComparer.OrdinalIgnoreCase);
             foreach (var entry in entries)
                 if (sources.TryGetValue(entry.BindingPath, out var list) && list.Count > 1)
                     conflicts[entry] = "Also bound by:\n" + string.Join("\n", list.Distinct());
+
+            if (preferences != null)
+            {
+                var hasSave = preferences.TryLoadCurrent(out var saved) && saved != null;
+                foreach (var entry in entries)
+                {
+                    var isSaved = hasSave && saved.Any(pair => string.Equals(pair.Key, entry.BindingPath, StringComparison.OrdinalIgnoreCase));
+                    var isDefault = preferences.TryGetDefault(entry.BindingPath, out _);
+                    storage[entry] = isSaved && isDefault ? "saved · default"
+                        : isSaved ? "saved"
+                        : isDefault ? "default"
+                        : "not saved yet";
+                }
+            }
 
             foreach (var shared in entries.Where(e => !e.FromOverride).GroupBy(e => e.SourceKey).Where(g => g.Count() > 1))
             {

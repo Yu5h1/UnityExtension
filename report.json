@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-09-30T13:07:18.547911+00:00",
+  "updated_at": "2026-09-30T14:12:40.727271+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -344,6 +344,12 @@
       "summary": "UI 綁定層（Preferences／DataView／adapter）已完整實作並驗證，已知問題 E1–E6、E8、E9 已修復，E7 轉由重複 Core 檔案盤點追蹤，E10 已於 2026-09-30 修復並以 MCP 實測（序列化器改為處理原始值的抽象基底，JSON 版對集合改丟例外）。I1–I3、D1、R1、D3、D4 皆已定案完成。UI Toolkit 支援計畫（步驟 1–5）全部完成並實測。VCP 的 AudioVolumePrefs 已刪除並改用 Preferences 綁定＋AudioMixerProxy，使用者確認可用。PlayerPrefObject／PlayerPrefBoolObject 已於 2026-09-28 刪除。AudioMixerProxy 的「Create Mixer」Editor 產生器已於 2026-09-28 完成。P1（序列化物件成員綁定）於 2026-09-30 結案不實作：沒有 UI 的設定由 ObservablePref<T> 涵蓋。IL2CPP [Preserve] 存活性驗證延後。",
       "completed_items": [
         {
+          "id": "item-preferences-todo-8",
+          "title": "改善方向 6：Preferences Inspector 的「Unclaimed List」列出沒有綁定認領的存檔欄位，黃燈＝只在 defaultSetting、紅燈＝都沒有可刪（x／Clear）；消費者註冊機制涵蓋 uGUI 與 UXML——已完成，MCP 驗證並經使用者確認畫面（2026-09-30）",
+          "priority": 4,
+          "status": "done"
+        },
+        {
           "id": "item-preferences-todo-7",
           "title": "P1：序列化物件成員綁定——結案不實作（2026-09-30）：沒有 UI 的設定用 ObservablePref<T>，有 UI 才走 Preferences",
           "priority": 4,
@@ -444,12 +450,6 @@
           "id": "item-preferences-todo-3",
           "title": "IL2CPP [Preserve] 存活性驗證：2026-09-29 實跑一次，發現待釐清——uGUI adapter 全過，TMP_DropdownAdapter 沒解析出來，link.xml 只從 Assets/ 生效（非 Packages/），但使用者過去專案沒遇過類似問題、對是否通用存疑，已依使用者要求停止本輪，不下定論、不動 code，之後重測",
           "priority": 4
-        },
-        {
-          "id": "item-preferences-todo-8",
-          "title": "改善方向 6：清理舊 key 的 Editor 工具（列出存檔中沒有任何綁定、也不在 defaultSetting 的 key，使用者確認後刪除；不做自動刪除）",
-          "priority": 4,
-          "status": "planned"
         }
       ],
       "priority": 2

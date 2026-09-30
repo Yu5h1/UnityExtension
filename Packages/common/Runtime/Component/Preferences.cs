@@ -36,6 +36,12 @@ namespace Yu5h1Lib
         }
         IDataView IPreferences.current => current;
 
+        public bool TryGetDefault(string key, out string value)
+        {
+            value = default;
+            return defaultSetting != null && defaultSetting.TryGetValue(key, out value);
+        }
+
         [SerializeField] private UnityEvent _changed;
         public event UnityAction changed
         {
