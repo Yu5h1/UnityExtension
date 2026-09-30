@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "report_id": "unity-extension-progress",
-  "updated_at": "2026-09-30T10:35:19.875922+00:00",
+  "updated_at": "2026-09-30T12:03:57.812522+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -100,7 +100,7 @@
     },
     {
       "id": "preferences",
-      "next_step": "待討論決策新增 P1（序列化物件成員綁定），尚待定案：寫回來源選 (a)/(b)/(c)，及是否接受物件參照＋成員路徑找值。IL2CPP [Preserve] 驗證仍延後，使用者存疑是否通用。",
+      "next_step": "改善方向 7 已結案。下一步 P1（序列化物件成員綁定）待定案：寫回來源選 (a)/(b)/(c)，及是否接受物件參照＋成員路徑找值；P1 綁定走 BindPort 即自動繼承撞名檢查。IL2CPP [Preserve] 驗證仍延後。",
       "decisions": [
         {
           "summary": "移除計畫完成：ObservablePref／ObservableValue／PlayerPrefValue 保留（欄位取向、任意型別、跟 Preferences 解不同問題），疊在外面的 PlayerPrefObject 系列（零消費者）已於 2026-09-28 刪除。",

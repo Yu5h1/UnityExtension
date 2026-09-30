@@ -1,0 +1,19 @@
+{
+    "name": "Yu5h1Lib.UIToolkit.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Yu5h1Lib.UIToolkit",
+        "Yu5h1Lib.Common"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

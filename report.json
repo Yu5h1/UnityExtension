@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-09-30T10:35:19.875922+00:00",
+  "updated_at": "2026-09-30T12:03:57.812522+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -344,6 +344,17 @@
       "summary": "UI 綁定層（Preferences／DataView／adapter）已完整實作並驗證，已知問題 E1–E6、E8、E9 已修復，E7 轉由重複 Core 檔案盤點追蹤，E10 已於 2026-09-30 修復並以 MCP 實測（序列化器改為處理原始值的抽象基底，JSON 版對集合改丟例外）。I1–I3、D1、R1、D3、D4 皆已定案完成。UI Toolkit 支援計畫（步驟 1–5）全部完成並實測。VCP 的 AudioVolumePrefs 已刪除並改用 Preferences 綁定＋AudioMixerProxy，使用者確認可用。PlayerPrefObject／PlayerPrefBoolObject 已於 2026-09-28 刪除。AudioMixerProxy 的「Create Mixer」Editor 產生器已於 2026-09-28 完成。待討論決策新增 P1（序列化物件成員綁定），尚待定案。IL2CPP [Preserve] 存活性驗證延後。",
       "completed_items": [
         {
+          "id": "item-preferences-todo-10",
+          "title": "改善方向 7（Editor）：PreferencesBinder Inspector 列出 binding-path、撞名標黃、改名只替換屬性值寫回 .uxml——已完成，MCP 驗證邏輯並經使用者確認畫面（2026-09-30）；共用 Template 自動加 override 未做",
+          "status": "done"
+        },
+        {
+          "id": "item-preferences-todo-9",
+          "title": "改善方向 7（Runtime）：BindPort 以欄位名登記表統一判定撞名，uGUI 與 UI Toolkit 跨路徑撞名會警告；新增 UnbindPort 避免重綁誤報——已完成並以 MCP 實測（2026-09-30）",
+          "priority": 4,
+          "status": "done"
+        },
+        {
           "id": "item-preferences-todo-6",
           "title": "E10：序列化器改為抽象基底 PlayerPrefsSerializer 處理原始值（含 double），PlayerPrefJsonSerializer 只負責物件、遇集合丟例外——已修並以 MCP 實測（2026-09-30）",
           "priority": 4,
@@ -437,12 +448,6 @@
         {
           "id": "item-preferences-todo-8",
           "title": "改善方向 6：清理舊 key 的 Editor 工具（列出存檔中沒有任何綁定、也不在 defaultSetting 的 key，使用者確認後刪除；不做自動刪除）",
-          "priority": 4,
-          "status": "planned"
-        },
-        {
-          "id": "item-preferences-todo-9",
-          "title": "改善方向 7：BindPort 補上重名檢查，和 BindAll 共用同一份判定，讓 uGUI 與 UI Toolkit 之間撞名也會警告",
           "priority": 4,
           "status": "planned"
         }
