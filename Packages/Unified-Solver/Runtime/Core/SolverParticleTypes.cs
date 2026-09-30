@@ -115,7 +115,7 @@ namespace Yu5h1Lib.UnifiedSolver
         public int rigidBodyOffset;
         public int rigidBodyCount;
         public int topology;
-        public int profileId;
+        public EntityId profileId;
         public Vector3 scale;
         // How strongly this body couples to any medium: the aggregate of drag
         // coefficient, cross-section and mass, which are the body's properties

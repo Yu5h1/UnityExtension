@@ -1,27 +1,20 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace Yu5h1Lib
 {
-    public class PlayerPrefJsonSerializer :  IPlayerPrefsSerializer
+    public class PlayerPrefJsonSerializer : PlayerPrefsSerializer
     {
-        public bool CanHandle(Type type)
+        protected override string SerializeObject<T>(T value)
         {
-            // �B�z�Ҧ��i�ǦC�ƪ�����
-            return type.IsValueType || 
-                   type.IsSerializable ||
-                   type.GetCustomAttributes(typeof(SerializableAttribute), false).Length > 0 ;
-        }
-
-        public string Serialize<T>(T value)
-        {
+            ThrowIfCollection(typeof(T));
             return JsonUtility.ToJson(value);
         }
 
-        public T Deserialize<T>(string data, T defaultValue)
+        protected override T DeserializeObject<T>(string data, T defaultValue)
         {
-            if (string.IsNullOrEmpty(data))
-                return defaultValue;
+            ThrowIfCollection(typeof(T));
             try
             {
                 return JsonUtility.FromJson<T>(data);
@@ -31,5 +24,13 @@ namespace Yu5h1Lib
                 return defaultValue;
             }
         }
-    } 
+
+        // JsonUtility 最外層只接受物件；陣列、List<T>、Dictionary 會寫成 {}，資料悄悄遺失
+        private static void ThrowIfCollection(Type type)
+        {
+            if (type.IsArray || typeof(IEnumerable).IsAssignableFrom(type))
+                throw new NotSupportedException(
+                    $"{nameof(PlayerPrefJsonSerializer)} cannot store {type} at top level. Wrap it in a [Serializable] class.");
+        }
+    }
 }

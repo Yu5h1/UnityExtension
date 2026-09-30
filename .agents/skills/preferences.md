@@ -105,5 +105,5 @@ Details and status in plan § 已知問題 / § 弊端評估.
 - Two uGUI GameObjects with the same name under one host share one field and overwrite each other; `BindAll` warns on the exact duplicate and logs a lighter hint when a name looks like a Unity default (`Toggle`, `Slider (1)`, ...). The drawer and `BindSelected` catch it earlier, but only for entries added through them.
 - uGUI controls instantiated after the host's `Start` are not bound until `BindAll()` is called.
 - Every change writes to disk; heavy Slider dragging is costly, especially on WebGL.
-- With `PlayerPrefJsonSerializer` swapped in, `PlayerPrefValue<T>`/`ObservablePref<T>` silently lose `double`, array, and `List<T>` values: `JsonUtility` writes `{}` for them (E10). Wrap such a value in a `[Serializable]` class until E10 is fixed.
+- With `PlayerPrefJsonSerializer` swapped in, `PlayerPrefValue<T>`/`ObservablePref<T>` of an array or collection type throws `NotSupportedException`: `JsonUtility` cannot store one at top level. Wrap it in a `[Serializable]` class. Primitives such as `double` never reach the object serializer.
 - `PreferencesBinder` rebinds on every `OnEnable`, unlike the uGUI host's single `Start`: `UIDocument` rebuilds `rootVisualElement` each time it is re-enabled. A script that assumes UI Toolkit controls were bound once at startup is wrong.
