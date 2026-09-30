@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-09-30T12:03:57.812522+00:00",
+  "updated_at": "2026-09-30T13:07:18.547911+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -341,8 +341,14 @@
       "id": "preferences",
       "title": "偏好設定（PlayerPrefs 持久化）",
       "status": "in_progress",
-      "summary": "UI 綁定層（Preferences／DataView／adapter）已完整實作並驗證，已知問題 E1–E6、E8、E9 已修復，E7 轉由重複 Core 檔案盤點追蹤，E10 已於 2026-09-30 修復並以 MCP 實測（序列化器改為處理原始值的抽象基底，JSON 版對集合改丟例外）。I1–I3、D1、R1、D3、D4 皆已定案完成。UI Toolkit 支援計畫（步驟 1–5）全部完成並實測。VCP 的 AudioVolumePrefs 已刪除並改用 Preferences 綁定＋AudioMixerProxy，使用者確認可用。PlayerPrefObject／PlayerPrefBoolObject 已於 2026-09-28 刪除。AudioMixerProxy 的「Create Mixer」Editor 產生器已於 2026-09-28 完成。待討論決策新增 P1（序列化物件成員綁定），尚待定案。IL2CPP [Preserve] 存活性驗證延後。",
+      "summary": "UI 綁定層（Preferences／DataView／adapter）已完整實作並驗證，已知問題 E1–E6、E8、E9 已修復，E7 轉由重複 Core 檔案盤點追蹤，E10 已於 2026-09-30 修復並以 MCP 實測（序列化器改為處理原始值的抽象基底，JSON 版對集合改丟例外）。I1–I3、D1、R1、D3、D4 皆已定案完成。UI Toolkit 支援計畫（步驟 1–5）全部完成並實測。VCP 的 AudioVolumePrefs 已刪除並改用 Preferences 綁定＋AudioMixerProxy，使用者確認可用。PlayerPrefObject／PlayerPrefBoolObject 已於 2026-09-28 刪除。AudioMixerProxy 的「Create Mixer」Editor 產生器已於 2026-09-28 完成。P1（序列化物件成員綁定）於 2026-09-30 結案不實作：沒有 UI 的設定由 ObservablePref<T> 涵蓋。IL2CPP [Preserve] 存活性驗證延後。",
       "completed_items": [
+        {
+          "id": "item-preferences-todo-7",
+          "title": "P1：序列化物件成員綁定——結案不實作（2026-09-30）：沒有 UI 的設定用 ObservablePref<T>，有 UI 才走 Preferences",
+          "priority": 4,
+          "status": "done"
+        },
         {
           "id": "item-preferences-todo-10",
           "title": "改善方向 7（Editor）：PreferencesBinder Inspector 列出 binding-path、撞名標黃、改名只替換屬性值寫回 .uxml——已完成，MCP 驗證邏輯並經使用者確認畫面（2026-09-30）；共用 Template 自動加 override 未做",
@@ -438,12 +444,6 @@
           "id": "item-preferences-todo-3",
           "title": "IL2CPP [Preserve] 存活性驗證：2026-09-29 實跑一次，發現待釐清——uGUI adapter 全過，TMP_DropdownAdapter 沒解析出來，link.xml 只從 Assets/ 生效（非 Packages/），但使用者過去專案沒遇過類似問題、對是否通用存疑，已依使用者要求停止本輪，不下定論、不動 code，之後重測",
           "priority": 4
-        },
-        {
-          "id": "item-preferences-todo-7",
-          "title": "P1：序列化物件成員綁定（待討論決策新章節，2026-09-29 使用者提出）——待定寫回來源 (a)/(b)/(c) 與物件參照＋成員路徑的綁定方式",
-          "priority": 4,
-          "status": "planned"
         },
         {
           "id": "item-preferences-todo-8",
