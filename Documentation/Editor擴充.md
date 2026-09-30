@@ -34,7 +34,7 @@ Yu5h1Lib Editor 擴充
 | 擴充 | 位置 | 作用範圍 | 功能 |
 |---|---|---|---|
 | `ReorderableListEnhanced` | Core `Control/ReorderableListEnhanced.cs` | 繼承 `Editor<T>` 的 Inspector 裡所有陣列 | 過濾搜尋欄、header 上的 size 欄位、多選 |
-| `CollectionElementMenu` | common `Editor/MenuItem/CollectionElementMenu.cs` | 所有集合欄位，兩種繪製方式皆可 | 右鍵 Copy／Cut／Paste Elements；在元素上貼上會插入到該位置，在集合標題上貼上會加到尾端 |
+| `CollectionElementMenu` | common `Editor/MenuItem/CollectionElementMenu.cs` | 所有集合欄位，兩種繪製方式皆可 | 元素右鍵的 Copy／Cut／Paste／Duplicate／Delete 取代 Unity 內建的 Copy、Paste、Duplicate Array Element、Delete Array Element，作用在多選的元素上（按到的元素不在選取範圍內時只作用在它）。貼上插入到該元素的位置，Duplicate 把複本插在最後一個選取項目之後。集合標題右鍵另有 Paste Elements，加到尾端；標題上 Unity 自己的 Copy／Paste（整個陣列）保留。Unity 改版導致無法取代時，改以 `Elements Action (n)` 子選單附加 |
 
 ### 其他類別
 
