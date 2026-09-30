@@ -28,7 +28,7 @@ namespace Yu5h1Lib
 
         private static void OnSceneGUI(SceneView view)
         {
-            foreach (var obj in GameObject.FindObjectsByType<DOMove2D>(FindObjectsInactive.Exclude,FindObjectsSortMode.None))
+            foreach (var obj in ObjectUtility.FindObjects<DOMove2D>(includeInactive: false))
                 Handle(obj, false);
         }
 

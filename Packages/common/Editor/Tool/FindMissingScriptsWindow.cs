@@ -48,7 +48,7 @@ public class FindMissingScriptsWindow : EditorWindow
     {
         _results.Clear();
         
-        var allObjects = GameObjectProxy.FindObjects<GameObject>();
+        var allObjects = ObjectUtility.FindObjects<GameObject>();
         foreach (var go in allObjects)
         {
             var components = go.GetComponents<Component>();
