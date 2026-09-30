@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-09-30T14:12:40.727271+00:00",
+  "updated_at": "2026-09-30T15:00:00+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -158,6 +158,36 @@
         }
       ],
       "completed_items": []
+    },
+    {
+      "id": "uitoolkit-decoupling",
+      "title": "UI Toolkit 抽離（套件解耦）",
+      "status": "in_progress",
+      "summary": "套件端抽取（common／animation／uitoolkit／inputsystem）已於 2026-09-16 交付，EditMode 180、PlayMode 9 全過；2026-09-27 再補上 GroupDragLayout.Pull／Spread 與 AppsMenuDemo 的吸塵器拖曳、全部收納後釋放擴散手勢。本卡涵蓋 UnityExtension（套件端）範疇；HealthAI 是否實際接入、移除自身重複實作，是另一個專案的獨立決定，尚未啟動。Canonical entry：HealthAI docs/unity/套件解耦計畫.md（Task ID: uitoolkit-decoupling）。",
+      "completed_items": [
+        {
+          "id": "item-uitoolkit-decoupling-done-1",
+          "title": "套件端 8 步驟抽取交付，EditMode 180、PlayMode 9 全過（2026-09-16）",
+          "priority": 4
+        },
+        {
+          "id": "item-uitoolkit-decoupling-done-2",
+          "title": "GroupDragLayout 新增 Spread（散開半徑倍率）與 Pull（吸附收斂），common EditMode 35/35 通過（2026-09-27 提交）",
+          "priority": 4
+        },
+        {
+          "id": "item-uitoolkit-decoupling-done-3",
+          "title": "AppsMenuDemo 範例接上吸塵器拖曳與釋放擴散手勢，Unity 編譯驗證通過",
+          "priority": 4
+        }
+      ],
+      "pending_items": [
+        {
+          "id": "item-uitoolkit-decoupling-todo-1",
+          "title": "HealthAI 實際接入套件、移除自身重複實作（第二階段）——獨立任務，尚未啟動，需使用者決定是否啟動",
+          "priority": 4
+        }
+      ]
     },
     {
       "id": "recycler-refactor",
