@@ -30,6 +30,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 - Continue adoption and extension evaluation from [Agent friendly workflow](Documentation/Agent%20friendly%20workflow%20Yu5h1Lib.UnityExtension.md#待討論決策); locate the existing chat panel and custom UI for comparison.
 
+- New independent plan (2026-10-01): [向量圖示系統](Documentation/向量圖示系統.md#待討論) — split out of the chat-module work once it became clear vector icons are their own capability, not part of that module. `com.unity.vectorgraphics@3.0.0-preview.7` confirmed still functional for SVG import despite its long-stalled preview status; `UnityEngine.UIElements.VectorImage` confirmed as a native engine type needing no package at runtime. Open question not yet decided: whether to build a data-driven parametric icon-animation format at all, given HealthAI's `SignalGraphic.cs` already solves continuous per-vertex animation (heartbeat pulse, ECG waveform) with plain procedural `Painter2D` code and no baked asset — no second consumer has asked for that yet.
+
 - Confirm `MessageSender.SetTarget` still receives the selected GameObject from a `GameObjectOption`; `OptionSet` regained `IGetter<T>` on 2026-09-25 but that path was not exercised.
 
 - **偏好設定 is functionally complete (updated 2026-09-29)**: the UI-binding core (E1–E9), R1, D1, D3, D4, and the entire UI Toolkit implementation plan (steps 1–5) are all done and verified. What's left is one deferred risk plus ordinary backlog —

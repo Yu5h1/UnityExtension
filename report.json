@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-09-30T15:00:00+00:00",
+  "updated_at": "2026-10-01T02:00:00+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -179,12 +179,62 @@
           "id": "item-uitoolkit-decoupling-done-3",
           "title": "AppsMenuDemo 範例接上吸塵器拖曳與釋放擴散手勢，Unity 編譯驗證通過",
           "priority": 4
+        },
+        {
+          "id": "item-uitoolkit-decoupling-done-4",
+          "title": "聊天面板模組（ChatPresenter／ChatComposer）實作完成並調到裝上即用；新增 DevicePanel（裝置縮放＋safe area）helper，Device Simulator 實測正常，EditMode 210、PlayMode 12 全過（2026-10-01）。詳見 Documentation/聊天面板模組.md",
+          "priority": 4
         }
       ],
       "pending_items": [
         {
+          "id": "item-uitoolkit-decoupling-todo-2",
+          "title": "聊天面板 demo 從 _dev/ChatModule 搬到 Samples~/ChatModule——使用者決定整體滿意後再搬",
+          "priority": 4
+        },
+        {
           "id": "item-uitoolkit-decoupling-todo-1",
           "title": "HealthAI 實際接入套件、移除自身重複實作（第二階段）——獨立任務，尚未啟動，需使用者決定是否啟動",
+          "priority": 4
+        }
+      ]
+    },
+    {
+      "id": "vector-icon-system",
+      "title": "向量圖示系統",
+      "status": "planned",
+      "summary": "2026-10-01 從聊天面板模組的討論中拆出的獨立計畫——向量圖示是獨立能力，不屬於聊天模組。已確認 com.unity.vectorgraphics@3.0.0-preview.7 雖長年停留在 preview 但 SVG 匯入功能仍正常（Yu5h1LibTest 實測），UnityEngine.UIElements.VectorImage 是引擎原生型別、runtime 不需任何套件。分工定案：靜態／有限狀態圖示走原生 VectorImage，連續參數驅動的動畫（如心跳脈動、心電圖波形）比照 HealthAI SignalGraphic.cs 既有做法直接用 Painter2D 程式碼描述，不需要額外資料格式。尚未開始實作。Canonical entry：Documentation/向量圖示系統.md（Task ID: vector-icon-system）。",
+      "completed_items": [
+        {
+          "id": "item-vector-icon-system-done-1",
+          "title": "實測 com.unity.vectorgraphics@3.0.0-preview.7 的 SVG 匯入仍正常運作，測試完已移除（2026-10-01）",
+          "priority": 4
+        },
+        {
+          "id": "item-vector-icon-system-done-2",
+          "title": "確認 UnityEngine.UIElements.VectorImage 為引擎原生型別，runtime 不依賴 com.unity.vectorgraphics",
+          "priority": 4
+        },
+        {
+          "id": "item-vector-icon-system-done-3",
+          "title": "查 HealthAI SignalGraphic.cs 全文，確認連續動畫（Heart 心跳、Ecg 波形）靠程式碼每幀重算座標，不需要烘焙資料或細分版 vector 資料",
+          "priority": 4
+        },
+        {
+          "id": "item-vector-icon-system-done-4",
+          "title": "定案分工：路線 A（原生 VectorImage，靜態／有限狀態）與路線 B（Painter2D 程式碼，連續參數驅動）",
+          "priority": 4
+        }
+      ],
+      "pending_items": [
+        {
+          "id": "item-vector-icon-system-todo-1",
+          "title": "是否要做一套資料驅動的參數化動畫圖示格式——目前沒有第二個消費端提出需求，暫不做",
+          "priority": 4
+        },
+        {
+          "id": "item-vector-icon-system-todo-2",
+          "title": "Editor 烘焙工具（SVG 解析）要借用 com.unity.vectorgraphics 還是自己寫——待第一個真正要烘焙的 icon 出現時再排",
           "priority": 4
         }
       ]
