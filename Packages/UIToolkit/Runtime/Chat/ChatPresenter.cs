@@ -24,9 +24,8 @@ namespace Yu5h1Lib.UIToolkit
 
         private const string ActiveReplyId = "chat-active-reply";
 
-        // How far from the viewport's vertical centre a row fades to its dimmest - decorative, not a hard
-        // cutoff - and the pointer travel that counts as "the user is dragging the list", not a tap on a message.
-        private const float FadeRange = 220f;
+        // Opacity of a row at the viewport's oldest edge, and the pointer travel that counts as "the user is
+        // dragging the list", not a tap on a message.
         private const float MinRowOpacity = .35f;
         private const float ScrollDragThreshold = 4f;
 
@@ -124,6 +123,9 @@ namespace Yu5h1Lib.UIToolkit
             scroller.style.borderLeftWidth = scroller.style.borderRightWidth =
                 scroller.style.borderTopWidth = scroller.style.borderBottomWidth = 0;
             scroller.style.backgroundColor = Color.clear;
+            // The theme sizes the slider wider than this 12px track; clip it so nothing it draws (the
+            // tracker's border, in particular) lands outside the scrollbar.
+            scroller.style.overflow = Overflow.Hidden;
             scroller.style.opacity = 0;
             scroller.style.transitionProperty = new List<StylePropertyName> { "opacity" };
             scroller.style.transitionDuration = new List<TimeValue> { new TimeValue(180, TimeUnit.Millisecond) };
@@ -133,13 +135,19 @@ namespace Yu5h1Lib.UIToolkit
 
             scroller.slider.style.flexGrow = 1;
             scroller.slider.style.minWidth = 0;
+            scroller.slider.style.width = new Length(100, LengthUnit.Percent);
             scroller.slider.style.marginLeft = scroller.slider.style.marginRight = 0;
             scroller.slider.style.backgroundColor = Color.clear;
 
             var tracker = scroller.slider.Q(className: Slider.trackerUssClassName);
             var draggerBorder = scroller.slider.Q(className: Slider.draggerBorderUssClassName);
             var dragger = scroller.slider.Q(className: Slider.draggerUssClassName);
-            if (tracker != null) { tracker.style.backgroundColor = Color.clear; tracker.style.borderLeftWidth = 0; }
+            if (tracker != null)
+            {
+                tracker.style.backgroundColor = Color.clear;
+                tracker.style.borderLeftWidth = tracker.style.borderRightWidth =
+                    tracker.style.borderTopWidth = tracker.style.borderBottomWidth = 0;
+            }
             if (draggerBorder != null)
             {
                 draggerBorder.style.backgroundColor = Color.clear;
@@ -167,7 +175,7 @@ namespace Yu5h1Lib.UIToolkit
 
         /// <summary>Per-frame upkeep unrelated to any single reply: keeps a short conversation hugging the
         /// bottom edge, keeps the view pinned to the bottom while nothing has pulled it away (see
-        /// <see cref="FollowBottom"/>), and fades each row by distance from the viewport's vertical centre.
+        /// <see cref="FollowBottom"/>), and applies <see cref="ChatModuleConfig.FadeMessages"/>.
         /// Call every frame regardless of whether a reply is active.</summary>
         public void Tick()
         {
@@ -205,17 +213,26 @@ namespace Yu5h1Lib.UIToolkit
         {
             Rect viewport = scrollView.contentViewport.worldBound;
             if (!viewport.IsValid()) return;
-            float center = viewport.y + viewport.height / 2;
-            foreach (var row in rows.Values) FadeRow(row, center);
-            if (activeReplyRow != null) FadeRow(activeReplyRow, center);
+            bool fade = config.FadeMessages; // read every frame so the caller can flip it live
+            foreach (var row in rows.Values) FadeRow(row, viewport, fade);
+            if (activeReplyRow != null) FadeRow(activeReplyRow, viewport, fade);
         }
 
-        private static void FadeRow(VisualElement row, float viewportCenter)
+        /// <summary>One-directional, following the stacking direction: messages pile up from the bottom, so
+        /// the bottom edge (newest) is fully opaque and opacity falls off toward the top (oldest). Measured
+        /// from the row's bottom margin edge, so the newest row sitting on the viewport's bottom is exactly 1.</summary>
+        private static void FadeRow(VisualElement row, Rect viewport, bool fade)
         {
+            if (!fade)
+            {
+                row.style.opacity = StyleKeyword.Null;
+                return;
+            }
             Rect bounds = row.worldBound;
             if (!bounds.IsValid()) return;
-            float distance = Mathf.Abs(bounds.y + bounds.height / 2 - viewportCenter);
-            row.style.opacity = Mathf.Lerp(1f, MinRowOpacity, Mathf.Clamp01(distance / FadeRange));
+            float bottom = bounds.yMax + row.resolvedStyle.marginBottom;
+            float towardNewest = Mathf.Clamp01((bottom - viewport.y) / viewport.height);
+            row.style.opacity = Mathf.Lerp(MinRowOpacity, 1f, towardNewest);
         }
 
         /// <summary>Rebuilds every row from scratch. Cheap enough for now; only worth diffing once a real

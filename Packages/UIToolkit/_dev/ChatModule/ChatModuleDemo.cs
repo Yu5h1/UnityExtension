@@ -39,8 +39,14 @@ namespace Yu5h1LibTest
         [Tooltip("Seconds between each revealed character of a simulated reply.")]
         public float streamInterval = .06f;
 
+        [Header("Display")]
+        [Tooltip("Messages fade from opaque at the newest (bottom) edge toward the oldest (top). " +
+                 "Can be toggled while playing.")]
+        public bool fadeMessages = true;
+
         private UIDocument document;
         private PanelSettings settings;
+        private ChatModuleConfig config;
         private ChatPresenter presenter;
         private ChatComposer composer;
         private readonly Dictionary<string, ChatParticipant> participants = new Dictionary<string, ChatParticipant>();
@@ -90,7 +96,7 @@ namespace Yu5h1LibTest
 
             BuildParticipants();
 
-            var config = new ChatModuleConfig
+            config = new ChatModuleConfig
             {
                 SelfAlignRight = true,
                 ShowAvatars = true,
@@ -162,6 +168,7 @@ namespace Yu5h1LibTest
         {
             if (presenter == null) return;
             float dt = Time.deltaTime;
+            config.FadeMessages = fadeMessages;
             presenter.TickReply(dt, reduceMotion: false);
             presenter.Tick(); // bottom-anchor, scroll-follow and distance fade
 

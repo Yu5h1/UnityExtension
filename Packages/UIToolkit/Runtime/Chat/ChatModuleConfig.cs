@@ -29,5 +29,9 @@ namespace Yu5h1Lib.UIToolkit
         public bool SelfAlignRight = true;
 
         public bool ShowTimestamps = false;
+
+        [Tooltip("On: rows fade from fully opaque at the newest (bottom) edge of the view toward the oldest " +
+                 "(top) edge. Off: every row fully opaque. Read every frame, so it can be flipped at runtime.")]
+        public bool FadeMessages = true;
     }
 }

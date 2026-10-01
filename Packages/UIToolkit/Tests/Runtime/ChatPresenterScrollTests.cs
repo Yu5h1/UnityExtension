@@ -25,6 +25,7 @@ namespace Yu5h1Lib.UIToolkit.Tests
 
         private GameObject host;
         private PanelSettings settings;
+        private ChatModuleConfig config;
         private ChatPresenter presenter;
 
         [SetUp]
@@ -39,7 +40,7 @@ namespace Yu5h1Lib.UIToolkit.Tests
             root.style.width = PanelWidth;
             root.style.height = PanelHeight;
 
-            var config = new ChatModuleConfig { ShowAvatars = false };
+            config = new ChatModuleConfig { ShowAvatars = false };
             var alice = new ChatParticipant("alice", "Alice");
             presenter = new ChatPresenter(config, "self", id => id == "alice" ? alice : null);
             presenter.Root.style.height = PanelHeight;
@@ -98,8 +99,10 @@ namespace Yu5h1Lib.UIToolkit.Tests
             Assert.Greater(scrollView.scrollOffset.y, 0);
         }
 
-        [UnityTest]
-        public IEnumerator RowsFartherFromTheViewportCentreAreDimmer()
+        private List<VisualElement> Rows() =>
+            ((ScrollView)presenter.Root).contentContainer.Children().First().Children().ToList();
+
+        private IEnumerator SettleAtBottom()
         {
             presenter.SetMessages(ManyMessages(40));
             yield return Settle();
@@ -107,16 +110,35 @@ namespace Yu5h1Lib.UIToolkit.Tests
             yield return Settle();
             presenter.Tick(); // opacity reflects the scroll position Tick left behind last frame
             yield return Settle();
+        }
 
-            var children = ((ScrollView)presenter.Root).contentContainer.Children().First().Children().ToList();
-            Assert.Greater(children.Count, 2);
+        [UnityTest]
+        public IEnumerator NewestRowIsOpaqueAndRowsFadeTowardTheOldestEdge()
+        {
+            yield return SettleAtBottom();
 
-            // Tick() leaves the view scrolled to the bottom (following is on by default), so the *last*
-            // message is the one actually near the viewport centre now - not the middle of the whole list.
-            float nearOpacity = children[children.Count - 1].resolvedStyle.opacity;
-            float farOpacity = children[0].resolvedStyle.opacity;
-            Assert.Greater(nearOpacity, farOpacity,
-                "the row nearest the current scroll position should be more opaque than one scrolled far out of view");
+            var rows = Rows();
+            Assert.Greater(rows.Count, 2);
+            // Following the bottom by default, so the newest row sits on the viewport's bottom edge.
+            float newest = rows[rows.Count - 1].resolvedStyle.opacity;
+            float older = rows[rows.Count - 4].resolvedStyle.opacity;
+            float oldest = rows[0].resolvedStyle.opacity;
+            Assert.AreEqual(1f, newest, .01f);
+            Assert.Greater(newest, older);
+            Assert.Greater(older, oldest);
+        }
+
+        [UnityTest]
+        public IEnumerator TurningFadeOffLeavesEveryRowOpaque()
+        {
+            yield return SettleAtBottom();
+            Assert.Less(Rows()[0].resolvedStyle.opacity, 1f, "guard: fading must be in effect before turning it off");
+
+            config.FadeMessages = false;
+            presenter.Tick();
+            yield return Settle();
+
+            foreach (var row in Rows()) Assert.AreEqual(1f, row.resolvedStyle.opacity, .001f);
         }
     }
 }
