@@ -32,11 +32,17 @@ namespace Yu5h1Lib
 
 
         private UnityAction ReadFromThis;
+        private bool binding;
+
+        /// <summary>Writes the DataView's value into this port, then notifies exactly once. Notifications
+        /// raised by the write itself are suppressed so listeners do not hear the bound value twice.</summary>
         public void BindTo(IDataView dataview)
         {
             Unbind();
             ReadFromThis = () => dataview.ReadFrom(this);
-            dataview.WriteTo(this);
+            binding = true;
+            try { dataview.WriteTo(this); }
+            finally { binding = false; }
             NotifyValueChanged();
         }
         public void Unbind() => ReadFromThis = null;
@@ -47,7 +53,15 @@ namespace Yu5h1Lib
         /// ChangedCallback: that name belongs to the typed <see cref="UValuePort{TValue}"/> event,
         /// which this non-generic string layer cannot match.
         /// </summary>
-        public virtual void NotifyValueChanged() => ReadFromThis?.Invoke();
+        public void NotifyValueChanged()
+        {
+            if (binding) return;
+            ReadFromThis?.Invoke();
+            OnValueChanged();
+        }
+
+        /// <summary>Runs after a bound DataView has read the new value; override to raise a component's own event.</summary>
+        protected virtual void OnValueChanged() {}
         protected virtual void OnDestroy() => Unbind();
     }
 
@@ -56,7 +70,7 @@ namespace Yu5h1Lib
     public class ValuePort : ValuePortBase
     {
         [SerializeField] private string _value;
-        [SerializeField] private UnityEvent<string> _changed;
+        [SerializeField] private UnityEvent<string> _changed = new UnityEvent<string>();
 
         public event UnityAction<string> changed
         {
@@ -64,11 +78,7 @@ namespace Yu5h1Lib
             remove => _changed.RemoveListener(value);
         }
 
-        public override void NotifyValueChanged()
-        {
-            base.NotifyValueChanged();
-            _changed?.Invoke(_value);
-        }
+        protected override void OnValueChanged() => _changed?.Invoke(_value);
 
         public override string GetValue() => _value;
         public override void SetValue(string value, System.StringComparison comparision)
