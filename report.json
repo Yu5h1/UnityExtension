@@ -575,7 +575,7 @@
         {
           "id": "item-cross-platform-ui-parity-todo-5",
           "title": "決定是否支援執行期自訂配色，以及圓角／間距／字級是否變成 Web 庫變數",
-          "priority": 5
+          "priority": 4
         }
       ]
     }
