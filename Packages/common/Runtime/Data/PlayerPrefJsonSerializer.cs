@@ -6,22 +6,24 @@ namespace Yu5h1Lib
 {
     public class PlayerPrefJsonSerializer : PlayerPrefsSerializer
     {
-        protected override string SerializeObject<T>(T value)
+        protected override string SerializeObject(object value, Type type)
         {
-            ThrowIfCollection(typeof(T));
+            ThrowIfCollection(type);
             return JsonUtility.ToJson(value);
         }
 
-        protected override T DeserializeObject<T>(string data, T defaultValue)
+        protected override bool TryDeserializeObject(string data, Type type, out object value)
         {
-            ThrowIfCollection(typeof(T));
+            ThrowIfCollection(type);
             try
             {
-                return JsonUtility.FromJson<T>(data);
+                value = JsonUtility.FromJson(data, type);
+                return value != null;
             }
             catch
             {
-                return defaultValue;
+                value = null;
+                return false;
             }
         }
 
