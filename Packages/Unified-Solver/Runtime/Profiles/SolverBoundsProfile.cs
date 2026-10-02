@@ -20,9 +20,6 @@ namespace Yu5h1Lib.UnifiedSolver
     // Deliberately not a modifier. A modifier belongs to an emitter and travels
     // with the bodies; a boundary belongs to the scene and applies to whatever
     // wanders into it, which is the same reason a medium is a volume.
-    [CreateAssetMenu(
-        fileName = "BoundsEffect",
-        menuName = "Yu5h1/Unified Solver/Volume Effects/Bounds")]
     public sealed class SolverBoundsProfile :
         SolverVolumeEffectProfile
     {

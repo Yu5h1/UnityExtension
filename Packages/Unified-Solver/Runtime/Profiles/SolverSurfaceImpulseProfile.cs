@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace Yu5h1Lib.UnifiedSolver
 {
-    [CreateAssetMenu(
-        fileName = "SurfaceImpulseModifier",
-        menuName = "Yu5h1/Unified Solver/Modifiers/Surface Impulse")]
     public sealed class SolverSurfaceImpulseProfile :
         SolverParticleModifierProfile
     {

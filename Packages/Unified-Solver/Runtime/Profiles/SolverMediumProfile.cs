@@ -12,9 +12,6 @@ namespace Yu5h1Lib.UnifiedSolver
     // Per particle, which is what floats a body at the waterline for nothing:
     // the half of it above the surface is simply not inside, and it settles at
     // partial submersion with no surface being modelled anywhere.
-    [CreateAssetMenu(
-        fileName = "MediumEffect",
-        menuName = "Yu5h1/Unified Solver/Volume Effects/Medium")]
     public sealed class SolverMediumProfile :
         SolverVolumeEffectProfile
     {

@@ -3,9 +3,6 @@ using UnityEngine.Serialization;
 
 namespace Yu5h1Lib.UnifiedSolver
 {
-    [CreateAssetMenu(
-        fileName = "OscillationModifier",
-        menuName = "Yu5h1/Unified Solver/Modifiers/Oscillation")]
     public sealed class SolverOscillationProfile :
         SolverParticleModifierProfile
     {
