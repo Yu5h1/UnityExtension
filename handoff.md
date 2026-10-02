@@ -39,10 +39,10 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
   - **IL2CPP `[Preserve]` survival** ([偏好設定 § 風險待驗證](Documentation/偏好設定.md#風險待驗證)) remains the one unverified risk; the user is deferring the actual build (cost/time), not asking for it now.
   - **`AudioMixerProxy`'s "Create Mixer" generator is done (2026-09-28)** — built as a CustomEditor inline button next to the `_voiceMixer` field (shown only while it's empty), not a CONTEXT-menu item, after discussing discoverability. See 2026-09-28 Recent Work for the implementation and the reflection pitfall it hit.
   - Everything else (save throttling, B1's remaining safety mechanisms, `OptionGroup` port, `PlayerPrefValue`/`ObservableValue` polish) is lower-priority backlog already tracked in the doc's 改善方向.
-  - **D6 is mostly settled, not implemented; 2 items open** (see Open decisions) ([偏好設定 § SO 設定來源](Documentation/偏好設定.md#so-設定來源d6)). Entry points, in order:
+  - **D6 is settled, not implemented** ([偏好設定 § SO 設定來源](Documentation/偏好設定.md#so-設定來源d6)). Entry points, in order:
     1. Implement `UnityEvent<string> changed` on `ValuePort` (no codec needed; `ValuePortBase.NotifyValueChanged` becomes virtual). Approved, interrupted before editing.
     2. Ask for Core authorization for the value codec in `PlayerPrefsSerializer`'s base (`Unity/Core/Runtime/Source/PlayerPrefValue.cs`). Everything below depends on it.
-    3. Unified entry: static non-generic `Preferences` with a `KEY`-keyed shared DataView, `Get<V>`/`Set<V>`; `Preferences<T>.current` switches to it.
+    3. Unified entry: static non-generic `Preferences` with a `KEY`-keyed shared DataView, `Get<V>`/`Set<V>`, a `KEY`-registered load/save extension point (default PlayerPrefs JSON), and save-on-change owned by the entry; `Preferences<T>.current` switches to it and the host stops writing PlayerPrefs. VCP `UserDataView` must then register its own storage instead of overriding `TryLoadCurrent`/`SaveToPlayerPrefs` - VCP's migration, not done here.
     4. Reshape the uncommitted D5 code instead of committing it: drop `DataViewObject.cs` (+ `.meta`) and the Inspector hiding in `PreferencesEditor<T>.DrawProperty`; keep `_defaultSetting` with `FormerlySerializedAs`; add `_source` with a host-declared `SourceType` (KEY stays the host type name), member preparation in `OnInitializing`, reset to defaults, Editor red mark for binding/member type mismatch.
     5. `ValuePort` value kind (typed get/set, UnityEvent overloads, typed Inspector field).
     6. Update the [preferences skill](.agents/skills/preferences.md) (step 3 defaults gain `_source`; the "code-owned value → `ObservablePref`" row changes once the entry exists), then verify over MCP in `Yu5h1LibTest`. The skill was reverted to its committed text on 2026-10-02 because its D5 edit was superseded.
@@ -64,6 +64,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 5. Clean up the backup copies under `Unity/UnityExtension/Runtime` and `Unity/UnityExtension/Editor`. Which side is the source is settled in [introduction.md § Core source and backups](.agents/introduction.md#core-source-and-backups). The backups have no asmdef and compile into the default `Assembly-CSharp`, so removing them must first confirm nothing in `Assembly-CSharp` depends on a type that exists only there. Do this as its own task, not as a side effect of unrelated work.
 
 ## Recent Work
+
+- 2026-10-02 (entry): Closed D6's last two items: (1) the unified entry gets a `KEY`-registered load/save extension point (storage interface) and hosts with custom storage (VCP `UserDataView`) register there instead of overriding; (2) the entry owns saving - one writer whether or not a host is in the scene; `SaveOnChanged` and throttling become entry settings. The trigger case is consumer code calling `Set` in a scene without a host (VCP `Character.cs` camera offset after leaving `ObservablePref`); no code hits it yet. D6 is now fully settled, not implemented.
 
 - 2026-10-02 (packages): The user ruled that packages must not bind to Preferences - the consumer handles persistence. D6 now has a responsibility table (package / Preferences / consumer); `Preferences.ISource` dropped in favour of the host declaring `SourceType`; `KEY` reverted to the host type name; the unified entry is for consumer code; member rules settled (serialized fields of the SO class). D6 待決定 is down to two items.
 
@@ -167,9 +169,6 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 - Decision: use `unified-solver` for large-scale collision, stacking, and container interactions. The retrospective is recorded in [DevelopmentLog.md](Documentation/DevelopmentLog.md).
 
 ## Open decisions
-
-- [偏好設定 — D6 待決定](Documentation/偏好設定.md#d6-待決定): how the unified entry handles hosts that override load/save (VCP `UserDataView`) - recommended a `KEY`-registered load/save extension point (storage interface); save responsibility moving from the host to the entry.
-
 
 - [專案開發系統分析技能計畫 — 待討論決策](Documentation/專案開發系統分析技能計畫.md#待討論決策).
 

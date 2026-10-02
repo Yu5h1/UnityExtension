@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-02T08:20:04.462019+00:00",
+  "updated_at": "2026-10-02T09:36:15.906980+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -533,7 +533,7 @@
         },
         {
           "id": "item-preferences-todo-11",
-          "title": "D6：SO 作為設定來源——大部分定案（2026-10-02），未實作：套件不引用 Preferences，由消費者的 host 宣告 SourceType 接受 SO；_source 準備 defaultSetting 成員（OnInitializing）；KEY 維持 host 型別名；統一入口 Preferences.Get/Set 給消費者；型別不一致標紅。待決定 2 項：覆寫存取的 host（VCP UserDataView）與入口、存檔責任。實作需先取得 Core 授權（值轉換）",
+          "title": "D6：SO 作為設定來源——設計定案（2026-10-02），未實作：套件不引用 Preferences，由消費者的 host 宣告 SourceType；_source 準備 defaultSetting 成員；KEY 維持 host 型別名；統一入口 Preferences.Get/Set（依 KEY 共用 DataView、儲存擴充點、由入口存檔）；型別不一致標紅。實作需先取得 Core 授權（值轉換）",
           "status": "planned"
         }
       ],
