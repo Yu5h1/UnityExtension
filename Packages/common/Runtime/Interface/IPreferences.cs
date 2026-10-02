@@ -12,6 +12,9 @@ namespace Yu5h1Lib
         /// <summary>Identifies the saved data this host reads and writes; hosts sharing a KEY share one save.</summary>
         string KEY { get; }
 
+        /// <summary>The ScriptableObject type this host accepts as its defaults source; null when it takes none.</summary>
+        System.Type SourceType { get; }
+
         IDataView current { get; }
 
         /// <summary>Reads the saved data from storage, bypassing <see cref="current"/>.</summary>

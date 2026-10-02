@@ -14,13 +14,85 @@ namespace Yu5h1Lib
         [SerializeField, TypeRestriction(typeof(Component), filter = typeof(ValuePortResolver))] private List<Object> _bindings;
         public IReadOnlyList<Object> bindings => _bindings;
 
+        /// <summary>The ScriptableObject type this host accepts as <c>_source</c>; null (the default) means the
+        /// host takes no source and keeps only inline defaults. A consumer's host overrides it to opt a
+        /// package's settings asset in; the package itself never references Preferences.</summary>
+        public virtual System.Type SourceType => null;
+
+        [SerializeField, PreferenceSource] private ScriptableObject _source;
+
+        /// <summary>The assigned source when <see cref="SourceType"/> accepts it, otherwise null.</summary>
+        public ScriptableObject source
+        {
+            get
+            {
+                if (_source == null || SourceType == null)
+                    return null;
+                if (SourceType.IsInstanceOfType(_source))
+                    return _source;
+                $"Preferences on {name}: source '{_source.name}' is not a {SourceType.Name}; ignored.".printWarning();
+                return null;
+            }
+        }
+
         [SerializeField, FormerlySerializedAs("defaultSetting")] private DataView _defaultSetting;
 
-        /// <summary>Defaults for fields missing from the save.</summary>
+        /// <summary>Defaults for fields missing from the save. With a <see cref="source"/>, its members come
+        /// first (see <see cref="PrepareSourceMembers"/>) followed by any loose keys.</summary>
         protected DataView defaultSetting
         {
             get => _defaultSetting;
             set => _defaultSetting = value;
+        }
+
+        private bool sourcePrepared;
+
+        /// <summary>
+        /// Rebuilds <see cref="defaultSetting"/> from <see cref="source"/>: its members first, in declaration
+        /// order, with the source's values converted to strings (added when missing, overwritten when present),
+        /// then the existing keys the source does not declare, kept in their order. Members can only be added,
+        /// never dropped, because they are C# fields. Runs from <c>OnInitializing</c> and from
+        /// <see cref="BaseMonoBehaviour.Init()"/>; in Edit Mode it records Undo and marks the host dirty, and
+        /// only when something changed.
+        /// </summary>
+        public void PrepareSourceMembers()
+        {
+            sourcePrepared = true;
+            var src = source;
+            if (src == null)
+                return;
+            var prepared = new DataView();
+            var members = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+            foreach (var field in Preferences.GetSourceFields(src.GetType()))
+            {
+                string text;
+                try
+                {
+                    text = PlayerPrefsSerializer.Default.Serialize(field.GetValue(src), field.FieldType);
+                }
+                catch (System.Exception e)
+                {
+                    $"Preferences on {name}: source member '{field.Name}' ({field.FieldType.Name}) cannot be converted, skipped. {e.Message}".printWarning();
+                    continue;
+                }
+                prepared[field.Name] = text;
+                members.Add(field.Name);
+            }
+            if (_defaultSetting != null)
+                foreach (var pair in _defaultSetting)
+                    if (!members.Contains(pair.Key))
+                        prepared[pair.Key] = pair.Value;
+            if (_defaultSetting != null && _defaultSetting.SequenceEqual(prepared))
+                return;
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+                UnityEditor.Undo.RecordObject(this, "Prepare Preference Members");
+#endif
+            _defaultSetting = prepared;
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+                UnityEditor.EditorUtility.SetDirty(this);
+#endif
         }
 
         [SerializeField, ReadOnly] private DataView _current = null;
@@ -36,6 +108,8 @@ namespace Yu5h1Lib
                 if (isCurrentLoaded)
                     return _current;
                 isCurrentLoaded = true;
+                if (!sourcePrepared)
+                    PrepareSourceMembers();
                 Preferences.Register(KEY, new HostStorage(this));
                 var view = Preferences.GetView(KEY, out bool loaded);
                 Preferences.SetSaveOnChanged(KEY, false);
@@ -111,7 +185,7 @@ namespace Yu5h1Lib
 
         protected override void OnInstantiated() {}
 
-        protected override void OnInitializing() {}
+        protected override void OnInitializing() => PrepareSourceMembers();
 
         protected virtual void Start()
         {
@@ -203,6 +277,28 @@ namespace Yu5h1Lib
             foreach (var ports in _boundPorts.Values)
                 foreach (var port in ports)
                     current.ReadFrom(port);
+        }
+
+        /// <summary>
+        /// Puts every key that has a default (<see cref="defaultSetting"/>, source members included) back to it
+        /// and saves once; keys without a default are left alone. Bound ports are rebound so the UI shows the
+        /// restored values. Also how an Editor change to the source becomes visible over an existing local save.
+        /// </summary>
+        [ContextMenu(nameof(ResetToDefaults))]
+        public void ResetToDefaults()
+        {
+            var view = current;
+            if (defaultSetting == null)
+                return;
+            Preferences.SetSaveOnChanged(KEY, false);
+            foreach (var pair in defaultSetting)
+                view[pair.Key] = pair.Value;
+            Preferences.SetSaveOnChanged(KEY, _saveOnChanged);
+            if (_saveOnChanged)
+                Preferences.Save(KEY);
+            foreach (var ports in _boundPorts.Values)
+                foreach (var port in ports.ToArray())
+                    port.BindTo(view);
         }
 
 

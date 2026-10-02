@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using Yu5h1Lib.Serialization;
 
@@ -125,5 +127,41 @@ namespace Yu5h1Lib
         /// entry saves it when SaveOnChanged is on. Bound UI is not updated (binding is one-way after it binds).</summary>
         public static void Set<V>(string key, string field, V value)
             => GetView(key)[field] = PlayerPrefsSerializer.Default.Serialize(value);
+
+        /// <summary>
+        /// The members a source ScriptableObject contributes to a host's defaults: serialized fields (public or
+        /// <c>[SerializeField]</c>, not static, readonly or <c>[NonSerialized]</c>) declared from the class just
+        /// below <see cref="ScriptableObject"/> down to <paramref name="sourceType"/>, in declaration order.
+        /// Fields whose type cannot become one string (UnityEngine.Object references, arrays and other
+        /// collections) are left out and, when <paramref name="skipped"/> is given, added to it.
+        /// </summary>
+        public static List<FieldInfo> GetSourceFields(System.Type sourceType, List<FieldInfo> skipped = null)
+        {
+            var chain = new List<System.Type>();
+            for (var type = sourceType; type != null && type != typeof(ScriptableObject); type = type.BaseType)
+                chain.Insert(0, type);
+            var fields = new List<FieldInfo>();
+            foreach (var type in chain)
+            {
+                var declared = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                System.Array.Sort(declared, (a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
+                foreach (var field in declared)
+                {
+                    if (field.IsInitOnly || field.IsDefined(typeof(System.NonSerializedAttribute), false))
+                        continue;
+                    if (!field.IsPublic && !field.IsDefined(typeof(SerializeField), false))
+                        continue;
+                    if (IsConvertibleMemberType(field.FieldType))
+                        fields.Add(field);
+                    else
+                        skipped?.Add(field);
+                }
+            }
+            return fields;
+        }
+
+        private static bool IsConvertibleMemberType(System.Type type)
+            => !typeof(Object).IsAssignableFrom(type)
+            && (type == typeof(string) || !typeof(IEnumerable).IsAssignableFrom(type));
     }
 }
