@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-02T10:08:06.726879+00:00",
+  "updated_at": "2026-10-02T10:41:37.545618+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -538,6 +538,46 @@
         }
       ],
       "priority": 2
+    },
+    {
+      "id": "cross-platform-ui-parity",
+      "title": "跨平台 UI 一致性（Web 庫為設計來源）",
+      "status": "planned",
+      "summary": "設計統一在 Web 庫，UI Toolkit 照 Web 規格實作，主題色票由 Web 庫輸出後自動轉成 USS 變數。先以設定面板試點驗證整條流程，通過後才遷移聊天面板與 Apps 面板的設計；Apps 面板的物理部分等 Physics 試作。Web 端工作見 Documentation/Requirements.Web.md。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
+      "completed_items": [
+        {
+          "id": "item-cross-platform-ui-parity-done-1",
+          "title": "計畫與 Web 庫需求 WEB-1～3 定案並提交（2026-10-02）",
+          "priority": 4
+        }
+      ],
+      "pending_items": [
+        {
+          "id": "item-cross-platform-ui-parity-todo-1",
+          "title": "Web 庫交付主題色票檔（Requirements.Web.md UNITYEXTENSION-WEB-1）",
+          "priority": 2
+        },
+        {
+          "id": "item-cross-platform-ui-parity-todo-2",
+          "title": "色票檔 → USS 匯入工具，light／dark 值與 Web 庫逐一相同",
+          "priority": 3
+        },
+        {
+          "id": "item-cross-platform-ui-parity-todo-3",
+          "title": "試點：設定面板 UI Toolkit 版照 Web 規格對照實作，保存接 Preferences",
+          "priority": 3
+        },
+        {
+          "id": "item-cross-platform-ui-parity-todo-4",
+          "title": "試點通過後，聊天面板與 Apps 面板設計遷到 Web 庫（WEB-2、WEB-3），Unity 回補差異",
+          "priority": 4
+        },
+        {
+          "id": "item-cross-platform-ui-parity-todo-5",
+          "title": "決定是否支援執行期自訂配色，以及圓角／間距／字級是否變成 Web 庫變數",
+          "priority": 5
+        }
+      ]
     }
   ]
 }
