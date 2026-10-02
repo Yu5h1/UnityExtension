@@ -14,7 +14,6 @@ namespace Yu5h1Lib
         [SerializeField] private System.StringComparison _searchComparison = System.StringComparison.OrdinalIgnoreCase;
 
         public System.StringComparison searchComparison { get => _searchComparison; protected set => _searchComparison = value; }
-        public object Value { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
 
         protected override void OnInitializing() {}
 

@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-01T02:00:00+00:00",
+  "updated_at": "2026-10-02T08:06:40.389115+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -530,6 +530,11 @@
           "id": "item-preferences-todo-3",
           "title": "IL2CPP [Preserve] 存活性驗證：2026-09-29 實跑一次，發現待釐清——uGUI adapter 全過，TMP_DropdownAdapter 沒解析出來，link.xml 只從 Assets/ 生效（非 Packages/），但使用者過去專案沒遇過類似問題、對是否通用存疑，已依使用者要求停止本輪，不下定論、不動 code，之後重測",
           "priority": 4
+        },
+        {
+          "id": "item-preferences-todo-11",
+          "title": "D6：SO 作為設定來源——設計定案（2026-10-02），未實作：_source（KEY＝型別名）、Preferences.ISource、OnInitializing 準備 defaultSetting 成員、統一入口 Preferences.Get/Set（依 KEY 共用 DataView）、型別不一致標紅；取代 D5 的 DataViewObject。實作需先取得 Core 授權（值轉換）",
+          "status": "planned"
         }
       ],
       "priority": 2
