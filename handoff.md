@@ -32,6 +32,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 - New independent plan (2026-10-01): [向量圖示系統](Documentation/向量圖示系統.md#待討論) — split out of the chat-module work once it became clear vector icons are their own capability, not part of that module. `com.unity.vectorgraphics@3.0.0-preview.7` confirmed still functional for SVG import despite its long-stalled preview status; `UnityEngine.UIElements.VectorImage` confirmed as a native engine type needing no package at runtime. Open question not yet decided: whether to build a data-driven parametric icon-animation format at all, given HealthAI's `SignalGraphic.cs` already solves continuous per-vertex animation (heartbeat pulse, ECG waveform) with plain procedural `Painter2D` code and no baked asset — no second consumer has asked for that yet.
 
+- [跨平台 UI 一致性](Documentation/跨平台UI一致性.md) (2026-10-02, not started): UI Toolkit follows the Web library as design source; theme tokens come from a Web-exported file converted to USS. First waits on [UNITYEXTENSION-WEB-1](Documentation/Requirements.Web.md#unityextension-web-1--輸出不綁平台的主題色票檔) (Web library work); then the USS importer and the settings-panel pilot. Chat and Apps panel design moves to Web only after the pilot passes; the Apps panel physics waits on the Physics project prototype.
+
 - Confirm `MessageSender.SetTarget` still receives the selected GameObject from a `GameObjectOption`; `OptionSet` regained `IGetter<T>` on 2026-09-25 but that path was not exercised.
 
 - **偏好設定 is functionally complete (updated 2026-09-29)**: the UI-binding core (E1–E9), R1, D1, D3, D4, and the entire UI Toolkit implementation plan (steps 1–5) are all done and verified. What's left is one deferred risk plus ordinary backlog —
@@ -193,6 +195,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 - [文字結構同步 — 待討論決策](Documentation/文字結構同步.md#待討論決策).
 
 - [Editor 擴充 — 尚未決定](Documentation/Editor擴充.md#尚未決定): whether `EnhanceCollectionField` replaces `Editor<T>`'s auto-wrapping; the user deferred it until the attribute passes acceptance.
+
+- [跨平台 UI 一致性 — 尚未決定](Documentation/跨平台UI一致性.md#尚未決定): runtime custom palettes in UI Toolkit, and whether radius/spacing/font sizes become Web library tokens.
 
 ## Ruled-out directions
 
