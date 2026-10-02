@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using Yu5h1Lib.MVVM;
 using Yu5h1Lib.Serialization;
 
 namespace Yu5h1Lib
@@ -159,6 +160,35 @@ namespace Yu5h1Lib
             }
             return fields;
         }
+
+        /// <summary>Implemented by a port whose value type cannot be read from an <c>IValuePort&lt;T&gt;</c> interface.</summary>
+        public interface ITypedPort
+        {
+            System.Type ValueType { get; }
+        }
+
+        /// <summary>The value type a port edits: <see cref="ITypedPort.ValueType"/>, else the <c>T</c> of an
+        /// implemented <c>IValuePort&lt;T&gt;</c>; <see cref="OptionSet"/> ports and anything else count as string,
+        /// since that is what they write.</summary>
+        public static System.Type GetPortValueType(IValuePort port)
+        {
+            if (port is ITypedPort typed)
+                return typed.ValueType;
+            if (port is OptionSet)
+                return typeof(string);
+            foreach (var type in port.GetType().GetInterfaces())
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IValuePort<>))
+                    return type.GetGenericArguments()[0];
+            return typeof(string);
+        }
+
+        /// <summary>Whether a port of <paramref name="portType"/> can drive a source member of
+        /// <paramref name="memberType"/>: the same type, or a string port for an enum member (a dropdown of names).</summary>
+        public static bool IsCompatible(System.Type portType, System.Type memberType)
+            => portType == memberType || (portType == typeof(string) && memberType.IsEnum);
+
+        public static string DescribeMismatch(string key, System.Type portType, System.Type memberType)
+            => $"binding type {portType.Name} does not match source member '{key}' type {memberType.Name}";
 
         private static bool IsConvertibleMemberType(System.Type type)
             => !typeof(Object).IsAssignableFrom(type)

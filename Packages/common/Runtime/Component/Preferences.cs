@@ -21,18 +21,35 @@ namespace Yu5h1Lib
 
         [SerializeField, PreferenceSource] private ScriptableObject _source;
 
-        /// <summary>The assigned source when <see cref="SourceType"/> accepts it, otherwise null.</summary>
+        private ScriptableObject AcceptedSource
+            => _source != null && SourceType != null && SourceType.IsInstanceOfType(_source) ? _source : null;
+
+        /// <summary>The assigned source when <see cref="SourceType"/> accepts it, otherwise null (with a warning
+        /// when one is assigned but of the wrong type).</summary>
         public ScriptableObject source
         {
             get
             {
-                if (_source == null || SourceType == null)
-                    return null;
-                if (SourceType.IsInstanceOfType(_source))
-                    return _source;
-                $"Preferences on {name}: source '{_source.name}' is not a {SourceType.Name}; ignored.".printWarning();
-                return null;
+                var accepted = AcceptedSource;
+                if (accepted == null && _source != null && SourceType != null)
+                    $"Preferences on {name}: source '{_source.name}' is not a {SourceType.Name}; ignored.".printWarning();
+                return accepted;
             }
+        }
+
+        public bool TryGetSourceMemberType(string key, out System.Type type)
+        {
+            type = null;
+            var accepted = AcceptedSource;
+            if (accepted == null)
+                return false;
+            foreach (var field in Preferences.GetSourceFields(accepted.GetType()))
+                if (string.Equals(field.Name, key, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    type = field.FieldType;
+                    return true;
+                }
+            return false;
         }
 
         [SerializeField, FormerlySerializedAs("defaultSetting")] private DataView _defaultSetting;
@@ -238,6 +255,12 @@ namespace Yu5h1Lib
                 if (ports.Count > 0)
                     $"Preferences on {name}: field name '{fieldName}' is bound by more than one control; they will overwrite each other.".printWarning();
                 ports.Add(port);
+            }
+            if (TryGetSourceMemberType(fieldName, out var memberType))
+            {
+                var portType = Preferences.GetPortValueType(port);
+                if (!Preferences.IsCompatible(portType, memberType))
+                    $"Preferences on {name}: {Preferences.DescribeMismatch(fieldName, portType, memberType)}; it still binds, but values it writes may not convert.".printWarning();
             }
             if (!current.ContainsKey(fieldName))
                 current[fieldName] = defaultSetting != null && defaultSetting.TryGetValue(fieldName, out string fallback)

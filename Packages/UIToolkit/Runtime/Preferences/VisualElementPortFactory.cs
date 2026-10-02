@@ -14,6 +14,21 @@ namespace Yu5h1Lib.UIToolkit
     /// </summary>
     internal static class VisualElementPortFactory
     {
+        /// <summary>The value type <see cref="TryCreate"/> would bind for an element of this UXML type name, or
+        /// null when the element is not bound. Kept beside <see cref="TryCreate"/> so the two cannot drift.</summary>
+        public static System.Type GetValueType(string elementTypeName)
+        {
+            switch (elementTypeName)
+            {
+                case nameof(Toggle): return typeof(bool);
+                case nameof(SliderInt): return typeof(int);
+                case nameof(Slider): return typeof(float);
+                case nameof(DropdownField): return typeof(string);
+                case nameof(TextField): return typeof(string);
+                default: return null;
+            }
+        }
+
         public static IValuePort TryCreate(VisualElement element)
         {
             switch (element)

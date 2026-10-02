@@ -24,5 +24,20 @@ namespace Yu5h1Lib.EditorExtension
             if (obj is Component resolved && PreferencesBindingUtility.IsDuplicateName(property, resolved, out var duplicateIndex))
                 $"Field name '{resolved.gameObject.name}' is already bound at index {duplicateIndex}.".printWarning();
         }
+
+        /// <summary>Flags a control whose value type does not match the host's source member of the same name.</summary>
+        public override string GetIssue(Object obj, SerializedProperty property)
+        {
+            if (!(property.serializedObject.targetObject is IPreferences host) || host.SourceType == null)
+                return null;
+            var port = ValuePortResolver.Resolve(obj);
+            if (port == null)
+                return null;
+            var key = port.GetFieldName();
+            if (!host.TryGetSourceMemberType(key, out var memberType))
+                return null;
+            var portType = Preferences.GetPortValueType(port);
+            return Preferences.IsCompatible(portType, memberType) ? null : Preferences.DescribeMismatch(key, portType, memberType);
+        }
     }
 }

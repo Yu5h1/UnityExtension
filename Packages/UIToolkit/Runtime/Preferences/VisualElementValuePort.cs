@@ -10,8 +10,10 @@ namespace Yu5h1Lib.UIToolkit
     /// close over the concrete element, so this class only owns field name, wiring, and the R1-style
     /// unconditional-notify-on-bind pattern shared with <c>ValuePortBase</c>.
     /// </summary>
-    internal sealed class VisualElementValuePort<TValue> : IValuePort
+    internal sealed class VisualElementValuePort<TValue> : IValuePort, Preferences.ITypedPort
     {
+        public System.Type ValueType => typeof(TValue);
+
         private readonly IBindable bindable;
         private readonly INotifyValueChanged<TValue> notifier;
         private readonly System.Func<string> getValue;

@@ -12,19 +12,22 @@ namespace Yu5h1Lib.EditorExtension
     /// <summary>
     /// Shows every <c>binding-path</c> the binder's UXML produces with whether the save and
     /// <c>defaultSetting</c> hold it, outlines the ones sharing a field name with another consumer of the
-    /// same save (<see cref="PreferencesConsumerRegistry"/>), and renames a binding by writing the new
+    /// same save (<see cref="PreferencesConsumerRegistry"/>), outlines in red the ones whose element value type
+    /// does not match the host's source member of that name, and renames a binding by writing the new
     /// value back into the UXML file. Also registers UXML bindings as consumers for the Preferences inspector.
     /// </summary>
     [CustomEditor(typeof(PreferencesBinder))]
     public class PreferencesBinderEditor : Editor<PreferencesBinder>
     {
         private static readonly Color ConflictColor = new Color(1f, 0.76f, 0.03f);
+        private static readonly Color MismatchColor = new Color(0.9f, 0.25f, 0.2f);
 
         private string scannedAsset;
         private readonly Dictionary<string, DateTime> scannedStamps = new Dictionary<string, DateTime>();
         private List<UxmlBinding> entries = new List<UxmlBinding>();
         private readonly Dictionary<UxmlBinding, string> conflicts = new Dictionary<UxmlBinding, string>();
         private readonly Dictionary<UxmlBinding, string> storage = new Dictionary<UxmlBinding, string>();
+        private readonly Dictionary<UxmlBinding, string> mismatches = new Dictionary<UxmlBinding, string>();
         private readonly List<string> sharedTemplateHints = new List<string>();
         private bool conflictsDirty = true;
 
@@ -102,13 +105,17 @@ namespace Yu5h1Lib.EditorExtension
             {
                 conflicts.TryGetValue(entry, out var conflict);
                 storage.TryGetValue(entry, out var stored);
+                mismatches.TryGetValue(entry, out var mismatch);
                 var tooltip = $"{entry.ElementType} · {entry.DefinedIn}:{entry.Line}" + (entry.FromOverride ? " (AttributeOverrides)" : "")
+                    + (mismatch == null ? "" : "\n" + mismatch)
                     + (conflict == null ? "" : "\n" + conflict);
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     var value = EditorGUILayout.DelayedTextField(new GUIContent(entry.DisplayName, tooltip), entry.BindingPath);
-                    if (conflict != null)
-                        DrawOutline(GUILayoutUtility.GetLastRect());
+                    if (mismatch != null)
+                        DrawOutline(GUILayoutUtility.GetLastRect(), MismatchColor);
+                    else if (conflict != null)
+                        DrawOutline(GUILayoutUtility.GetLastRect(), ConflictColor);
                     EditorGUILayout.LabelField(stored, EditorStyles.miniLabel, GUILayout.Width(90));
                     if (value != entry.BindingPath)
                     {
@@ -120,8 +127,10 @@ namespace Yu5h1Lib.EditorExtension
 
             if (targetObject.preferences == null)
                 EditorGUILayout.HelpBox("Assign Preferences to check these against its save and its other bindings.", MessageType.Info);
+            foreach (var pair in mismatches)
+                EditorGUILayout.HelpBox($"{pair.Key.DisplayName}: {pair.Value}.", MessageType.Error);
             if (conflicts.Count > 0)
-                EditorGUILayout.HelpBox("Outlined fields share a field name with another binding on the same save; they will overwrite each other at runtime. Hover a field to see what it collides with.", MessageType.Warning);
+                EditorGUILayout.HelpBox("Yellow-outlined fields share a field name with another binding on the same save; they will overwrite each other at runtime. Hover a field to see what it collides with.", MessageType.Warning);
             foreach (var hint in sharedTemplateHints)
                 EditorGUILayout.HelpBox(hint, MessageType.Warning);
 
@@ -172,6 +181,7 @@ namespace Yu5h1Lib.EditorExtension
             conflictsDirty = false;
             conflicts.Clear();
             storage.Clear();
+            mismatches.Clear();
             sharedTemplateHints.Clear();
 
             var preferences = targetObject.preferences;
@@ -185,6 +195,15 @@ namespace Yu5h1Lib.EditorExtension
             foreach (var entry in entries)
                 if (sources.TryGetValue(entry.BindingPath, out var list) && list.Count > 1)
                     conflicts[entry] = "Also bound by:\n" + string.Join("\n", list.Distinct());
+
+            if (preferences != null)
+                foreach (var entry in entries)
+                {
+                    var portType = VisualElementPortFactory.GetValueType(entry.ElementType);
+                    if (portType != null && preferences.TryGetSourceMemberType(entry.BindingPath, out var memberType)
+                        && !Preferences.IsCompatible(portType, memberType))
+                        mismatches[entry] = Preferences.DescribeMismatch(entry.BindingPath, portType, memberType);
+                }
 
             if (preferences != null)
             {
@@ -207,13 +226,13 @@ namespace Yu5h1Lib.EditorExtension
             }
         }
 
-        private static void DrawOutline(Rect rect)
+        private static void DrawOutline(Rect rect, Color color)
         {
             var field = new Rect(rect.x + EditorGUIUtility.labelWidth + 2, rect.y, rect.width - EditorGUIUtility.labelWidth - 2, rect.height);
-            EditorGUI.DrawRect(new Rect(field.x, field.y, field.width, 1), ConflictColor);
-            EditorGUI.DrawRect(new Rect(field.x, field.yMax - 1, field.width, 1), ConflictColor);
-            EditorGUI.DrawRect(new Rect(field.x, field.y, 1, field.height), ConflictColor);
-            EditorGUI.DrawRect(new Rect(field.xMax - 1, field.y, 1, field.height), ConflictColor);
+            EditorGUI.DrawRect(new Rect(field.x, field.y, field.width, 1), color);
+            EditorGUI.DrawRect(new Rect(field.x, field.yMax - 1, field.width, 1), color);
+            EditorGUI.DrawRect(new Rect(field.x, field.y, 1, field.height), color);
+            EditorGUI.DrawRect(new Rect(field.xMax - 1, field.y, 1, field.height), color);
         }
     }
 }

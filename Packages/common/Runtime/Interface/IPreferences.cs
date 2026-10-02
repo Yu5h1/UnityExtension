@@ -15,6 +15,10 @@ namespace Yu5h1Lib
         /// <summary>The ScriptableObject type this host accepts as its defaults source; null when it takes none.</summary>
         System.Type SourceType { get; }
 
+        /// <summary>The type of the source member named <paramref name="key"/> (case-insensitive); false when
+        /// there is no accepted source or it declares no such member.</summary>
+        bool TryGetSourceMemberType(string key, out System.Type type);
+
         IDataView current { get; }
 
         /// <summary>Reads the saved data from storage, bypassing <see cref="current"/>.</summary>
