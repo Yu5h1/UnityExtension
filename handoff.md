@@ -39,7 +39,7 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
   - **IL2CPP `[Preserve]` survival** ([偏好設定 § 風險待驗證](Documentation/偏好設定.md#風險待驗證)) remains the one unverified risk; the user is deferring the actual build (cost/time), not asking for it now.
   - **`AudioMixerProxy`'s "Create Mixer" generator is done (2026-09-28)** — built as a CustomEditor inline button next to the `_voiceMixer` field (shown only while it's empty), not a CONTEXT-menu item, after discussing discoverability. See 2026-09-28 Recent Work for the implementation and the reflection pitfall it hit.
   - Everything else (save throttling, B1's remaining safety mechanisms, `OptionGroup` port, `PlayerPrefValue`/`ObservableValue` polish) is lower-priority backlog already tracked in the doc's 改善方向.
-  - **D6 is settled, not implemented** ([偏好設定 § SO 設定來源](Documentation/偏好設定.md#so-設定來源d6)). Entry points, in order:
+  - **D6 is mostly settled, not implemented; 3 items open** (see Open decisions) ([偏好設定 § SO 設定來源](Documentation/偏好設定.md#so-設定來源d6)). Entry points, in order:
     1. Implement `UnityEvent<string> changed` on `ValuePort` (no codec needed; `ValuePortBase.NotifyValueChanged` becomes virtual). Approved, interrupted before editing.
     2. Ask for Core authorization for the value codec in `PlayerPrefsSerializer`'s base (`Unity/Core/Runtime/Source/PlayerPrefValue.cs`). Everything below depends on it.
     3. Unified entry: static non-generic `Preferences` with a `KEY`-keyed shared DataView, `Get<V>`/`Set<V>`; `Preferences<T>.current` switches to it.
@@ -64,6 +64,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 5. Clean up the backup copies under `Unity/UnityExtension/Runtime` and `Unity/UnityExtension/Editor`. Which side is the source is settled in [introduction.md § Core source and backups](.agents/introduction.md#core-source-and-backups). The backups have no asmdef and compile into the default `Assembly-CSharp`, so removing them must first confirm nothing in `Assembly-CSharp` depends on a type that exists only there. Do this as its own task, not as a side effect of unrelated work.
 
 ## Recent Work
+
+- 2026-10-02 (converge): Second review of D6 found gaps; converged the doc. Fixed in place: packages read runtime values via `Preferences.Get` (not the SO), `Get<V>` parse failure returns the fallback with a warning, packages use only SO member keys, assigning `_source` changes `KEY` and orphans the old save, reset-to-defaults is how SO edits become visible in the Editor, Edit Mode `Init()` needs Undo/dirty, IL2CPP reflection risk, and stale lines in 成員總覽/弊端評估. Moved to D6 待決定: `ISource` content, hosts overriding load/save vs the unified entry, save responsibility.
 
 - 2026-10-02 (settled): D6 settled after the review round. Member preparation runs in `OnInitializing` (`Init()` triggers it manually); `_source` members come first in declaration order with `_source` values, loose keys after. Unified entry adopted: one storage shape (one `KEY`, one DataView JSON), a `KEY`-keyed shared DataView in static `Preferences` used by `Preferences<T>.current` and by packages via `Get<V>`/`Set<V>` (type from the caller); a source host's `KEY` is the `_source` type name. New code must not store these values with `PlayerPrefValue`. This also replaces pre-scene loading: packages load the `KEY` on first read.
 
@@ -163,6 +165,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 - Decision: use `unified-solver` for large-scale collision, stacking, and container interactions. The retrospective is recorded in [DevelopmentLog.md](Documentation/DevelopmentLog.md).
 
 ## Open decisions
+
+- [偏好設定 — D6 待決定](Documentation/偏好設定.md#d6-待決定): `ISource` as an empty marker and which SO fields are members; how the unified entry handles hosts that override load/save (VCP `UserDataView`) - recommended a `KEY`-registered load/save extension point (storage interface); save responsibility moving from the host to the entry.
 
 
 - [專案開發系統分析技能計畫 — 待討論決策](Documentation/專案開發系統分析技能計畫.md#待討論決策).
