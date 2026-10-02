@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 using Yu5h1Lib.MVVM;
 using Yu5h1Lib.Serialization;
 
@@ -13,10 +14,21 @@ namespace Yu5h1Lib
         [SerializeField, TypeRestriction(typeof(Component), filter = typeof(ValuePortResolver))] private List<Object> _bindings;
         public IReadOnlyList<Object> bindings => _bindings;
 
-        [SerializeField] protected DataView defaultSetting;
+        [SerializeField, FormerlySerializedAs("defaultSetting")] private DataView _defaultSetting;
+
+        /// <summary>Defaults for fields missing from the save.</summary>
+        protected DataView defaultSetting
+        {
+            get => _defaultSetting;
+            set => _defaultSetting = value;
+        }
 
         [SerializeField, ReadOnly] private DataView _current = null;
         private bool isCurrentLoaded = false;
+
+        /// <summary>The shared entry's DataView for <see cref="KEY"/> (<see cref="Preferences.GetView(string)"/>),
+        /// with <see cref="defaultSetting"/> merged into fields the save lacks. The merge saves once when a save
+        /// already existed, and not at all when there was none.</summary>
         public DataView current
         {
             get
@@ -24,13 +36,22 @@ namespace Yu5h1Lib
                 if (isCurrentLoaded)
                     return _current;
                 isCurrentLoaded = true;
-                bool loaded = TryLoadCurrent(out DataView data);
-                _current = loaded ? new DataView(data) : (defaultSetting == null ? new DataView() : new DataView(defaultSetting));
-                _current.Changed += Current_Changed;
-                if (loaded && defaultSetting != null)
+                Preferences.Register(KEY, new HostStorage(this));
+                var view = Preferences.GetView(KEY, out bool loaded);
+                Preferences.SetSaveOnChanged(KEY, false);
+                bool merged = false;
+                if (defaultSetting != null)
                     foreach (var pair in defaultSetting)
-                        if (!_current.ContainsKey(pair.Key))
-                            _current[pair.Key] = pair.Value;
+                        if (!view.ContainsKey(pair.Key))
+                        {
+                            view[pair.Key] = pair.Value;
+                            merged = true;
+                        }
+                _current = view;
+                Preferences.SetSaveOnChanged(KEY, _saveOnChanged);
+                if (loaded && merged && _saveOnChanged)
+                    Preferences.Save(KEY);
+                _current.Changed += Current_Changed;
                 return _current;
             }
         }
@@ -42,13 +63,26 @@ namespace Yu5h1Lib
             return defaultSetting != null && defaultSetting.TryGetValue(key, out value);
         }
 
-        [SerializeField] private UnityEvent _changed;
+        [SerializeField] private UnityEvent _changed = new UnityEvent();
         public event UnityAction changed
         {
             add => _changed.AddListener(value);
             remove => _changed.RemoveListener(value);
         }
-        public bool SaveOnChanged = true;
+
+        [SerializeField, FormerlySerializedAs("SaveOnChanged")] private bool _saveOnChanged = true;
+
+        /// <summary>Whether the shared entry saves this KEY on every change.</summary>
+        public bool SaveOnChanged
+        {
+            get => _saveOnChanged;
+            set
+            {
+                _saveOnChanged = value;
+                if (isCurrentLoaded)
+                    Preferences.SetSaveOnChanged(KEY, value);
+            }
+        }
 
         /// <summary>Resolved map from each binding Object to its IValuePort. Built during BindAll.</summary>
         private readonly Dictionary<Object, IValuePort> _portMap = new Dictionary<Object, IValuePort>();
@@ -83,14 +117,14 @@ namespace Yu5h1Lib
         {
             BindAll();
         }
-        protected virtual void OnDestroy() => UnbindAll();
-
-        private void Current_Changed()
+        protected virtual void OnDestroy()
         {
-            _changed?.Invoke();
-            if (SaveOnChanged)
-                SaveToPlayerPrefs();
+            UnbindAll();
+            if (_current != null)
+                _current.Changed -= Current_Changed;
         }
+
+        private void Current_Changed() => _changed?.Invoke();
 
         public void BindAll()
         {
@@ -175,17 +209,22 @@ namespace Yu5h1Lib
 
         public virtual bool IsValidToSave() => true;
 
-        public virtual void SaveToPlayerPrefs()
+        /// <summary>How this host's KEY is saved; the shared entry calls it whenever the DataView changes.
+        /// Override together with <see cref="TryLoadCurrent"/> for a custom storage format.</summary>
+        public virtual void SaveToPlayerPrefs() => Preferences.DefaultStorage.Save(KEY, current);
+
+        /// <summary>How this host's KEY is loaded; the shared entry calls it on first access.</summary>
+        public virtual bool TryLoadCurrent(out DataView output) => Preferences.DefaultStorage.TryLoad(KEY, out output);
+
+        /// <summary>Routes the shared entry's load/save of this KEY through the host's virtual methods, so
+        /// a host that overrides them (e.g. VCP UserDataView) keeps its format without registering storage itself.</summary>
+        private class HostStorage : Preferences.IStorage
         {
-            PlayerPrefs.SetString(KEY, current.ToJson());
-            PlayerPrefs.Save();
-        }
-        public virtual bool TryLoadCurrent(out DataView output)
-        {
-            output = default;
-            if (!PlayerPrefs.HasKey(KEY))
-                return false;
-            return DataView.TryParseFromJson(PlayerPrefs.GetString(KEY), out output);
+            private readonly Preferences<T> host;
+            public HostStorage(Preferences<T> host) => this.host = host;
+            public bool TryLoad(string key, out DataView data) => host.TryLoadCurrent(out data);
+            public void Save(string key, DataView data) => host.SaveToPlayerPrefs();
+            public void Delete(string key) => Preferences.DefaultStorage.Delete(key);
         }
         
         protected virtual void Print()
