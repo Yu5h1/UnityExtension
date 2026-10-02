@@ -39,11 +39,11 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
   - **IL2CPP `[Preserve]` survival** ([偏好設定 § 風險待驗證](Documentation/偏好設定.md#風險待驗證)) remains the one unverified risk; the user is deferring the actual build (cost/time), not asking for it now.
   - **`AudioMixerProxy`'s "Create Mixer" generator is done (2026-09-28)** — built as a CustomEditor inline button next to the `_voiceMixer` field (shown only while it's empty), not a CONTEXT-menu item, after discussing discoverability. See 2026-09-28 Recent Work for the implementation and the reflection pitfall it hit.
   - Everything else (save throttling, B1's remaining safety mechanisms, `OptionGroup` port, `PlayerPrefValue`/`ObservableValue` polish) is lower-priority backlog already tracked in the doc's 改善方向.
-  - **D6 is mostly settled, not implemented; 3 items open** (see Open decisions) ([偏好設定 § SO 設定來源](Documentation/偏好設定.md#so-設定來源d6)). Entry points, in order:
+  - **D6 is mostly settled, not implemented; 2 items open** (see Open decisions) ([偏好設定 § SO 設定來源](Documentation/偏好設定.md#so-設定來源d6)). Entry points, in order:
     1. Implement `UnityEvent<string> changed` on `ValuePort` (no codec needed; `ValuePortBase.NotifyValueChanged` becomes virtual). Approved, interrupted before editing.
     2. Ask for Core authorization for the value codec in `PlayerPrefsSerializer`'s base (`Unity/Core/Runtime/Source/PlayerPrefValue.cs`). Everything below depends on it.
     3. Unified entry: static non-generic `Preferences` with a `KEY`-keyed shared DataView, `Get<V>`/`Set<V>`; `Preferences<T>.current` switches to it.
-    4. Reshape the uncommitted D5 code instead of committing it: drop `DataViewObject.cs` (+ `.meta`) and the Inspector hiding in `PreferencesEditor<T>.DrawProperty`; keep `_defaultSetting` with `FormerlySerializedAs`; add `Preferences.ISource` and `_source` (KEY = `_source` type name), member preparation in `OnInitializing`, reset to defaults, Editor red mark for binding/member type mismatch.
+    4. Reshape the uncommitted D5 code instead of committing it: drop `DataViewObject.cs` (+ `.meta`) and the Inspector hiding in `PreferencesEditor<T>.DrawProperty`; keep `_defaultSetting` with `FormerlySerializedAs`; add `_source` with a host-declared `SourceType` (KEY stays the host type name), member preparation in `OnInitializing`, reset to defaults, Editor red mark for binding/member type mismatch.
     5. `ValuePort` value kind (typed get/set, UnityEvent overloads, typed Inspector field).
     6. Update the [preferences skill](.agents/skills/preferences.md) (step 3 defaults gain `_source`; the "code-owned value → `ObservablePref`" row changes once the entry exists), then verify over MCP in `Yu5h1LibTest`. The skill was reverted to its committed text on 2026-10-02 because its D5 edit was superseded.
     The `ValuePort.cs` E11 change is independent and can be committed on its own.
@@ -64,6 +64,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 5. Clean up the backup copies under `Unity/UnityExtension/Runtime` and `Unity/UnityExtension/Editor`. Which side is the source is settled in [introduction.md § Core source and backups](.agents/introduction.md#core-source-and-backups). The backups have no asmdef and compile into the default `Assembly-CSharp`, so removing them must first confirm nothing in `Assembly-CSharp` depends on a type that exists only there. Do this as its own task, not as a side effect of unrelated work.
 
 ## Recent Work
+
+- 2026-10-02 (packages): The user ruled that packages must not bind to Preferences - the consumer handles persistence. D6 now has a responsibility table (package / Preferences / consumer); `Preferences.ISource` dropped in favour of the host declaring `SourceType`; `KEY` reverted to the host type name; the unified entry is for consumer code; member rules settled (serialized fields of the SO class). D6 待決定 is down to two items.
 
 - 2026-10-02 (converge): Second review of D6 found gaps; converged the doc. Fixed in place: packages read runtime values via `Preferences.Get` (not the SO), `Get<V>` parse failure returns the fallback with a warning, packages use only SO member keys, assigning `_source` changes `KEY` and orphans the old save, reset-to-defaults is how SO edits become visible in the Editor, Edit Mode `Init()` needs Undo/dirty, IL2CPP reflection risk, and stale lines in 成員總覽/弊端評估. Moved to D6 待決定: `ISource` content, hosts overriding load/save vs the unified entry, save responsibility.
 
@@ -166,7 +168,7 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 ## Open decisions
 
-- [偏好設定 — D6 待決定](Documentation/偏好設定.md#d6-待決定): `ISource` as an empty marker and which SO fields are members; how the unified entry handles hosts that override load/save (VCP `UserDataView`) - recommended a `KEY`-registered load/save extension point (storage interface); save responsibility moving from the host to the entry.
+- [偏好設定 — D6 待決定](Documentation/偏好設定.md#d6-待決定): how the unified entry handles hosts that override load/save (VCP `UserDataView`) - recommended a `KEY`-registered load/save extension point (storage interface); save responsibility moving from the host to the entry.
 
 
 - [專案開發系統分析技能計畫 — 待討論決策](Documentation/專案開發系統分析技能計畫.md#待討論決策).
@@ -181,8 +183,10 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 ## Ruled-out directions
 
+- Packages binding to Preferences (2026-10-02): an opt-in `Preferences.ISource` on the package SO, packages reading runtime values via `Preferences.Get`, and `KEY` = the `_source` type name so packages could find the save without referencing the host. The user ruled that packages must not know Preferences; the consumer decides what persists, declares the accepted SO type on its host (`SourceType`), and hands runtime values to the package. `KEY` stays the host type name, so assigning `_source` no longer orphans a save.
+
 - Loading source hosts before scene load (Resources host prefab + `RuntimeInitializeOnLoadMethod(BeforeSceneLoad)`), 2026-10-02: uGUI `_bindings` and `PreferencesBinder._preferences` reference scene objects, so the host must live in the scene; `SingletonBehaviour` does not `DontDestroyOnLoad`; `RuntimeInitializeOnLoadMethod` is not invoked on generic types. Hosts keep binding in `Start`.
-- Splitting the SO into `_defaults` plus a `[NonSerialized] current` runtime copy (`PreferenceSource<TData>`, `ResetCurrent`), 2026-10-02: the user decided the SO is defaults only and the runtime value lives in the host DataView. Packages now read changed values through the unified entry (`Preferences.Get<V>`).
+- Splitting the SO into `_defaults` plus a `[NonSerialized] current` runtime copy (`PreferenceSource<TData>`, `ResetCurrent`), 2026-10-02: the user decided the SO is defaults only and the runtime value lives in the host DataView. Runtime values now reach packages through the consumer (which reads via the unified entry `Preferences.Get<V>`).
 
 - `ParameterObjectBinding : IValuePort` as the replacement for `ObservablePref` users (2026-10-02, user's proposal; a host `Set(key, value)` was proposed instead and later dropped - code-side writes go through the unified entry `Preferences.Set<V>`): a port holding its own value makes a third copy beside the host DataView and the SO's `current`, needs scene/registration/unbind lifecycle where `ObservablePref` was a plain field, and goes stale when UI binds the same key (binding is one-way after the initial write). The mechanism for designer-wired, code-free persistence already exists as `ValuePort`/`ValuePortBase`.
 
