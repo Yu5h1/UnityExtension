@@ -22,11 +22,80 @@ no tuning.
 
 If a feature seems to need both a position and tuning, it wants two objects.
 
+## The scene that is known to work
+
+`Packages/Unified-Solver/Runtime/Test/test solver mesh.unity`, opened from
+BonghuoVR. Fish schooling, breaching, a net, and catching them in it are all
+verified there. **Read it before deriving a setup from first principles** — a
+working assembly answers faster than this file does, and its numbers are real
+rather than plausible.
+
+```
+unified-solver        SolverManager        substeps 30, damping 2, particleRadius 0.05
+                                           frictionStatic 0.02, frictionKinetic 0.005
+SolverVolume/
+  Sea                 SolverVolume + PrimitiveShape (Box)   -> Medium  density 472
+  Bound               SolverVolume + PrimitiveShape         -> Bounds  actOutside, fade 0.5/0.5
+  FishGenerator       SolverParticleEmitter  256 of 512, spawnVolume 5x2x5
+    SolverMotionTarget                       mode Direction, radius 0
+splash water          SolverVolume + ParticleSystemAddon    -> Medium  density 1, flow (0,0,2000) local
+box medium            SolverVolume + PrimitiveShape         -> Medium  (the same profile object as Sea)
+box/Cube x5           SolverBoxCollider        thin walls making a tank
+cloth-generator       ClothGenerator 100x100   + SolverClothParticles + PhysicsParticleAnchor
+hand/grab             ClothGrabber             grabRadius 0.89
+Ice-generator         SolverParticleEmitter    100 of 2048, ice profile
+pip                   RopeGenerator 59 seg     + SolverRopeParticles + PhysicsParticleAnchor
+```
+
+Two things in that list are easy to misread. `Sea` is **disabled** — the active
+water is `box medium`, which references the *same* medium profile object — an
+unsaved ScriptableObject living in the scene, not an asset file, so searching the
+Project window for it finds nothing. The two are alternative placements of one
+body of water, not two bodies. And `splash water`
+takes its geometry from a **ParticleSystem**, so the cone the artist sees in the
+Shape module *is* the jet region.
+
+The verified profile values, for comparison rather than for copying:
+
+| | Fish | Ice |
+|---|---|---|
+| `topology` | `GuideChain4` | `RigidCluster6` + `SolverIceFragmentShapeSource` |
+| `renderProfile.mesh` | fish FBX, `forwardAxis` Y, `flipForward` | empty — draws its own hull |
+| `bendCompliance` | `0.05` (limp) | `0.0005` (stiff) |
+| `rollDamping` | `1` | `0.25` |
+| `sleepSpeed` | `0.05` | `1` — ice settles hard, fish must not |
+| `modifiers` | Oscillation + Locomotion | Oscillation |
+
+Fish locomotion as tuned: `speed 5`, `mediumThrust 1`, `frequency 1`,
+`duration 0.3`, `headingSpread 25`, `turnRate 180`, `uprightRate 120`.
+Oscillation is tuned far lower than its defaults — `vitality 0.065`,
+`muscleTension 0`, `stiffness 0` — because locomotion now supplies the travel
+and oscillation only has to supply the wriggle.
+
 ## Volumes carry a list of effects
 
-`SolverVolume` is geometry only: shape (Box or Ellipsoid) from the Transform,
-plus an `effects` list. One box can be water inside **and** recycle anything
-leaving, without two components duplicating the same geometry and inside test.
+`SolverVolume` is geometry only, plus an `effects` list. One box can be water
+inside **and** recycle anything leaving, without two components duplicating the
+same geometry and inside test.
+
+**The geometry is not this component's Transform.** It comes from a separate
+component implementing `IShapeProvider`, and from nowhere else — there is no
+fallback, because a fallback is what would make a mis-wired volume move
+sometimes and do nothing other times with nothing on screen saying which. A
+volume with no provider simply does not run.
+
+| Provider | Gives | Use for |
+|---|---|---|
+| `PrimitiveShape` | Box, Sphere, Cylinder, Cone from the Transform | most regions |
+| `ParticleSystemAddon` | the PS Shape module's own volume | a region the VFX already draws |
+
+`Reset` adds a `PrimitiveShape` for you, so a volume added through the Inspector
+is wired already. Only **Box** has a flat top, and a flat top is what a waterline
+is; a sphere's surface height varies with horizontal position, so a body floating
+up in one settles at a different level depending on where it happens to be.
+
+`Shape` may also be a GameObject rather than the component — dragging a provider
+out of the hierarchy hands over the GameObject, and the field resolves it.
 
 Every effect carries `actOutside`, because that motivating case needs both sides
 of one surface at once.
@@ -54,7 +123,7 @@ It touches neither `SolverVolume` nor the upload path. That is the seam.
 
 ```
 SolverManager   <- vendored; gravity, substeps, particleRadius, friction
-Water           <- SolverVolume (Box) -> [SolverMediumProfile]
+Water           <- SolverVolume + PrimitiveShape (Box) -> [SolverMediumProfile]
 Fish            <- SolverParticleEmitter -> SolverParticleProfile
 Heading         <- SolverMotionTarget
 ```
@@ -153,8 +222,9 @@ See `Documentation/Plan/SolverParticle.md`.
 
 ## Setting up water
 
-1. Scale a GameObject over the water, add `SolverVolume`, shape Box. Box has a
-   flat top and therefore a waterline; Ellipsoid has none.
+1. Scale a GameObject over the water and add `SolverVolume`. It brings a
+   `PrimitiveShape`; leave that on Box. Box has a flat top and therefore a
+   waterline; the rounded kinds have none.
 2. Add a `SolverMediumProfile` to `effects`.
 3. `density`: **the useful value is in the hundreds, and water is not 1000.**
    Units follow the profile mass and the global particle radius. The runner logs
@@ -224,10 +294,18 @@ speed; and buoyancy falls with density, so bodies sink while inside.
 Do **not** reach for `density = 0`. Nothing real is weightless, and the ratio
 goes to zero, so the jet stops dragging as well.
 
-A ParticleSystem alongside it draws the water and owns nothing else; they share a
-Transform and no state. PS particles cannot push solver particles and should not
-try — a droplet is one tiny impulse, and what reads as *washed away* is the
-sustained velocity field the medium already is.
+**Let the ParticleSystem that draws the spray own the geometry.** Put
+`SolverVolume` on it and point `_shapeProvider` at its `ParticleSystemAddon`:
+the cone in the Shape module then *is* the medium, so the region can never drift
+out of step with what the artist sees, and aiming the VFX aims the push. This is
+how `splash water` is built in the reference scene. Its Cone opens along +Z, the
+same axis as `ShapeKind.Cone`, so nothing has to be reconciled — but a Circle,
+Edge, Rectangle, Sprite or Mesh shape encloses no volume and `IsUsable` reports
+false rather than inventing a depth.
+
+The PS particles themselves still push nothing and should not try — a droplet is
+one tiny impulse, and what reads as *washed away* is the sustained velocity field
+the medium already is.
 
 Box costs three things: uniform push inside, a hard boundary, no spread. Two
 existing settings to check before blaming the mechanism — `speedLimit` below the
@@ -305,6 +383,68 @@ cannot implement the interface:
   by intent; use `ClothGrabber` for grab-and-release, which does restore it.
 - Runs at `-100`, before the solver, because an anchor states where a particle
   *is*. Do not move it after the solver like a modifier.
+
+### A net, and catching things in it
+
+The whole catching mechanism is: a cloth soft enough to bag, its corners held by
+Transforms, and those Transforms moved by anything at all. Nothing in the package
+knows the word "net".
+
+1. `ClothGenerator` for the mesh. Verified: `resolutionX/Y 100`, `spacing 0.1`,
+   `compliance 1e-7`, `constraintDamping 99999`, every `fix*Edge` **off**,
+   `enableSelfCollision` **off**, `fixedParticlesFollowTransform` on.
+2. Add `SolverClothParticles` beside it, then `PhysicsParticleAnchor`.
+3. In the anchor's Scene view, click the grid to pick the corner particles and
+   drop each on its own Transform. Those Transforms are the rim: parent them to
+   hands, a frame, a winch, an animation — the anchor neither knows nor cares.
+4. Move the rim. A bag forms, fish inside cannot leave through it, and lifting it
+   out of the medium is the catch — they go limp on the way up because locomotion
+   has nothing left to push against, with no rule anywhere saying so.
+
+Why those cloth numbers and not softer-looking ones: `compliance 1e-7` is near
+rigid *after* the substep scaling (see the compliance entry below), and
+`constraintDamping 99999` is only usable *because* the compliance is that small —
+`gamma = compliance * beta / subDt`, so the two have to be tuned as a pair and a
+damping that large against an ordinary compliance does nothing. Leave the fix
+edges off: pinning sets inverse mass to zero and would fight the anchors for the
+same particles.
+
+`ClothGrabber` is the other half — grab and **release**, with inverse mass
+restored. Use it for a hand; use `PhysicsParticleAnchor` for a rim that is held
+permanently.
+
+## Driving it from script
+
+Most of this system is authored, not called. The runtime surface is small, and
+knowing it is small saves hunting for an API that was never going to exist.
+
+| To do this | Call / change |
+|---|---|
+| spawn one body | `SolverParticleEmitter.SpawnOne()` |
+| spawn a specific body | `TryEnqueueSpawn(request)`, then `FlushQueued()` |
+| spawn many | `EnqueueBatch(...)` — reserves capacity once |
+| hold back the initial pile | `playOnAwake = false` |
+| move a shoal | move the `SolverMotionTarget` Transform |
+| split shoals | give each target a `radius`; a body follows the nearest that reaches it |
+| turn water off | disable the `SolverVolume`, or set an effect's `enabled` |
+| aim a jet | rotate the volume, with `flowIsLocal` on |
+| grab cloth | `ClothGrabber.Grab()` / `Release()` |
+| retune anything | edit the profile asset — it is live in play mode |
+
+Two consequences of that table worth stating outright.
+
+**`SolverMotionTarget` is just a Transform.** Timeline, a tween, a spline, a
+NavMeshAgent, or feeding bait by hand all drive it the same way, and Unity already
+animates Transforms better than anything written here would. There is no
+scripting interface for "where the shoal goes" because there did not need to be.
+
+**There is no group object.** A group is whichever bodies happen to be in range
+of a target, so there is nothing to add or remove a body from, and no component
+named after one. Asking which fish are in a shoal is asking the wrong question.
+
+Capacity is the one place a script can quietly fail: `TryEnqueue` returns false
+past `maxInstances`, and the solver's own `maxParticles` / `maxRigidBodies` on
+`SolverManager` are separate ceilings that an emitter cannot raise.
 
 ## Settings that silently ruin things
 
