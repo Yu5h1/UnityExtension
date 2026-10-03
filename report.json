@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-02T11:22:27.221700+00:00",
+  "updated_at": "2026-10-03T09:27:22.552086+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -163,7 +163,7 @@
       "id": "uitoolkit-decoupling",
       "title": "UI Toolkit 抽離（套件解耦）",
       "status": "in_progress",
-      "summary": "套件端抽取（common／animation／uitoolkit／inputsystem）已於 2026-09-16 交付，EditMode 180、PlayMode 9 全過；2026-09-27 再補上 GroupDragLayout.Pull／Spread 與 AppsMenuDemo 的吸塵器拖曳、全部收納後釋放擴散手勢。本卡涵蓋 UnityExtension（套件端）範疇；HealthAI 是否實際接入、移除自身重複實作，是另一個專案的獨立決定，尚未啟動。Canonical entry：HealthAI docs/unity/套件解耦計畫.md（Task ID: uitoolkit-decoupling）。",
+      "summary": "套件端抽取（common／animation／uitoolkit／inputsystem）已於 2026-09-16 交付，EditMode 180、PlayMode 9 全過；2026-09-27 再補上 GroupDragLayout.Pull／Spread 與 AppsMenuDemo 的吸塵器拖曳、全部收納後釋放擴散手勢。本卡涵蓋 UnityExtension（套件端）範疇；HealthAI 的接入由 HealthAI 自己的任務擁有：聊天面板已另立 healthai-chat-module-migration（規格已確認、尚未啟動），其餘能力的接入尚未排定。Canonical entry：HealthAI docs/unity/套件解耦計畫.md（Task ID: uitoolkit-decoupling）。",
       "completed_items": [
         {
           "id": "item-uitoolkit-decoupling-done-1",
@@ -188,13 +188,23 @@
       ],
       "pending_items": [
         {
+          "id": "item-uitoolkit-decoupling-todo-3",
+          "title": "實作 HealthAI 對聊天模組的需求 HEALTHAI-UNITYEXTENSION-7–13（遷移前置），先在 Yu5h1LibTest 驗證",
+          "priority": 2
+        },
+        {
+          "id": "item-uitoolkit-decoupling-todo-4",
+          "title": "實作 HEALTHAI-UNITYEXTENSION-14：輸入框上方／下方擴充列（擴充方向，不擋遷移）",
+          "priority": 4
+        },
+        {
           "id": "item-uitoolkit-decoupling-todo-2",
           "title": "聊天面板 demo 從 _dev/ChatModule 搬到 Samples~/ChatModule——使用者決定整體滿意後再搬",
           "priority": 4
         },
         {
           "id": "item-uitoolkit-decoupling-todo-1",
-          "title": "HealthAI 實際接入套件、移除自身重複實作（第二階段）——獨立任務，尚未啟動，需使用者決定是否啟動",
+          "title": "HealthAI 第二階段接入：聊天面板走 HealthAI 任務 healthai-chat-module-migration；長按、BottomSheet、World 等其餘能力的接入尚未排定，由 HealthAI 決定",
           "priority": 4
         }
       ]
