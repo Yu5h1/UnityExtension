@@ -131,6 +131,12 @@ Unity C# namespace 不得使用 `Yu5h1Lib.Physics`，避免遮蔽 `UnityEngine.P
 - 受限解析建置色票與轉譯完整 CSS 是不同工作；不以試點擴張成通用樣式轉譯器。
 - 先用共用案例驗證跨語言行為；不以避免重複為名先建無消費案例的通用框架。
 
+## 抽離工作入口
+
+Unity 消費端能力抽離與採用使用 [unity-ui-extraction](../.agents/skills/unity-ui-extraction/SKILL.md)：先盤點套件與呼叫者、保留序列化引用和生命週期，再以第二使用端驗證重用。單純採用既有設定或聊天元件，直接使用對應能力，不為套用技能新增抽離工作。
+
+Web 消費端能力抽離仍由 [web-integration](../../../Web/.agents/skills/web-integration/SKILL.md) 擁有；兩份技能各自維護平台流程，共同引用協作規範。本計畫擁有跨平台設計與 P1–P5 門檻，技能不複製設計或任務狀態。技能可用不代表設定試點或產品遷移已完成。
+
 ## 驗收與遷移
 
 | 階段 | 完成條件 |
