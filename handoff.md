@@ -32,7 +32,7 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 - New independent plan (2026-10-01): [向量圖示系統](Documentation/向量圖示系統.md#待討論) — split out of the chat-module work once it became clear vector icons are their own capability, not part of that module. `com.unity.vectorgraphics@3.0.0-preview.7` confirmed still functional for SVG import despite its long-stalled preview status; `UnityEngine.UIElements.VectorImage` confirmed as a native engine type needing no package at runtime. Open question not yet decided: whether to build a data-driven parametric icon-animation format at all, given HealthAI's `SignalGraphic.cs` already solves continuous per-vertex animation (heartbeat pulse, ECG waveform) with plain procedural `Painter2D` code and no baked asset — no second consumer has asked for that yet.
 
-- [跨平台 UI 一致性](Documentation/跨平台UI一致性.md) (2026-10-02, not started): UI Toolkit follows the Web library as design source; theme tokens come from the Web build's generated `dist/theme/theme.css` (already exists), converted to USS. The USS importer can start now; [UNITYEXTENSION-WEB-1](Documentation/Requirements.Web.md#unityextension-web-1--將產生的主題色票檔宣告為穩定契約) only asks Web to declare that file's format stable. Then the settings-panel pilot. Chat and Apps panel design moves to Web only after the pilot passes; the Apps panel physics waits on the Physics project prototype.
+- [跨平台 UI 一致性](Documentation/跨平台UI一致性.md) (2026-10-05, plan revised; implementation not started): common contracts are maintained in Web using evidence from both platforms; native implementations reuse existing platform capabilities. Next: WEB-1 theme contract and WEB-4 minimal settings parameters/shared cases, then the P1 Preferences responsibility/gap inventory and P2–P4 pilot. Chat follows parity gaps; Apps remains reusable mechanisms plus composition, preserving the rejected DraggableDesktop boundary. No runtime validation or requirement closure in this documentation update.
 
 - Implement the chat module requirements HealthAI raised: [HEALTHAI-UNITYEXTENSION-7–13](file:///W:/UnityProject/HealthAI/docs/unity/Requirements.UnityExtension.md#聊天模組需求-714) (multiline input with the native placeholder, self/others bubble styles, selectable text, a row-created hook, revealing the rest of a reply on takeover, the stream scroll lock option, focus-driven full opacity) gate HealthAI's [chat module migration](file:///W:/UnityProject/HealthAI/docs/unity/聊天模組遷移計畫.md); 14 (composer accessory rows above and below) is an extension and does not block it. Each is verified in `Yu5h1LibTest` first; HealthAI owns the Status field and marks a requirement implemented only after its own acceptance. Module design and the decisions behind it: [聊天面板模組](Documentation/聊天面板模組.md).
 
@@ -196,7 +196,7 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 - [Editor 擴充 — 尚未決定](Documentation/Editor擴充.md#尚未決定): whether `EnhanceCollectionField` replaces `Editor<T>`'s auto-wrapping; the user deferred it until the attribute passes acceptance.
 
-- [跨平台 UI 一致性 — 尚未決定](Documentation/跨平台UI一致性.md#尚未決定): runtime custom palettes in UI Toolkit, and whether radius/spacing/font sizes become Web library tokens.
+- [跨平台 UI 一致性 — 尚未決定](Documentation/跨平台UI一致性.md#尚未決定): runtime custom palettes (deferred), pilot parameter/case delivery, and the minimum Unity submission-coordination gap after inspecting Preferences.
 
 ## Ruled-out directions
 

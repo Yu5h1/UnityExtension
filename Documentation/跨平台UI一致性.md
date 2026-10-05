@@ -1,175 +1,152 @@
 # 跨平台 UI 一致性
 
 > Task ID: cross-platform-ui-parity
-
-> 狀態：方向已定案，尚未開始（2026-10-02）。先以設定面板一項試點驗證整條流程，見[試點](#試點)。
 >
-> 與其他文件的關係：Web 庫要做的事寫在 [Requirements.Web.md](Requirements.Web.md)，由 Web 庫實作；
-> 各元件的 Web 端設計由 Web 庫自己的文件擁有。聊天面板目前的設計在 [聊天面板模組](聊天面板模組.md)，
-> Apps 面板在 [指標互動與世界橋接](指標互動與世界橋接.md) 與 [運動系統](運動系統.md)。物理算式的共用是
-> 獨立的 Physics 專案，見 [物理共用](#物理共用)。執行狀態留在 [handoff.md](../handoff.md)。
+> 本計畫定義 Web 與 Unity 的 UI 共用邊界。執行狀態由 [handoff.md](../handoff.md) 擁有。
+> Web 端需求由 [Requirements.Web.md](Requirements.Web.md) 擁有；各元件的共用契約集中在 Web 文件，Unity 平台差異與接線留在本專案。
 
 ## 系統階層與關係
 
 ```text
 Yu5h1Lib
-├─ Web 庫：UI 設計的唯一來源
-│  ├─ 主題：resolveTheme 決定 light／dark 色票與推導規則
-│  ├─ 元件：Lit 實作＋規格文件（設定面板、save bar、對話框……）
-│  └─ 主題輸出：建置時產生 dist/theme/theme.css（已存在；穩定性見 Requirements.Web.md）
+├─ Web 庫：共用契約與設計資料的維護位置
+│  ├─ Theme：resolveTheme → 建置色票 theme.css
+│  ├─ 元件契約：操作語意、狀態、共用案例與必要視覺參數
+│  └─ Web 實作：Lit 元件、ConfigStore 與既有互動能力
 ├─ UnityExtension
-│  └─ com.yu5h1.uitoolkit：UI Toolkit 實作
-│     ├─ 主題匯入：色票檔 → USS 變數（Editor 工具）
-│     ├─ 元件：照 Web 規格實作，引用同名變數
-│     └─ 驗證：Yu5h1LibTest；使用端：HealthAI 等 Unity App
-└─ Physics（獨立 repo）：物理算式共用，另案
+│  ├─ Editor 匯入：Web 色票 → USS／TSS
+│  ├─ UI Toolkit：原生元件與平台接線
+│  └─ 既有能力：Preferences、手勢、拖曳與動畫
+├─ 使用端：內容、產品規則、保存範圍與場景互動
+└─ Physics：運動算式的共用方式，獨立專案決定
 ```
 
-色票和元件規格由 Web 庫流向 UI Toolkit，不反向。UI Toolkit 這邊發現規格缺漏或做不到的地方，以需求
-回報 Web 庫，不在 Unity 端自行改設計。
-
-## 摘要
-
-讓 Unity 的 UI 和 Web 庫的 UI 看起來、用起來一致。Web 庫的 UI 是 Lit 寫的，依賴 DOM 與完整 CSS，Unity
-不經過瀏覽器引擎無法執行，所以不共用渲染程式；改成在下面幾層共用唯一來源，兩邊各自原生渲染：
-
-| 層 | 共用方式 |
-|---|---|
-| 主題色票 | 由 Web 庫輸出，自動轉成 USS 變數，兩邊同值 |
-| 元件結構與狀態 | UI Toolkit 元件沿用 Web 元件的名稱、狀態與事件語意 |
-| 行為 | 照 Web 庫的規格文件實作，用同一組案例驗證 |
-| 渲染 | 各平台自己做：Web 用 Lit＋CSS，Unity 用 UI Toolkit＋USS |
+共用契約只有一個維護來源，內容依兩端的既有能力與需求共同制定。Web 文件集中維護契約，不代表 Web 的 DOM、slot 或事件 API 是 Unity 必須模仿的實作。兩端發現缺漏時先修正共用契約，再各自補足；平台差異須明確記錄。
 
 ## 問題與目標
 
-- **問題**：同一個 UI（例如設定面板）在 Web 與 Unity 各做一份，設計會各自漂移；Unity 這邊目前也沒有
-  任何來自 Web 庫的設計依據。
-- **目標**：設計只在 Web 庫決定一次；Unity 實作一次後，所有 Unity 專案共用。
-- **目標**：主題色票改一次，兩邊同時生效，不靠手動抄值。
-- **非目標**：在 Unity 執行 Lit 或模擬 DOM；用 WebView 嵌入網頁；把元件的 CSS 規則自動轉成 USS；
-  本輪不支援使用者在執行期自訂配色（見[尚未決定](#尚未決定)）。
+同一個 UI 在不同產品重寫，會重複處理保存、手勢與狀態，也容易產生外觀和行為漂移。本計畫讓可重用能力先在各平台收斂，再以單一契約連接兩端。
 
-## 責任邊界
+- 設計資料與資產維護一次；色票由 Web 推導，Unity 不重寫推導規則。
+- 每個平台的通用能力實作一次，第二個使用端只提供內容、資料與接線。
+- 相同操作以同一組案例驗證；明確區分必須一致的語意與允許不同的平台呈現。
+- 主題變更經建置、匯入與檢查後到達兩端，不靠人工抄值；不承諾已部署應用即時同步。
+- 本輪不建立跨語言 UI 框架，不模擬 DOM，不轉譯完整 CSS，不引入 WebView；執行期自訂配色另列待決。
 
-| 擁有者 | 擁有 | 不擁有 |
+## 共用層次與責任
+
+| 層 | 共用方式 | 各平台仍需負責 |
 |---|---|---|
-| Web 庫 | 色票與推導規則、元件設計與規格、產生的色票檔及其格式 | Unity 的 USS 與元件實作 |
-| UnityExtension | 色票檔 → USS 的匯入工具、UI Toolkit 元件、與 Web 規格的對照紀錄 | 設計決定；推導規則的第二份實作 |
-| Unity 使用端 | 元件的組合、內容與產品行為 | 元件本身的外觀與共用行為 |
+| 色票、可相容圖示資產 | 同一來源，建置或匯入產生平台產物 | 匯入、呈現及相容性驗證 |
+| 必要尺寸與動態參數 | 試點先盤點並集中實際需要的值 | 單位映射、字型與縮放差異 |
+| 操作語意、狀態轉換 | 同一契約與案例資料 | TS／C# 各自實作並執行案例 |
+| 保存、輸入、焦點與場景互動 | 優先重用各平台既有能力 | 平台接線與生命週期 |
+| 渲染 | Web 用 Lit／CSS，Unity 用 UI Toolkit／USS | 版面、原生 API 與資源釋放 |
+
+共用規格不等於共用執行碼：行為若仍由 TS 與 C# 各寫一份，就如實記為兩份實作。先以共用案例控制漂移；只有具體案例證明成本值得，才另案評估可共用的計算核心或生成方式。
+
+| 擁有者 | 責任 |
+|---|---|
+| Web 庫 | Theme 推導與輸出契約、共用元件契約與案例、Web 原生實作 |
+| UnityExtension | 匯入工具、Unity 原生實作、既有能力的接線、平台差異與驗收紀錄 |
+| 使用端 | 內容、資料驗證、預設值、保存範圍、產品政策、實際套用與場景互動 |
 
 ## 設計
 
 ### 主題轉換
 
-Web 庫的色票由程式決定：`src/theme/index.ts` 的 `resolveTheme` 先取 8 個基本色，再推導其他色
-（`--ui-hover`、`--ui-overlay`、`--ui-danger` 依亮暗模式決定，`--ui-on-accent` 依對比度在黑白之間選）。
-Web 庫建置時（`scripts/build-ui.mjs` 的 `buildTheme`）已經用 `resolveTheme` 算出結果，寫成
-`dist/theme/theme.css`：`[data-ui-scheme="light"]` 與 `[data-ui-scheme="dark"]` 兩個區塊，各列出完整的
-`--ui-*` 變數（含推導色），檔頭有 `src/theme/index.ts` 與建置腳本的 SHA-256 指紋。
+現有 `scripts/build-ui.mjs` 的 `buildTheme` 使用 `src/theme/index.ts` 的 `resolveTheme`，輸出 `dist/theme/theme.css`。它包含 light／dark 兩個 scheme 區塊，每個區塊有 `color-scheme` 及已推導的 `--ui-*` 色票；檔頭 SHA-256 由 Theme 原始碼與建置腳本共同產生。
 
-1. **讀 Web 庫產生的色票檔**：來源就是 `dist/theme/theme.css`，不需要 Web 庫另做輸出。它是程式產生的檔案，
-   格式固定，可以直接讀；Web 庫要做的只剩把位置與格式宣告為穩定契約，見
-   [UNITYEXTENSION-WEB-1](Requirements.Web.md#unityextension-web-1--將產生的主題色票檔宣告為穩定契約)。
-2. **UnityExtension 匯入**：Editor 工具讀這個檔案，只取兩個 `data-ui-scheme` 區塊裡的 `--ui-*` 宣告，產生
-   `.uss`／`.tss`，每個變數照原名輸出（`--ui-accent` 等），放在 `com.yu5h1.uitoolkit` 內；檔頭標明
-   「自動產生、勿手改」，並抄下來源檔的指紋，用來判斷是否需要重新匯入。檔案裡出現的選擇器、變數或值格式
-   不在預期內時，匯入工具報錯，不靜默略過。
-3. **元件只引用變數**：UI Toolkit 元件的 USS 一律寫 `var(--ui-*)`，不寫死顏色。
+1. **固定既有產物契約**：先完成 [UNITYEXTENSION-WEB-1](Requirements.Web.md#unityextension-web-1--將產生的主題色票檔宣告為穩定契約)。試點沿用 CSS，不另做 JSON 輸出。指紋用於追蹤來源，不當成格式版本。
+2. **受限解析與驗證**：Unity Editor 匯入器只接受契約指定的 scheme 與宣告；驗證並略過 `color-scheme`，擷取色票。支援註解、空白及宣告順序差異；缺必要變數、重複名稱、未知選擇器或不支援值格式都報錯。新增色票是否相容由契約規則判斷，不把所有新增變數一律視為破壞性變更。
+3. **產生 Unity 資產**：輸出 USS／TSS，保留變數名稱；記錄自動產生標記、來源版本或 commit、來源指紋、輸入內容雜湊與匯入器版本。元件引用變數，不抄寫色碼。必要時把 8 位十六進位轉成 `rgba()`，驗收比較 RGBA 語意值，不能要求字串完全相同。
+4. **更新與過期檢查**：試點由可重現的 Editor 匯入入口讀取指定 Web 建置產物；來源更新後重新匯入。Unity 整合／交付檢查核對輸入雜湊與生成紀錄，過期時阻止宣稱同步完成。同一輸入重匯入不產生差異；匯入失敗不覆寫上一份有效產物，明確標為未更新，不能算驗收通過。
 
-推導規則只存在 Web 庫一份。Unity 端不得重寫 `resolveTheme` 的推導，否則兩邊遲早算出不同顏色。
+只轉設計資料，不把 Web 元件 CSS 翻譯成 USS。Unity 目標版本的透明色、變數及主題切換仍須實測。既有 `customStyle` 唯讀的確認只支持「不能直接經此 API 改變變數」，不推論所有執行期配色方案都不可行。
 
-**限制**：
+### 視覺與互動對照
 
-- 只轉色票，不轉元件樣式。USS 是 CSS 的子集，沒有 grid、`::after`、`::part`、`@media`、
-  `:focus-visible`，元件版面由 UI Toolkit 自己實作。
-- 色票檔裡帶透明度的色碼是 8 位十六進位（如 `--ui-overlay: #17233266`），USS 是否接受這種寫法尚未實測；
-  不接受就由匯入工具轉成 `rgba()`。
-- Web 庫目前只有顏色是變數；圓角、間距、字級寫死在各元件的 CSS 裡，這些要共用得先在 Web 庫變成變數。
-- UI Toolkit 沒有公開 API 能在執行期改 USS 變數（`VisualElement.customStyle` 唯讀，2026-10-02 於
-  Unity 6000.6.0f1 反射確認），所以預先產生的 light／dark 可以直接用，執行期自訂配色不行。
+試點先列出設定面板需要共用的圓角、間距、字級／行高及動態參數，附現有來源與平台單位對照。Web 的資料化缺口由 [UNITYEXTENSION-WEB-4](Requirements.Web.md#unityextension-web-4--設定面板的最小共用設計參數與案例) 承接，只納入試點需要的項目，不先整理全庫。
 
-### 元件對照
+兩端對齊狀態與事件的意義，API 命名依平台慣例；Unity 不照搬 DOM／slot 結構。元件對照紀錄包含共用規格章節、兩端入口、平台差異及原因。視覺驗收比較同一內容與主題下的層級、間距、可讀性與操作區域，允許字型渲染差異，不要求逐像素相同。鍵盤、焦點返回、觸控、中文輸入及縮放依目標環境分別驗證。
 
-- 每個 UI Toolkit 元件沿用 Web 元件的名稱、狀態與事件語意。例如設定面板的 `busy`、`canApply`、
-  `retrySave`、`retryApply`、`autoSave`，以及分類 Tab、save bar、恢復預設。
-- 每個元件的文件寫明對應的 Web 原始檔與規格章節，並列出和 Web 不同的地方與原因（通常是 USS 做不到）。
-- Unity 端發現規格沒寫清楚，回報 Web 庫補規格，不在 Unity 端自行決定。
+### 設定面板的狀態責任
+
+Web 既有契約由 [SettingsPanelPlan.md](../../../Web/Documentation/SettingsPanelPlan.md) 與 [SaveBar.md](../../../Web/Documentation/SaveBar.md) 擁有。本計畫只定義 Unity 的對接責任，不另寫一份保存語意。
+
+| 責任 | Web 現有邊界 | Unity 對接要求 |
+|---|---|---|
+| 顯示與請求 | SettingsPanel／SaveBar | UI Toolkit 面板顯示狀態、提出操作，不自行保存 |
+| 編輯草稿 | 宿主接線 | 與已接受值隔離，手動編輯不能直接寫入 Preferences |
+| 已保存值與提交狀態 | ConfigStore | 先核對 Preferences 可承擔部分，僅補缺少的提交協調，不複製持久化引擎 |
+| 儲存與驗證 | 宿主提供 storage／decode | 沿用 Preferences 能力，宿主決定範圍、預設與驗證 |
+| 實際套用 | 宿主 apply | 由使用端套用至產品；保存成功與套用成功分開回報 |
+
+實作前先核對 [偏好設定](偏好設定.md) 的實際 API 與生命週期，列出是否支援草稿隔離、保存結果與套用錯誤的缺口。共用 UI 套件不直接依賴 Preferences；使用端負責接線，沿用既有「套件不認識 Preferences」邊界。若需可重用協調能力，依責任放在對應層，不能藏進面板或另建設定真值。
 
 ### 試點
 
-整套做法先用**設定面板**一項驗證，通過後才擴大到其他元件。選它的原因：Web 庫已有完整規格與 Lit 實作，
-不必等 Web 庫新寫設計；它同時走過主題轉換、元件對照與行為對照三層；也不牽涉物理。
+以設定面板走完主題、狀態與使用端接線。先用現有 Web demo 與 Yu5h1LibTest；再以第二個獨立宿主或消費端驗證擴充，不另造專屬面板。
 
-試點通過的條件，即[驗收與遷移](#驗收與遷移)第 1–3 步全部成立：
+共用案例以穩定 ID 記錄初始狀態、操作、儲存／套用結果及預期狀態；同一份中性資料由兩端測試入口消費。案例的權威來源集中在 Web，Unity 記錄所驗版本與結果，平台操作另由各端驗證。
 
-1. Web 庫把 `dist/theme/theme.css` 宣告為穩定契約，UnityExtension 匯入後 light／dark 的 USS 變數與它逐一相同。
-2. 設定面板的 UI Toolkit 版照 Web 規格逐條對照，差異都有原因。
-3. 自動儲存、手動套用、恢復預設、保存失敗重試在兩邊得到同樣的狀態。
+| 案例 | 必須觀察的結果 |
+|---|---|
+| 自動保存與恢復預設 | 依既有模式契約保存、套用，重載可恢復 |
+| 手動草稿、跨分類與取消 | 切分類保留草稿；取消不修改已接受值 |
+| 手動切回自動 | 提交目前草稿，避免重複寫入 |
+| 保存失敗與重試 | 保留草稿、不宣稱生效；重開仍可重試 |
+| 保存成功、套用失敗 | 顯示已保存但未生效；重試只套用，不再保存 |
+| 保存中操作與卸載 | 防重複提交與禁止關閉；舊回應不更新已卸載 UI |
+| 無資料與毀損資料 | 無資料用預設；讀取失敗不得靜默覆寫 |
+| 兩個保存範圍 | 彼此隔離，不共用錯誤的 key 或狀態 |
+| 第二使用端／自訂分類 | 只換內容、資料與接線，不修改元件核心或重寫保存流程 |
 
-試點沒通過前，不啟動 [UNITYEXTENSION-WEB-2](Requirements.Web.md#unityextension-web-2--聊天面板設計)、
-[UNITYEXTENSION-WEB-3](Requirements.Web.md#unityextension-web-3--apps-面板設計)，也不把既有 UI Toolkit 元件改成匯入的色票變數。
-試點中發現做法本身行不通（例如色票檔格式不足、規格無法對照），先修正本計畫再繼續。
+完整試點通過條件由下方「驗收與遷移」P1–P4 擁有。未通過前，不啟動 WEB-2／WEB-3 的實作或既有 UI 的整批換色；做法不成立時先修正契約與邊界。
 
 ### 現有元件的去向
 
-| 元件 | 目前的設計來源 | 去向 |
-|---|---|---|
-| 設定面板 | Web 庫 `SettingsPanelPlan.md`（已實作） | **試點**：第一個照 Web 規格實作的 UI Toolkit 元件；保存接 UnityExtension 的 `Preferences`（見[偏好設定](偏好設定.md)） |
-| 聊天面板 | UnityExtension [聊天面板模組](聊天面板模組.md)；Web 庫沒有 | 試點通過後，設計遷到 Web 庫，需求 [UNITYEXTENSION-WEB-2](Requirements.Web.md#unityextension-web-2--聊天面板設計) |
-| Apps 面板 | UnityExtension `Samples~/AppsMenu`；Web 庫沒有 | 試點通過後，設計遷到 Web 庫，需求 [UNITYEXTENSION-WEB-3](Requirements.Web.md#unityextension-web-3--apps-面板設計)；物理部分另等 Physics 試作 |
-| 向量圖示 | UnityExtension [向量圖示系統](向量圖示系統.md)；Web 庫有 `svg-animated-icons` 規劃 | 兩邊都以 SVG 為資產時可共用同一批檔案；對齊方式待兩份計畫各自推進後再談 |
+| 元件 | 重用與補缺口方式 |
+|---|---|
+| 設定面板 | 第一個試點；重用 Web 元件、ConfigStore 與 Unity Preferences，各平台只補必要部分 |
+| 聊天面板 | 試點後依 WEB-2 對照 [聊天面板模組](聊天面板模組.md) 與 HealthAI 網頁 demo；集中共用契約，保留可用實作並補差異 |
+| Apps 面板 | 試點後依 WEB-3 盤點通用機制；`Samples~/AppsMenu` 是組合範例，不新增包辦產品政策的桌面控件 |
+| 向量圖示 | 依 [向量圖示系統](向量圖示系統.md) 與 Web 圖示計畫核對 SVG 子集；能共用資產不代表動態渲染可直接共用 |
 
-聊天面板與 Apps 面板都已有 Unity 實作，遷移的意思是「設計的擁有者換成 Web 庫」：Web 庫依現有 Unity
-設計與 HealthAI 網頁 demo 寫出自己的規格與實作，之後兩邊以 Web 庫的規格為準。進行中的工作不因此暫停：
-HealthAI 的聊天模組遷移（[聊天模組遷移計畫](file:///W:/UnityProject/HealthAI/docs/unity/聊天模組遷移計畫.md)，
-需求 HEALTHAI-UNITYEXTENSION-7–14）照常進行；Web 庫的聊天規格完成後，再把差異回補到 Unity。
+聊天的訊息來源、網路串流、語音服務與產品工作流留在使用端；UI 只呈現資料及提出請求。HealthAI 的 [聊天模組遷移](file:///W:/UnityProject/HealthAI/docs/unity/聊天模組遷移計畫.md) 照常進行，後續以差異表補齊，不為改換契約維護位置而重做元件。
+
+Apps 優先重用 Unity 的 `GroupDragLayout`、`Reaction.Throw`、`PointerVelocity`、`SweptContact`、`ElementTarget`，以及 Web 的長按、排序、列表與適用動畫能力。障礙物集合、圖示歸屬、丟入面板的判定及產品動作留在宿主；缺口經實例證實才抽出。遵守既有取消 `DraggableDesktop` 的決策。
 
 ### 物理共用
 
-Apps 面板的慣性、甩飛、彈簧和桌面避障是物理算式，Web 與 Unity 都需要。是否以 C++ 寫成單一核心、
-分別輸出 Unity 原生程式庫與 WebAssembly，或改為共用規格各自實作，由獨立的 Physics 專案決定：
-[盤點計畫](file:///C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Physics/Documentation/InventoryPlan.md)第 4 步「比較共用方式」已列入此選項。
-本計畫不重複該比較。
+慣性、彈簧及接觸運算的共用方式由 Physics 的 [盤點計畫](file:///C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Physics/Documentation/InventoryPlan.md) 決定；本計畫不預選 C++／WASM 或另寫第二套核心。Physics 最小試作通過前，Unity 沿用既有 common／animation 實作，Web 不因展示 Apps 而另造物理引擎；物理展示可延後，非物理機制可獨立驗收。
 
-Physics 也先以最小試作驗證（其盤點計畫第 5 步「提出最小試作」）。Apps 面板的物理部分等 Physics 試作通過、共用方式定案後才接；在那之前，Unity 端沿用 `com.yu5h1.common`／`com.yu5h1.animation` 現有的物理實作，WEB-3 的規格只描述行為與參數。
-
-Unity 端的命名限制：C# namespace 不得取 `Yu5h1Lib.Physics`，它會在整個 library 遮蔽 `UnityEngine.Physics`
-（見 [UnityExtension 入口文件](../.agents/introduction.md)的 house conventions）。資料夾或 repo 名稱不受影響。
-
-## 案例
-
-- **設定面板**：Web 庫已有完整規格與 Lit 實作。UI Toolkit 版照同一份規格做，色票來自匯入的 USS，
-  保存接 `Preferences`。兩邊在同樣的操作下（自動儲存、手動套用、保存失敗重試）得到同樣的狀態。
-- **聊天面板**：Unity 先有實作，Web 庫後補規格。驗證這套做法在「Unity 先做」的情況下也能把設計擁有權
-  轉回 Web 庫，不需要重做 Unity 實作。
+Unity C# namespace 不得使用 `Yu5h1Lib.Physics`，避免遮蔽 `UnityEngine.Physics`。
 
 ## 決策理由與替代方案
 
-- **不共用渲染程式**：Unity 端執行 JS 的方案（OneJS、ReactUnity）都不模擬 DOM，Lit 無法執行；自己在
-  UI Toolkit 上模擬 DOM 與 CSS，工程大且只能接近、不能一致。
-- **已排除：WebView 嵌入**。目前需求不是瀏覽網頁，而是 Unity 原生顯示一致的 UI。嵌入網頁會多一個
-  瀏覽器引擎，且主介面需要和 Unity 場景互動（遮擋、觸控、定位），網頁做不到。
-- **已排除：Unity 端重寫色票推導規則**。兩份推導遲早不一致；改由 Web 庫輸出已算好的值。
-- **已排除：解析 Web 庫手寫的元件 CSS 產生 USS**。元件 CSS 用了 USS 不支援的語法，轉出來只會走樣。
-  讀建置產生的 `theme.css` 不在此列：它只有變數宣告，由 `resolveTheme` 產生、格式固定。
+- 各平台原生渲染可以沿用現有工具與場景整合；共同維護資料與契約，接受必要的兩端實作成本。
+- WebView 可藉外掛提供場景呈現與雙向通訊，並非技術上完全做不到（例如 [Vuplex 官方文件](https://developer.vuplex.com/)）。本輪因選擇原生 UI 與避免新增瀏覽器引擎及橋接依賴而排除；未來需求改變再評估。
+- 色票推導只由 Web 執行；生成資產必須可追溯並能偵測過期。
+- 受限解析建置色票與轉譯完整 CSS 是不同工作；不以試點擴張成通用樣式轉譯器。
+- 先用共用案例驗證跨語言行為；不以避免重複為名先建無消費案例的通用框架。
 
 ## 驗收與遷移
 
-第 1–3 步是[試點](#試點)，全部通過才進入第 4 步。
+| 階段 | 完成條件 |
+|---|---|
+| P1 契約與盤點 | WEB-1 與 WEB-4 的交付可用；設定責任對照完成，Unity 缺口有明確擁有者；既有能力與新增工作逐項區分 |
+| P2 主題匯入 | light／dark 色值語意相同；透明色實測；重匯入無差異；來源更新可偵測，錯誤不破壞有效產物；視覺參數映射可核對 |
+| P3 狀態與平台驗證 | 兩端執行同一版案例並記錄結果；鍵盤、焦點、觸控、IME 及明暗呈現按目標環境驗證，未驗項不得記通過 |
+| P4 重用驗證 | 第二個獨立宿主或消費端只提供內容、資料與接線；新增分類不改核心，不複製保存／手勢規則；證明使用同一份平台模組 |
+| P5 擴大採用 | P1–P4 通過後，聊天按差異遷移、Apps 按通用機制補缺口；物理依 Physics 自身門檻 |
 
-1. Web 庫將產生的色票檔宣告為穩定契約（UNITYEXTENSION-WEB-1）。
-2. UnityExtension 完成匯入工具：light 與 dark 產生的 USS 變數逐一等於色票檔的值；重新匯入不產生差異；
-   在 Yu5h1LibTest 用一個測試面板切換 light／dark，顏色與 Web 庫 demo 的同一主題相符。
-3. 設定面板的 UI Toolkit 版：照 Web 規格逐條對照，列出差異與原因；保存接 `Preferences`。
-4. 試點通過後，Web 庫依 WEB-2、WEB-3 完成聊天面板與 Apps 面板的設計，Unity 端依 Web 規格回補差異。
-   Apps 面板的物理部分另等 Physics 試作通過。
+既有聊天、BottomSheet 與 Apps 範例改色須有實際截圖與操作驗收，不能只靠編譯。每次驗收記錄 Web 來源版本、Unity 版本、產物指紋、共用案例版本及差異；產品正式採用由該使用端驗收。
 
-既有 UI Toolkit 元件（聊天模組、BottomSheet、Apps Menu 範例）改用匯入的色票變數時，視覺變化需在
-Yu5h1LibTest 截圖確認，不靠編譯通過宣稱一致。
+規模：計畫修訂為小型；後續跨平台試點預估中型、架構影響為系統層級。先例是既有元件與服務，探索部分是匯入契約及設定狀態接線；檔案與工時估算在 P1 缺口盤點後提出，不先承諾整套 UI 移植。驗證採資料／狀態檢查加上兩端實際 UI 操作。
 
 ## 尚未決定
 
-- **執行期自訂配色**：Web 庫的 `custom` 模式讓使用者執行時挑色，UI Toolkit 無法在執行期改 USS 變數。
-  要支援的話需另找機制（例如執行期重新產生並套用 StyleSheet，或改由 C# 直接寫顏色），是否需要、何時需要待定。
-- **圓角、間距、字級是否變成 Web 庫的變數**：決定兩邊能共用到多細；這是 Web 庫的設計決定，
-  UnityExtension 只能提需求。
+- **執行期自訂配色**：本輪只驗證預先產生的 light／dark。是否需要動態配色及其 Unity 機制，留到有消費需求時決定。
+- **試點參數與案例交付**：WEB-4 實作前確定必要參數清單、單位映射及案例資料位置／格式；由 Web 維護，兩端共同核對，不擴大成全庫設計系統重整。
+- **Unity 提交協調缺口**：P1 核對 Preferences 後確定最小補足位置；不得預設面板直接保存或建立第二套持久化系統。
