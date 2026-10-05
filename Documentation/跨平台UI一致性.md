@@ -16,7 +16,7 @@ Yu5h1Lib
 ├─ Web 庫：UI 設計的唯一來源
 │  ├─ 主題：resolveTheme 決定 light／dark 色票與推導規則
 │  ├─ 元件：Lit 實作＋規格文件（設定面板、save bar、對話框……）
-│  └─ 主題輸出：產生不綁平台的色票檔（Requirements.Web.md）
+│  └─ 主題輸出：建置時產生 dist/theme/theme.css（已存在；穩定性見 Requirements.Web.md）
 ├─ UnityExtension
 │  └─ com.yu5h1.uitoolkit：UI Toolkit 實作
 │     ├─ 主題匯入：色票檔 → USS 變數（Editor 工具）
@@ -53,7 +53,7 @@ Yu5h1Lib
 
 | 擁有者 | 擁有 | 不擁有 |
 |---|---|---|
-| Web 庫 | 色票與推導規則、元件設計與規格、色票檔格式 | Unity 的 USS 與元件實作 |
+| Web 庫 | 色票與推導規則、元件設計與規格、產生的色票檔及其格式 | Unity 的 USS 與元件實作 |
 | UnityExtension | 色票檔 → USS 的匯入工具、UI Toolkit 元件、與 Web 規格的對照紀錄 | 設計決定；推導規則的第二份實作 |
 | Unity 使用端 | 元件的組合、內容與產品行為 | 元件本身的外觀與共用行為 |
 
@@ -61,13 +61,19 @@ Yu5h1Lib
 
 ### 主題轉換
 
-Web 庫的色票不是靜態 CSS：`src/theme/index.ts` 的 `resolveTheme` 先取 8 個基本色，再推導其他色
+Web 庫的色票由程式決定：`src/theme/index.ts` 的 `resolveTheme` 先取 8 個基本色，再推導其他色
 （`--ui-hover`、`--ui-overlay`、`--ui-danger` 依亮暗模式決定，`--ui-on-accent` 依對比度在黑白之間選）。
+Web 庫建置時（`scripts/build-ui.mjs` 的 `buildTheme`）已經用 `resolveTheme` 算出結果，寫成
+`dist/theme/theme.css`：`[data-ui-scheme="light"]` 與 `[data-ui-scheme="dark"]` 兩個區塊，各列出完整的
+`--ui-*` 變數（含推導色），檔頭有 `src/theme/index.ts` 與建置腳本的 SHA-256 指紋。
 
-1. **Web 庫輸出色票檔**：建置時以 Node 呼叫 Web 庫自己的 `resolveTheme`，分別輸出 light 與 dark 的完整
-   變數表。格式由 Web 庫決定，需求見 [UNITYEXTENSION-WEB-1](Requirements.Web.md#unityextension-web-1--輸出不綁平台的主題色票檔)。
-2. **UnityExtension 匯入**：Editor 工具讀色票檔，產生 `.uss`／`.tss`，每個變數照原名輸出
-   （`--ui-accent` 等），放在 `com.yu5h1.uitoolkit` 內，檔頭標明「自動產生、勿手改」與來源版本。
+1. **讀 Web 庫產生的色票檔**：來源就是 `dist/theme/theme.css`，不需要 Web 庫另做輸出。它是程式產生的檔案，
+   格式固定，可以直接讀；Web 庫要做的只剩把位置與格式宣告為穩定契約，見
+   [UNITYEXTENSION-WEB-1](Requirements.Web.md#unityextension-web-1--將產生的主題色票檔宣告為穩定契約)。
+2. **UnityExtension 匯入**：Editor 工具讀這個檔案，只取兩個 `data-ui-scheme` 區塊裡的 `--ui-*` 宣告，產生
+   `.uss`／`.tss`，每個變數照原名輸出（`--ui-accent` 等），放在 `com.yu5h1.uitoolkit` 內；檔頭標明
+   「自動產生、勿手改」，並抄下來源檔的指紋，用來判斷是否需要重新匯入。檔案裡出現的選擇器、變數或值格式
+   不在預期內時，匯入工具報錯，不靜默略過。
 3. **元件只引用變數**：UI Toolkit 元件的 USS 一律寫 `var(--ui-*)`，不寫死顏色。
 
 推導規則只存在 Web 庫一份。Unity 端不得重寫 `resolveTheme` 的推導，否則兩邊遲早算出不同顏色。
@@ -76,6 +82,8 @@ Web 庫的色票不是靜態 CSS：`src/theme/index.ts` 的 `resolveTheme` 先�
 
 - 只轉色票，不轉元件樣式。USS 是 CSS 的子集，沒有 grid、`::after`、`::part`、`@media`、
   `:focus-visible`，元件版面由 UI Toolkit 自己實作。
+- 色票檔裡帶透明度的色碼是 8 位十六進位（如 `--ui-overlay: #17233266`），USS 是否接受這種寫法尚未實測；
+  不接受就由匯入工具轉成 `rgba()`。
 - Web 庫目前只有顏色是變數；圓角、間距、字級寫死在各元件的 CSS 裡，這些要共用得先在 Web 庫變成變數。
 - UI Toolkit 沒有公開 API 能在執行期改 USS 變數（`VisualElement.customStyle` 唯讀，2026-10-02 於
   Unity 6000.6.0f1 反射確認），所以預先產生的 light／dark 可以直接用，執行期自訂配色不行。
@@ -94,7 +102,7 @@ Web 庫的色票不是靜態 CSS：`src/theme/index.ts` 的 `resolveTheme` 先�
 
 試點通過的條件，即[驗收與遷移](#驗收與遷移)第 1–3 步全部成立：
 
-1. Web 庫交付色票檔，UnityExtension 匯入後 light／dark 的 USS 變數與 Web 庫逐一相同。
+1. Web 庫把 `dist/theme/theme.css` 宣告為穩定契約，UnityExtension 匯入後 light／dark 的 USS 變數與它逐一相同。
 2. 設定面板的 UI Toolkit 版照 Web 規格逐條對照，差異都有原因。
 3. 自動儲存、手動套用、恢復預設、保存失敗重試在兩邊得到同樣的狀態。
 
@@ -142,13 +150,14 @@ Unity 端的命名限制：C# namespace 不得取 `Yu5h1Lib.Physics`，它會在
 - **已排除：WebView 嵌入**。目前需求不是瀏覽網頁，而是 Unity 原生顯示一致的 UI。嵌入網頁會多一個
   瀏覽器引擎，且主介面需要和 Unity 場景互動（遮擋、觸控、定位），網頁做不到。
 - **已排除：Unity 端重寫色票推導規則**。兩份推導遲早不一致；改由 Web 庫輸出已算好的值。
-- **已排除：解析 Web 庫的 CSS 產生 USS**。色票是程式算出來的，不在 CSS 檔裡；元件 CSS 又有 USS 不支援的語法。
+- **已排除：解析 Web 庫手寫的元件 CSS 產生 USS**。元件 CSS 用了 USS 不支援的語法，轉出來只會走樣。
+  讀建置產生的 `theme.css` 不在此列：它只有變數宣告，由 `resolveTheme` 產生、格式固定。
 
 ## 驗收與遷移
 
 第 1–3 步是[試點](#試點)，全部通過才進入第 4 步。
 
-1. Web 庫交付色票檔（UNITYEXTENSION-WEB-1）。
+1. Web 庫將產生的色票檔宣告為穩定契約（UNITYEXTENSION-WEB-1）。
 2. UnityExtension 完成匯入工具：light 與 dark 產生的 USS 變數逐一等於色票檔的值；重新匯入不產生差異；
    在 Yu5h1LibTest 用一個測試面板切換 light／dark，顏色與 Web 庫 demo 的同一主題相符。
 3. 設定面板的 UI Toolkit 版：照 Web 規格逐條對照，列出差異與原因；保存接 `Preferences`。

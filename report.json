@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-03T09:27:22.552086+00:00",
+  "updated_at": "2026-10-05T05:06:54.569704+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -553,7 +553,7 @@
       "id": "cross-platform-ui-parity",
       "title": "跨平台 UI 一致性（Web 庫為設計來源）",
       "status": "planned",
-      "summary": "設計統一在 Web 庫，UI Toolkit 照 Web 規格實作，主題色票由 Web 庫輸出後自動轉成 USS 變數。先以設定面板試點驗證整條流程，通過後才遷移聊天面板與 Apps 面板的設計；Apps 面板的物理部分等 Physics 試作。Web 端工作見 Documentation/Requirements.Web.md。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
+      "summary": "設計統一在 Web 庫，UI Toolkit 照 Web 規格實作，主題色票讀 Web 庫建置產生的 theme.css，自動轉成 USS 變數。先以設定面板試點驗證整條流程，通過後才遷移聊天面板與 Apps 面板的設計；Apps 面板的物理部分等 Physics 試作。Web 端工作見 Documentation/Requirements.Web.md。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
       "completed_items": [
         {
           "id": "item-cross-platform-ui-parity-done-1",
@@ -564,12 +564,12 @@
       "pending_items": [
         {
           "id": "item-cross-platform-ui-parity-todo-1",
-          "title": "Web 庫交付主題色票檔（Requirements.Web.md UNITYEXTENSION-WEB-1）",
+          "title": "Web 庫將建置產生的 dist/theme/theme.css 宣告為穩定契約（Requirements.Web.md UNITYEXTENSION-WEB-1）",
           "priority": 2
         },
         {
           "id": "item-cross-platform-ui-parity-todo-2",
-          "title": "色票檔 → USS 匯入工具，light／dark 值與 Web 庫逐一相同",
+          "title": "theme.css → USS 匯入工具（可先開始），light／dark 值與 Web 庫逐一相同；實測 USS 是否接受 8 位色碼",
           "priority": 3
         },
         {
