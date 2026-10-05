@@ -1,0 +1,16 @@
+{
+    "name": "Yu5h1Lib.Web",
+    "rootNamespace": "Yu5h1Lib.WebSupport",
+    "references": [
+        "Yu5h1Lib.Common"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

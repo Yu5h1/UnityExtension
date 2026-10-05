@@ -1,0 +1,20 @@
+{
+    "name": "Yu5h1Lib.Web.Editor",
+    "rootNamespace": "Yu5h1Lib.WebSupport",
+    "references": [
+        "Yu5h1Lib.Web",
+        "Yu5h1Lib.Common",
+        "Yu5h1Lib.Common.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

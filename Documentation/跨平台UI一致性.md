@@ -27,7 +27,7 @@ Web 是來源，Unity 是復刻。Unity 先做出來的 UI，先把設計搬到 
 |---|---|---|
 | Yu5h1Lib.Web | `Yu5h1Lib/Web` | UI 設計與實作的來源 |
 | Yu5h1Lib.UIToolkit | `UnityExtension/Packages/UIToolkit` | 擴充 UI Toolkit，負責復刻 Web 的 UI 互動，轉換工具也放在這裡 |
-| Yu5h1Lib.Web package | `UnityExtension/Packages/Web`（UPM，尚未建立） | Unity 端的 Web 平台能力，承接 `common` 的 WebSupport 等程式；不屬於本計畫的 UI 復刻 |
+| Yu5h1Lib.Web package | `UnityExtension/Packages/Web`（UPM） | Unity 端的 Web 平台能力，承接 `common` 的 WebSupport 等程式（[遷移計畫](Web套件遷移.md)）；不屬於本計畫的 UI 復刻 |
 
 ## 問題與目標
 

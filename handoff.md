@@ -28,7 +28,7 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 - Use [unity-ui-extraction](.agents/skills/unity-ui-extraction/SKILL.md) for the next actual Unity UI extraction or replication, within the source project's existing plan.
 
-- Create the Yu5h1Lib.Web package (UPM) at `Packages/Web` — the folder exists, empty and untracked — and move `common`'s Web platform code into it: `Runtime/WebSupport/` (`WebConfig.cs`, `WebInput.cs`, two `.jslib`), `Editor/WebSupport/IndexHtmlEditor.cs`, `Runtime/Event/WebRequestEvent.cs`; check `Component/VersionChecker.cs`'s WebGL use before deciding whether it moves. Keep `.meta` GUIDs and check serialized references; this is separate from the UI parity work. Not started, not yet scoped with the user.
+- Web package migration ([Web套件遷移](Documentation/Web套件遷移.md), Task ID `web-package-migration`): skeleton done; next is its 步驟 2 (add `com.yu5h1.web` to VCP's manifest), then step 3 (one `git mv` commit). Settle its [尚未決定](Documentation/Web套件遷移.md#尚未決定) first; separate from the UI parity work.
 
 - Continue [專案開發系統分析技能計畫](Documentation/專案開發系統分析技能計畫.md#待討論決策): settle skill ownership, activation scope, decision flow, and a first consumer case. The draft records requirement classification, capability matching, and Prefab/data-driven authoring with editable results. No formal skill or AgentsRule change has been implemented.
 
@@ -74,6 +74,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 5. Clean up the backup copies under `Unity/UnityExtension/Runtime` and `Unity/UnityExtension/Editor`. Which side is the source is settled in [introduction.md § Core source and backups](.agents/introduction.md#core-source-and-backups). The backups have no asmdef and compile into the default `Assembly-CSharp`, so removing them must first confirm nothing in `Assembly-CSharp` depends on a type that exists only there. Do this as its own task, not as a side effect of unrelated work.
 
 ## Recent Work
+
+- 2026-10-06 (Web package): Created the `Packages/Web` skeleton (`com.yu5h1.web` 0.1.0, depends on common; asmdefs `Yu5h1Lib.Web` (all platforms) and `Yu5h1Lib.Web.Editor`; `.meta` GUIDs fixed) and wrote the migration plan [Web套件遷移](Documentation/Web套件遷移.md). Survey: only Virtual-Chat-Partner uses the code (`ChatRequest.cs` → `WebConfig`; `ChatScene`/`vcp_AudioClient` mount `WebInput` by GUID `8066e72c…`); BonghuoVR, KFC, MotionGen, Yu5h1LibTest have none; `VersionChecker` stays in common (no WebGL API). No file moved, no Unity run; the empty asmdefs are unverified in Unity.
 
 - 2026-10-06 (Core on 6000.3 + 6000.6): BonghuoVR (Unity 6000.3.9f1) unloaded `Yu5h1Lib.Editor.dll` as broken because Core was built against the `Unity` env var's 6000.6.0f1 and `CustomEndNameEditAction` derived from `AssetCreationEndAction`, which 6000.3 lacks. A `#if` in Core cannot help: the DLL is compiled once, outside Unity, so it carries one branch. With the user's Core authorization: new `AssetCreation` (Core Editor `Utilities/`) owns the version-neutral part (`Create`, `Complete`) and exposes a `StartNameEditing` hook; `Packages/common/Editor/Utility/NamedAssetEndAction.cs` registers it on `[InitializeOnLoadMethod]` with `#if UNITY_6000_6_OR_NEWER` choosing `AssetCreationEndAction`/`EntityId` or `EndNameEditAction`/`int` (the exact version that introduced the new type, 6000.4 or 6000.5, is unverified). `CustomEndNameEditAction` deleted. `ScriptTemplateUtil` modernised at the user's request (`CompilationPipeline.RequestScriptCompilation(CleanBuildCache)` instead of the obsolete define-symbol toggle, `applicationContentsPath`, `OpenWithDefaultApp`, `GetIconForFile`, regex clipboard parsing, `LoadMainAssetAtPath`); fixed `NewClass.cs.cs`, the Inspector menu NRE with no selection, and the `Exeplore Templetes` typo (no callers). A 6000.3 compile check then caught `ObjectUtility.FindObjects` binding to the 6000.6-only `FindObjectsByType(FindObjectsInactive)` overload (a runtime `MissingMethodException` in BonghuoVR); it now passes `FindObjectsSortMode.None` (deprecated only as a warning in 6000.6, CS0618 suppressed). Verified: normal build (netstandard2.1, 6000.6) and an isolated 6000.3 check (`dotnet build Yu5h1Lib.Editor.csproj -c Release -f net48 -p:Unity=<6000.3.9f1 Unity.exe> -p:OutputPath=<Unity>\bin\Validation\Core6000_3\Release\`; net48 so the post-build copy does not overwrite Packages) both pass, and the Unity type/member references of the shipped DLLs are identical to the 6000.3 build's (1145 entries, compared with a System.Reflection.Metadata scratch tool). The user verified in Unity: Yu5h1LibTest (6000.6) and BonghuoVR (6000.3) both compile and work.
 
@@ -201,6 +203,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 - Decision: use `unified-solver` for large-scale collision, stacking, and container interactions. The retrospective is recorded in [DevelopmentLog.md](Documentation/DevelopmentLog.md).
 
 ## Open decisions
+
+- [Web 套件遷移 — 尚未決定](Documentation/Web套件遷移.md#尚未決定): `WebRequestEvent.cs` delete vs move, `IndexHtmlEditor.cs` encoding, common version number.
 
 - [專案開發系統分析技能計畫 — 待討論決策](Documentation/專案開發系統分析技能計畫.md#待討論決策).
 

@@ -1,0 +1,19 @@
+{
+  "name": "com.yu5h1.web",
+  "displayName": "Yu5h1Lib.Web",
+  "version": "0.1.0",
+  "unity": "2024.1",
+  "description": "Unity WebGL platform support from Yu5h1: page config reading, browser keyboard bridging and WebGL template tooling",
+  "dependencies": {
+    "com.yu5h1.common": "1.0.0"
+  },
+  "keywords": [
+    "WebGL",
+    "Web"
+  ],
+  "author": {
+    "name": "Yu5h1",
+    "url": "https://github.com/Yu5h1",
+    "email": "jenyu5h10415@gmail.com"
+  }
+}
