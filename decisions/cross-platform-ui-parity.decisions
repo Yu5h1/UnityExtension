@@ -1,0 +1,285 @@
+{
+  "schema_version": "1.1",
+  "task_id": "cross-platform-ui-parity",
+  "updated_at": "2026-10-06T02:31:23+08:00",
+  "decisions": [
+    {
+      "id": "unpark",
+      "version": 1,
+      "question": "跨平台 UI 一致性目前「已排入、暫緩」，Unity 端要等具名產品需求才啟動。是否解除暫緩？",
+      "context": "計畫〈啟動條件〉要求具名產品需求；Web 已交付 WEB-1 與 WEB-3 非物理 1.0.0，等待 Unity 驗收。",
+      "source_ref": "Unity/UnityExtension/Documentation/跨平台UI一致性.md#啟動條件",
+      "options": [
+        {
+          "id": "keep-parked",
+          "label": "維持暫緩"
+        },
+        {
+          "id": "unpark-unbound",
+          "label": "解除暫緩，不綁產品"
+        },
+        {
+          "id": "unpark-product",
+          "label": "解除暫緩，綁定具名產品"
+        }
+      ],
+      "allow_other": true,
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "unpark-unbound",
+        "reason": "使用者 2026-10-06 於對話中決定；計畫與 handoff 尚未改寫",
+        "confirmed_at": "2026-10-06T02:31:23+08:00"
+      }
+    },
+    {
+      "id": "phase-order",
+      "version": 1,
+      "question": "Unity 端先做哪一階段？",
+      "context": "原計畫 P1–P4 依序（P2 WebTheme 轉換，P3 復刻 AppsMenu）；先前未討論 P2 與 P3 的先後。",
+      "source_ref": "Unity/UnityExtension/Documentation/跨平台UI一致性.md#驗收與遷移",
+      "options": [
+        {
+          "id": "p2-first",
+          "label": "先 P2 WebTheme 轉換"
+        },
+        {
+          "id": "p3-first",
+          "label": "先 P3 復刻 AppsMenu"
+        }
+      ],
+      "allow_other": true,
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "p3-first",
+        "reason": "使用者 2026-10-06 於對話中決定",
+        "confirmed_at": "2026-10-06T02:31:23+08:00"
+      }
+    },
+    {
+      "id": "physics-scope",
+      "version": 1,
+      "question": "Unity 的 Apps 模組要不要包含物理行為（慣性、甩飛、吸塵器、避障、面板彈簧、抖動）？",
+      "context": "Web 1.0.0 只有非物理部分；Unity 範例 Samples~/AppsMenu 已有這些行為，分類由 Motion 決定。",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#來源與範圍",
+      "options": [
+        {
+          "id": "replica-only",
+          "label": "模組只復刻 Web 1.0.0",
+          "description": "物理行為留在既有範例，等 Motion 定案再接"
+        },
+        {
+          "id": "include-physics",
+          "label": "模組直接包含物理行為",
+          "description": "用既有 animation／common 實作"
+        }
+      ],
+      "recommendation": {
+        "option_id": "replica-only",
+        "reason": "先從小驗證；物理分類未定，避免先寫死在模組裡"
+      },
+      "allow_other": true,
+      "status": "pending",
+      "answer": null
+    },
+    {
+      "id": "behavior-source",
+      "version": 1,
+      "question": "Web 與 Unity 範例行為不同時，模組以誰為準？",
+      "context": "差異：初始位置（Web 固定網格、前 5 項在桌面；Unity 散佈）、拖曳超過 6px 才開始、背景拖曳直接跟手、面板開合立即生效、不保留 app-0 特例。",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#公開契約",
+      "options": [
+        {
+          "id": "follow-web",
+          "label": "照 Web"
+        },
+        {
+          "id": "follow-unity",
+          "label": "照 Unity 範例"
+        }
+      ],
+      "recommendation": {
+        "option_id": "follow-web",
+        "reason": "Web 是來源，共用案例依 Web 行為撰寫"
+      },
+      "allow_other": true,
+      "status": "pending",
+      "answer": null
+    },
+    {
+      "id": "entrance",
+      "version": 1,
+      "question": "入場動畫復刻哪一份？",
+      "context": "Web 目前是 250ms 淡入加 75ms 錯開的簡化版，正在修正以對齊 Unity 的 Transition.Opening（飛入、縮放、收攏、整段跳過）。",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#與-unity-範例的差異",
+      "options": [
+        {
+          "id": "unity-opening",
+          "label": "沿用 Unity 既有 Transition.Opening"
+        },
+        {
+          "id": "web-fade",
+          "label": "復刻 Web 簡化淡入"
+        }
+      ],
+      "recommendation": {
+        "option_id": "unity-opening",
+        "reason": "Web 正往 Unity 的入場對齊；列為暫時差異"
+      },
+      "allow_other": true,
+      "status": "pending",
+      "answer": null
+    },
+    {
+      "id": "keyboard",
+      "version": 1,
+      "question": "Web 新增的鍵盤操作（Enter／Space 啟動、Shift+Enter 長按動作、Alt+左右鍵排序、Escape 取消或關閉）要不要補做？",
+      "context": "Unity 範例沒有鍵盤操作；Web 文件允許 Unity 補做或記為平台差異。",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#與-unity-範例的差異",
+      "options": [
+        {
+          "id": "escape-only",
+          "label": "只做 Escape 取消，其餘記為平台差異"
+        },
+        {
+          "id": "all",
+          "label": "全部補做"
+        },
+        {
+          "id": "none",
+          "label": "全部記為平台差異"
+        }
+      ],
+      "recommendation": {
+        "option_id": "escape-only",
+        "reason": "取消是案例會用到的行為；其餘先小規模"
+      },
+      "allow_other": true,
+      "status": "pending",
+      "answer": null
+    },
+    {
+      "id": "module-shape",
+      "version": 1,
+      "question": "Unity 模組放哪、長什麼樣？",
+      "context": "Web 分為無 DOM 的 AppsModel（dispatch、snapshot、政策）與 ui-apps-menu 元件。",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#公開契約",
+      "options": [
+        {
+          "id": "model-plus-control",
+          "label": "Packages/UIToolkit/Runtime/Apps/：純 C# AppsModel ＋ AppsMenu VisualElement 控件",
+          "description": "AppsModel 對應 Web 的 Dispatch／Snapshot／政策委派；控件負責指標捕獲、長按、拖曳，沿用 Gesture.LongPress、ElementTarget"
+        },
+        {
+          "id": "control-only",
+          "label": "只做一個 VisualElement 控件，狀態放在控件內"
+        }
+      ],
+      "recommendation": {
+        "option_id": "model-plus-control",
+        "reason": "與 Web 一一對應，共用案例可直接對模型執行"
+      },
+      "allow_other": true,
+      "status": "pending",
+      "answer": null
+    },
+    {
+      "id": "design-params",
+      "version": 1,
+      "question": "設計參數（apps-design.json）如何進入 Unity？",
+      "context": "計畫規定不能手抄；完整的轉換工具屬 P2。",
+      "source_ref": "Yu5h1Lib/Web/src/design/apps.json",
+      "options": [
+        {
+          "id": "params-converter",
+          "label": "先做只處理 apps-design.json 的轉換：產生 USS 變數，C# 從 USS 讀時間類參數"
+        },
+        {
+          "id": "wait-p2",
+          "label": "等完整 P2 再做"
+        }
+      ],
+      "recommendation": {
+        "option_id": "params-converter",
+        "reason": "P3 需要參數；只做參數這一塊，色票留到 P2"
+      },
+      "allow_other": true,
+      "status": "pending",
+      "answer": null
+    },
+    {
+      "id": "colors",
+      "version": 1,
+      "question": "WebTheme 尚未產生前，模組顏色怎麼處理？",
+      "context": "Web 使用 --ui-* 色票；WebTheme 屬 P2。",
+      "source_ref": "Unity/UnityExtension/Documentation/跨平台UI一致性.md#主題轉換",
+      "options": [
+        {
+          "id": "sample-colors",
+          "label": "暫用既有範例顏色，列為未對齊項"
+        },
+        {
+          "id": "webtheme-first",
+          "label": "先做 WebTheme 轉換"
+        }
+      ],
+      "recommendation": {
+        "option_id": "sample-colors",
+        "reason": "維持先做 P3 的順序"
+      },
+      "allow_other": true,
+      "status": "pending",
+      "answer": null
+    },
+    {
+      "id": "cases-source",
+      "version": 1,
+      "question": "Unity 測試從哪讀共用案例？",
+      "context": "Web 的 contracts/apps-cases.json 為 schema 1／1.0.0；alternate 政策變體定義在 Web 的 JS 測試程式 tests/apps-cases.mjs，不在 JSON 資料裡。",
+      "source_ref": "Yu5h1Lib/Web/contracts/apps-cases.json",
+      "options": [
+        {
+          "id": "copy-with-hash",
+          "label": "複製進套件 Tests/，記錄版本與雜湊，過期時測試提醒",
+          "description": "alternate 變體在 C# 測試照抄，並回饋 Web"
+        },
+        {
+          "id": "read-web-path",
+          "label": "測試直接讀 Web repo 的路徑"
+        }
+      ],
+      "recommendation": {
+        "option_id": "copy-with-hash",
+        "reason": "套件不依賴另一個 repo 的路徑也能測試"
+      },
+      "allow_other": true,
+      "status": "pending",
+      "answer": null
+    },
+    {
+      "id": "demo-location",
+      "version": 1,
+      "question": "驗證用 demo 放哪？",
+      "context": "Web demo 有主要版與政策變體兩個實例；既有 Samples~/AppsMenu 含物理行為。",
+      "source_ref": "Yu5h1Lib/Web/demo/apps/demo.js",
+      "options": [
+        {
+          "id": "new-sample",
+          "label": "新增 Samples~/AppsMenuModule，放主要版與政策變體兩個實例，既有範例不動"
+        },
+        {
+          "id": "replace-sample",
+          "label": "直接改寫既有 Samples~/AppsMenu"
+        }
+      ],
+      "recommendation": {
+        "option_id": "new-sample",
+        "reason": "既有範例保留物理行為，也是 Motion 的驗證場景"
+      },
+      "allow_other": true,
+      "status": "pending",
+      "answer": null
+    }
+  ]
+}
