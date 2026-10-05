@@ -2,7 +2,7 @@
 
 > Task ID: cross-platform-ui-parity
 >
-> 本計畫定義 Web 與 Unity 的 UI 共用邊界。執行狀態由 [handoff.md](../handoff.md) 擁有。
+> 狀態：共用邊界與試點方向已定案；實作前待決項見文末，執行進度由 [handoff.md](../handoff.md) 擁有。
 > Web 端需求由 [Requirements.Web.md](Requirements.Web.md) 擁有；各元件的共用契約集中在 Web 文件，Unity 平台差異與接線留在本專案。
 
 ## 系統階層與關係
@@ -82,7 +82,7 @@ Web 既有契約由 [SettingsPanelPlan.md](../../../Web/Documentation/SettingsPa
 | 儲存與驗證 | 宿主提供 storage／decode | 沿用 Preferences 能力，宿主決定範圍、預設與驗證 |
 | 實際套用 | 宿主 apply | 由使用端套用至產品；保存成功與套用成功分開回報 |
 
-實作前先核對 [偏好設定](偏好設定.md) 的實際 API 與生命週期，列出是否支援草稿隔離、保存結果與套用錯誤的缺口。共用 UI 套件不直接依賴 Preferences；使用端負責接線，沿用既有「套件不認識 Preferences」邊界。若需可重用協調能力，依責任放在對應層，不能藏進面板或另建設定真值。
+實作前先核對 [偏好設定](偏好設定.md) 的實際 API 與生命週期，列出是否支援草稿隔離、保存結果與套用錯誤的缺口。設定面板與 SaveBar 等呈現元件不直接依賴 Preferences 或決定持久化；使用端負責組合接線。UI Toolkit 套件既有的 PreferencesBinder 是 Preferences 的專用綁定層，透過 IPreferences 接入，並不在此限制內。既有 binder 直接綁定 Preferences，不能據此宣稱已支援手動草稿、取消或套用失敗重試；這些仍須先核對並驗證。若需可重用協調能力，依責任放在對應層，不能藏進面板或另建設定真值。
 
 ### 試點
 

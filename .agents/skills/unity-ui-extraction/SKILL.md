@@ -24,7 +24,7 @@ Examples that constrain extraction:
 
 - Chat presentation can consume message snapshots and emit send/microphone requests; network, voice services and product flows stay with the host. Inspect [chat module](../../../Documentation/聊天面板模組.md) before making a second presenter.
 - AppsMenu is composition. Inspect the existing drag/gesture/motion primitives and the [ruled-out directions](../../../handoff.md#ruled-out-directions) before proposing a desktop control. Obstacle selection, item ownership and drop policy may remain host responsibilities even when their mechanics are reusable.
-- Packages do not directly depend on Preferences. The consumer chooses persistence and passes values to the package; inspect the current [preferences design](../../../Documentation/偏好設定.md) and its API before adding coordination.
+- Presentation controls such as settings panels do not depend directly on Preferences or choose persistence policy. Consumers compose the connection. The existing PreferencesBinder is a dedicated integration layer within UI Toolkit and may use IPreferences; this does not mean it already supports isolated manual drafts, cancellation or apply-only retry. Inspect the [preferences design](../../../Documentation/偏好設定.md) and actual binder behavior before adding coordination; preserve the functional-package/settings-object boundary defined there.
 
 ## Define the bounded extraction
 

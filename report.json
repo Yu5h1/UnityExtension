@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-05T05:06:54.569704+00:00",
+  "updated_at": "2026-10-05T06:47:46.085779+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -551,41 +551,47 @@
     },
     {
       "id": "cross-platform-ui-parity",
-      "title": "跨平台 UI 一致性（Web 庫為設計來源）",
+      "title": "跨平台 UI 一致性（共用契約與平台重用）",
       "status": "planned",
-      "summary": "設計統一在 Web 庫，UI Toolkit 照 Web 規格實作，主題色票讀 Web 庫建置產生的 theme.css，自動轉成 USS 變數。先以設定面板試點驗證整條流程，通過後才遷移聊天面板與 Apps 面板的設計；Apps 面板的物理部分等 Physics 試作。Web 端工作見 Documentation/Requirements.Web.md。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
+      "summary": "共用契約集中在 Web，兩端重用各自原生能力。先以 WEB-1／WEB-4 與設定責任盤點完成 P1，再驗證 P2 主題匯入、P3 狀態與平台、P4 第二使用端；通過後才進入 P5 聊天差異補足與 Apps 機制組合，物理另依 Physics。方向已定案，實作尚未開始。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
       "completed_items": [
         {
           "id": "item-cross-platform-ui-parity-done-1",
-          "title": "計畫與 Web 庫需求 WEB-1～3 定案並提交（2026-10-02）",
+          "title": "共用邊界、WEB-1～4 與 P1–P5 驗收計畫已整理；技能交付不代表試點完成",
           "priority": 4
         }
       ],
       "pending_items": [
         {
           "id": "item-cross-platform-ui-parity-todo-1",
-          "title": "Web 庫將建置產生的 dist/theme/theme.css 宣告為穩定契約（Requirements.Web.md UNITYEXTENSION-WEB-1）",
+          "title": "P1：WEB-1 色票契約、WEB-4 最小設計參數與共用案例可用；完成 Preferences／binder 責任與缺口盤點",
           "priority": 2
         },
         {
           "id": "item-cross-platform-ui-parity-todo-2",
-          "title": "theme.css → USS 匯入工具（可先開始），light／dark 值與 Web 庫逐一相同；實測 USS 是否接受 8 位色碼",
+          "title": "P2：theme.css → USS 語意色值一致、透明色實測、重匯入無差異與過期檢查；可先開發原型，但不代表 P1 通過",
           "priority": 3
         },
         {
           "id": "item-cross-platform-ui-parity-todo-3",
-          "title": "試點：設定面板 UI Toolkit 版照 Web 規格對照實作，保存接 Preferences",
+          "title": "P3：兩端同版狀態案例與平台操作驗證；呈現元件不直接保存，binder 的草稿隔離及失敗重試能力須核對",
           "priority": 3
         },
         {
           "id": "item-cross-platform-ui-parity-todo-4",
-          "title": "試點通過後，聊天面板與 Apps 面板設計遷到 Web 庫（WEB-2、WEB-3），Unity 回補差異",
+          "title": "P5：P1–P4 通過後補齊聊天差異與 Apps 通用機制／組合；產品政策留在宿主，物理另依 Physics",
           "priority": 4
         },
         {
           "id": "item-cross-platform-ui-parity-todo-5",
-          "title": "決定是否支援執行期自訂配色，以及圓角／間距／字級是否變成 Web 庫變數",
+          "title": "待決：WEB-4 參數／單位／案例格式及 Unity 最小提交協調缺口；執行期自訂配色依後續需求決定",
           "priority": 4
+        },
+        {
+          "priority": 3,
+          "id": "item-cross-platform-ui-parity-todo-6",
+          "title": "P4：第二個獨立宿主／使用端只提供內容、資料及接線，不改元件核心或複製保存／手勢規則",
+          "status": "planned"
         }
       ]
     }
