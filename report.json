@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-05T13:44:08.468427+00:00",
+  "updated_at": "2026-10-05T15:04:48.897324+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -553,7 +553,7 @@
       "id": "cross-platform-ui-parity",
       "title": "跨平台 UI 一致性（Web 來源、Unity 復刻）",
       "status": "planned",
-      "summary": "Yu5h1Lib.Web 是 UI 設計與實作的來源，Unity 以 Yu5h1Lib.UIToolkit 復刻：只轉色票與設計參數，UXML／C# 依 Web 規格手寫。試點為 AppsMenu，先從小規模驗證開始；設定面板與 WEB-4 延後。方向已與使用者定案，實作尚未開始。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
+      "summary": "已排入、暫緩（2026-10-05）：其他任務優先，未來確定走這條路時從計畫接續。Yu5h1Lib.Web 是 UI 設計與實作的來源；Web 已交付色票契約（WEB-1）與 AppsMenu 非物理模組 1.0.0（WEB-3）。Unity 端復刻與 WebTheme 轉換只在有具名產品需求時啟動；WebGL 直接使用 Web 庫，以 jslib 橋接，第一個實例為 VCP。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
       "completed_items": [
         {
           "id": "item-cross-platform-ui-parity-done-1",
@@ -569,27 +569,32 @@
         },
         {
           "id": "item-cross-platform-ui-parity-todo-2",
-          "title": "P2：UIToolkit Editor 轉換工具，色票與 Apps 參數轉成 USS；RGBA 一致、重轉無差異、過期偵測、失敗不覆寫；產物命名 WebTheme，經 PanelSettings.themeStyleSheet 切換 light／dark 實測",
+          "title": "P2（依需求啟動）：UIToolkit Editor 轉換工具，色票與 Apps 參數轉成 USS；RGBA 一致、重轉無差異、過期偵測、失敗不覆寫；產物命名 WebTheme，經 PanelSettings.themeStyleSheet 切換 light／dark 實測",
           "priority": 3
         },
         {
           "id": "item-cross-platform-ui-parity-todo-3",
-          "title": "P3：Unity 復刻 AppsMenu，兩端執行同一版非物理案例；先驗證滑鼠操作",
+          "title": "P3（依需求啟動）：Unity 復刻 AppsMenu，兩端執行同一版非物理案例；先驗證滑鼠操作",
           "priority": 3
         },
         {
           "id": "item-cross-platform-ui-parity-todo-6",
-          "title": "P4：同一個 demo 的小變體只換內容、資料與政策，不改模組",
+          "title": "P4（依需求啟動）：同一個 demo 的小變體只換內容、資料與政策，不改模組",
           "priority": 3
         },
         {
           "id": "item-cross-platform-ui-parity-todo-4",
-          "title": "P5：聊天依 WEB-2；物理項目等 Physics 定案；設定面板等保存語意討論",
+          "title": "P5（依需求啟動）：聊天依 WEB-2；物理項目等 Physics 定案；設定面板等保存語意討論",
           "priority": 4
         },
         {
           "id": "item-cross-platform-ui-parity-todo-5",
           "title": "待決：AppsMenu 範例去留、聊天是否走 Web 來源、設定面板與 Preferences 的對應、uGUI 主題切換機制復盤與色票來源、執行期自訂配色",
+          "priority": 4
+        },
+        {
+          "id": "item-cross-platform-ui-parity-todo-7",
+          "title": "WebGL 路線（依需求啟動）：VCP 確定使用 Web UI 時，建 Packages/Web 的 jslib 橋接與模板工具",
           "priority": 4
         }
       ]

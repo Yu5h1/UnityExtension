@@ -2,7 +2,7 @@
 
 > Task ID: cross-platform-ui-parity
 >
-> 狀態：方向為 Yu5h1Lib.Web 是 UI 設計與實作的來源，Unity 以 Yu5h1Lib.UIToolkit 復刻；試點元件為 AppsMenu，先從小規模驗證開始。實作前待決項見文末，執行進度由 [handoff.md](../handoff.md) 擁有。
+> 狀態：**已排入、暫緩**（2026-10-05）：其他任務優先，未來確定走這條路時從本文件接續。Yu5h1Lib.Web 是 UI 設計與實作的來源；Web 端的 AppsMenu 試點與色票契約已交付，Unity 端的復刻與 WebTheme 轉換依需求啟動，見[啟動條件](#啟動條件)。WebGL 直接使用 Web 庫，見 [WebGL](#webgl直接使用-web-庫)。執行進度由 [handoff.md](../handoff.md) 擁有。
 > Web 端需求由 [Requirements.Web.md](Requirements.Web.md) 擁有；元件規格、參數與案例集中在 Web，Unity 的復刻方式與平台差異留在本專案。
 
 ## 系統階層與關係
@@ -58,6 +58,19 @@ Web 是來源，Unity 是復刻。Unity 先做出來的 UI，先把設計搬到 
 
 ## 設計
 
+### 啟動條件
+
+設計抽到 Web 庫是常態；Unity 端的工作只在有具名的產品需求時才啟動，不為「將來可能用到」或兩端一致本身而做。
+
+| 工作 | 啟動條件 |
+|---|---|
+| 新 UI 的設計與實作 | 一律以 Web 庫為來源 |
+| Unity 復刻 Web 元件（P3 起） | 某個 Unity 產品確定要使用該元件的 Web 設計 |
+| WebTheme 轉換工具（P2） | 第一個需要 Web 色票的 Unity UI Toolkit 產品出現 |
+| 既有 Unity 元件（AppsMenu、聊天模組） | 維持現狀照常使用；不為一致性而依 Web 重做 |
+
+停損：沒有具名產品需求時，P2 之後的階段凍結；已交付的 Web 契約、模組與案例保留，需求出現時直接接續，不重做。
+
 ### 復刻方式
 
 只轉設計資料：色票與尺寸參數由 Yu5h1Lib.UIToolkit 的 Editor 轉換工具自動產生 USS；UXML 結構與 C# 互動依 Web 規格手寫。UI Toolkit 以 flexbox 排版，UXML／USS 與 HTML／CSS 概念接近，結構大多能一對一手寫對應；容易出錯又不值得人工抄的是數值，這部分自動化。
@@ -105,6 +118,7 @@ AppsMenu 目前的設計在 Unity 的 `Packages/UIToolkit/Samples~/AppsMenu`。�
 | 圖示拖曳、拖進 Apps 按鈕或面板、從面板拖回桌面、面板內排序 | 共用 |
 | 群組拖曳（直接跟手）、面板開合、入場錯開（時間驅動） | 共用 |
 | 避障排列（`GroupDragLayout` 的幾何投影） | 待 Physics 盤點確認是否屬物理 |
+| Apps 按鈕吸塵器：按住拖超過門檻後吸入附近圖示並收納、放手散開（`GroupDragLayout.Pull`／`Spread`） | 待 Physics 盤點確認是否屬物理；確認前 Web 版暫缺，不列入一致性驗收 |
 | 放手慣性、甩飛與反彈、撞擊、吸入、面板彈簧、收納抖動 | 依賴 Physics：Unity 沿用既有實作，Web 版暫缺，不列入一致性驗收 |
 
 模組可覆寫的政策：障礙物集合、項目初始位置（桌面或面板）、落點判定、點擊與長按的產品動作、甩飛門檻，預設值由 Web 定。模組不得寫死產品政策，也不得出現產品名稱分支。
@@ -121,6 +135,19 @@ AppsMenu 目前的設計在 Unity 的 `Packages/UIToolkit/Samples~/AppsMenu`。�
 | 向量圖示 | 依 [向量圖示系統](向量圖示系統.md) 與 Web 圖示計畫核對 SVG 子集；能共用資產不代表動態渲染可直接共用 |
 
 聊天的訊息來源、網路串流、語音服務與產品工作流留在使用端；UI 只呈現資料及提出請求。HealthAI 的 [聊天模組遷移](file:///W:/UnityProject/HealthAI/docs/unity/聊天模組遷移計畫.md) 照常進行。
+
+### WebGL：直接使用 Web 庫
+
+WebGL 版本身跑在瀏覽器頁面裡，Web 庫的元件在那裡是原生的：不復刻、不轉換、不需要 WebView，Unity 只以 jslib 補互動與通知。第一個實例是多平台的 [Virtual-Chat-Partner](file:///W:/UnityProject/Virtual-Chat-Partner)（PC、Android、WebGL；UI 以 uGUI 為主，已有自訂模板 `Assets/WebGLTemplates/VCP/index.html`）。
+
+- **疊層**：Web UI 以 DOM 疊在 Unity canvas 上方；沒有 UI 的區域讓指標穿透到 canvas。同一畫面只由一邊負責，不在 DOM 與 Unity UI 各畫一份。
+- **鍵盤焦點**：Unity WebGL 預設攔截全部鍵盤輸入（common `WebInput` 的 `captureAllKeyboardInput` 預設也是 true）。Web UI 的輸入框取得焦點時，Unity 不得攔截。中文輸入法由 DOM 原生處理；改用 DOM 的畫面不再需要第三方 `WebGLInput` 的隱藏輸入框。
+- **橋接**：C# 呼叫 JS 用 jslib；JS 通知 C# 用 `SendMessage`（字串、指定 GameObject）。訊息一律 JSON 並帶版本欄位，沿用 Dandelion message 2.0 的信封形式，不各功能自訂格式。
+- **打包**：Web 庫建置產物隨 WebGL 模板一起輸出，延伸既有 `IndexHtmlEditor` 處理。
+- **保存**：同一設定只由一邊保存：Web 庫 `ConfigStore`（localStorage）或 Unity PlayerPrefs（WebGL 為 IndexedDB），不並存兩份真值。
+- **歸屬**：橋接與模板工具放在計畫中的 `Packages/Web`（承接 common 的 `WebSupport`），不放進 Yu5h1Lib.UIToolkit。
+
+同樣依[啟動條件](#啟動條件)：VCP 的 WebGL 版確定要用某個 Web UI 時才實作。PC、Android 版沿用既有 uGUI。
 
 ### 物理共用
 
@@ -141,6 +168,8 @@ Unity C# namespace 不得使用 `Yu5h1Lib.Physics`，避免遮蔽 `UnityEngine.P
 Unity 端的抽離與復刻使用 [unity-ui-extraction](../.agents/skills/unity-ui-extraction/SKILL.md)。Web 端的抽離由 [web-integration](../../../Web/.agents/skills/web-integration/SKILL.md) 擁有。本計畫擁有跨平台方向與 P1–P5 門檻，技能不複製設計或任務狀態。
 
 ## 驗收與遷移
+
+P1 的 Web 部分（WEB-1 契約、WEB-3 非物理模組 1.0.0）已交付。P2 起依[啟動條件](#啟動條件)啟動；未啟動前不視為進行中。
 
 | 階段 | 完成條件 |
 |---|---|
