@@ -65,6 +65,7 @@ Web 是來源，Unity 是復刻。Unity 先做出來的 UI，先把設計搬到 
 | 工作 | 啟動條件 |
 |---|---|
 | 新 UI 的設計與實作 | 一律以 Web 庫為來源 |
+| AppsMenu 修正：入場動畫、Apps 按鈕吸塵器分類 | **現在進行**（暫緩的例外）：屬於已交付的 AppsMenu 試點本身；AppsMenu 也是 Physics 的驗證場景 |
 | Unity 復刻 Web 元件（P3 起） | 某個 Unity 產品確定要使用該元件的 Web 設計 |
 | WebTheme 轉換工具（P2） | 第一個需要 Web 色票的 Unity UI Toolkit 產品出現 |
 | 既有 Unity 元件（AppsMenu、聊天模組） | 維持現狀照常使用；不為一致性而依 Web 重做 |
@@ -152,6 +153,8 @@ WebGL 版本身跑在瀏覽器頁面裡，Web 庫的元件在那裡是原生的�
 ### 物理共用
 
 慣性、彈簧及接觸運算的共用方式由 Physics 的 [盤點計畫](file:///C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Physics/Documentation/InventoryPlan.md) 決定；本計畫不預選 C++／WASM 或另寫第二套核心。Physics 最小試作通過前，Unity 沿用既有 common／animation 實作，Web 不因 Apps 另造物理引擎。
+
+AppsMenu 是 Physics 的驗證場景：第一個案例是甩飛，由 Physics 的 [Throw 驗證計畫](file:///C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Physics/Documentation/ThrowValidationPlan.md)（Task ID: physics-throw-validation）擁有；Apps 按鈕吸塵器（`GroupDragLayout.Pull`／`Spread`）的分類交給 Physics 盤點，作為後續候選。入場動畫是時間驅動（`Transition.Opening`），不屬物理；它驗證的是 Web 共用動畫時間核心，不是物理庫。
 
 Unity C# namespace 不得使用 `Yu5h1Lib.Physics`，避免遮蔽 `UnityEngine.Physics`。
 

@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-05T15:04:48.897324+00:00",
+  "updated_at": "2026-10-05T15:31:51.293056+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -562,6 +562,11 @@
         }
       ],
       "pending_items": [
+        {
+          "id": "item-cross-platform-ui-parity-todo-8",
+          "title": "AppsMenu 修正（現在進行）：Web 入場動畫照 Unity Transition.Opening 復刻或明列差異；Apps 按鈕吸塵器標為待 Physics 分類",
+          "priority": 2
+        },
         {
           "id": "item-cross-platform-ui-parity-todo-1",
           "title": "P1：WEB-1 色票契約交付；WEB-3 Apps 模組規格（非物理行為、政策覆寫點、參數、案例）在 Web 定案；三種 theme 分工與切換擁有者列入盤點",
