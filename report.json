@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-05T06:47:46.085779+00:00",
+  "updated_at": "2026-10-05T07:08:53.537864+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -578,6 +578,11 @@
           "priority": 3
         },
         {
+          "id": "item-cross-platform-ui-parity-todo-6",
+          "title": "P4：第二個獨立宿主／使用端只提供內容、資料及接線，不改元件核心或複製保存／手勢規則",
+          "priority": 3
+        },
+        {
           "id": "item-cross-platform-ui-parity-todo-4",
           "title": "P5：P1–P4 通過後補齊聊天差異與 Apps 通用機制／組合；產品政策留在宿主，物理另依 Physics",
           "priority": 4
@@ -586,12 +591,6 @@
           "id": "item-cross-platform-ui-parity-todo-5",
           "title": "待決：WEB-4 參數／單位／案例格式及 Unity 最小提交協調缺口；執行期自訂配色依後續需求決定",
           "priority": 4
-        },
-        {
-          "priority": 3,
-          "id": "item-cross-platform-ui-parity-todo-6",
-          "title": "P4：第二個獨立宿主／使用端只提供內容、資料及接線，不改元件核心或複製保存／手勢規則",
-          "status": "planned"
         }
       ]
     }
