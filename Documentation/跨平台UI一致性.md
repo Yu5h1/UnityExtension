@@ -18,7 +18,7 @@ Yu5h1Lib
 │  │  └─ 執行期：依 Web 規格手寫的 UXML 與 C# 元件
 │  └─ common／animation：既有的手勢、排列與運動能力
 ├─ 使用端：內容、資料，以及要覆寫的政策
-└─ Physics：慣性、彈簧、接觸等運動算式的共用方式，獨立專案決定
+└─ Motion：運動算式的共用（物理互動共用 C++ 核心、插值表現共用規格與 fixtures），獨立專案決定
 ```
 
 Web 是來源，Unity 是復刻。Unity 先做出來的 UI，先把設計搬到 Web 成為來源，再由 Unity 依 Web 復刻回來。Web 的 DOM、slot 與事件 API 不是 Unity 必須模仿的實作；Unity 依 UI Toolkit 慣例對齊行為與狀態的意義，平台差異明確記錄。
@@ -45,7 +45,7 @@ Web 是來源，Unity 是復刻。Unity 先做出來的 UI，先把設計搬到 
 | 色票、設計參數 | Web 產出，Unity 工具轉成 USS | 轉換、過期偵測與相容性驗證 |
 | 元件結構與樣式 | Web 規格；Unity 手寫 UXML／USS | 元件對照紀錄與截圖比較 |
 | 互動行為與狀態 | Web 實作與案例；Unity 以 C# 復刻 | 執行同一份案例 |
-| 物理運動 | Physics 定案前屬平台限定 | 沿用既有 common／animation |
+| 物理運動 | Motion 定案前屬平台限定 | 沿用既有 common／animation |
 | 輸入、焦點與生命週期 | 各平台原生 | 平台接線 |
 
 行為由 TS 與 C# 各寫一份，就如實記為兩份實作；以共用案例控制漂移。
@@ -65,7 +65,7 @@ Web 是來源，Unity 是復刻。Unity 先做出來的 UI，先把設計搬到 
 | 工作 | 啟動條件 |
 |---|---|
 | 新 UI 的設計與實作 | 一律以 Web 庫為來源 |
-| AppsMenu 修正：入場動畫、Apps 按鈕吸塵器分類 | **現在進行**（暫緩的例外）：屬於已交付的 AppsMenu 試點本身；AppsMenu 也是 Physics 的驗證場景 |
+| AppsMenu 修正：入場動畫、Apps 按鈕吸塵器分類 | **現在進行**（暫緩的例外）：屬於已交付的 AppsMenu 試點本身；AppsMenu 也是 Motion 的驗證場景 |
 | Unity 復刻 Web 元件（P3 起） | 某個 Unity 產品確定要使用該元件的 Web 設計 |
 | WebTheme 轉換工具（P2） | 第一個需要 Web 色票的 Unity UI Toolkit 產品出現 |
 | 既有 Unity 元件（AppsMenu、聊天模組） | 維持現狀照常使用；不為一致性而依 Web 重做 |
@@ -118,9 +118,9 @@ AppsMenu 目前的設計在 Unity 的 `Packages/UIToolkit/Samples~/AppsMenu`。�
 | 長按 400ms 與接續點擊抑制、移動容許量、取消與卸載 | 共用 |
 | 圖示拖曳、拖進 Apps 按鈕或面板、從面板拖回桌面、面板內排序 | 共用 |
 | 群組拖曳（直接跟手）、面板開合、入場錯開（時間驅動） | 共用 |
-| 避障排列（`GroupDragLayout` 的幾何投影） | 待 Physics 盤點確認是否屬物理 |
-| Apps 按鈕吸塵器：按住拖超過門檻後吸入附近圖示並收納、放手散開（`GroupDragLayout.Pull`／`Spread`） | 待 Physics 盤點確認是否屬物理；確認前 Web 版暫缺，不列入一致性驗收 |
-| 放手慣性、甩飛與反彈、撞擊、吸入、面板彈簧、收納抖動 | 依賴 Physics：Unity 沿用既有實作，Web 版暫缺，不列入一致性驗收 |
+| 避障排列（`GroupDragLayout` 的幾何投影） | 待 Motion 盤點確認是否屬物理 |
+| Apps 按鈕吸塵器：按住拖超過門檻後吸入附近圖示並收納、放手散開（`GroupDragLayout.Pull`／`Spread`） | 待 Motion 盤點確認是否屬物理；確認前 Web 版暫缺，不列入一致性驗收 |
+| 放手慣性、甩飛與反彈、撞擊、吸入、面板彈簧、收納抖動 | 依賴 Motion（物理互動）：Unity 沿用既有實作，Web 版暫缺，不列入一致性驗收 |
 
 模組可覆寫的政策：障礙物集合、項目初始位置（桌面或面板）、落點判定、點擊與長按的產品動作、甩飛門檻，預設值由 Web 定。模組不得寫死產品政策，也不得出現產品名稱分支。
 
@@ -150,13 +150,13 @@ WebGL 版本身跑在瀏覽器頁面裡，Web 庫的元件在那裡是原生的�
 
 同樣依[啟動條件](#啟動條件)：VCP 的 WebGL 版確定要用某個 Web UI 時才實作。PC、Android 版沿用既有 uGUI。
 
-### 物理共用
+### 運動共用（Motion）
 
-慣性、彈簧及接觸運算的共用方式由 Physics 的 [盤點計畫](file:///C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Physics/Documentation/InventoryPlan.md) 決定；本計畫不預選 C++／WASM 或另寫第二套核心。Physics 最小試作通過前，Unity 沿用既有 common／animation 實作，Web 不因 Apps 另造物理引擎。
+慣性、彈簧及接觸運算的共用方式由 Motion 的 [盤點計畫](file:///C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Motion/Documentation/InventoryPlan.md) 決定；本計畫不預選 C++／WASM 或另寫第二套核心。Motion 最小試作通過前，Unity 沿用既有 common／animation 實作，Web 不因 Apps 另造物理引擎。
 
-AppsMenu 是 Physics 的驗證場景：第一個案例是甩飛，由 Physics 的 [Throw 驗證計畫](file:///C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Physics/Documentation/ThrowValidationPlan.md)（Task ID: physics-throw-validation）擁有；Apps 按鈕吸塵器（`GroupDragLayout.Pull`／`Spread`）的分類交給 Physics 盤點，作為後續候選。入場動畫是時間驅動（`Transition.Opening`），不屬物理；它驗證的是 Web 共用動畫時間核心，不是物理庫。
+AppsMenu 是 Motion 的驗證場景：第一個案例是甩飛，由 Motion 的 [Throw 驗證計畫](file:///C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Motion/Documentation/ThrowValidationPlan.md)（Task ID: physics-throw-validation）擁有；Apps 按鈕吸塵器（`GroupDragLayout.Pull`／`Spread`）的分類交給 Motion 盤點，作為後續候選。入場動畫是時間驅動（`Transition.Opening`），屬 Motion 的插值表現：以規格與 fixtures 共用，Web 對齊 `@yu5h1/web/animation`，不經 C++ 核心。
 
-Unity C# namespace 不得使用 `Yu5h1Lib.Physics`，避免遮蔽 `UnityEngine.Physics`。
+Unity C# namespace 不得使用 `Yu5h1Lib.Physics` 或 `Yu5h1Lib.Motion`，避免遮蔽 `UnityEngine.Physics`、`UnityEngine.Motion`；資料夾與 repo 名稱不受此限。
 
 ## 決策理由與替代方案
 
@@ -180,7 +180,7 @@ P1 的 Web 部分（WEB-1 契約、WEB-3 非物理模組 1.0.0）已交付。P2 
 | P2 轉換 | 色票與 Apps 參數轉成 USS；light／dark 換算成 RGBA 後一致；透明色實測；重新轉換無差異；來源變更可偵測；失敗不覆寫有效產物；產物以 WebTheme 命名，經 `PanelSettings.themeStyleSheet` 切換 light／dark 實測 |
 | P3 行為驗證 | 兩端執行同一版非物理案例並記錄結果；先驗證滑鼠操作，觸控與明暗呈現等目標環境確定後再驗，未驗項不記通過 |
 | P4 重用驗證 | 同一個 demo 的小變體只換內容、資料與政策，不改模組、不複製手勢規則 |
-| P5 擴大採用 | P1–P4 通過後，聊天依 WEB-2；物理項目等 Physics 定案後補驗收；設定面板等保存語意討論後再排 |
+| P5 擴大採用 | P1–P4 通過後，聊天依 WEB-2；物理項目等 Motion 定案後補驗收；設定面板等保存語意討論後再排 |
 
 每次驗收記錄 Web 來源版本、Unity 版本、產物指紋、案例版本及差異；改色須有實際截圖與操作驗收，不能只靠編譯。
 

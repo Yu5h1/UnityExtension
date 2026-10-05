@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-05T15:31:51.293056+00:00",
+  "updated_at": "2026-10-05T17:36:21.732114+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -564,7 +564,7 @@
       "pending_items": [
         {
           "id": "item-cross-platform-ui-parity-todo-8",
-          "title": "AppsMenu 修正（現在進行）：Web 入場動畫照 Unity Transition.Opening 復刻或明列差異；Apps 按鈕吸塵器標為待 Physics 分類",
+          "title": "AppsMenu 修正（現在進行）：Web 入場動畫照 Unity Transition.Opening 復刻或明列差異；Apps 按鈕吸塵器標為待 Motion 分類",
           "priority": 2
         },
         {
@@ -589,7 +589,7 @@
         },
         {
           "id": "item-cross-platform-ui-parity-todo-4",
-          "title": "P5（依需求啟動）：聊天依 WEB-2；物理項目等 Physics 定案；設定面板等保存語意討論",
+          "title": "P5（依需求啟動）：聊天依 WEB-2；物理項目等 Motion 定案；設定面板等保存語意討論",
           "priority": 4
         },
         {
