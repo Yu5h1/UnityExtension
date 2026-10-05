@@ -551,45 +551,45 @@
     },
     {
       "id": "cross-platform-ui-parity",
-      "title": "跨平台 UI 一致性（共用契約與平台重用）",
+      "title": "跨平台 UI 一致性（Web 來源、Unity 復刻）",
       "status": "planned",
-      "summary": "共用契約集中在 Web，兩端重用各自原生能力。先以 WEB-1／WEB-4 與設定責任盤點完成 P1，再驗證 P2 主題匯入、P3 狀態與平台、P4 第二使用端；通過後才進入 P5 聊天差異補足與 Apps 機制組合，物理另依 Physics。方向已定案，實作尚未開始。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
+      "summary": "Yu5h1Lib.Web 是 UI 設計與實作的來源，Unity 以 Yu5h1Lib.UIToolkit 復刻：只轉色票與設計參數，UXML／C# 依 Web 規格手寫。試點為 AppsMenu，先從小規模驗證開始；設定面板與 WEB-4 延後。方向已與使用者定案，實作尚未開始。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
       "completed_items": [
         {
           "id": "item-cross-platform-ui-parity-done-1",
-          "title": "共用邊界、WEB-1～4 與 P1–P5 驗收計畫已整理；技能交付不代表試點完成",
+          "title": "方向修訂：Web 為來源、Unity 復刻；試點改為 AppsMenu；WEB-3 改為可直接使用的模組，WEB-4 延後",
           "priority": 4
         }
       ],
       "pending_items": [
         {
           "id": "item-cross-platform-ui-parity-todo-1",
-          "title": "P1：WEB-1 色票契約、WEB-4 最小設計參數與共用案例可用；完成 Preferences／binder 責任與缺口盤點",
+          "title": "P1：WEB-1 色票契約交付；WEB-3 Apps 模組規格（非物理行為、政策覆寫點、參數、案例）在 Web 定案",
           "priority": 2
         },
         {
           "id": "item-cross-platform-ui-parity-todo-2",
-          "title": "P2：theme.css → USS 語意色值一致、透明色實測、重匯入無差異與過期檢查；可先開發原型，但不代表 P1 通過",
+          "title": "P2：UIToolkit Editor 轉換工具，色票與 Apps 參數轉成 USS；RGBA 一致、重轉無差異、過期偵測、失敗不覆寫",
           "priority": 3
         },
         {
           "id": "item-cross-platform-ui-parity-todo-3",
-          "title": "P3：兩端同版狀態案例與平台操作驗證；呈現元件不直接保存，binder 的草稿隔離及失敗重試能力須核對",
+          "title": "P3：Unity 復刻 AppsMenu，兩端執行同一版非物理案例；先驗證滑鼠操作",
           "priority": 3
         },
         {
           "id": "item-cross-platform-ui-parity-todo-6",
-          "title": "P4：第二個獨立宿主／使用端只提供內容、資料及接線，不改元件核心或複製保存／手勢規則",
+          "title": "P4：同一個 demo 的小變體只換內容、資料與政策，不改模組",
           "priority": 3
         },
         {
           "id": "item-cross-platform-ui-parity-todo-4",
-          "title": "P5：P1–P4 通過後補齊聊天差異與 Apps 通用機制／組合；產品政策留在宿主，物理另依 Physics",
+          "title": "P5：聊天依 WEB-2；物理項目等 Physics 定案；設定面板等保存語意討論",
           "priority": 4
         },
         {
           "id": "item-cross-platform-ui-parity-todo-5",
-          "title": "待決：WEB-4 參數／單位／案例格式及 Unity 最小提交協調缺口；執行期自訂配色依後續需求決定",
+          "title": "待決：AppsMenu 範例去留、聊天是否走 Web 來源、設定面板與 Preferences 的對應、執行期自訂配色",
           "priority": 4
         }
       ]
