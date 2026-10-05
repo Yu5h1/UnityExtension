@@ -13,7 +13,7 @@
 
 | 欄位 | 內容 |
 |---|---|
-| **Status** | Outstanding（2026-10-02 提出；2026-10-05 修正實際格式及更新驗收） |
+| **Status** | Outstanding（2026-10-02 提出；2026-10-05 修正實際格式及更新驗收；同日 Web 已交付，見 Web commit `9528c9d` 與 [跨平台主題色票交付契約](../../../Web/Documentation/NativeUIAndDataUpdatePlan.md#跨平台主題色票交付契約)，待 UnityExtension 以轉換工具（產物 WebTheme）驗收後才改為 Implemented） |
 | **Requirement** | 宣告既有 `dist/theme/theme.css` 的跨平台讀取契約，涵蓋格式、相容變更、來源追蹤與重新交付方式。 |
 | **Evidence** | `scripts/build-ui.mjs` 的 `buildTheme` 已以 `resolveTheme` 產生 light／dark 完整色票。兩個 `[data-ui-scheme]` 區塊各含 `color-scheme` 與 `--ui-*` 宣告；值目前為 6／8 位十六進位。檔頭 SHA-256 是 `src/theme/index.ts` 與建置腳本的組合指紋，不是格式版本，也不是 CSS 內容雜湊。 |
 | **Acceptance** | 文件明定位置、scheme、必要變數與值格式；明確允許並驗證 `color-scheme`，不再宣稱只有自訂屬性。定義空白／註解／宣告順序不影響解析，以及新增變數、改名／移除、值格式改變的相容規則與變更紀錄位置。交付記錄可辨識契約版本及來源版本或 commit，不以指紋代替相容性判斷。Web 來源改變須重新建置；Unity 以該產物匯入後，兩個 scheme 的 RGBA 語意值相同，同一輸入重匯入無差異。來源／產物變更可被檢查發現，格式錯誤不能覆寫上一份有效 USS。 |
@@ -48,7 +48,7 @@
 
 | 欄位 | 內容 |
 |---|---|
-| **Status** | Deferred（2026-10-05 提出；同日延後：試點改為 AppsMenu，設定面板的保存語意與 Unity Preferences 的對應尚未討論） |
+| **Status** | Deferred（2026-10-05 提出；同日延後：試點改為 AppsMenu，設定面板的保存語意與 Unity Preferences 的對應尚未討論。Web 在延後前依舊順序已先交付契約 1.0.0（Web commit `9528c9d`，[跨平台試點交付](../../../Web/Documentation/SettingsPanelPlan.md#跨平台試點交付)），予以保留、暫不擴充；保存語意討論後再核對是否符合並驗收） |
 | **Requirement** | 從既有設定面板抽出試點必要的設計參數與中性狀態案例，讓兩端引用同一維護來源。 |
 | **Evidence** | [SettingsPanelPlan.md](../../../Web/Documentation/SettingsPanelPlan.md) 已區分面板、宿主草稿、ConfigStore 與 storage／apply，含保存成功但套用失敗的契約；現有色票輸出不足以交付間距、圓角、字級等視覺參數。只對齊狀態名稱無法驗證草稿與提交結果。 |
 | **Acceptance** | 明列設定面板實際需要的參數、來源與單位，提供可被 Web 元件及 Unity 匯入／映射共同使用的單一資料來源與交付格式；不全面重整全庫。既有設定文件繼續擁有保存語意，補上可追蹤版本的中性案例資料（ID、初始狀態、操作、保存／套用結果、預期狀態），由兩端測試入口消費。案例範圍待保存語意討論後重新界定，至少涵蓋失敗、取消、卸載及另一個使用端的擴充。明確列出平台限定行為，不能為配合 DOM 結構要求 Unity 複製平台 API。 |
