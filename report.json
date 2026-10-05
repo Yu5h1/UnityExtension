@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-05T07:08:53.537864+00:00",
+  "updated_at": "2026-10-05T13:44:08.468427+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -564,12 +564,12 @@
       "pending_items": [
         {
           "id": "item-cross-platform-ui-parity-todo-1",
-          "title": "P1：WEB-1 色票契約交付；WEB-3 Apps 模組規格（非物理行為、政策覆寫點、參數、案例）在 Web 定案",
+          "title": "P1：WEB-1 色票契約交付；WEB-3 Apps 模組規格（非物理行為、政策覆寫點、參數、案例）在 Web 定案；三種 theme 分工與切換擁有者列入盤點",
           "priority": 2
         },
         {
           "id": "item-cross-platform-ui-parity-todo-2",
-          "title": "P2：UIToolkit Editor 轉換工具，色票與 Apps 參數轉成 USS；RGBA 一致、重轉無差異、過期偵測、失敗不覆寫",
+          "title": "P2：UIToolkit Editor 轉換工具，色票與 Apps 參數轉成 USS；RGBA 一致、重轉無差異、過期偵測、失敗不覆寫；產物命名 WebTheme，經 PanelSettings.themeStyleSheet 切換 light／dark 實測",
           "priority": 3
         },
         {
@@ -589,7 +589,7 @@
         },
         {
           "id": "item-cross-platform-ui-parity-todo-5",
-          "title": "待決：AppsMenu 範例去留、聊天是否走 Web 來源、設定面板與 Preferences 的對應、執行期自訂配色",
+          "title": "待決：AppsMenu 範例去留、聊天是否走 Web 來源、設定面板與 Preferences 的對應、uGUI 主題切換機制復盤與色票來源、執行期自訂配色",
           "priority": 4
         }
       ]

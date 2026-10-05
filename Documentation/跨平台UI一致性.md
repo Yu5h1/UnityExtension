@@ -14,7 +14,7 @@ Yu5h1Lib
 │  └─ 元件：Lit 實作、設計參數、共用案例、可直接使用的模組與範例
 ├─ UnityExtension
 │  ├─ Yu5h1Lib.UIToolkit：復刻 Web 元件，範圍只限 UI 互動
-│  │  ├─ Editor 轉換：theme.css 與設計參數 → USS
+│  │  ├─ Editor 轉換：theme.css 與設計參數 → WebTheme（USS／TSS）
 │  │  └─ 執行期：依 Web 規格手寫的 UXML 與 C# 元件
 │  └─ common／animation：既有的手勢、排列與運動能力
 ├─ 使用端：內容、資料，以及要覆寫的政策
@@ -75,6 +75,20 @@ Web 是來源，Unity 是復刻。Unity 先做出來的 UI，先把設計搬到 
 
 設計參數（圓角、間距、字級等）依 Web 交付的格式以同一工具轉換，只納入試點元件需要的項目，不先整理全庫。Unity 目標版本的透明色、變數及主題切換仍須實測。既有 `customStyle` 唯讀的確認只支持「不能直接經此 API 改變變數」，不推論所有執行期配色方案都不可行。
 
+### Unity 端的主題載體與切換
+
+Unity 有三種同樣叫「theme」的東西，各自分工，不互相取代：
+
+| 名稱 | 是什麼 | 用在哪裡 |
+|---|---|---|
+| WebTheme | Yu5h1Lib.UIToolkit 的轉換工具由 Web `theme.css` 產生的 USS／TSS（`WebTheme-Light.tss`、`WebTheme-Dark.tss`） | UI Toolkit |
+| common `Theme` | `Packages/common` 的 ScriptableObject，以 binding 把具名參數推到 Unity 物件 | uGUI、SpriteRenderer |
+| `ThemeStyleSheet` | Unity UI Toolkit 原生的主題樣式表格式；WebTheme 就是這種檔案 | UI Toolkit |
+
+- **UI Toolkit**：WebTheme 透過 `PanelSettings.themeStyleSheet` 套用，切換明暗就是換成另一份 TSS。UI Toolkit 不另寫主題切換器，也不在 `Yu5h1Lib` 新增名為 `Theme` 的型別。
+- **uGUI**：沿用 common `Theme` SO 與既有 binding。
+- **切換的觸發與保存只有一個擁有者**：由誰觸發（使用者選擇、跟隨系統、程式指定），以及選擇怎麼保存，兩個 UI 系統共用同一套。該擁有者在 uGUI 切換機制復盤時決定；UI Toolkit 只負責依結果替換 `themeStyleSheet`，不自行保存選擇。
+
 ### 試點：AppsMenu
 
 AppsMenu 目前的設計在 Unity 的 `Packages/UIToolkit/Samples~/AppsMenu`。試點走完整個循環，先從小規模開始：
@@ -130,8 +144,8 @@ Unity 端的抽離與復刻使用 [unity-ui-extraction](../.agents/skills/unity-
 
 | 階段 | 完成條件 |
 |---|---|
-| P1 來源與契約 | WEB-1 交付；WEB-3 的 Apps 模組規格（非物理行為、政策覆寫點、參數、案例）在 Web 定案；行為分類完成，物理項目標出 |
-| P2 轉換 | 色票與 Apps 參數轉成 USS；light／dark 換算成 RGBA 後一致；透明色實測；重新轉換無差異；來源變更可偵測；失敗不覆寫有效產物 |
+| P1 來源與契約 | WEB-1 交付；WEB-3 的 Apps 模組規格（非物理行為、政策覆寫點、參數、案例）在 Web 定案；行為分類完成，物理項目標出；三種 theme 的分工與切換擁有者已列入盤點，切換擁有者未決時明確標示 |
+| P2 轉換 | 色票與 Apps 參數轉成 USS；light／dark 換算成 RGBA 後一致；透明色實測；重新轉換無差異；來源變更可偵測；失敗不覆寫有效產物；產物以 WebTheme 命名，經 `PanelSettings.themeStyleSheet` 切換 light／dark 實測 |
 | P3 行為驗證 | 兩端執行同一版非物理案例並記錄結果；先驗證滑鼠操作，觸控與明暗呈現等目標環境確定後再驗，未驗項不記通過 |
 | P4 重用驗證 | 同一個 demo 的小變體只換內容、資料與政策，不改模組、不複製手勢規則 |
 | P5 擴大採用 | P1–P4 通過後，聊天依 WEB-2；物理項目等 Physics 定案後補驗收；設定面板等保存語意討論後再排 |
@@ -145,4 +159,6 @@ Unity 端的抽離與復刻使用 [unity-ui-extraction](../.agents/skills/unity-
 - **Apps 範例的去留**：Unity 復刻完成後，`Samples~/AppsMenu` 改為模組的使用範例，或退役。
 - **聊天的方向**：Unity 已有聊天模組，是否同樣走「Unity 設計搬到 Web，再復刻回 Unity」。
 - **設定面板的保存語意**：保存語意與 Unity Preferences 的對應，以及 Preferences 是否需要對齊 Yu5h1Lib.Web，尚未討論。
+- **uGUI 主題切換機制復盤**：檢視 common `Theme` + `ThemeOptionSet` 的切換時機、Preferences 保存選擇的方式與 `_schema` 繼承是否足夠，並決定 uGUI 與 UI Toolkit 共用的觸發與保存擁有者。
+- **uGUI 色票來源**：common `Theme` SO 的顏色繼續手填，或由轉換工具同樣從 Web `theme.css` 產生；未決前 uGUI 顏色不保證與 Web 一致。
 - **執行期自訂配色**：本輪只驗證預先產生的 light／dark；是否需要動態配色及其 Unity 機制，留到有消費需求時決定。
