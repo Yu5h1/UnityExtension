@@ -553,7 +553,7 @@
       "id": "cross-platform-ui-parity",
       "title": "跨平台 UI 一致性（Web 來源、Unity 復刻）",
       "status": "planned",
-      "summary": "已排入、暫緩（2026-10-05）：其他任務優先，未來確定走這條路時從計畫接續。Yu5h1Lib.Web 是 UI 設計與實作的來源；Web 已交付色票契約（WEB-1）與 AppsMenu 非物理模組 1.0.0（WEB-3）。Unity 端復刻與 WebTheme 轉換只在有具名產品需求時啟動；WebGL 直接使用 Web 庫，以 jslib 橋接，第一個實例為 VCP。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
+      "summary": "已排入、暫緩（2026-10-05）：其他任務優先，未來確定走這條路時從計畫接續。Yu5h1Lib.Web 是 UI 設計與實作的來源；Web 已交付色票契約（WEB-1）與 AppsMenu 非物理模組 1.0.0（WEB-3），並於 2026-10-06 接入 Motion 的單一圖示甩飛與吸塵器／釋放散佈（設計資料 2.0.0；共用案例仍為 1.0.0 非物理）。是否解除暫緩與 P3 復刻細節待決，見 decisions/cross-platform-ui-parity.decisions。Unity 端復刻與 WebTheme 轉換只在有具名產品需求時啟動；WebGL 直接使用 Web 庫，以 jslib 橋接，第一個實例為 VCP。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
       "completed_items": [
         {
           "id": "item-cross-platform-ui-parity-done-1",
@@ -564,7 +564,7 @@
       "pending_items": [
         {
           "id": "item-cross-platform-ui-parity-todo-8",
-          "title": "AppsMenu 修正（現在進行）：Web 入場動畫照 Unity Transition.Opening 復刻或明列差異；Apps 按鈕吸塵器標為待 Motion 分類",
+          "title": "AppsMenu 修正（現在進行，屬 Web）：Web 入場動畫照 Unity Transition.Opening 復刻或明列差異；Apps 按鈕吸塵器已由 Web 以 Motion Scatter2D 完成",
           "priority": 2
         },
         {

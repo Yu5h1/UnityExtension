@@ -65,7 +65,7 @@ Web 是來源，Unity 是復刻。Unity 先做出來的 UI，先把設計搬到 
 | 工作 | 啟動條件 |
 |---|---|
 | 新 UI 的設計與實作 | 一律以 Web 庫為來源 |
-| AppsMenu 修正：入場動畫、Apps 按鈕吸塵器分類 | **現在進行**（暫緩的例外）：屬於已交付的 AppsMenu 試點本身；AppsMenu 也是 Motion 的驗證場景 |
+| AppsMenu 修正：入場動畫 | **現在進行**（暫緩的例外，屬於 Web）：屬於已交付的 AppsMenu 試點本身；AppsMenu 也是 Motion 的驗證場景。Apps 按鈕吸塵器已由 Web 以 Motion Scatter2D 完成（2026-10-06） |
 | Unity 復刻 Web 元件（P3 起） | 某個 Unity 產品確定要使用該元件的 Web 設計 |
 | WebTheme 轉換工具（P2） | 第一個需要 Web 色票的 Unity UI Toolkit 產品出現 |
 | 既有 Unity 元件（AppsMenu、聊天模組） | 維持現狀照常使用；不為一致性而依 Web 重做 |
@@ -118,9 +118,9 @@ AppsMenu 目前的設計在 Unity 的 `Packages/UIToolkit/Samples~/AppsMenu`。�
 | 長按 400ms 與接續點擊抑制、移動容許量、取消與卸載 | 共用 |
 | 圖示拖曳、拖進 Apps 按鈕或面板、從面板拖回桌面、面板內排序 | 共用 |
 | 群組拖曳（直接跟手）、面板開合、入場錯開（時間驅動） | 共用 |
-| 避障排列（`GroupDragLayout` 的幾何投影） | 待 Motion 盤點確認是否屬物理 |
-| Apps 按鈕吸塵器：按住拖超過門檻後吸入附近圖示並收納、放手散開（`GroupDragLayout.Pull`／`Spread`） | 待 Motion 盤點確認是否屬物理；確認前 Web 版暫缺，不列入一致性驗收 |
-| 放手慣性、甩飛與反彈、撞擊、吸入、面板彈簧、收納抖動 | 依賴 Motion（物理互動）：Unity 沿用既有實作，Web 版暫缺，不列入一致性驗收 |
+| 單一圖示甩飛與外框反彈 | Motion Throw2D；Web 已接入（設計資料 1.1.0） |
+| Apps 按鈕吸塵器與釋放散佈，含吸收／釋放時的矩形障礙投影 | Motion Scatter2D；Web 已接入（設計資料 2.0.0）。Web 的規則與 Unity 範例不同：吸收範圍預設無上限並持續擴大、吸力在 0.8 秒內漸強、只有本次零捕獲才釋放、釋放接 Throw 往外拋；Unity 範例是桌面清空才釋放 |
+| 甩飛撞擊障礙、群組放手慣性、甩進 Apps 自動收納、面板彈簧、收納抖動 | 依賴 Motion，Web 未實作；Unity 範例沿用既有實作，不列入一致性驗收 |
 
 模組可覆寫的政策：障礙物集合、項目初始位置（桌面或面板）、落點判定、點擊與長按的產品動作、甩飛門檻，預設值由 Web 定。模組不得寫死產品政策，也不得出現產品名稱分支。
 
@@ -152,9 +152,9 @@ WebGL 版本身跑在瀏覽器頁面裡，Web 庫的元件在那裡是原生的�
 
 ### 運動共用（Motion）
 
-慣性、彈簧及接觸運算的共用方式由 Motion 的 [盤點計畫](file:///C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Motion/Documentation/InventoryPlan.md) 決定；本計畫不預選 C++／WASM 或另寫第二套核心。Motion 最小試作通過前，Unity 沿用既有 common／animation 實作，Web 不因 Apps 另造物理引擎。
+物理互動由 Motion 的單一 C++ 核心共用，能力範圍由 Motion 的 [盤點計畫](file:///C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Motion/Documentation/InventoryPlan.md) 決定。Web 透過 Wasm 使用 Throw2D 與 Scatter2D；兩者的數值基準是從 Unity 既有 C#（`Reaction.Throw`、`GroupDragLayout`）擷取的 fixtures。Unity 改用原生核心（DLL）由 Motion 依產品需求另行決定；在那之前 Unity 沿用既有 common／animation 實作，Web 不另造物理引擎。
 
-AppsMenu 是 Motion 的驗證場景：第一個案例是甩飛，由 Motion 的 [Throw 驗證計畫](file:///C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Motion/Documentation/ThrowValidationPlan.md)（Task ID: physics-throw-validation）擁有；Apps 按鈕吸塵器（`GroupDragLayout.Pull`／`Spread`）的分類交給 Motion 盤點，作為後續候選。入場動畫是時間驅動（`Transition.Opening`），屬 Motion 的插值表現：以規格與 fixtures 共用，Web 對齊 `@yu5h1/web/animation`，不經 C++ 核心。
+AppsMenu 是 Motion 的驗證場景，甩飛由 Motion 的 [Throw 驗證計畫](file:///C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Motion/Documentation/ThrowValidationPlan.md)（Task ID: physics-throw-validation）擁有，吸塵器與釋放由 Motion 的 Scatter2D 契約擁有。入場動畫是時間驅動（`Transition.Opening`），屬 Motion 的插值表現：以規格與 fixtures 共用，Web 對齊 `@yu5h1/web/animation`，不經 C++ 核心。
 
 Unity C# namespace 不得使用 `Yu5h1Lib.Physics` 或 `Yu5h1Lib.Motion`，避免遮蔽 `UnityEngine.Physics`、`UnityEngine.Motion`；資料夾與 repo 名稱不受此限。
 
@@ -172,7 +172,7 @@ Unity 端的抽離與復刻使用 [unity-ui-extraction](../.agents/skills/unity-
 
 ## 驗收與遷移
 
-P1 的 Web 部分（WEB-1 契約、WEB-3 非物理模組 1.0.0）已交付。P2 起依[啟動條件](#啟動條件)啟動；未啟動前不視為進行中。
+P1 的 Web 部分已交付：WEB-1 契約；WEB-3 的非物理模組 1.0.0，以及接入 Motion 的甩飛與吸塵器（設計資料 2.0.0）。共用案例仍是 1.0.0，只涵蓋非物理行為；物理行為目前只有 Web 的瀏覽器測試與 Motion 的數值 fixtures。P2 起依[啟動條件](#啟動條件)啟動；未啟動前不視為進行中。Unity 端啟動與復刻細節的待決項見 [決策檔](../decisions/cross-platform-ui-parity.decisions)。
 
 | 階段 | 完成條件 |
 |---|---|

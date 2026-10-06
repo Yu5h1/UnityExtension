@@ -1,131 +1,142 @@
 {
   "schema_version": "1.1",
   "task_id": "cross-platform-ui-parity",
-  "updated_at": "2026-10-06T02:31:23+08:00",
+  "updated_at": "2026-10-06T15:06:01.1167849\u002B00:00",
   "decisions": [
     {
       "id": "unpark",
-      "version": 1,
-      "question": "跨平台 UI 一致性目前「已排入、暫緩」，Unity 端要等具名產品需求才啟動。是否解除暫緩？",
-      "context": "計畫〈啟動條件〉要求具名產品需求；Web 已交付 WEB-1 與 WEB-3 非物理 1.0.0，等待 Unity 驗收。",
-      "source_ref": "Unity/UnityExtension/Documentation/跨平台UI一致性.md#啟動條件",
+      "version": 2,
+      "status": "pending",
+      "answer": null,
+      "last_request": {
+        "request_id": "4538df03-a6cf-4f07-975f-59779be181a4",
+        "fingerprint": "520e1e98610068f5a345bd4b659ebbf23ec964da46c4f8829d4d0dce35c39ad0"
+      },
+      "question": "\u8DE8\u5E73\u53F0 UI \u4E00\u81F4\u6027\u76EE\u524D\u300C\u5DF2\u6392\u5165\u3001\u66AB\u7DE9\u300D\uFF0CUnity \u7AEF\u8981\u7B49\u5177\u540D\u7522\u54C1\u9700\u6C42\u624D\u555F\u52D5\u3002\u662F\u5426\u89E3\u9664\u66AB\u7DE9\uFF1F",
+      "context": "\u8A08\u756B\u3008\u555F\u52D5\u689D\u4EF6\u3009\u8981\u6C42\u5177\u540D\u7522\u54C1\u9700\u6C42\u3002Web \u5DF2\u4EA4\u4ED8 WEB-1 \u8272\u7968\u5951\u7D04\u3001WEB-3 \u975E\u7269\u7406 1.0.0\uFF0C\u4E26\u65BC 2026-10-06 \u63A5\u5165 Motion \u7684\u7529\u98DB\u8207\u5438\u5875\u5668\uFF08\u8A2D\u8A08\u8CC7\u6599 2.0.0\uFF09\uFF0C\u90FD\u7B49\u5F85 Unity \u9A57\u6536\u3002",
+      "source_ref": "Unity/UnityExtension/Documentation/\u8DE8\u5E73\u53F0UI\u4E00\u81F4\u6027.md#\u555F\u52D5\u689D\u4EF6",
       "options": [
         {
           "id": "keep-parked",
-          "label": "維持暫緩"
+          "label": "\u7DAD\u6301\u66AB\u7DE9"
         },
         {
           "id": "unpark-unbound",
-          "label": "解除暫緩，不綁產品"
+          "label": "\u89E3\u9664\u66AB\u7DE9\uFF0C\u4E0D\u7D81\u7522\u54C1"
         },
         {
           "id": "unpark-product",
-          "label": "解除暫緩，綁定具名產品"
+          "label": "\u89E3\u9664\u66AB\u7DE9\uFF0C\u7D81\u5B9A\u5177\u540D\u7522\u54C1"
         }
       ],
-      "allow_other": true,
-      "status": "decided",
-      "answer": {
-        "kind": "option",
+      "recommendation": {
         "option_id": "unpark-unbound",
-        "reason": "使用者 2026-10-06 於對話中決定；計畫與 handoff 尚未改寫",
-        "confirmed_at": "2026-10-06T02:31:23+08:00"
-      }
+        "reason": "Web \u8207 Motion \u5DF2\u4EA4\u4ED8\u5230\u53EF\u4EE5\u9A57\u6536\u7684\u7A0B\u5EA6"
+      },
+      "allow_other": true
     },
     {
       "id": "phase-order",
       "version": 1,
-      "question": "Unity 端先做哪一階段？",
-      "context": "原計畫 P1–P4 依序（P2 WebTheme 轉換，P3 復刻 AppsMenu）；先前未討論 P2 與 P3 的先後。",
-      "source_ref": "Unity/UnityExtension/Documentation/跨平台UI一致性.md#驗收與遷移",
+      "question": "Unity \u7AEF\u5148\u505A\u54EA\u4E00\u968E\u6BB5\uFF1F",
+      "context": "\u539F\u8A08\u756B P1\u2013P4 \u4F9D\u5E8F\uFF08P2 WebTheme \u8F49\u63DB\uFF0CP3 \u5FA9\u523B AppsMenu\uFF09\uFF1B\u5148\u524D\u672A\u8A0E\u8AD6 P2 \u8207 P3 \u7684\u5148\u5F8C\u3002",
+      "source_ref": "Unity/UnityExtension/Documentation/\u8DE8\u5E73\u53F0UI\u4E00\u81F4\u6027.md#\u9A57\u6536\u8207\u9077\u79FB",
       "options": [
         {
           "id": "p2-first",
-          "label": "先 P2 WebTheme 轉換"
+          "label": "\u5148 P2 WebTheme \u8F49\u63DB"
         },
         {
           "id": "p3-first",
-          "label": "先 P3 復刻 AppsMenu"
+          "label": "\u5148 P3 \u5FA9\u523B AppsMenu"
         }
       ],
-      "allow_other": true,
-      "status": "decided",
-      "answer": {
-        "kind": "option",
-        "option_id": "p3-first",
-        "reason": "使用者 2026-10-06 於對話中決定",
-        "confirmed_at": "2026-10-06T02:31:23+08:00"
-      }
-    },
-    {
-      "id": "physics-scope",
-      "version": 1,
-      "question": "Unity 的 Apps 模組要不要包含物理行為（慣性、甩飛、吸塵器、避障、面板彈簧、抖動）？",
-      "context": "Web 1.0.0 只有非物理部分；Unity 範例 Samples~/AppsMenu 已有這些行為，分類由 Motion 決定。",
-      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#來源與範圍",
-      "options": [
-        {
-          "id": "replica-only",
-          "label": "模組只復刻 Web 1.0.0",
-          "description": "物理行為留在既有範例，等 Motion 定案再接"
-        },
-        {
-          "id": "include-physics",
-          "label": "模組直接包含物理行為",
-          "description": "用既有 animation／common 實作"
-        }
-      ],
-      "recommendation": {
-        "option_id": "replica-only",
-        "reason": "先從小驗證；物理分類未定，避免先寫死在模組裡"
-      },
       "allow_other": true,
       "status": "pending",
       "answer": null
     },
     {
+      "id": "physics-scope",
+      "version": 2,
+      "status": "pending",
+      "answer": null,
+      "question": "Unity \u7684 Apps \u6A21\u7D44\u8981\u4E0D\u8981\u5305\u542B Web \u5DF2\u63A5\u5165\u7684\u7269\u7406\u884C\u70BA\uFF08\u55AE\u4E00\u5716\u793A\u7529\u98DB\u3001Apps \u6309\u9215\u5438\u5875\u5668\u8207\u91CB\u653E\u6563\u4F48\uFF09\uFF1F",
+      "context": "Web \u4EE5 Motion \u7684 Throw2D\uFF0FScatter2D\uFF08Wasm\uFF09\u63A5\u5165\uFF1BMotion \u7684\u6578\u503C\u57FA\u6E96\u53D6\u81EA Unity \u65E2\u6709 C#\uFF08Reaction.Throw\u3001GroupDragLayout\uFF09\uFF0C\u8AA4\u5DEE \u003C 1e-4\u3002Unity \u6539\u7528\u539F\u751F\u6838\u5FC3\uFF08DLL\uFF09\u7531 Motion \u4F9D\u9700\u6C42\u53E6\u884C\u6C7A\u5B9A\u3002\u649E\u64CA\u969C\u7919\u3001\u7FA4\u7D44\u6163\u6027\u3001\u5F48\u7C27\u3001\u6296\u52D5\u5169\u7AEF\u90FD\u9084\u6C92\u6709\u5171\u7528\u7248\u672C\u3002",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#motion-\u5438\u6536\u8207\u91CB\u653E\u63A5\u5165",
+      "options": [
+        {
+          "id": "non-physics",
+          "label": "\u53EA\u505A\u975E\u7269\u7406\uFF08Web 1.0.0 \u90E8\u5206\uFF09",
+          "description": "\u7269\u7406\u7559\u5728\u65E2\u6709\u7BC4\u4F8B"
+        },
+        {
+          "id": "existing-csharp",
+          "label": "\u7528 Unity \u65E2\u6709 C# \u5BE6\u4F5C Web 2.0.0 \u7684\u7529\u98DB\u8207\u5438\u5875\u5668",
+          "description": "Reaction.Throw\u3001GroupDragLayout \u5C31\u662F Motion \u7684\u6578\u503C\u57FA\u6E96"
+        },
+        {
+          "id": "native-core",
+          "label": "\u7B49 Motion \u539F\u751F\u6838\u5FC3 DLL \u518D\u505A\u7269\u7406",
+          "description": "\u5148\u505A\u975E\u7269\u7406\uFF0C\u7269\u7406\u7B49 DLL"
+        }
+      ],
+      "recommendation": {
+        "option_id": "existing-csharp",
+        "reason": "Web \u5DF2\u6709\u7269\u7406\uFF0CUnity \u65E2\u6709 C# \u5DF2\u8207 Motion \u6838\u5FC3\u9A57\u8B49\u4E00\u81F4\uFF0C\u4E0D\u5FC5\u7B49 DLL"
+      },
+      "allow_other": true,
+      "last_request": {
+        "request_id": "fbb3c57f-b274-4bff-abbc-2397326e07df",
+        "fingerprint": "a2b82760b130001de47e8acae7de55493502dd36a37d6f7aa93888a0fa483ade"
+      }
+    },
+    {
       "id": "behavior-source",
-      "version": 1,
-      "question": "Web 與 Unity 範例行為不同時，模組以誰為準？",
-      "context": "差異：初始位置（Web 固定網格、前 5 項在桌面；Unity 散佈）、拖曳超過 6px 才開始、背景拖曳直接跟手、面板開合立即生效、不保留 app-0 特例。",
-      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#公開契約",
+      "version": 2,
+      "status": "pending",
+      "answer": null,
+      "question": "Web \u8207 Unity \u7BC4\u4F8B\u884C\u70BA\u4E0D\u540C\u6642\uFF0C\u6A21\u7D44\u4EE5\u8AB0\u70BA\u6E96\uFF1F",
+      "context": "\u975E\u7269\u7406\u5DEE\u7570\uFF1A\u521D\u59CB\u4F4D\u7F6E\uFF08Web \u56FA\u5B9A\u7DB2\u683C\u3001\u524D 5 \u9805\u5728\u684C\u9762\uFF1BUnity \u6563\u4F48\uFF09\u3001\u62D6\u66F3\u8D85\u904E 6px \u624D\u958B\u59CB\u3001\u80CC\u666F\u62D6\u66F3\u76F4\u63A5\u8DDF\u624B\u3001\u9762\u677F\u958B\u5408\u7ACB\u5373\u751F\u6548\u3001\u4E0D\u4FDD\u7559 app-0 \u7279\u4F8B\u3002\u5438\u5875\u5668\u5DEE\u7570\uFF1AWeb \u5438\u6536\u7BC4\u570D\u9810\u8A2D\u7121\u4E0A\u9650\u4E26\u6301\u7E8C\u64F4\u5927\u3001\u5438\u529B 0.8 \u79D2\u6F38\u5F37\u3001\u53EA\u6709\u672C\u6B21\u96F6\u6355\u7372\u624D\u91CB\u653E\u3001\u91CB\u653E\u63A5 Throw \u5F80\u5916\u62CB\uFF1BUnity \u7BC4\u4F8B\u662F\u684C\u9762\u6E05\u7A7A\u624D\u91CB\u653E\u3002\u7167 Web \u6642\u65E2\u6709\u7BC4\u4F8B\u4E0D\u6539\uFF0C\u53EA\u6709\u65B0\u6A21\u7D44\u7167 Web\u3002",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#\u516C\u958B\u5951\u7D04",
       "options": [
         {
           "id": "follow-web",
-          "label": "照 Web"
+          "label": "\u7167 Web"
         },
         {
           "id": "follow-unity",
-          "label": "照 Unity 範例"
+          "label": "\u7167 Unity \u7BC4\u4F8B"
         }
       ],
       "recommendation": {
         "option_id": "follow-web",
-        "reason": "Web 是來源，共用案例依 Web 行為撰寫"
+        "reason": "Web \u662F\u4F86\u6E90\uFF0C\u5171\u7528\u6848\u4F8B\u4F9D Web \u884C\u70BA\u64B0\u5BEB"
       },
       "allow_other": true,
-      "status": "pending",
-      "answer": null
+      "last_request": {
+        "request_id": "2b76e856-88d9-484d-bd80-ecfc9c2326f4",
+        "fingerprint": "50b43e01d81594b9d96b266ff02ffb50db79e81fd9f2026291c79d5c62547611"
+      }
     },
     {
       "id": "entrance",
       "version": 1,
-      "question": "入場動畫復刻哪一份？",
-      "context": "Web 目前是 250ms 淡入加 75ms 錯開的簡化版，正在修正以對齊 Unity 的 Transition.Opening（飛入、縮放、收攏、整段跳過）。",
-      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#與-unity-範例的差異",
+      "question": "\u5165\u5834\u52D5\u756B\u5FA9\u523B\u54EA\u4E00\u4EFD\uFF1F",
+      "context": "Web \u76EE\u524D\u662F 250ms \u6DE1\u5165\u52A0 75ms \u932F\u958B\u7684\u7C21\u5316\u7248\uFF0C\u6B63\u5728\u4FEE\u6B63\u4EE5\u5C0D\u9F4A Unity \u7684 Transition.Opening\uFF08\u98DB\u5165\u3001\u7E2E\u653E\u3001\u6536\u650F\u3001\u6574\u6BB5\u8DF3\u904E\uFF09\u3002",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#\u8207-unity-\u7BC4\u4F8B\u7684\u5DEE\u7570",
       "options": [
         {
           "id": "unity-opening",
-          "label": "沿用 Unity 既有 Transition.Opening"
+          "label": "\u6CBF\u7528 Unity \u65E2\u6709 Transition.Opening"
         },
         {
           "id": "web-fade",
-          "label": "復刻 Web 簡化淡入"
+          "label": "\u5FA9\u523B Web \u7C21\u5316\u6DE1\u5165"
         }
       ],
       "recommendation": {
         "option_id": "unity-opening",
-        "reason": "Web 正往 Unity 的入場對齊；列為暫時差異"
+        "reason": "Web \u6B63\u5F80 Unity \u7684\u5165\u5834\u5C0D\u9F4A\uFF1B\u5217\u70BA\u66AB\u6642\u5DEE\u7570"
       },
       "allow_other": true,
       "status": "pending",
@@ -134,26 +145,26 @@
     {
       "id": "keyboard",
       "version": 1,
-      "question": "Web 新增的鍵盤操作（Enter／Space 啟動、Shift+Enter 長按動作、Alt+左右鍵排序、Escape 取消或關閉）要不要補做？",
-      "context": "Unity 範例沒有鍵盤操作；Web 文件允許 Unity 補做或記為平台差異。",
-      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#與-unity-範例的差異",
+      "question": "Web \u65B0\u589E\u7684\u9375\u76E4\u64CD\u4F5C\uFF08Enter\uFF0FSpace \u555F\u52D5\u3001Shift\u002BEnter \u9577\u6309\u52D5\u4F5C\u3001Alt\u002B\u5DE6\u53F3\u9375\u6392\u5E8F\u3001Escape \u53D6\u6D88\u6216\u95DC\u9589\uFF09\u8981\u4E0D\u8981\u88DC\u505A\uFF1F",
+      "context": "Unity \u7BC4\u4F8B\u6C92\u6709\u9375\u76E4\u64CD\u4F5C\uFF1BWeb \u6587\u4EF6\u5141\u8A31 Unity \u88DC\u505A\u6216\u8A18\u70BA\u5E73\u53F0\u5DEE\u7570\u3002",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#\u8207-unity-\u7BC4\u4F8B\u7684\u5DEE\u7570",
       "options": [
         {
           "id": "escape-only",
-          "label": "只做 Escape 取消，其餘記為平台差異"
+          "label": "\u53EA\u505A Escape \u53D6\u6D88\uFF0C\u5176\u9918\u8A18\u70BA\u5E73\u53F0\u5DEE\u7570"
         },
         {
           "id": "all",
-          "label": "全部補做"
+          "label": "\u5168\u90E8\u88DC\u505A"
         },
         {
           "id": "none",
-          "label": "全部記為平台差異"
+          "label": "\u5168\u90E8\u8A18\u70BA\u5E73\u53F0\u5DEE\u7570"
         }
       ],
       "recommendation": {
         "option_id": "escape-only",
-        "reason": "取消是案例會用到的行為；其餘先小規模"
+        "reason": "\u53D6\u6D88\u662F\u6848\u4F8B\u6703\u7528\u5230\u7684\u884C\u70BA\uFF1B\u5176\u9918\u5148\u5C0F\u898F\u6A21"
       },
       "allow_other": true,
       "status": "pending",
@@ -161,72 +172,80 @@
     },
     {
       "id": "module-shape",
-      "version": 1,
-      "question": "Unity 模組放哪、長什麼樣？",
-      "context": "Web 分為無 DOM 的 AppsModel（dispatch、snapshot、政策）與 ui-apps-menu 元件。",
-      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#公開契約",
+      "version": 2,
+      "status": "pending",
+      "answer": null,
+      "question": "Unity \u6A21\u7D44\u653E\u54EA\u3001\u9577\u4EC0\u9EBC\u6A23\uFF1F",
+      "context": "Web \u5206\u70BA\u7121 DOM \u7684 AppsModel\uFF08dispatch\u3001snapshot\u3001\u653F\u7B56\uFF1B2.0.0 \u53E6\u6709 position \u547D\u4EE4\uFF09\u8207 ui-apps-menu \u5143\u4EF6\uFF08reducedMotion\u3001flyingIds\u3001releaseForce\u3001\u5438\u5875\u5668\u53C3\u6578\uFF09\u3002",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#\u516C\u958B\u5951\u7D04",
       "options": [
         {
           "id": "model-plus-control",
-          "label": "Packages/UIToolkit/Runtime/Apps/：純 C# AppsModel ＋ AppsMenu VisualElement 控件",
-          "description": "AppsModel 對應 Web 的 Dispatch／Snapshot／政策委派；控件負責指標捕獲、長按、拖曳，沿用 Gesture.LongPress、ElementTarget"
+          "label": "Packages/UIToolkit/Runtime/Apps/\uFF1A\u7D14 C# AppsModel \uFF0B AppsMenu VisualElement \u63A7\u4EF6",
+          "description": "AppsModel \u5C0D\u61C9 Web \u7684 Dispatch\uFF0FSnapshot\uFF0Fposition \u8207\u653F\u7B56\u59D4\u6D3E\uFF1B\u63A7\u4EF6\u8CA0\u8CAC\u6307\u6A19\u6355\u7372\u3001\u9577\u6309\u3001\u62D6\u66F3\u3001\u7529\u98DB\u8207\u5438\u5875\u5668\u6392\u7A0B\uFF0C\u6CBF\u7528 Gesture.LongPress\u3001ElementTarget\u3001PointerVelocity"
         },
         {
           "id": "control-only",
-          "label": "只做一個 VisualElement 控件，狀態放在控件內"
+          "label": "\u53EA\u505A\u4E00\u500B VisualElement \u63A7\u4EF6\uFF0C\u72C0\u614B\u653E\u5728\u63A7\u4EF6\u5167"
         }
       ],
       "recommendation": {
         "option_id": "model-plus-control",
-        "reason": "與 Web 一一對應，共用案例可直接對模型執行"
+        "reason": "\u8207 Web \u4E00\u4E00\u5C0D\u61C9\uFF0C\u5171\u7528\u6848\u4F8B\u53EF\u76F4\u63A5\u5C0D\u6A21\u578B\u57F7\u884C"
       },
       "allow_other": true,
-      "status": "pending",
-      "answer": null
+      "last_request": {
+        "request_id": "2300e527-2989-4900-aeda-f99de61a0655",
+        "fingerprint": "c85a4db8654fe4e06a6e53fdafa4574bb6777639eda9d93987c66590bac3e4b7"
+      }
     },
     {
       "id": "design-params",
-      "version": 1,
-      "question": "設計參數（apps-design.json）如何進入 Unity？",
-      "context": "計畫規定不能手抄；完整的轉換工具屬 P2。",
+      "version": 2,
+      "status": "pending",
+      "answer": null,
+      "question": "\u8A2D\u8A08\u53C3\u6578\uFF08apps-design.json\uFF09\u5982\u4F55\u9032\u5165 Unity\uFF1F",
+      "context": "\u8A08\u756B\u898F\u5B9A\u4E0D\u80FD\u624B\u6284\uFF1B\u5B8C\u6574\u7684\u8F49\u63DB\u5DE5\u5177\u5C6C P2\u3002\u8A2D\u8A08\u8CC7\u6599\u5DF2\u662F 2.0.0\uFF0C\u542B releaseForce\u3001vacuumRadius\uFF0FForce\uFF0FRampDuration\uFF0FExpansionRadius \u7B49\u5438\u5875\u5668\u53C3\u6578\u3002",
       "source_ref": "Yu5h1Lib/Web/src/design/apps.json",
       "options": [
         {
           "id": "params-converter",
-          "label": "先做只處理 apps-design.json 的轉換：產生 USS 變數，C# 從 USS 讀時間類參數"
+          "label": "\u5148\u505A\u53EA\u8655\u7406 apps-design.json \u7684\u8F49\u63DB\uFF1A\u7522\u751F USS \u8B8A\u6578\uFF0CC# \u5F9E USS \u8B80\u6642\u9593\u8207\u529B\u9053\u985E\u53C3\u6578"
         },
         {
           "id": "wait-p2",
-          "label": "等完整 P2 再做"
+          "label": "\u7B49\u5B8C\u6574 P2 \u518D\u505A"
         }
       ],
       "recommendation": {
         "option_id": "params-converter",
-        "reason": "P3 需要參數；只做參數這一塊，色票留到 P2"
+        "reason": "P3 \u9700\u8981\u53C3\u6578\uFF1B\u53EA\u505A\u53C3\u6578\u9019\u4E00\u584A\uFF0C\u8272\u7968\u7559\u5230 P2"
       },
       "allow_other": true,
-      "status": "pending",
-      "answer": null
+      "last_request": {
+        "request_id": "ce3f9df9-c3c3-42de-9895-ef3b82aeee31",
+        "fingerprint": "e14cdf7db6d283dcff982f2790ead02592e6e18dbea00e83395c415dd5794a67"
+      }
     },
     {
       "id": "colors",
       "version": 1,
-      "question": "WebTheme 尚未產生前，模組顏色怎麼處理？",
-      "context": "Web 使用 --ui-* 色票；WebTheme 屬 P2。",
-      "source_ref": "Unity/UnityExtension/Documentation/跨平台UI一致性.md#主題轉換",
+      "question": "WebTheme \u5C1A\u672A\u7522\u751F\u524D\uFF0C\u6A21\u7D44\u984F\u8272\u600E\u9EBC\u8655\u7406\uFF1F",
+      "context": "Web \u4F7F\u7528 --ui-* \u8272\u7968\uFF1BWebTheme \u5C6C P2\u3002",
+      "source_ref": "Unity/UnityExtension/Documentation/\u8DE8\u5E73\u53F0UI\u4E00\u81F4\u6027.md#\u4E3B\u984C\u8F49\u63DB",
       "options": [
         {
           "id": "sample-colors",
-          "label": "暫用既有範例顏色，列為未對齊項"
+          "label": "\u66AB\u7528\u65E2\u6709\u7BC4\u4F8B\u984F\u8272\uFF0C\u5217\u70BA\u672A\u5C0D\u9F4A\u9805"
         },
         {
           "id": "webtheme-first",
-          "label": "先做 WebTheme 轉換"
+          "label": "\u5148\u505A WebTheme \u8F49\u63DB"
         }
       ],
       "recommendation": {
         "option_id": "sample-colors",
-        "reason": "維持先做 P3 的順序"
+        "reason": "\u7DAD\u6301\u5148\u505A P3 \u7684\u9806\u5E8F"
       },
       "allow_other": true,
       "status": "pending",
@@ -234,48 +253,100 @@
     },
     {
       "id": "cases-source",
-      "version": 1,
-      "question": "Unity 測試從哪讀共用案例？",
-      "context": "Web 的 contracts/apps-cases.json 為 schema 1／1.0.0；alternate 政策變體定義在 Web 的 JS 測試程式 tests/apps-cases.mjs，不在 JSON 資料裡。",
+      "version": 2,
+      "status": "pending",
+      "answer": null,
+      "question": "Unity \u6E2C\u8A66\u5F9E\u54EA\u8B80\u975E\u7269\u7406\u5171\u7528\u6848\u4F8B\uFF1F",
+      "context": "Web \u7684 contracts/apps-cases.json \u70BA schema 1\uFF0F1.0.0\uFF0811 \u9805\uFF0C\u53EA\u6709\u975E\u7269\u7406\uFF09\uFF1Balternate \u653F\u7B56\u8B8A\u9AD4\u5B9A\u7FA9\u5728 Web \u7684 JS \u6E2C\u8A66\u7A0B\u5F0F tests/apps-cases.mjs\uFF0C\u4E0D\u5728 JSON \u8CC7\u6599\u88E1\u3002\u7269\u7406\u884C\u70BA\u7684\u6848\u4F8B\u53E6\u898B physics-cases\u3002",
       "source_ref": "Yu5h1Lib/Web/contracts/apps-cases.json",
       "options": [
         {
           "id": "copy-with-hash",
-          "label": "複製進套件 Tests/，記錄版本與雜湊，過期時測試提醒",
-          "description": "alternate 變體在 C# 測試照抄，並回饋 Web"
+          "label": "\u8907\u88FD\u9032\u5957\u4EF6 Tests/\uFF0C\u8A18\u9304\u7248\u672C\u8207\u96DC\u6E4A\uFF0C\u904E\u671F\u6642\u6E2C\u8A66\u63D0\u9192",
+          "description": "alternate \u8B8A\u9AD4\u5728 C# \u6E2C\u8A66\u7167\u6284\uFF0C\u4E26\u56DE\u994B Web"
         },
         {
           "id": "read-web-path",
-          "label": "測試直接讀 Web repo 的路徑"
+          "label": "\u6E2C\u8A66\u76F4\u63A5\u8B80 Web repo \u7684\u8DEF\u5F91"
         }
       ],
       "recommendation": {
         "option_id": "copy-with-hash",
-        "reason": "套件不依賴另一個 repo 的路徑也能測試"
+        "reason": "\u5957\u4EF6\u4E0D\u4F9D\u8CF4\u53E6\u4E00\u500B repo \u7684\u8DEF\u5F91\u4E5F\u80FD\u6E2C\u8A66"
+      },
+      "allow_other": true,
+      "last_request": {
+        "request_id": "cb4c3b6b-54f0-4369-b9a0-8eb784e3960b",
+        "fingerprint": "705be3fdf5acc87b03eff1a3cc545460e4418a8a1833f903027913d18e6de8b1"
+      }
+    },
+    {
+      "id": "demo-location",
+      "version": 1,
+      "question": "\u9A57\u8B49\u7528 demo \u653E\u54EA\uFF1F",
+      "context": "Web demo \u6709\u4E3B\u8981\u7248\u8207\u653F\u7B56\u8B8A\u9AD4\u5169\u500B\u5BE6\u4F8B\uFF1B\u65E2\u6709 Samples~/AppsMenu \u542B\u7269\u7406\u884C\u70BA\u3002",
+      "source_ref": "Yu5h1Lib/Web/demo/apps/demo.js",
+      "options": [
+        {
+          "id": "new-sample",
+          "label": "\u65B0\u589E Samples~/AppsMenuModule\uFF0C\u653E\u4E3B\u8981\u7248\u8207\u653F\u7B56\u8B8A\u9AD4\u5169\u500B\u5BE6\u4F8B\uFF0C\u65E2\u6709\u7BC4\u4F8B\u4E0D\u52D5"
+        },
+        {
+          "id": "replace-sample",
+          "label": "\u76F4\u63A5\u6539\u5BEB\u65E2\u6709 Samples~/AppsMenu"
+        }
+      ],
+      "recommendation": {
+        "option_id": "new-sample",
+        "reason": "\u65E2\u6709\u7BC4\u4F8B\u4FDD\u7559\u7269\u7406\u884C\u70BA\uFF0C\u4E5F\u662F Motion \u7684\u9A57\u8B49\u5834\u666F"
       },
       "allow_other": true,
       "status": "pending",
       "answer": null
     },
     {
-      "id": "demo-location",
+      "id": "physics-cases",
       "version": 1,
-      "question": "驗證用 demo 放哪？",
-      "context": "Web demo 有主要版與政策變體兩個實例；既有 Samples~/AppsMenu 含物理行為。",
-      "source_ref": "Yu5h1Lib/Web/demo/apps/demo.js",
+      "question": "Web \u65B0\u589E\u7684\u7269\u7406\u884C\u70BA\uFF08\u7529\u98DB\u3001\u5438\u5875\u5668\u8207\u91CB\u653E\uFF09\u76EE\u524D\u6C92\u6709\u4E2D\u6027\u6848\u4F8B\uFF0CUnity \u600E\u9EBC\u9A57\u8B49\u4E00\u81F4\uFF1F",
+      "context": "Web \u5171\u7528\u6848\u4F8B\u4ECD\u70BA 1.0.0\uFF0C\u53EA\u6DB5\u84CB\u975E\u7269\u7406\u884C\u70BA\uFF1BWeb \u7684\u7529\u98DB\u8207\u5438\u5875\u5668\u53EA\u6709\u700F\u89BD\u5668\u6E2C\u8A66\uFF0CMotion \u53EA\u6709\u6838\u5FC3\u6578\u503C fixtures\uFF08\u53D6\u81EA Unity \u65E2\u6709 C#\uFF09\u3002\u5438\u6536\u7BC4\u570D\u6F38\u5F37\u3001\u96F6\u6355\u7372\u624D\u91CB\u653E\u3001\u91CB\u653E\u63A5 Throw \u7B49\u898F\u5247\u5728 Web \u7684 vacuum.ts\uFF0C\u4E0D\u5728 Motion \u6838\u5FC3\u3002",
+      "source_ref": "Yu5h1Lib/Web/contracts/apps-cases.json",
       "options": [
         {
-          "id": "new-sample",
-          "label": "新增 Samples~/AppsMenuModule，放主要版與政策變體兩個實例，既有範例不動"
+          "id": "request-web",
+          "label": "\u5BEB\u6210\u7D66 Web \u7684\u9700\u6C42\uFF0C\u8ACB Web \u88DC\u7269\u7406\u884C\u70BA\u7684\u4E2D\u6027\u6848\u4F8B"
         },
         {
-          "id": "replace-sample",
-          "label": "直接改寫既有 Samples~/AppsMenu"
+          "id": "unity-only",
+          "label": "Unity \u53EA\u505A\u81EA\u5DF1\u7684\u5E73\u53F0\u6E2C\u8A66\uFF0C\u4E0D\u8981\u6C42\u5169\u7AEF\u540C\u4E00\u4EFD\u6848\u4F8B"
         }
       ],
       "recommendation": {
-        "option_id": "new-sample",
-        "reason": "既有範例保留物理行為，也是 Motion 的驗證場景"
+        "option_id": "request-web",
+        "reason": "\u898F\u5247\u5C6C\u65BC Web\uFF0C\u6C92\u6709\u5171\u7528\u6848\u4F8B\u5C31\u7121\u6CD5\u5224\u65B7 Unity \u662F\u5426\u4E00\u81F4"
+      },
+      "allow_other": true,
+      "status": "pending",
+      "answer": null
+    },
+    {
+      "id": "demo-settings",
+      "version": 1,
+      "question": "Unity demo \u8981\u4E0D\u8981\u6709 AppsMenu\uFF0FMotion \u53C3\u6578\u7684\u8A2D\u5B9A\u9762\u677F\uFF1F",
+      "context": "Web demo \u6709 AppsMenu\uFF0FMotion \u8A2D\u5B9A\u5206\u985E\uFF08\u91CB\u653E\u529B\u9053\u3001\u5438\u6536\u7BC4\u570D\u8207\u529B\u9053\u3001\u6F38\u5F37\u6642\u9593\u3001Throw \u53C3\u6578\uFF09\uFF0C\u4EE5 ConfigStore \u4FDD\u5B58\u3002\u8A2D\u5B9A\u9762\u677F\u7684\u4FDD\u5B58\u8A9E\u610F\u8207 Unity Preferences \u7684\u5C0D\u61C9\u5C1A\u672A\u8A0E\u8AD6\u3002",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#appsmenu-\u8207-motion-\u8A2D\u5B9A",
+      "options": [
+        {
+          "id": "inspector-only",
+          "label": "\u4E0D\u505A\u8A2D\u5B9A\u9762\u677F\uFF0C\u53C3\u6578\u653E\u5728 Inspector"
+        },
+        {
+          "id": "settings-panel",
+          "label": "\u505A\u8A2D\u5B9A\u9762\u677F\u4E26\u4FDD\u5B58"
+        }
+      ],
+      "recommendation": {
+        "option_id": "inspector-only",
+        "reason": "\u4FDD\u5B58\u8A9E\u610F\u8207 Preferences \u7684\u5C0D\u61C9\u5C1A\u672A\u8A0E\u8AD6"
       },
       "allow_other": true,
       "status": "pending",
