@@ -1,16 +1,20 @@
 {
   "schema_version": "1.1",
   "task_id": "cross-platform-ui-parity",
-  "updated_at": "2026-10-06T15:06:01.1167849\u002B00:00",
+  "updated_at": "2026-10-06T18:58:35.8968850\u002B00:00",
   "decisions": [
     {
       "id": "unpark",
       "version": 2,
-      "status": "pending",
-      "answer": null,
+      "status": "decided",
+      "answer": {
+        "kind": "other",
+        "text": "unityextension uitoolkit \u7684 appsmenu \u7576\u4F5C \u9A57\u8B49\u7684\u7522\u54C1 \u5305\u542B theme \u8272\u7968\u5951\u7D04",
+        "confirmed_at": "2026-10-06T15:18:53.8109092\u002B00:00"
+      },
       "last_request": {
-        "request_id": "4538df03-a6cf-4f07-975f-59779be181a4",
-        "fingerprint": "520e1e98610068f5a345bd4b659ebbf23ec964da46c4f8829d4d0dce35c39ad0"
+        "request_id": "33b7f6ee-11e1-4f42-9eb6-361625552fc1",
+        "fingerprint": "e2b1173074a332cf3a037f03f12b7f7d8df5681466ffe48e2eb6061572a4a20c"
       },
       "question": "\u8DE8\u5E73\u53F0 UI \u4E00\u81F4\u6027\u76EE\u524D\u300C\u5DF2\u6392\u5165\u3001\u66AB\u7DE9\u300D\uFF0CUnity \u7AEF\u8981\u7B49\u5177\u540D\u7522\u54C1\u9700\u6C42\u624D\u555F\u52D5\u3002\u662F\u5426\u89E3\u9664\u66AB\u7DE9\uFF1F",
       "context": "\u8A08\u756B\u3008\u555F\u52D5\u689D\u4EF6\u3009\u8981\u6C42\u5177\u540D\u7522\u54C1\u9700\u6C42\u3002Web \u5DF2\u4EA4\u4ED8 WEB-1 \u8272\u7968\u5951\u7D04\u3001WEB-3 \u975E\u7269\u7406 1.0.0\uFF0C\u4E26\u65BC 2026-10-06 \u63A5\u5165 Motion \u7684\u7529\u98DB\u8207\u5438\u5875\u5668\uFF08\u8A2D\u8A08\u8CC7\u6599 2.0.0\uFF09\uFF0C\u90FD\u7B49\u5F85 Unity \u9A57\u6536\u3002",
@@ -52,14 +56,26 @@
         }
       ],
       "allow_other": true,
-      "status": "pending",
-      "answer": null
+      "status": "decided",
+      "answer": {
+        "kind": "other",
+        "text": "\u9806\u5E8F\uFF1A\u2460 Unity \u7AEF\u5FA9\u76E4 AppsMenu\uFF08\u53EA\u7522\u51FA\u5C0D\u7167\u5831\u544A\uFF1ADocumentation/AppsMenu\u5C0D\u7167.md\uFF09\u2461 \u5728 Unity \u9A57\u8B49 C\u002B\u002B Motion \u5EAB \u2462 Web \u5EAB\u7684 config \u2463 WebTheme\uFF08theme \u7528\u5230 config\uFF09\u3002\uFF08\u539F\u7B54\u6848\u52A0\u4E0A 2026-10-07 \u5C0D\u8A71\u78BA\u8A8D\u7684\u7B2C 1 \u6B65\u7BC4\u570D\uFF09",
+        "confirmed_at": "2026-10-06T17:00:30.7368139\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "34cae0e5-71a3-44fd-a057-5da3c6c98810",
+        "fingerprint": "8994f677ef3cc94fa20ff871c1a4aa3a6b717763dc7d8a478bc6b6dd1ef62f7a"
+      }
     },
     {
       "id": "physics-scope",
       "version": 2,
-      "status": "pending",
-      "answer": null,
+      "status": "decided",
+      "answer": {
+        "kind": "other",
+        "text": "\u7B49 Motion \u539F\u751F\u6838\u5FC3 DLL \u518D\u505A\u7269\u7406\uFF1BDLL \u5148\u652F\u63F4 Windows \u002B Android\u3002\uFF082026-10-07 \u5C0D\u8A71\u78BA\u8A8D\u5E73\u53F0\uFF09",
+        "confirmed_at": "2026-10-06T17:00:31.0718502\u002B00:00"
+      },
       "question": "Unity \u7684 Apps \u6A21\u7D44\u8981\u4E0D\u8981\u5305\u542B Web \u5DF2\u63A5\u5165\u7684\u7269\u7406\u884C\u70BA\uFF08\u55AE\u4E00\u5716\u793A\u7529\u98DB\u3001Apps \u6309\u9215\u5438\u5875\u5668\u8207\u91CB\u653E\u6563\u4F48\uFF09\uFF1F",
       "context": "Web \u4EE5 Motion \u7684 Throw2D\uFF0FScatter2D\uFF08Wasm\uFF09\u63A5\u5165\uFF1BMotion \u7684\u6578\u503C\u57FA\u6E96\u53D6\u81EA Unity \u65E2\u6709 C#\uFF08Reaction.Throw\u3001GroupDragLayout\uFF09\uFF0C\u8AA4\u5DEE \u003C 1e-4\u3002Unity \u6539\u7528\u539F\u751F\u6838\u5FC3\uFF08DLL\uFF09\u7531 Motion \u4F9D\u9700\u6C42\u53E6\u884C\u6C7A\u5B9A\u3002\u649E\u64CA\u969C\u7919\u3001\u7FA4\u7D44\u6163\u6027\u3001\u5F48\u7C27\u3001\u6296\u52D5\u5169\u7AEF\u90FD\u9084\u6C92\u6709\u5171\u7528\u7248\u672C\u3002",
       "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#motion-\u5438\u6536\u8207\u91CB\u653E\u63A5\u5165",
@@ -86,15 +102,19 @@
       },
       "allow_other": true,
       "last_request": {
-        "request_id": "fbb3c57f-b274-4bff-abbc-2397326e07df",
-        "fingerprint": "a2b82760b130001de47e8acae7de55493502dd36a37d6f7aa93888a0fa483ade"
+        "request_id": "293e6912-7b2c-40cd-89bc-ab9f39cb847d",
+        "fingerprint": "6e9d7e352d40f8a2e33460427a8c2d83d9343b35f4210f8c382462761fc55304"
       }
     },
     {
       "id": "behavior-source",
       "version": 2,
-      "status": "pending",
-      "answer": null,
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "follow-web",
+        "confirmed_at": "2026-10-06T16:35:36.2773399\u002B00:00"
+      },
       "question": "Web \u8207 Unity \u7BC4\u4F8B\u884C\u70BA\u4E0D\u540C\u6642\uFF0C\u6A21\u7D44\u4EE5\u8AB0\u70BA\u6E96\uFF1F",
       "context": "\u975E\u7269\u7406\u5DEE\u7570\uFF1A\u521D\u59CB\u4F4D\u7F6E\uFF08Web \u56FA\u5B9A\u7DB2\u683C\u3001\u524D 5 \u9805\u5728\u684C\u9762\uFF1BUnity \u6563\u4F48\uFF09\u3001\u62D6\u66F3\u8D85\u904E 6px \u624D\u958B\u59CB\u3001\u80CC\u666F\u62D6\u66F3\u76F4\u63A5\u8DDF\u624B\u3001\u9762\u677F\u958B\u5408\u7ACB\u5373\u751F\u6548\u3001\u4E0D\u4FDD\u7559 app-0 \u7279\u4F8B\u3002\u5438\u5875\u5668\u5DEE\u7570\uFF1AWeb \u5438\u6536\u7BC4\u570D\u9810\u8A2D\u7121\u4E0A\u9650\u4E26\u6301\u7E8C\u64F4\u5927\u3001\u5438\u529B 0.8 \u79D2\u6F38\u5F37\u3001\u53EA\u6709\u672C\u6B21\u96F6\u6355\u7372\u624D\u91CB\u653E\u3001\u91CB\u653E\u63A5 Throw \u5F80\u5916\u62CB\uFF1BUnity \u7BC4\u4F8B\u662F\u684C\u9762\u6E05\u7A7A\u624D\u91CB\u653E\u3002\u7167 Web \u6642\u65E2\u6709\u7BC4\u4F8B\u4E0D\u6539\uFF0C\u53EA\u6709\u65B0\u6A21\u7D44\u7167 Web\u3002",
       "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#\u516C\u958B\u5951\u7D04",
@@ -114,67 +134,83 @@
       },
       "allow_other": true,
       "last_request": {
-        "request_id": "2b76e856-88d9-484d-bd80-ecfc9c2326f4",
-        "fingerprint": "50b43e01d81594b9d96b266ff02ffb50db79e81fd9f2026291c79d5c62547611"
+        "request_id": "d8fa5ea2-88d4-4c1d-b517-2242099083d9",
+        "fingerprint": "5f54021ac4ae0c1f4a87f3d62287d598cd51f93d6b4ebe909d9984e737435a2c"
       }
     },
     {
       "id": "entrance",
-      "version": 1,
-      "question": "\u5165\u5834\u52D5\u756B\u5FA9\u523B\u54EA\u4E00\u4EFD\uFF1F",
-      "context": "Web \u76EE\u524D\u662F 250ms \u6DE1\u5165\u52A0 75ms \u932F\u958B\u7684\u7C21\u5316\u7248\uFF0C\u6B63\u5728\u4FEE\u6B63\u4EE5\u5C0D\u9F4A Unity \u7684 Transition.Opening\uFF08\u98DB\u5165\u3001\u7E2E\u653E\u3001\u6536\u650F\u3001\u6574\u6BB5\u8DF3\u904E\uFF09\u3002",
-      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#\u8207-unity-\u7BC4\u4F8B\u7684\u5DEE\u7570",
+      "version": 2,
+      "status": "decided",
+      "answer": {
+        "kind": "other",
+        "text": "\u6CBF\u7528 Unity \u7684 Transition.Opening , web \u88DC\u8A2D\u8A08\u898F\u7BC4",
+        "confirmed_at": "2026-10-06T18:37:56.6812199\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "6614876f-7bb0-4a25-8253-637b18468ded",
+        "fingerprint": "429f6c3001eea1c3172f2b205166f2609e6b91273685b47feb9b1ba5d94edd29"
+      },
+      "question": "\u5165\u5834\u52D5\u756B\u7167\u54EA\u4E00\u4EFD\uFF1F",
+      "context": "Web 935474c \u898F\u683C\uFF1A\u5165\u5834\u9A57\u6536\u4EE5 Web \u7684 250ms \u6DE1\u5165\u52A0 75ms \u932F\u958B\u70BA\u6E96\uFF0C\u820A Unity \u7684\u98DB\u5165\u3001\u7E2E\u653E\u3001\u6536\u650F\u4E0D\u5C6C\u65BC\u9019\u7248\u8981\u6C42\u3002\u5148\u524D\u7B54\u6848\u662F\u6CBF\u7528 Unity \u7684 Transition.Opening\u3002",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#web-\u4E3B\u898F\u683C\u8207-unity-\u5FA9\u523B\u908A\u754C",
       "options": [
         {
-          "id": "unity-opening",
-          "label": "\u6CBF\u7528 Unity \u65E2\u6709 Transition.Opening"
+          "id": "web-fade",
+          "label": "\u7167 Web\uFF1A250ms \u6DE1\u5165\u3001\u932F\u958B 75ms"
         },
         {
-          "id": "web-fade",
-          "label": "\u5FA9\u523B Web \u7C21\u5316\u6DE1\u5165"
+          "id": "unity-opening",
+          "label": "\u6CBF\u7528 Unity \u65E2\u6709 Transition.Opening\uFF0C\u5217\u70BA\u8207 Web \u898F\u683C\u7684\u5DEE\u7570"
         }
       ],
       "recommendation": {
-        "option_id": "unity-opening",
-        "reason": "Web \u6B63\u5F80 Unity \u7684\u5165\u5834\u5C0D\u9F4A\uFF1B\u5217\u70BA\u66AB\u6642\u5DEE\u7570"
+        "option_id": "web-fade",
+        "reason": "Web \u662F\u4E3B\u898F\u683C\uFF0C\u9A57\u6536\u4EE5\u5B83\u70BA\u6E96"
       },
-      "allow_other": true,
-      "status": "pending",
-      "answer": null
+      "allow_other": true
     },
     {
       "id": "keyboard",
-      "version": 1,
-      "question": "Web \u65B0\u589E\u7684\u9375\u76E4\u64CD\u4F5C\uFF08Enter\uFF0FSpace \u555F\u52D5\u3001Shift\u002BEnter \u9577\u6309\u52D5\u4F5C\u3001Alt\u002B\u5DE6\u53F3\u9375\u6392\u5E8F\u3001Escape \u53D6\u6D88\u6216\u95DC\u9589\uFF09\u8981\u4E0D\u8981\u88DC\u505A\uFF1F",
-      "context": "Unity \u7BC4\u4F8B\u6C92\u6709\u9375\u76E4\u64CD\u4F5C\uFF1BWeb \u6587\u4EF6\u5141\u8A31 Unity \u88DC\u505A\u6216\u8A18\u70BA\u5E73\u53F0\u5DEE\u7570\u3002",
-      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#\u8207-unity-\u7BC4\u4F8B\u7684\u5DEE\u7570",
+      "version": 2,
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "all",
+        "confirmed_at": "2026-10-06T18:38:42.8963129\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "f4829e53-c9dd-40a4-835a-efb1e86e7927",
+        "fingerprint": "734b836b8b968c248d7b3a47855970264be6581845b2815cf635f0ddeeb00c15"
+      },
+      "question": "\u9375\u76E4\u64CD\u4F5C\u8981\u5C0D\u9F4A\u5230\u4EC0\u9EBC\u7A0B\u5EA6\uFF1F",
+      "context": "Web \u898F\u683C U8\uFF1AEnter\uFF0FSpace \u555F\u52D5\u3001Shift\u002BEnter \u9577\u6309\u52D5\u4F5C\u3001Alt\u002B\u5DE6\u53F3\u9375\u6392\u5E8F\u3001Escape \u90FD\u8981\u5C0D\u9F4A\uFF1B\u5E73\u53F0\u6C92\u6709\u5C0D\u61C9\u8F38\u5165\u6642\u624D\u5217\u66FF\u4EE3\u8207\u672A\u9A57\u9805\u76EE\u3002\u5148\u524D\u7B54\u6848\u662F\u53EA\u505A Escape\u3002",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#web-\u4E3B\u898F\u683C\u8207-unity-\u5FA9\u523B\u908A\u754C",
       "options": [
         {
-          "id": "escape-only",
-          "label": "\u53EA\u505A Escape \u53D6\u6D88\uFF0C\u5176\u9918\u8A18\u70BA\u5E73\u53F0\u5DEE\u7570"
-        },
-        {
           "id": "all",
-          "label": "\u5168\u90E8\u88DC\u505A"
+          "label": "\u5168\u90E8\u5C0D\u9F4A\uFF1BAndroid \u7121\u5BE6\u9AD4\u9375\u76E4\u6642\u5217\u66FF\u4EE3\u8207\u672A\u9A57\u9805\u76EE"
         },
         {
-          "id": "none",
-          "label": "\u5168\u90E8\u8A18\u70BA\u5E73\u53F0\u5DEE\u7570"
+          "id": "escape-only",
+          "label": "\u53EA\u505A Escape\uFF0C\u5176\u9918\u5217\u70BA\u8207 Web \u898F\u683C\u7684\u5DEE\u7570"
         }
       ],
       "recommendation": {
-        "option_id": "escape-only",
-        "reason": "\u53D6\u6D88\u662F\u6848\u4F8B\u6703\u7528\u5230\u7684\u884C\u70BA\uFF1B\u5176\u9918\u5148\u5C0F\u898F\u6A21"
+        "option_id": "all",
+        "reason": "Unity \u5728 Windows \u6709\u9375\u76E4\uFF0C\u53EF\u4EE5\u5C0D\u9F4A"
       },
-      "allow_other": true,
-      "status": "pending",
-      "answer": null
+      "allow_other": true
     },
     {
       "id": "module-shape",
       "version": 2,
-      "status": "pending",
-      "answer": null,
+      "status": "decided",
+      "answer": {
+        "kind": "other",
+        "text": "\u8CC7\u6599\u593E Packages/UIToolkit/Runtime/WebUI/AppsMenu/\uFF0C\u578B\u5225 AppsMenu\uFF08\u63A7\u4EF6\uFF09\u8207 AppsMenuModel\uFF0C\u4E0D\u52A0 Web \u524D\u7DB4\uFF1B\u547D\u540D\u7A7A\u9593\u7DAD\u6301 Yu5h1Lib.UIToolkit\u3002\u4E4B\u5F8C\u5F9E Web \u5FA9\u523B\u7684\u5143\u4EF6\u4E5F\u653E\u5728 WebUI/ \u5E95\u4E0B\u5404\u81EA\u7684\u5B50\u8CC7\u6599\u593E\u3002\uFF082026-10-07 \u5C0D\u8A71\u78BA\u8A8D\u7684\u6298\u8877\u547D\u540D\uFF09",
+        "confirmed_at": "2026-10-06T17:00:31.3856706\u002B00:00"
+      },
       "question": "Unity \u6A21\u7D44\u653E\u54EA\u3001\u9577\u4EC0\u9EBC\u6A23\uFF1F",
       "context": "Web \u5206\u70BA\u7121 DOM \u7684 AppsModel\uFF08dispatch\u3001snapshot\u3001\u653F\u7B56\uFF1B2.0.0 \u53E6\u6709 position \u547D\u4EE4\uFF09\u8207 ui-apps-menu \u5143\u4EF6\uFF08reducedMotion\u3001flyingIds\u3001releaseForce\u3001\u5438\u5875\u5668\u53C3\u6578\uFF09\u3002",
       "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#\u516C\u958B\u5951\u7D04",
@@ -195,15 +231,19 @@
       },
       "allow_other": true,
       "last_request": {
-        "request_id": "2300e527-2989-4900-aeda-f99de61a0655",
-        "fingerprint": "c85a4db8654fe4e06a6e53fdafa4574bb6777639eda9d93987c66590bac3e4b7"
+        "request_id": "effc5dea-e8d6-4fb4-b2fb-6e6c9082e7d1",
+        "fingerprint": "6df6fdb0ddec500369d07e570f2f72dcffc14b1a76c3d25993f2b38d9f2b3a08"
       }
     },
     {
       "id": "design-params",
       "version": 2,
-      "status": "pending",
-      "answer": null,
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "params-converter",
+        "confirmed_at": "2026-10-06T16:36:37.5062112\u002B00:00"
+      },
       "question": "\u8A2D\u8A08\u53C3\u6578\uFF08apps-design.json\uFF09\u5982\u4F55\u9032\u5165 Unity\uFF1F",
       "context": "\u8A08\u756B\u898F\u5B9A\u4E0D\u80FD\u624B\u6284\uFF1B\u5B8C\u6574\u7684\u8F49\u63DB\u5DE5\u5177\u5C6C P2\u3002\u8A2D\u8A08\u8CC7\u6599\u5DF2\u662F 2.0.0\uFF0C\u542B releaseForce\u3001vacuumRadius\uFF0FForce\uFF0FRampDuration\uFF0FExpansionRadius \u7B49\u5438\u5875\u5668\u53C3\u6578\u3002",
       "source_ref": "Yu5h1Lib/Web/src/design/apps.json",
@@ -223,8 +263,8 @@
       },
       "allow_other": true,
       "last_request": {
-        "request_id": "ce3f9df9-c3c3-42de-9895-ef3b82aeee31",
-        "fingerprint": "e14cdf7db6d283dcff982f2790ead02592e6e18dbea00e83395c415dd5794a67"
+        "request_id": "7d6a7a11-ec6b-455b-851c-13bfaeec376c",
+        "fingerprint": "a302c5f3e4f9cbf7bd2cf5bbce483bfdb165912f1b8fd029f72b923d31c6475d"
       }
     },
     {
@@ -248,14 +288,26 @@
         "reason": "\u7DAD\u6301\u5148\u505A P3 \u7684\u9806\u5E8F"
       },
       "allow_other": true,
-      "status": "pending",
-      "answer": null
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "sample-colors",
+        "confirmed_at": "2026-10-06T16:36:51.0849435\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "9bf0126a-91eb-4e31-87bb-88fa6f0ce145",
+        "fingerprint": "12ba9215b3ab07ebf0902648ee1e9db6dc3cc3434059d618a8d3b81d2f1990c6"
+      }
     },
     {
       "id": "cases-source",
       "version": 2,
-      "status": "pending",
-      "answer": null,
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "copy-with-hash",
+        "confirmed_at": "2026-10-06T16:37:07.9428638\u002B00:00"
+      },
       "question": "Unity \u6E2C\u8A66\u5F9E\u54EA\u8B80\u975E\u7269\u7406\u5171\u7528\u6848\u4F8B\uFF1F",
       "context": "Web \u7684 contracts/apps-cases.json \u70BA schema 1\uFF0F1.0.0\uFF0811 \u9805\uFF0C\u53EA\u6709\u975E\u7269\u7406\uFF09\uFF1Balternate \u653F\u7B56\u8B8A\u9AD4\u5B9A\u7FA9\u5728 Web \u7684 JS \u6E2C\u8A66\u7A0B\u5F0F tests/apps-cases.mjs\uFF0C\u4E0D\u5728 JSON \u8CC7\u6599\u88E1\u3002\u7269\u7406\u884C\u70BA\u7684\u6848\u4F8B\u53E6\u898B physics-cases\u3002",
       "source_ref": "Yu5h1Lib/Web/contracts/apps-cases.json",
@@ -276,8 +328,8 @@
       },
       "allow_other": true,
       "last_request": {
-        "request_id": "cb4c3b6b-54f0-4369-b9a0-8eb784e3960b",
-        "fingerprint": "705be3fdf5acc87b03eff1a3cc545460e4418a8a1833f903027913d18e6de8b1"
+        "request_id": "d2a7e46e-1060-490e-88c6-c33bad8df810",
+        "fingerprint": "29671a478cf0d0b848149b11bbf311e44f32a5f9a50964c6e74fed114f42dd55"
       }
     },
     {
@@ -301,56 +353,334 @@
         "reason": "\u65E2\u6709\u7BC4\u4F8B\u4FDD\u7559\u7269\u7406\u884C\u70BA\uFF0C\u4E5F\u662F Motion \u7684\u9A57\u8B49\u5834\u666F"
       },
       "allow_other": true,
-      "status": "pending",
-      "answer": null
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "new-sample",
+        "confirmed_at": "2026-10-06T16:37:20.2720875\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "e60dbfe9-6e7d-4093-a4eb-287d9a090dee",
+        "fingerprint": "d15adbfba24a2ce7b1eed5f7afc5fe517d777a0c821b587d2275bbdc0e0334ef"
+      }
     },
     {
       "id": "physics-cases",
-      "version": 1,
-      "question": "Web \u65B0\u589E\u7684\u7269\u7406\u884C\u70BA\uFF08\u7529\u98DB\u3001\u5438\u5875\u5668\u8207\u91CB\u653E\uFF09\u76EE\u524D\u6C92\u6709\u4E2D\u6027\u6848\u4F8B\uFF0CUnity \u600E\u9EBC\u9A57\u8B49\u4E00\u81F4\uFF1F",
-      "context": "Web \u5171\u7528\u6848\u4F8B\u4ECD\u70BA 1.0.0\uFF0C\u53EA\u6DB5\u84CB\u975E\u7269\u7406\u884C\u70BA\uFF1BWeb \u7684\u7529\u98DB\u8207\u5438\u5875\u5668\u53EA\u6709\u700F\u89BD\u5668\u6E2C\u8A66\uFF0CMotion \u53EA\u6709\u6838\u5FC3\u6578\u503C fixtures\uFF08\u53D6\u81EA Unity \u65E2\u6709 C#\uFF09\u3002\u5438\u6536\u7BC4\u570D\u6F38\u5F37\u3001\u96F6\u6355\u7372\u624D\u91CB\u653E\u3001\u91CB\u653E\u63A5 Throw \u7B49\u898F\u5247\u5728 Web \u7684 vacuum.ts\uFF0C\u4E0D\u5728 Motion \u6838\u5FC3\u3002",
-      "source_ref": "Yu5h1Lib/Web/contracts/apps-cases.json",
+      "version": 2,
+      "status": "decided",
+      "answer": {
+        "kind": "other",
+        "text": "\u56B4\u683C\u9075\u5B88 \u4E00\u9805\u898F\u7BC4\u4F86\u6E90 , \u56E0 unity \u7121\u6CD5\u5F15\u7528 web \u5EAB \u53EA\u80FD \u518D\u6B21\u9A57\u8B49 unity \u7AEF\n\u64CD\u4F5C\u898F\u7BC4\u8981\u9010\u9805\u5BEB\u6E05\u695A",
+        "confirmed_at": "2026-10-06T18:40:23.2251773\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "892ca70e-230d-47d5-8faf-68d694041861",
+        "fingerprint": "1daa0427464a72fbb4e1df83bbb14ef651a6e0021136c446340fc3e97e231de8"
+      },
+      "question": "\u7529\u98DB\u8207\u5438\u5875\u5668\u7684\u64CD\u4F5C\u898F\u5247\u600E\u9EBC\u9A57\u8B49\u5169\u7AEF\u4E00\u81F4\uFF1F",
+      "context": "Web 935474c\uFF1A11 \u500B\u6848\u4F8B\u4E0D\u6DB5\u84CB\u6307\u6A19\u8207 Motion \u884C\u70BA\uFF1BUnity \u9A57\u6536\u8981\u53E6\u9A57\u6355\u7372\uFF0F\u96F6\u6355\u7372\u5169\u5206\u652F\u3001\u7121\u4E0A\u9650\u8207\u6B63\u6578\u7BC4\u570D\u3001\u5FEB\u901F\uFF0F\u4F4E\u901F\u91CB\u653E\u3001\u53D6\u6D88\uFF0F\u5378\u8F09\u7B49\uFF0C\u4F9D U4\u2013U6 \u7684\u898F\u683C\u8207\u516C\u5F0F\u3002\u898F\u5247\u5C6C Web\uFF0CMotion \u53EA\u63D0\u4F9B\u6578\u503C\u670D\u52D9\uFF0C\u5404\u4F7F\u7528\u7AEF\u81EA\u884C\u9A57\u6536\u3002\u5148\u524D\u7B54\u6848\u662F\u8ACB Web \u88DC\u4E2D\u6027\u6848\u4F8B\u3002",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#web-\u4E3B\u898F\u683C\u8207-unity-\u5FA9\u523B\u908A\u754C",
       "options": [
         {
-          "id": "request-web",
-          "label": "\u5BEB\u6210\u7D66 Web \u7684\u9700\u6C42\uFF0C\u8ACB Web \u88DC\u7269\u7406\u884C\u70BA\u7684\u4E2D\u6027\u6848\u4F8B"
+          "id": "unity-verifies",
+          "label": "Unity \u4F9D U4\u2013U6 \u898F\u683C\u8207\u516C\u5F0F\u81EA\u884C\u9A57\u8B49\uFF0C\u4E0D\u8ACB Web \u88DC\u6848\u4F8B"
         },
         {
-          "id": "unity-only",
-          "label": "Unity \u53EA\u505A\u81EA\u5DF1\u7684\u5E73\u53F0\u6E2C\u8A66\uFF0C\u4E0D\u8981\u6C42\u5169\u7AEF\u540C\u4E00\u4EFD\u6848\u4F8B"
+          "id": "request-web",
+          "label": "\u4ECD\u8ACB Web \u88DC\u4E2D\u6027\u6848\u4F8B"
         }
       ],
       "recommendation": {
-        "option_id": "request-web",
-        "reason": "\u898F\u5247\u5C6C\u65BC Web\uFF0C\u6C92\u6709\u5171\u7528\u6848\u4F8B\u5C31\u7121\u6CD5\u5224\u65B7 Unity \u662F\u5426\u4E00\u81F4"
+        "option_id": "unity-verifies",
+        "reason": "\u8207 Web \u4E3B\u898F\u683C\u7684\u9A57\u6536\u65B9\u5F0F\u4E00\u81F4"
+      },
+      "allow_other": true
+    },
+    {
+      "id": "demo-settings",
+      "version": 2,
+      "status": "decided",
+      "answer": {
+        "kind": "other",
+        "text": "\u8A2D\u5B9A \u5728 motion \u5EAB \u5728 web\u5EAB\u90FD \u9075\u5FAA\u540C\u4E00\u5957\u6A21\u5F0F\n.json \u8CAC\u4EFB\u7BC4\u570D\u9805\u76EE\n\n.json \u540C\u6642\u4E5F\u662F web\u5EAB\u7684 \u8A2D\u5B9A\u6A21\u7D44 \u7684\u898F\u683C\n\u8A2D\u5B9A\u6A21\u7D44 \u4F9D\u7167 json \u6578\u91CF\u540D\u7A31 \u4F86\u52A0\u5165 tabs\n",
+        "confirmed_at": "2026-10-06T18:42:28.4485789\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "7ce2f0b7-37a6-4fcd-855c-9dee0c6cea09",
+        "fingerprint": "d144b93381a72abda66be7d89ddbec6207ddaec7b659edcd5b1a66730310828c"
+      },
+      "question": "AppsMenu\uFF0FMotion \u53C3\u6578\u7684\u8A2D\u5B9A\u8207\u4FDD\u5B58\u600E\u9EBC\u8655\u7406\uFF1F",
+      "context": "Web \u898F\u683C U8\uFF1A\u8A2D\u5B9A\u7684\u610F\u7FA9\u3001\u9810\u8A2D\uFF0C\u4EE5\u53CA\u4FDD\u5B58\u3001\u5957\u7528\u3001\u5931\u6557\u91CD\u8A66\u90FD\u8981\u5C0D\u9F4A\u3002\u9019\u6703\u78B0\u5230 Unity Preferences \u8207 ConfigStore \u7684\u5C0D\u61C9\uFF0C\u5DF2\u6392\u5728\u9806\u5E8F\u7B2C 3 \u6B65\uFF08config\uFF09\u3002\u5148\u524D\u7B54\u6848\u662F\u53C3\u6578\u653E Inspector\u3002",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#web-\u4E3B\u898F\u683C\u8207-unity-\u5FA9\u523B\u908A\u754C",
+      "options": [
+        {
+          "id": "inspector-then-config",
+          "label": "\u73FE\u5728\u5148\u653E Inspector\uFF1B\u8A2D\u5B9A\u8207\u4FDD\u5B58\u7684\u5C0D\u9F4A\u5728 config \u90A3\u4E00\u6B65\u5B8C\u6210"
+        },
+        {
+          "id": "inspector-only",
+          "label": "\u53EA\u7528 Inspector\uFF0C\u5217\u70BA\u8207 Web \u898F\u683C\u7684\u5DEE\u7570"
+        }
+      ],
+      "recommendation": {
+        "option_id": "inspector-then-config",
+        "reason": "\u7B26\u5408\u65E2\u5B9A\u9806\u5E8F\uFF0C\u4E0D\u63D0\u524D\u78B0 Preferences"
+      },
+      "allow_other": true
+    },
+    {
+      "id": "reference-model",
+      "version": 1,
+      "question": "Unity \u7528\u4EC0\u9EBC\u65B9\u5F0F\u300C\u5F15\u7528\u300DWeb \u5EAB\uFF1F",
+      "context": "Unity \u7121\u6CD5\u76F4\u63A5\u57F7\u884C Web \u7A0B\u5F0F\u78BC\uFF0C\u53EA\u80FD\u5FA9\u523B\u3002Web \u5DF2\u6709\u7D66\u975E Web \u4F7F\u7528\u7AEF\u7684\u4EA4\u4ED8\uFF1Adist/theme/theme.css\u3001dist/contracts\uFF08\u53C3\u6578 JSON\u3001\u6848\u4F8B JSON\uFF09\uFF0C\u4EE5\u53CA delivery.json\uFF0Fapps-delivery.json\uFF08\u7248\u672C\u3001\u4F86\u6E90 commit\u3001\u96DC\u6E4A\uFF09\u3002Web \u4E5F\u5DF2\u6B63\u5F0F\u63D0\u51FA WEB-UNITYEXTENSION-2\uFF08AppsMenu \u4F9D Web \u4E3B\u898F\u683C\u5FA9\u523B\uFF0CU1\u2013U8\uFF09\u3002Unity \u76EE\u524D\u6C92\u6709\u4EFB\u4F55\u8B80\u53D6\u9019\u4E9B\u4EA4\u4ED8\u7684\u5DE5\u5177\u3002",
+      "source_ref": "Yu5h1Lib/Web/Documentation/Requirements.UnityExtension.md#web-unityextension-2--appsmenu-\u4F9D-web-\u4E3B\u898F\u683C\u5FA9\u523B",
+      "options": [
+        {
+          "id": "versioned-delivery",
+          "label": "\u5F15\u7528\u7248\u672C\u5316\u4EA4\u4ED8\uFF1A\u532F\u5165\u5DE5\u5177 \u2192 \u6A21\u7D44\u5FA9\u523B \u2192 \u6848\u4F8B adapter \u2192 \u9A57\u6536\u56DE\u5831",
+          "description": "\u2460 Yu5h1Lib.UIToolkit \u7684 Editor \u532F\u5165\u5DE5\u5177\uFF08\u5404\u6A21\u7D44\u5171\u7528\uFF09\uFF1A\u9396\u5B9A Web commit\u3001\u9A57\u8B49 manifest\u3001\u7522\u751F USS \u8B8A\u6578\u8207 WebTheme\u3001\u8907\u88FD\u6848\u4F8B\u3001\u8A18\u9304\u5DF2\u532F\u5165\u7248\u672C\u3001\u5075\u6E2C\u904E\u671F\u4E14\u5931\u6557\u4E0D\u8986\u5BEB\u3002\u2461 \u4F9D Web \u898F\u683C\u624B\u5BEB UXML\uFF0FC#\uFF0C\u6A21\u578B\u547D\u4EE4\u8207 Web \u540C\u5F62\u3002\u2462 \u901A\u7528 C# \u6848\u4F8B\u57F7\u884C\u5668\u8DD1 Web \u6848\u4F8B\u3002\u2463 \u9010\u9805\u7D50\u679C\u8207\u63A1\u7528\u7248\u672C\u56DE\u5831\u5230 Web \u7684\u9700\u6C42\u3002\u9700\u6C42\u65B9\u5411\uFF1AWeb\u2192Unity \u555F\u52D5\u5FA9\u523B\uFF1BUnity\u2192Web \u53EA\u5728\u9700\u8981 Web \u6539\u4EA4\u4ED8\u6216\u88DC\u8CC7\u6599\u6642\u63D0\u51FA\uFF0C\u820A Unity \u7BC4\u4F8B\u7684\u5DEE\u7570\u4E0D\u56DE\u63A8\u3002"
+        },
+        {
+          "id": "per-module-manual",
+          "label": "\u6BCF\u500B\u6A21\u7D44\u5404\u81EA\u8655\u7406\uFF0C\u4E0D\u5EFA\u5171\u7528\u532F\u5165\u5DE5\u5177"
+        }
+      ],
+      "recommendation": {
+        "option_id": "versioned-delivery",
+        "reason": "Web \u7684\u4EA4\u4ED8\u683C\u5F0F\u5DF2\u7D93\u5B58\u5728\uFF1B\u4E00\u5957\u5171\u7528\u5DE5\u5177\u8B93 AppsMenu\u3001Theme\u3001config \u90FD\u8D70\u540C\u4E00\u6D41\u7A0B"
+      },
+      "allow_other": true,
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "versioned-delivery",
+        "confirmed_at": "2026-10-06T18:44:28.1785116\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "ae76cadf-6038-4a52-86fc-82b7e94c4758",
+        "fingerprint": "76ec1726088c48d01c1c6e6f5681821f58d5637d996dc877348f936ec0fc62a0"
+      }
+    },
+    {
+      "id": "replication-skill",
+      "version": 1,
+      "question": "Unity \u7AEF\u5F15\u7528 Web \u7684\u6D41\u7A0B\u5BEB\u6210\u54EA\u500B skill\uFF1F",
+      "context": "\u73FE\u6709 unity-ui-extraction \u8655\u7406\u300CUnity \u7522\u54C1 UI \u62BD\u5230\u5957\u4EF6\u300D\uFF0C\u5C0D Web \u53EA\u6709\u4E00\u884C\u5206\u6D41\uFF0C\u6C92\u6709\u532F\u5165\u3001\u9396\u7248\u672C\u3001\u8DD1\u6848\u4F8B\u3001\u56DE\u5831\u7684\u6B65\u9A5F\u3002",
+      "source_ref": "Unity/UnityExtension/.agents/skills/unity-ui-extraction/SKILL.md",
+      "options": [
+        {
+          "id": "new-skill",
+          "label": "\u65B0\u589E\u7368\u7ACB skill\uFF08\u66AB\u540D web-replication\uFF09\uFF0CUnityExtension \u64C1\u6709",
+          "description": "\u4EE5 AppsMenu \u70BA\u7B2C\u4E00\u500B\u5BE6\u969B\u6848\u4F8B\uFF0CTheme \u505A\u5B8C\u5F8C\u4FEE\u8A02\uFF1Bunity-ui-extraction \u56DE\u5230\u539F\u7528\u9014\uFF0C\u53EA\u7559\u4E00\u884C\u5206\u6D41"
+        },
+        {
+          "id": "merge",
+          "label": "\u4F75\u5165 unity-ui-extraction\uFF0C\u65B0\u589E\u300C\u5F9E Web \u5FA9\u523B\u300D\u4E00\u7BC0"
+        }
+      ],
+      "recommendation": {
+        "option_id": "new-skill",
+        "reason": "\u5169\u8005\u89F8\u767C\u689D\u4EF6\u4E0D\u540C\uFF1A\u4E00\u500B\u662F\u5F9E Unity \u7522\u54C1\u62BD\u51FA\uFF0C\u4E00\u500B\u662F\u5F9E Web \u4EA4\u4ED8\u5FA9\u523B"
+      },
+      "allow_other": true,
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "new-skill",
+        "confirmed_at": "2026-10-06T18:45:10.6547387\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "bc7ef560-aa0c-4cab-a68e-18c29ee0bd81",
+        "fingerprint": "7e47a997d128011bbb5baeded2cd818d4d88abeb18059976c36654367c601f0d"
+      }
+    },
+    {
+      "id": "theme-split",
+      "version": 1,
+      "question": "WebTheme \u8981\u4E0D\u8981\u62C6\u6210\u300C\u8272\u7968\u8F49\u63DB\u300D\u8207\u300C\u5207\u63DB\u8207\u4FDD\u5B58\u300D\uFF1F",
+      "context": "\u9806\u5E8F\u5DF2\u5B9A\u70BA AppsMenu \u2192 config \u2192 Theme\uFF0C\u7406\u7531\u662F Theme \u504F\u597D\u7531 config \u4FDD\u5B58\u3002\u4F46 theme.css \u2192 TSS \u7684\u8272\u7968\u8F49\u63DB\u4E0D\u4F9D\u8CF4 config\uFF1BWeb \u898F\u683C U8 \u8981\u6C42 AppsMenu \u7528 Web Theme \u5916\u89C0\u3002",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#web-\u4E3B\u898F\u683C\u8207-unity-\u5FA9\u523B\u908A\u754C",
+      "options": [
+        {
+          "id": "split",
+          "label": "\u62C6\u958B\uFF1A\u8272\u7968\u8F49\u63DB\u96A8\u532F\u5165\u5DE5\u5177\u5148\u505A\uFF0C\u5207\u63DB\u8207\u4FDD\u5B58\u7B49 config"
+        },
+        {
+          "id": "keep",
+          "label": "\u4E0D\u62C6\uFF1A\u7DAD\u6301\u539F\u9806\u5E8F\uFF0CAppsMenu \u5148\u7528\u66AB\u6642\u984F\u8272"
+        }
+      ],
+      "recommendation": {
+        "option_id": "split",
+        "reason": "AppsMenu \u9A57\u6536\u5C31\u80FD\u7528 Web \u5916\u89C0\uFF0C\u5207\u63DB\u8207\u4FDD\u5B58\u4ECD\u7167\u539F\u9806\u5E8F"
+      },
+      "allow_other": true,
+      "status": "decided",
+      "answer": {
+        "kind": "other",
+        "text": "theme \u5148\u66AB\u505C , web \u5EAB\u90A3\u908A\u9700\u8981\u5148\u5C07 theme \u8207 config \u7684\u4E92\u52D5\u78BA\u8A8D\u6E05\u695A \u9084\u6709 \u5B58\u6A94\u683C\u5F0F\n",
+        "confirmed_at": "2026-10-06T18:46:24.5635125\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "06861fe3-b110-4688-a053-d084b796480e",
+        "fingerprint": "b403482083106c1da503f4ab5ccf83890c6ecbaee0c8da9dc20bdc069e44e293"
+      }
+    },
+    {
+      "id": "cleanup-scope",
+      "version": 1,
+      "question": "\u5169\u908A\u6587\u4EF6\u7684\u6574\u7406\u7531\u8AB0\u505A\uFF1F",
+      "context": "Unity\uFF1A\u8DE8\u5E73\u53F0UI\u4E00\u81F4\u6027.md \u758A\u4E86 P1\u2013P5\u3001\u555F\u52D5\u689D\u4EF6\u3001\u66AB\u7DE9\u6B98\u7559\u3001\u8A2D\u5B9A\u9762\u677F\u8207 Preferences \u6BB5\u843D\uFF1B\u6C7A\u7B56\u6A94\u6709 4 \u984C\u8207 Web \u898F\u683C\u885D\u7A81\uFF1BAppsMenu\u5C0D\u7167.md \u5DF2\u88AB Web \u898F\u683C\u53D6\u4EE3\uFF1BWEB-3 Status \u5197\u9577\u3002Web\uFF1AAppsMenu.md \u7684\u300C\u4F86\u6E90\u8207\u7BC4\u570D\u300D\u4ECD\u5F15\u7528 Unity \u820A\u8A08\u756B a6aaf1b\uFF0C\u300C\u8207 Unity \u7BC4\u4F8B\u7684\u5DEE\u7570\u300D\u8868\u5DF2\u6210\u6B77\u53F2\uFF1Bhandoff \u7684 Cross-library validation tracking \u4ECD\u5BEB Unity planned/parked\u3002",
+      "source_ref": "Unity/UnityExtension/Documentation/\u8DE8\u5E73\u53F0UI\u4E00\u81F4\u6027.md",
+      "options": [
+        {
+          "id": "unity-me-web-list",
+          "label": "Unity \u6587\u4EF6\u7531\u6211\u6574\u7406\uFF08\u5148\u7D66\u8349\u7A3F\uFF09\uFF1BWeb \u5217\u6E05\u55AE\u4EA4\u7D66 Web \u7684 session"
+        },
+        {
+          "id": "both-me",
+          "label": "\u5169\u908A\u90FD\u7531\u6211\u6574\u7406\uFF08Web \u4E5F\u5148\u7D66\u8349\u7A3F\uFF09"
+        }
+      ],
+      "recommendation": {
+        "option_id": "unity-me-web-list",
+        "reason": "Web \u6587\u4EF6\u5C6C\u65BC Web \u7684\u7BC4\u570D\uFF0C\u7531 Web \u7684 session \u4F9D Web \u898F\u5247\u6574\u7406"
+      },
+      "allow_other": true,
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "unity-me-web-list",
+        "confirmed_at": "2026-10-06T18:47:07.5577427\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "0338ce6e-07fb-49af-9009-dd6e5d29f9f6",
+        "fingerprint": "fce3d96d687d38c1deceb368d621cb9ca738c40d878978224b4c5863a067a6c6"
+      }
+    },
+    {
+      "id": "web-feedback-drafts",
+      "version": 1,
+      "question": "\u8349\u7A3F\u4E2D\u7684 WEB-5\uFF08\u64CD\u4F5C\u898F\u5247\u7684\u4E2D\u6027\u6848\u4F8B\uFF09\u8207 WEB-6\uFF08Unity \u7BC4\u4F8B\u6709\u3001Web \u7F3A\u5C11\u7684\u884C\u70BA\uFF09\u600E\u9EBC\u8655\u7406\uFF1F",
+      "context": "Web 935474c \u660E\u5B9A\uFF1AWeb \u662F\u4E3B\u898F\u683C\uFF0C\u820A Unity \u7BC4\u4F8B\u8207 Web \u7684\u5DEE\u7570\u4E0D\u69CB\u6210\u8981\u6C42 Web \u4FEE\u6539\u7684\u7406\u7531\uFF1B11 \u500B\u6848\u4F8B\u4E0D\u6DB5\u84CB\u6307\u6A19\u8207 Motion \u884C\u70BA\uFF0C\u9019\u4E9B\u7531 Unity \u4F9D U4\u2013U6 \u898F\u683C\u8207\u516C\u5F0F\u81EA\u884C\u9A57\u8B49\u3002\u5169\u9805\u90FD\u53EA\u5728\u8349\u7A3F\u4E2D\uFF0C\u5C1A\u672A\u5BEB\u5165 Requirements.Web.md\u3002",
+      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#web-\u4E3B\u898F\u683C\u8207-unity-\u5FA9\u523B\u908A\u754C",
+      "options": [
+        {
+          "id": "drop-both",
+          "label": "\u5169\u9805\u90FD\u64A4\u6389"
+        },
+        {
+          "id": "keep-web5",
+          "label": "\u53EA\u4FDD\u7559 WEB-5"
+        },
+        {
+          "id": "keep-both",
+          "label": "\u5169\u9805\u90FD\u63D0\u51FA"
+        }
+      ],
+      "recommendation": {
+        "option_id": "drop-both",
+        "reason": "\u8207 Web \u4E3B\u898F\u683C\u7684\u908A\u754C\u4E00\u81F4\uFF1BUnity \u9700\u8981 Web \u88DC\u8CC7\u6599\u6642\u518D\u500B\u5225\u63D0\u51FA"
+      },
+      "allow_other": true,
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "drop-both",
+        "confirmed_at": "2026-10-06T18:47:55.5855688\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "4052911a-2ebf-4121-944f-679b0818ecb2",
+        "fingerprint": "c65ba9ea9e92b73d0066d98e5ca8823e2bc98240c7c9c70b3de55bdd73405896"
+      }
+    },
+    {
+      "id": "appsmenu-start",
+      "version": 1,
+      "question": "AppsMenu \u975E\u7269\u7406\u90E8\u5206\u7684\u5BE6\u4F5C\uFF0C\u8981\u4E0D\u8981\u548C Motion \u9700\u6C42\u4E26\u884C\u958B\u59CB\uFF1F",
+      "context": "\u9806\u5E8F\u6C7A\u7B56\u662F\u300C\u5FA9\u76E4 \u2192 Motion \u5728 Unity \u9A57\u8B49 \u2192 config \u2192 Theme\u300D\uFF0C\u6C92\u6709\u6392 AppsMenu \u6A21\u7D44\u5BE6\u4F5C\u7684\u6642\u9593\u3002\u7269\u7406\uFF08\u7529\u98DB\u3001\u5438\u5875\u5668\uFF09\u8981\u7B49 Motion \u539F\u751F\u6838\u5FC3\uFF1B\u5176\u9918 U1\u2013U8 \u7684\u975E\u7269\u7406\u884C\u70BA\uFF08\u9577\u6309\u3001\u62D6\u653E\u3001\u9762\u677F\u3001\u6392\u5E8F\u3001\u7FA4\u7D44\u62D6\u66F3\u3001\u53D6\u6D88\uFF09\u4E0D\u4F9D\u8CF4 Motion\u3002Web \u5DF2\u4EE5 WEB-UNITYEXTENSION-2 \u59D4\u8A17 Unity \u5FA9\u523B\u3002",
+      "source_ref": "Yu5h1Lib/Web/Documentation/Requirements.UnityExtension.md#web-unityextension-2--appsmenu-\u4F9D-web-\u4E3B\u898F\u683C\u5FA9\u523B",
+      "options": [
+        {
+          "id": "parallel",
+          "label": "\u4E26\u884C\uFF1A\u9001\u51FA Motion \u9700\u6C42\u5F8C\uFF0C\u958B\u59CB\u505A\u532F\u5165\u5DE5\u5177\uFF08\u53C3\u6578\uFF09\u8207 AppsMenu \u975E\u7269\u7406\u90E8\u5206"
+        },
+        {
+          "id": "after-motion",
+          "label": "\u7B49 Motion \u539F\u751F\u6838\u5FC3\u4EA4\u4ED8\u5F8C\uFF0C\u518D\u4E00\u8D77\u505A AppsMenu"
+        }
+      ],
+      "recommendation": {
+        "option_id": "parallel",
+        "reason": "\u975E\u7269\u7406\u90E8\u5206\u4E0D\u4F9D\u8CF4 Motion\uFF0C\u5148\u505A\u53EF\u4EE5\u65E9\u9EDE\u9A57\u8B49\u532F\u5165\u5DE5\u5177\u8207\u6848\u4F8B\u57F7\u884C\u5668"
+      },
+      "allow_other": true,
+      "status": "decided",
+      "answer": {
+        "kind": "other",
+        "text": "\u6211\u4E0D\u61C2\u6240\u4EE5\u6309\u7167\u5EFA\u8B70.\n\u8ACB\u554F , \u76EE\u524D\u5DF2\u7D93 motion \u5EAB\u5DF2\u7D93\u5728 web \u6709 demo \u9A57\u8B49\u4E86\nunity \u7AEF\u8981\u53E6\u5916\u958B\u767C\u63A5\u53E3 ?  \u9700\u8981\u8A0E\u8AD6\n\n",
+        "confirmed_at": "2026-10-06T18:57:58.2181885\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "0d4a16ab-842a-4962-be93-8231ad8c6c40",
+        "fingerprint": "18b760cc7d2e3ec0bd457a8e51e4fdc5157a9ba6f294186480d0e6de28b30f41"
+      }
+    },
+    {
+      "id": "web4-fate",
+      "version": 1,
+      "question": "WEB-4\uFF08\u8A2D\u5B9A\u9762\u677F\u7684\u6700\u5C0F\u5171\u7528\u8A2D\u8A08\u53C3\u6578\u8207\u6848\u4F8B\uFF09\u600E\u9EBC\u8655\u7406\uFF1F",
+      "context": "WEB-4 \u76EE\u524D Deferred\uFF1BWeb \u5DF2\u4EA4\u4ED8\u8A2D\u5B9A\u5951\u7D04 1.0.0\u3002\u6C7A\u7B56 demo-settings \u5B9A\u4E86\u65B0\u65B9\u5411\uFF1A\u5404\u6A21\u7D44\u4EE5 json \u5BA3\u544A\u8A2D\u5B9A\u9805\u76EE\uFF0Cjson \u540C\u6642\u662F Web \u8A2D\u5B9A\u6A21\u7D44\u7684\u898F\u683C\uFF08\u8349\u7A3F\u4E2D\u7684 WEB-7\uFF09\u3002",
+      "source_ref": "Unity/UnityExtension/Documentation/Requirements.Web.md#unityextension-web-4--\u8A2D\u5B9A\u9762\u677F\u7684\u6700\u5C0F\u5171\u7528\u8A2D\u8A08\u53C3\u6578\u8207\u6848\u4F8B",
+      "options": [
+        {
+          "id": "decline",
+          "label": "\u6539\u70BA Declined\uFF1A\u7531 WEB-7 \u53D6\u4EE3\uFF0CWeb \u5DF2\u4EA4\u4ED8\u7684 1.0.0 \u4FDD\u7559\u4F5C\u70BA WEB-7 \u7684\u53C3\u8003"
+        },
+        {
+          "id": "keep-deferred",
+          "label": "\u7DAD\u6301 Deferred\uFF0C\u8207 WEB-7 \u4E26\u5B58"
+        }
+      ],
+      "recommendation": {
+        "option_id": "decline",
+        "reason": "\u5169\u9805\u63CF\u8FF0\u540C\u4E00\u4EF6\u4E8B\u6703\u8B8A\u6210\u5169\u500B\u4F86\u6E90\uFF1B\u4FDD\u7559\u4E00\u500B"
       },
       "allow_other": true,
       "status": "pending",
       "answer": null
     },
     {
-      "id": "demo-settings",
+      "id": "motion-settings-json",
       "version": 1,
-      "question": "Unity demo \u8981\u4E0D\u8981\u6709 AppsMenu\uFF0FMotion \u53C3\u6578\u7684\u8A2D\u5B9A\u9762\u677F\uFF1F",
-      "context": "Web demo \u6709 AppsMenu\uFF0FMotion \u8A2D\u5B9A\u5206\u985E\uFF08\u91CB\u653E\u529B\u9053\u3001\u5438\u6536\u7BC4\u570D\u8207\u529B\u9053\u3001\u6F38\u5F37\u6642\u9593\u3001Throw \u53C3\u6578\uFF09\uFF0C\u4EE5 ConfigStore \u4FDD\u5B58\u3002\u8A2D\u5B9A\u9762\u677F\u7684\u4FDD\u5B58\u8A9E\u610F\u8207 Unity Preferences \u7684\u5C0D\u61C9\u5C1A\u672A\u8A0E\u8AD6\u3002",
-      "source_ref": "Yu5h1Lib/Web/Documentation/AppsMenu.md#appsmenu-\u8207-motion-\u8A2D\u5B9A",
+      "question": "\u8A2D\u5B9A json \u6A21\u5F0F\u8981\u4E0D\u8981\u73FE\u5728\u4E5F\u5411 Motion \u63D0\u9700\u6C42\uFF08Motion \u4EE5 json \u5BA3\u544A Throw \u7B49\u53C3\u6578\uFF09\uFF1F",
+      "context": "\u6C7A\u7B56 demo-settings\uFF1AMotion \u5EAB\u8207 Web \u5EAB\u7684\u8A2D\u5B9A\u90FD\u9075\u5FAA\u540C\u4E00\u5957 json \u6A21\u5F0F\u3002\u4F46 json \u683C\u5F0F\u8981\u7531 WEB-7 \u5148\u5728 Web \u5B9A\u6848\u3002",
+      "source_ref": "Unity/UnityExtension/decisions/cross-platform-ui-parity.decisions",
       "options": [
         {
-          "id": "inspector-only",
-          "label": "\u4E0D\u505A\u8A2D\u5B9A\u9762\u677F\uFF0C\u53C3\u6578\u653E\u5728 Inspector"
+          "id": "after-web7",
+          "label": "\u7B49 WEB-7 \u683C\u5F0F\u5B9A\u6848\u5F8C\u518D\u5411 Motion \u63D0\u51FA"
         },
         {
-          "id": "settings-panel",
-          "label": "\u505A\u8A2D\u5B9A\u9762\u677F\u4E26\u4FDD\u5B58"
+          "id": "now",
+          "label": "\u73FE\u5728\u5C31\u5411 Motion \u63D0\u51FA\uFF0C\u683C\u5F0F\u5F85 WEB-7"
         }
       ],
       "recommendation": {
-        "option_id": "inspector-only",
-        "reason": "\u4FDD\u5B58\u8A9E\u610F\u8207 Preferences \u7684\u5C0D\u61C9\u5C1A\u672A\u8A0E\u8AD6"
+        "option_id": "after-web7",
+        "reason": "\u907F\u514D Motion \u5148\u4F9D\u4E00\u4EFD\u672A\u5B9A\u7684\u683C\u5F0F\u5BE6\u4F5C"
       },
       "allow_other": true,
-      "status": "pending",
-      "answer": null
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "now",
+        "confirmed_at": "2026-10-06T18:58:35.8968850\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "72a79e46-38e0-4488-86d0-7734f86b17d2",
+        "fingerprint": "9d130918c9066e26d9078fc0757b5bc9af61158c7a280f2a1670234d3303bb36"
+      }
     }
   ]
 }

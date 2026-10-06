@@ -551,55 +551,50 @@
     },
     {
       "id": "cross-platform-ui-parity",
-      "title": "跨平台 UI 一致性（Web 來源、Unity 復刻）",
-      "status": "planned",
-      "summary": "已排入、暫緩（2026-10-05）：其他任務優先，未來確定走這條路時從計畫接續。Yu5h1Lib.Web 是 UI 設計與實作的來源；Web 已交付色票契約（WEB-1）與 AppsMenu 非物理模組 1.0.0（WEB-3），並於 2026-10-06 接入 Motion 的單一圖示甩飛與吸塵器／釋放散佈（設計資料 2.0.0；共用案例仍為 1.0.0 非物理）。是否解除暫緩與 P3 復刻細節待決，見 decisions/cross-platform-ui-parity.decisions。Unity 端復刻與 WebTheme 轉換只在有具名產品需求時啟動；WebGL 直接使用 Web 庫，以 jslib 橋接，第一個實例為 VCP。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
+      "title": "跨平台 UI 一致性（Unity 引用 Web 交付並復刻）",
+      "status": "in_progress",
+      "summary": "進行中：Unity 以 Yu5h1Lib.Web 的版本化交付（規格條目、參數、案例、manifest）引用 Web，在 Yu5h1Lib.UIToolkit 復刻並重新驗證；流程見 skill web-replication。AppsMenu 依 Web 規格 U1–U8 復刻，物理經 Motion 原生核心；Theme 等 WEB-6、設定等 WEB-7。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
       "completed_items": [
         {
           "id": "item-cross-platform-ui-parity-done-1",
-          "title": "方向修訂：Web 為來源、Unity 復刻；試點改為 AppsMenu；WEB-3 改為可直接使用的模組，WEB-4 延後",
+          "title": "方向：Web 為唯一規範來源，Unity 以版本化交付引用並復刻；文件收斂、web-replication skill 建立（2026-10-07）",
           "priority": 4
+        },
+        {
+          "id": "item-cross-platform-ui-parity-done-2",
+          "title": "21 項決策中 18 項已定（引用模式、AppsMenu 復刻細節、Theme 與設定暫停）",
+          "priority": 3
         }
       ],
       "pending_items": [
         {
-          "id": "item-cross-platform-ui-parity-todo-8",
-          "title": "AppsMenu 修正（現在進行，屬 Web）：Web 入場動畫照 Unity Transition.Opening 復刻或明列差異；Apps 按鈕吸塵器已由 Web 以 Motion Scatter2D 完成",
+          "id": "item-cross-platform-ui-parity-todo-5",
+          "title": "待決：appsmenu-start、web4-fate、motion-settings-json",
           "priority": 2
         },
         {
           "id": "item-cross-platform-ui-parity-todo-1",
-          "title": "P1：WEB-1 色票契約交付；WEB-3 Apps 模組規格（非物理行為、政策覆寫點、參數、案例）在 Web 定案；三種 theme 分工與切換擁有者列入盤點",
+          "title": "AppsMenu：匯入工具（參數、案例）與 Runtime/WebUI/AppsMenu 復刻，逐條驗證 U1–U8 並回報 WEB-UNITYEXTENSION-2",
           "priority": 2
         },
         {
-          "id": "item-cross-platform-ui-parity-todo-2",
-          "title": "P2（依需求啟動）：UIToolkit Editor 轉換工具，色票與 Apps 參數轉成 USS；RGBA 一致、重轉無差異、過期偵測、失敗不覆寫；產物命名 WebTheme，經 PanelSettings.themeStyleSheet 切換 light／dark 實測",
-          "priority": 3
-        },
-        {
           "id": "item-cross-platform-ui-parity-todo-3",
-          "title": "P3（依需求啟動）：Unity 復刻 AppsMenu，兩端執行同一版非物理案例；先驗證滑鼠操作",
+          "title": "Motion：UNITYEXTENSION-MOTION-1（Packages/Motion，Windows＋Android）交付後接上甩飛與吸塵器",
           "priority": 3
         },
         {
-          "id": "item-cross-platform-ui-parity-todo-6",
-          "title": "P4（依需求啟動）：同一個 demo 的小變體只換內容、資料與政策，不改模組",
-          "priority": 3
-        },
-        {
-          "id": "item-cross-platform-ui-parity-todo-4",
-          "title": "P5（依需求啟動）：聊天依 WEB-2；物理項目等 Motion 定案；設定面板等保存語意討論",
+          "id": "item-cross-platform-ui-parity-todo-2",
+          "title": "Theme：等 WEB-6（theme 與 config 互動、存檔格式），再做 WebTheme 匯入並驗收 WEB-1",
           "priority": 4
         },
         {
-          "id": "item-cross-platform-ui-parity-todo-5",
-          "title": "待決：AppsMenu 範例去留、聊天是否走 Web 來源、設定面板與 Preferences 的對應、uGUI 主題切換機制復盤與色票來源、執行期自訂配色",
+          "id": "item-cross-platform-ui-parity-todo-4",
+          "title": "設定：等 WEB-7（json 宣告的設定模式），再對應 Unity Preferences",
           "priority": 4
         },
         {
           "id": "item-cross-platform-ui-parity-todo-7",
-          "title": "WebGL 路線（依需求啟動）：VCP 確定使用 Web UI 時，建 Packages/Web 的 jslib 橋接與模板工具",
+          "title": "WebGL 路線（依需求）：VCP 確定使用 Web UI 時，建 Packages/Web 的 jslib 橋接與模板工具",
           "priority": 4
         }
       ]
