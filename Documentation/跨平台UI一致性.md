@@ -46,8 +46,8 @@ Unity 無法執行 Web 程式碼，因此不引用程式，而是引用 Web 的*
 
 | 模組 | Web 來源 | Unity 狀態與下一步 |
 |---|---|---|
-| AppsMenu | [AppsMenu.md](../../../Web/Documentation/AppsMenu.md) U1–U8；設計資料 2.0.0、案例 1.0.0 | 決策已定，尚未實作；開始時間見決策 `appsmenu-start`。物理（甩飛、吸塵器）經 Motion 原生核心（[UNITYEXTENSION-MOTION-1](Requirements.Motion.md#unityextension-motion-1--appsmenu-使用-motion-原生核心windowsandroid)）；入場沿用 `Transition.Opening`，等 Web 補規範（[WEB-5](Requirements.Web.md#unityextension-web-5--appsmenu-入場的設計規範)） |
-| 設定（config） | 方向：各模組以 `.json` 宣告負責的設定項目，同一份 json 是 Web 設定模組的規格，設定面板依 json 加入分頁（決策 `demo-settings`）。Web 尚未定案 | 暫停，等 [WEB-7](Requirements.Web.md#unityextension-web-7--以-json-宣告的設定模式)。Unity 端與 Preferences 的對應屆時討論 |
+| AppsMenu | [AppsMenu.md](../../../Web/Documentation/AppsMenu.md) U1–U8；設計資料 2.0.0、案例 1.0.0 | 等 Web 與 Motion 先依需求準備好再開始（決策 `appsmenu-start`）：Web 的 WEB-5～7，Motion 的 MOTION-1～2。物理（甩飛、吸塵器）經 Motion 原生核心（[UNITYEXTENSION-MOTION-1](Requirements.Motion.md#unityextension-motion-1--appsmenu-使用-motion-原生核心windowsandroid)）；入場沿用 `Transition.Opening`，等 Web 補規範（[WEB-5](Requirements.Web.md#unityextension-web-5--appsmenu-入場的設計規範)） |
+| 設定（config） | 方向：各模組以 `.json` 宣告負責的設定項目，同一份 json 是 Web 設定模組的規格，設定面板依 json 加入分頁（決策 `demo-settings`）。Web 尚未定案 | 暫停，等 [WEB-7](Requirements.Web.md#unityextension-web-7--以-json-宣告的設定模式) 與 [MOTION-2](Requirements.Motion.md#unityextension-motion-2--以-json-宣告-motion-的設定項目)。Unity 端與 Preferences 的對應屆時討論 |
 | Theme | 色票契約 1.0.0（`theme.css`） | 暫停，等 [WEB-6](Requirements.Web.md#unityextension-web-6--theme-與-config-的互動及存檔格式) 釐清 theme 與 config 的互動及存檔格式（決策 `theme-split`） |
 | 聊天 | [WEB-2](Requirements.Web.md#unityextension-web-2--聊天面板設計) | 未開始；方向見[尚未決定](#尚未決定) |
 

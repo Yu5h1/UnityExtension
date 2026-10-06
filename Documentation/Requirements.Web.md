@@ -3,9 +3,9 @@
 - **目標專案（Target）**：Web 庫 `Yu5h1Lib.Web`，`C:\Users\Yu5h1\Dev\VSProjects\Yu5h1Lib\Web`。
 - **提出專案（Requester）**：UnityExtension，`C:\Users\Yu5h1\Dev\VSProjects\Yu5h1Lib\Unity\UnityExtension`。
 - **目前依賴方式**：Unity 以 Web 的版本化交付引用，見[跨平台 UI 一致性 § 引用模式](跨平台UI一致性.md#引用模式)。
-- **未結案需求數**：7（WEB-4 延後）。
+- **未結案需求數**：6（WEB-4 不採用）。
 - **提出日期**：2026-10-02；2026-10-07 依 Web 主規格收斂並新增 WEB-5～7。
-- **順序**：WEB-3（AppsMenu）進行中，WEB-5 配合 AppsMenu；WEB-6、WEB-7 是 Theme 與設定恢復的前提；WEB-2 在 AppsMenu 之後。
+- **順序**：Web 先完成 WEB-5～7，Unity 再開始 AppsMenu 復刻（WEB-3）；WEB-6、WEB-7 也是 Theme 與設定恢復的前提；WEB-2 在 AppsMenu 之後。
 - **背景**：Yu5h1Lib.Web 是 UI 行為規格的唯一來源，Unity 以 Yu5h1Lib.UIToolkit 復刻。本檔只提出 Unity 需要 Web 補的規格或交付資料；舊 Unity 範例與 Web 的差異不在此提出。
 - **驗收責任**：Web 提供產物與證據；UnityExtension 在試點中確認符合需求後更新本檔狀態。完整分工與門檻見 [跨平台 UI 一致性](跨平台UI一致性.md)。
 
@@ -48,7 +48,7 @@
 
 | 欄位 | 內容 |
 |---|---|
-| **Status** | Deferred（2026-10-05 提出）。設定改走 json 宣告模式（WEB-7）；本項的去留見決策 `web4-fate`。Web 已交付的設定契約 1.0.0（`9528c9d`，[跨平台試點交付](../../../Web/Documentation/SettingsPanelPlan.md#跨平台試點交付)）保留 |
+| **Status** | Declined（2026-10-05 提出；2026-10-07 不採用）：設定改走 WEB-7 的 json 宣告模式，兩項描述同一件事會變成兩個來源。Web 已交付的設定契約 1.0.0（`9528c9d`，[跨平台試點交付](../../../Web/Documentation/SettingsPanelPlan.md#跨平台試點交付)）保留作為 WEB-7 的參考 |
 | **Requirement** | 從既有設定面板抽出試點必要的設計參數與中性狀態案例，讓兩端引用同一維護來源。 |
 | **Evidence** | [SettingsPanelPlan.md](../../../Web/Documentation/SettingsPanelPlan.md) 已區分面板、宿主草稿、ConfigStore 與 storage／apply，含保存成功但套用失敗的契約；現有色票輸出不足以交付間距、圓角、字級等視覺參數。只對齊狀態名稱無法驗證草稿與提交結果。 |
 | **Acceptance** | 明列設定面板實際需要的參數、來源與單位，提供可被 Web 元件及 Unity 匯入／映射共同使用的單一資料來源與交付格式；不全面重整全庫。既有設定文件繼續擁有保存語意，補上可追蹤版本的中性案例資料（ID、初始狀態、操作、保存／套用結果、預期狀態），由兩端測試入口消費。案例範圍待保存語意討論後重新界定，至少涵蓋失敗、取消、卸載及另一個使用端的擴充。明確列出平台限定行為，不能為配合 DOM 結構要求 Unity 複製平台 API。 |

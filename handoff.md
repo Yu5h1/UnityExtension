@@ -39,8 +39,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 - New independent plan (2026-10-01): [向量圖示系統](Documentation/向量圖示系統.md#待討論) — split out of the chat-module work once it became clear vector icons are their own capability, not part of that module. `com.unity.vectorgraphics@3.0.0-preview.7` confirmed still functional for SVG import despite its long-stalled preview status; `UnityEngine.UIElements.VectorImage` confirmed as a native engine type needing no package at runtime. Open question not yet decided: whether to build a data-driven parametric icon-animation format at all, given HealthAI's `SignalGraphic.cs` already solves continuous per-vertex animation (heartbeat pulse, ECG waveform) with plain procedural `Painter2D` code and no baked asset — no second consumer has asked for that yet.
 
 - [跨平台 UI 一致性](Documentation/跨平台UI一致性.md) (in progress): Unity references Yu5h1Lib.Web through its versioned delivery and replicates in Yu5h1Lib.UIToolkit; procedure in [web-replication](.agents/skills/web-replication/SKILL.md); Unity-side choices in [decisions/cross-platform-ui-parity.decisions](decisions/cross-platform-ui-parity.decisions). Next:
-  - Answer the 3 pending decisions (`appsmenu-start`, `web4-fate`, `motion-settings-json`), then apply them to the plan and Requirements.
-  - AppsMenu: Web delivered spec U1–U8, design 2.0.0, cases 1.0.0 at Web `935474c` and asked Unity to replicate ([WEB-UNITYEXTENSION-2](../../Web/Documentation/Requirements.UnityExtension.md#web-unityextension-2--appsmenu-依-web-主規格復刻)). Unity has not started implementation. Physics waits on [UNITYEXTENSION-MOTION-1](Documentation/Requirements.Motion.md); entrance waits on WEB-5 in [Requirements.Web.md](Documentation/Requirements.Web.md).
+  - Waiting on Web and Motion: the user has each repo's session read UnityExtension's requirement files and prepare first — Web: [Requirements.Web.md](Documentation/Requirements.Web.md) WEB-5–7 (plus the Web-side cleanup below); Motion: [Requirements.Motion.md](Documentation/Requirements.Motion.md) MOTION-1–2. Unity starts AppsMenu replication with web-replication only after those are delivered (decision `appsmenu-start`); then verify and update each Status.
+  - AppsMenu: Web delivered spec U1–U8, design 2.0.0, cases 1.0.0 at Web `935474c` and asked Unity to replicate ([WEB-UNITYEXTENSION-2](../../Web/Documentation/Requirements.UnityExtension.md#web-unityextension-2--appsmenu-依-web-主規格復刻)). Unity has not started implementation. Physics needs MOTION-1; entrance needs WEB-5 in [Requirements.Web.md](Documentation/Requirements.Web.md).
   - Theme paused until WEB-6; settings/config paused until WEB-7.
   - Web-side cleanup for the Web session: AppsMenu.md「來源與範圍」cites the old Unity plan `a6aaf1b` and anchor `#試點appsmenu` (now gone);「與 Unity 範例的差異」is historical; Web handoff「Cross-library validation tracking」still says Unity is parked; new requirements WEB-5–7 await Web.
 
@@ -217,8 +217,6 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 - [Editor 擴充 — 尚未決定](Documentation/Editor擴充.md#尚未決定): whether `EnhanceCollectionField` replaces `Editor<T>`'s auto-wrapping; the user deferred it until the attribute passes acceptance.
 
 - [跨平台 UI 一致性 — 尚未決定](Documentation/跨平台UI一致性.md#尚未決定): chat direction, the fate of `Samples~/AppsMenu`, uGUI theme ownership, runtime custom palettes.
-
-- [跨平台 UI 一致性 — 決策檔](decisions/cross-platform-ui-parity.decisions): 3 pending (`appsmenu-start`, `web4-fate`, `motion-settings-json`).
 
 ## Ruled-out directions
 

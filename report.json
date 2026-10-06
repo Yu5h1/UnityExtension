@@ -562,14 +562,14 @@
         },
         {
           "id": "item-cross-platform-ui-parity-done-2",
-          "title": "21 項決策中 18 項已定（引用模式、AppsMenu 復刻細節、Theme 與設定暫停）",
+          "title": "21 項決策全部已定（引用模式、AppsMenu 復刻細節、Theme 與設定暫停、Web 與 Motion 先準備）",
           "priority": 3
         }
       ],
       "pending_items": [
         {
           "id": "item-cross-platform-ui-parity-todo-5",
-          "title": "待決：appsmenu-start、web4-fate、motion-settings-json",
+          "title": "等 Web（WEB-5～7）與 Motion（MOTION-1～2）依需求文件準備好，Unity 再開始 AppsMenu 復刻",
           "priority": 2
         },
         {
