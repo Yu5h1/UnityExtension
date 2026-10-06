@@ -1,0 +1,7 @@
+{
+  "name": "com.yu5h1.motion",
+  "version": "0.1.0",
+  "displayName": "Yu5h1Lib.Motion",
+  "description": "Shared native Throw2D and Scatter2D numerical services for Windows x64 and Android ARM64.",
+  "unity": "6000.6"
+}

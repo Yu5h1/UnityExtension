@@ -1,0 +1,7 @@
+{
+  "name": "Yu5h1Lib.Motion.Tests",
+  "references": ["Yu5h1Lib.Motion"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "autoReferenced": false,
+  "defineConstraints": ["UNITY_INCLUDE_TESTS"]
+}

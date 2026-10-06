@@ -1,0 +1,8 @@
+{
+  "name": "Yu5h1Lib.Motion.Editor.Tests",
+  "references": ["Yu5h1Lib.Motion", "Yu5h1Lib.Motion.Tests"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "autoReferenced": false,
+  "defineConstraints": ["UNITY_INCLUDE_TESTS"]
+}
