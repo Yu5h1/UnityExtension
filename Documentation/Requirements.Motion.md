@@ -3,8 +3,8 @@
 - **目標專案（Target）**：Motion，`C:\Users\Yu5h1\Dev\VSProjects\Yu5h1Lib\Motion`。
 - **提出專案（Requester）**：UnityExtension，`C:\Users\Yu5h1\Dev\VSProjects\Yu5h1Lib\Unity\UnityExtension`。
 - **目前依賴方式**：`Packages/Motion` 已交付，AppsMenu 尚未接入。Unity 使用自己的 C#（`Reaction.Throw`、`GroupDragLayout`），也是 Motion 數值基準的來源。
-- **未結案需求數**：2。
-- **提出日期**：2026-10-07。
+- **未結案需求數**：4。
+- **提出日期**：2026-10-07；同日依決策 `layering-doc-owner`、`core-contracts` 新增 MOTION-3、4。
 - **背景**：Yu5h1Lib.UIToolkit 的 AppsMenu 復刻，甩飛與吸塵器的數值計算使用 Motion 原生核心（[跨平台 UI 一致性](跨平台UI一致性.md) 決策 `physics-scope`）。Motion 已有 [Unity 原生核心接入計畫](../../../Motion/Documentation/UnityIntegrationPlan.md)，本檔只提出 Unity 這邊的使用需求，不重述該計畫。
 - **驗收責任**：Motion 提供產物與證據；UnityExtension 在 AppsMenu 接入後確認並更新本檔狀態。
 
@@ -29,3 +29,25 @@
 | **Acceptance** | Motion 交付設定 json（項目、型別、預設、範圍、版本），預設值與核心一致並隨版本化交付；格式隨 WEB-7 定案，WEB-7 定案前可先列出項目與預設，格式變更時同步更新。 |
 | **Impact** | Web 設定面板的 Motion 分頁；Unity 的設定復刻。 |
 | **Workaround** | Web demo 繼續從 `motion.defaults` 取預設；Unity 參數暫放 Inspector。 |
+
+## UNITYEXTENSION-MOTION-3 — 補間殼成為 Motion 的模組規格
+
+| 欄位 | 內容 |
+|---|---|
+| **Status** | Outstanding（2026-10-07 提出） |
+| **Requirement** | Motion 擁有補間殼（有起點、終點、時長的補間，可替換 DOTween、PrimeTween 或自製引擎）的唯一設計規範，以 cross-platform-module-spec 寫成 `Documentation/ModuleSpec/` 下的模組規格。 |
+| **Evidence** | 決策 `layering-doc-owner`：補間殼、插值公式、物理互動三者都以 Motion 為唯一設計規範來源，DotNet Core 依規格以 C# 建立框架與介面（使用端不只 Unity，還有 WPF、WinForms、Web）；`Motion_System_Refactor` 應優先收斂進 Motion 成為一項服務。現有設計只在 UnityExtension 的 [Motion_System_Refactor](../.agents/plans/Motion_System_Refactor.md)（§1–§7 殼與 provider 差異、§11 待確認），尚未實作，且仍用已作廢的 `Yu5h1Lib.Animation.Motion` 命名。 |
+| **Acceptance** | 一、模組規格含行為 ID 與案例：控制動詞、設定、引擎注入、回收語意，以及 DOTween 與 PrimeTween 兩種模型都能滿足的條件。二、名稱由 Motion 決定；使用者指出 `Transition` 可能不對或已過時。三、Motion 收錄後，UnityExtension 刪除 `Motion_System_Refactor` 裡被取代的規範內容，只留 Unity 端的引擎適配與既有組件遷移（§8–§9）。 |
+| **Impact** | DotNet Core 的 C# 介面（[DOTNET-1](Requirements.DotNet.md#unityextension-dotnet-1--依-motion-規格在-core-建立動態合約)）；Unity 的 DOTween／PrimeTween 適配與 11 個既有組件；之後的 WPF、WinForms、Web 使用端。 |
+| **Workaround** | Unity 繼續用既有 DOTween 組件；殼尚未實作。 |
+
+## UNITYEXTENSION-MOTION-4 — 插值公式的規格
+
+| 欄位 | 內容 |
+|---|---|
+| **Status** | Outstanding（2026-10-07 提出） |
+| **Requirement** | Motion 擁有插值公式（緩動曲線、排程、入場的飛入、縮放與收攏）的規格與 fixtures，各平台依規格以原生方式實作。 |
+| **Evidence** | 決策 `layering-doc-owner`：公式與方程是 Motion 的責任，C# 依規格復刻。Motion [plan](../../../Motion/plan.md#定位) 已把插值列為「共用規格與 fixtures、各平台原生實作」，但 `ModuleSpec` 目前只有 Throw、Scatter、Attraction。AppsMenu 入場公式現在寫在 Web 的 [AppsMenu 規格〈入場規範〉](../../../Web/Documentation/ModuleSpec/AppsMenu.md)；Unity 的實作是 `com.yu5h1.animation` 的 `Transition.Entrance`、`Opening`。 |
+| **Acceptance** | 一、模組規格含行為 ID 與 fixtures，至少涵蓋 AppsMenu 入場用到的公式。二、Web 與 Unity 都能引用同一份公式規格；入場公式從 Web AppsMenu 規格移到 Motion 的協調由 Motion 與 Web 處理。 |
+| **Impact** | Unity `Transition`；Web `@yu5h1/web/animation` 與 AppsMenu 入場；補間殼的緩動（MOTION-3）。 |
+| **Workaround** | Unity 沿用既有 `Transition`；AppsMenu 入場以 Web 規格驗收。 |

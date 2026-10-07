@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-07T09:25:18.460120+00:00",
+  "updated_at": "2026-10-07T10:09:26.780503+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -333,16 +333,16 @@
       "id": "motion-system",
       "title": "Motion 系統重構",
       "status": "planned",
-      "summary": "Motion 的抽象方向與遷移階段已有設計，但目前未找到 IHandle、ISettings、IRunner 或 Motion facade 的實作。",
+      "summary": "2026-10-07 所有權變更：補間殼的設計規範交給 Motion（UNITYEXTENSION-MOTION-3），Core 介面由 DotNet 依 Motion 規格建立（UNITYEXTENSION-DOTNET-1）；Unity 端只保留 DOTween／PrimeTween 適配與 11 個既有組件遷移。Motion 收錄後刪除 Motion_System_Refactor.md 的規範內容。Canonical entry：.agents/plans/Motion_System_Refactor.md（Task ID: motion-system）。",
       "pending_items": [
         {
           "id": "item-motion-system-todo-1",
-          "title": "確認 Phase A 的契約與 Core 放置位置",
+          "title": "等 Motion 依 MOTION-3 寫出補間殼模組規格，DotNet 依 DOTNET-1 在 Core 建立介面（取代原 Phase A 由 Unity 定契約）",
           "priority": 4
         },
         {
           "id": "item-motion-system-todo-2",
-          "title": "實作不綁定引擎的 Motion 抽象殼",
+          "title": "Motion 收錄後，刪除 Motion_System_Refactor.md 被取代的規範內容（§0–§7、§10–§11），保留 §8–§9",
           "priority": 4
         },
         {
@@ -593,8 +593,8 @@
     {
       "id": "appsmenu-library-adoption",
       "title": "AppsMenu 引用 Web 庫與 Motion 庫的實作與驗收",
-      "status": "in_progress",
-      "summary": "Yu5h1Lib.UIToolkit 依 Web ModuleSpec/AppsMenu（f7abccf）實作 AppsMenu，甩飛與吸塵器用 Motion Throw、Scatter（8b53e5f）；依 referenced-module-acceptance 逐項記錄。已完成既有範例對照與 Motion 的 Windows Editor 數值驗收；下一步由使用者依對照選擇改既有範例或另建模組。Canonical entry：Packages/UIToolkit/Documentation/Yu5h1Lib.Web/AppsMenu.md（Task ID: appsmenu-library-adoption）。",
+      "status": "blocked",
+      "summary": "2026-10-07 暫停，先打基礎：AppsMenu 的操作模型與手勢判斷放 DotNet Core（DOTNET-2），甩飛與吸塵器經 Core 的物理互動入口（DOTNET-1），Unity 只寫畫面適配；UGUI 等有產品需要。已完成既有範例對照與 Motion 的 Windows Editor 數值驗收。Canonical entry：Packages/UIToolkit/Documentation/Yu5h1Lib.Web/AppsMenu.md（Task ID: appsmenu-library-adoption）。",
       "pending_items": [
         {
           "id": "item-appsmenu-library-adoption-todo-2",

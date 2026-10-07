@@ -75,10 +75,17 @@ Unity 端的選擇（模組位置、參數匯入、案例來源、鍵盤、入�
 
 尚未決定：依上表選擇改既有範例或另建模組（決策 `appsmenu-approach` 的後續），以及 `Samples~/AppsMenu` 之後改為模組範例或退役。
 
-決定後的順序：
+**2026-10-07 暫停，先打基礎。** 依決策 `layering-doc-owner`、`core-contracts`、`ui-model-location`：AppsMenu 的操作模型（狀態、命令、行為規則、手勢判斷）放 DotNet Core，甩飛與吸塵器經 Core 的物理互動入口，Unity 只寫畫面適配。前置需求：
 
-1. 實作模型與控制，甩飛與吸塵器改用 Motion 的 Throw、Scatter。
+- [UNITYEXTENSION-DOTNET-2](../../../../Documentation/Requirements.DotNet.md#unityextension-dotnet-2--在-core-建立-appsmenu-的操作模型)：Core 的 AppsMenu 操作模型，11 項中性案例在模型上執行。
+- [UNITYEXTENSION-DOTNET-1](../../../../Documentation/Requirements.DotNet.md#unityextension-dotnet-1--依-motion-規格在-core-建立動態合約)：Throw、Scatter 的單一入口。
+
+前置完成後的順序：
+
+1. 依上表決定改既有範例或另建模組；UIToolkit 的畫面與控制接上 Core 模型與物理互動入口。
 2. 建立參數與案例匯入，記錄採用的 Web commit 與雜湊（[web-replication](../../../../.agents/skills/web-replication/SKILL.md)）。
-3. 逐項執行上表，結果回報 Web 的 [WEB-UNITYEXTENSION-2](../../../../../../Web/Documentation/Requirements.UnityExtension.md#web-unityextension-2--appsmenu-依-web-主規格復刻)。
+3. 逐項執行上表的 Unity 端檢查（輸入、畫面、生命週期、平台），結果回報 Web 的 [WEB-UNITYEXTENSION-2](../../../../../../Web/Documentation/Requirements.UnityExtension.md#web-unityextension-2--appsmenu-依-web-主規格復刻)。
+
+UGUI 版等有產品需要再做（決策 `ugui-appsmenu-now`），屆時另建 `Packages/UI/Documentation/Yu5h1Lib.Web/AppsMenu.md`。
 
 Web 規格、設計資料、案例或 Motion 規格包改版時，找出受影響的 APPS-ID 重新驗收；舊結果只對應它記錄的版本。
