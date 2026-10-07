@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-05T17:36:21.732114+00:00",
+  "updated_at": "2026-10-07T06:36:55.658903+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -553,8 +553,14 @@
       "id": "cross-platform-ui-parity",
       "title": "跨平台 UI 一致性（Unity 引用 Web 交付並復刻）",
       "status": "in_progress",
-      "summary": "進行中：Unity 以 Yu5h1Lib.Web 的版本化交付（規格條目、參數、案例、manifest）引用 Web，在 Yu5h1Lib.UIToolkit 復刻並重新驗證；流程見 skill web-replication。AppsMenu 依 Web 規格 U1–U8 復刻，物理經 Motion 原生核心；Theme 等 WEB-6、設定等 WEB-7。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
+      "summary": "進行中：Unity 以 Yu5h1Lib.Web 的版本化交付引用 Web，在 Yu5h1Lib.UIToolkit 復刻並重新驗證；流程見 skill web-replication。前置已交付：Web WEB-5～7（d916b6c）、Motion MOTION-1～2（套件 8977d46），Unity 都未驗收。下一步依決策 appsmenu-approach：先逐條對照既有 Samples~/AppsMenu 與 Web U1–U8（AppsMenu對照.md），再決定改既有範例或另建模組；接入驗證另見卡片 appsmenu-library-adoption。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
       "completed_items": [
+        {
+          "id": "item-cross-platform-ui-parity-todo-5",
+          "title": "Web（WEB-5～7，d916b6c）與 Motion（MOTION-1～2，bb0dcca／8977d46）已交付；Unity 尚未驗收（2026-10-07）",
+          "priority": 2,
+          "status": "done"
+        },
         {
           "id": "item-cross-platform-ui-parity-done-1",
           "title": "方向：Web 為唯一規範來源，Unity 以版本化交付引用並復刻；文件收斂、web-replication skill 建立（2026-10-07）",
@@ -567,11 +573,6 @@
         }
       ],
       "pending_items": [
-        {
-          "id": "item-cross-platform-ui-parity-todo-5",
-          "title": "等 Web（WEB-5～7）與 Motion（MOTION-1～2）依需求文件準備好，Unity 再開始 AppsMenu 復刻",
-          "priority": 2
-        },
         {
           "id": "item-cross-platform-ui-parity-todo-1",
           "title": "AppsMenu：匯入工具（參數、案例）與 Runtime/WebUI/AppsMenu 復刻，逐條驗證 U1–U8 並回報 WEB-UNITYEXTENSION-2",
@@ -596,6 +597,34 @@
           "id": "item-cross-platform-ui-parity-todo-7",
           "title": "WebGL 路線（依需求）：VCP 確定使用 Web UI 時，建 Packages/Web 的 jslib 橋接與模板工具",
           "priority": 4
+        }
+      ]
+    },
+    {
+      "id": "appsmenu-library-adoption",
+      "title": "AppsMenu 接入驗證（使用 Motion 庫與 Web 庫）",
+      "status": "in_progress",
+      "summary": "確認 AppsMenu 實際使用 Motion 庫與 Web 庫的交付，而不是只有套件存在。驗證專案 Yu5h1LibTest；Motion 已在 Windows Editor 跑通。驗證哪一份 AppsMenu 在 AppsMenu對照.md 完成後決定。Canonical entry：Documentation/跨平台UI一致性.md#appsmenu-接入驗證（Task ID: appsmenu-library-adoption）。",
+      "pending_items": [
+        {
+          "id": "item-appsmenu-library-adoption-todo-2",
+          "title": "AppsMenu 使用 Motion：甩飛與吸塵器改由 MotionThrow2D、MotionScatter2D 計算，不再用 C# Reaction.Throw、GroupDragLayout；Editor 實際操作確認",
+          "priority": 2,
+          "status": "planned"
+        },
+        {
+          "id": "item-appsmenu-library-adoption-todo-3",
+          "title": "AppsMenu 使用 Web 交付：參數與案例來自 Web 版本化交付，記錄採用的 Web commit、版本與雜湊",
+          "priority": 2,
+          "status": "planned"
+        }
+      ],
+      "completed_items": [
+        {
+          "id": "item-appsmenu-library-adoption-todo-1",
+          "title": "Motion 在 Unity 能跑：Yu5h1LibTest 加入 com.yu5h1.motion（含 testables），Windows Editor（6000.6）EditMode 2/2 通過：EditorFixtures（共用 fixtures 重播，經原生 DLL）、EditorLifecycle（建立／呼叫／銷毀與實例隔離）（2026-10-07）。Player 與 Android IL2CPP 未跑",
+          "priority": 2,
+          "status": "done"
         }
       ]
     }

@@ -46,9 +46,9 @@ Unity 無法執行 Web 程式碼，因此不引用程式，而是引用 Web 的*
 
 | 模組 | Web 來源 | Unity 狀態與下一步 |
 |---|---|---|
-| AppsMenu | [AppsMenu.md](../../../Web/Documentation/AppsMenu.md) U1–U8；設計資料 2.0.0、案例 1.0.0 | 等 Web 與 Motion 先依需求準備好再開始（決策 `appsmenu-start`）：Web 的 WEB-5～7，Motion 的 MOTION-1～2。物理（甩飛、吸塵器）經 Motion 原生核心（[UNITYEXTENSION-MOTION-1](Requirements.Motion.md#unityextension-motion-1--appsmenu-使用-motion-原生核心windowsandroid)）；入場沿用 `Transition.Opening`，等 Web 補規範（[WEB-5](Requirements.Web.md#unityextension-web-5--appsmenu-入場的設計規範)） |
-| 設定（config） | 方向：各模組以 `.json` 宣告負責的設定項目，同一份 json 是 Web 設定模組的規格，設定面板依 json 加入分頁（決策 `demo-settings`）。Web 尚未定案 | 暫停，等 [WEB-7](Requirements.Web.md#unityextension-web-7--以-json-宣告的設定模式) 與 [MOTION-2](Requirements.Motion.md#unityextension-motion-2--以-json-宣告-motion-的設定項目)。Unity 端與 Preferences 的對應屆時討論 |
-| Theme | 色票契約 1.0.0（`theme.css`） | 暫停，等 [WEB-6](Requirements.Web.md#unityextension-web-6--theme-與-config-的互動及存檔格式) 釐清 theme 與 config 的互動及存檔格式（決策 `theme-split`） |
+| AppsMenu | [AppsMenu.md](../../../Web/Documentation/AppsMenu.md) U1–U8；設計資料 2.1.0（含 WEB-5 入場）、案例 1.0.0，Web `d916b6c` | 前置已交付：Web 的 WEB-5～7（`d916b6c`）、Motion 的 MOTION-1～2（Motion `bb0dcca`，套件進 UnityExtension `8977d46`），Unity 都還沒驗收。下一步：在 Yu5h1LibTest 的 Editor 確認 Motion 套件能跑（見 [AppsMenu 接入驗證](#appsmenu-接入驗證)）；決策 `appsmenu-approach`：先逐條對照既有 `Samples~/AppsMenu` 與 U1–U8（`AppsMenu對照.md`），再決定改既有範例或另建模組 |
+| 設定（config） | 各模組以 `.json` 宣告負責的設定項目，同一份 json 是 Web 設定模組的規格，設定面板依 json 加入分頁（決策 `demo-settings`）。Web 宣告格式 1.0.0（`d916b6c`） | WEB-7 與 MOTION-2 已交付，Unity 未驗收。Unity 端與 Preferences 的對應待討論 |
+| Theme | 色票契約 1.0.0（`theme.css`）；Theme 存檔格式 v1（WEB-6，`d916b6c`） | WEB-6 已交付，Unity 未驗收；依決策 `phase-order` 排在設定之後 |
 | 聊天 | [WEB-2](Requirements.Web.md#unityextension-web-2--聊天面板設計) | 未開始；方向見[尚未決定](#尚未決定) |
 
 AppsMenu 的復刻細節（位置、型別、參數、案例、demo、鍵盤、顏色）見決策檔 `module-shape`、`design-params`、`cases-source`、`demo-location`、`keyboard`、`colors`。
@@ -62,6 +62,20 @@ AppsMenu 的復刻細節（位置、型別、參數、案例、demo、鍵盤、�
 ## Motion
 
 數值核心由 Motion 擁有，Unity 經 `Packages/Motion` 使用，計畫見 Motion 的 [Unity 原生核心接入計畫](../../../Motion/Documentation/UnityIntegrationPlan.md)；平台先做 Windows 與 Android（決策 `physics-scope`）。操作規則（捕獲、釋放條件等）屬於 Web 規格，Motion 只提供數值服務，各使用端自行驗收。原生核心可用前，既有 `Samples~/AppsMenu` 保留 C# 實作。
+
+`Packages/Motion`（`com.yu5h1.motion` 0.1.0）目前含 Windows x64 DLL 與 Android arm64-v8a SO；Motion 只在 Unity 外以 .NET Framework x64 驗過，Unity Editor／Player 都還沒跑過，Android importer 停用。Unity WebGL 不在這個套件裡：Motion 計畫說明 Web 用的 `motion.wasm` 不能直接當 Unity WebGL 插件，依需求另建。
+
+## AppsMenu 接入驗證
+
+> Task ID: appsmenu-library-adoption
+
+確認 AppsMenu 實際使用 Motion 庫與 Web 庫的交付，而不是只有套件存在。
+
+1. **Motion 在 Unity 能跑**：Yu5h1LibTest 加入 `com.yu5h1.motion`（含 `testables`），在 Windows Editor 執行套件測試（fixtures 重播、建立／呼叫／銷毀）。Windows Player 與 Android IL2CPP 建置不在這一步。
+2. **AppsMenu 使用 Motion**：甩飛與吸塵器的數值改由 `MotionThrow2D`、`MotionScatter2D` 計算，不再用 C# `Reaction.Throw`、`GroupDragLayout`；在 Editor 實際操作確認。
+3. **AppsMenu 使用 Web 交付**：參數與案例來自 Web 的版本化交付，記錄採用的 Web commit、版本與雜湊。
+
+驗證對象是哪一份 AppsMenu，在對照完成後決定（決策 `appsmenu-approach`）。
 
 ## WebGL：直接使用 Web 庫
 
