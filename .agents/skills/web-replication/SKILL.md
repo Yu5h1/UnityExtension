@@ -9,7 +9,7 @@ UnityExtension owns this skill. Direction, module status and conventions: [跨�
 
 ## Sources
 
-- Behavior: the module's Web spec (for AppsMenu, `Web/Documentation/AppsMenu.md`, items U1–U8). It is the only behavior source.
+- Behavior: the module's Web spec (for AppsMenu, `Web/Documentation/ModuleSpec/AppsMenu.md`, items U1–U8). It is the only behavior source.
 - Data: `Web/dist/contracts/*` and `Web/dist/theme/theme.css`, with the delivery manifest (`delivery.json`, `<module>-delivery.json`): versions, source commit, dirty flag, SHA-256.
 - Trigger: Web's `Requirements.UnityExtension.md` entry for the module. Its Status belongs to Web.
 - Unity-side choices: `decisions/cross-platform-ui-parity.decisions`.

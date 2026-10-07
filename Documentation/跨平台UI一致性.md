@@ -3,7 +3,7 @@
 > Task ID: cross-platform-ui-parity
 >
 > 狀態：進行中。執行進度由 [handoff.md](../handoff.md) 擁有；Unity 端的選擇由 [決策檔](../decisions/cross-platform-ui-parity.decisions) 擁有，本文以決策 ID 引用。
-> 行為規格由 Web 擁有（例如 [AppsMenu](../../../Web/Documentation/AppsMenu.md)）。Unity 對 Web 的需求在 [Requirements.Web.md](Requirements.Web.md)，對 Motion 的需求在 [Requirements.Motion.md](Requirements.Motion.md)；Web 對 Unity 的需求在 Web 的 [Requirements.UnityExtension.md](../../../Web/Documentation/Requirements.UnityExtension.md)。
+> 行為規格由 Web 擁有（例如 [AppsMenu](../../../Web/Documentation/ModuleSpec/AppsMenu.md)）。Unity 對 Web 的需求在 [Requirements.Web.md](Requirements.Web.md)，對 Motion 的需求在 [Requirements.Motion.md](Requirements.Motion.md)；Web 對 Unity 的需求在 Web 的 [Requirements.UnityExtension.md](../../../Web/Documentation/Requirements.UnityExtension.md)。
 
 ## 系統階層與關係
 
@@ -46,7 +46,7 @@ Unity 無法執行 Web 程式碼，因此不引用程式，而是引用 Web 的*
 
 | 模組 | Web 來源 | Unity 狀態與下一步 |
 |---|---|---|
-| AppsMenu | [AppsMenu.md](../../../Web/Documentation/AppsMenu.md) U1–U8；設計資料 2.1.0（含 WEB-5 入場）、案例 1.0.0，Web `d916b6c` | 前置已交付：Web 的 WEB-5～7（`d916b6c`）、Motion 的 MOTION-1～2（Motion `bb0dcca`，套件進 UnityExtension `8977d46`），Unity 都還沒驗收。下一步：在 Yu5h1LibTest 的 Editor 確認 Motion 套件能跑（見 [AppsMenu 接入驗證](#appsmenu-接入驗證)）；決策 `appsmenu-approach`：先逐條對照既有 `Samples~/AppsMenu` 與 U1–U8（`AppsMenu對照.md`），再決定改既有範例或另建模組 |
+| AppsMenu | [AppsMenu.md](../../../Web/Documentation/ModuleSpec/AppsMenu.md) U1–U8；設計資料 2.1.0（含 WEB-5 入場）、案例 1.0.0，Web `d916b6c` | 前置已交付：Web 的 WEB-5～7（`d916b6c`）、Motion 的 MOTION-1～2（Motion `bb0dcca`，套件進 UnityExtension `8977d46`），Unity 都還沒驗收。下一步：在 Yu5h1LibTest 的 Editor 確認 Motion 套件能跑（見 [AppsMenu 接入驗證](#appsmenu-接入驗證)）；決策 `appsmenu-approach`：先逐條對照既有 `Samples~/AppsMenu` 與 U1–U8（`AppsMenu對照.md`），再決定改既有範例或另建模組 |
 | 設定（config） | 各模組以 `.json` 宣告負責的設定項目，同一份 json 是 Web 設定模組的規格，設定面板依 json 加入分頁（決策 `demo-settings`）。Web 宣告格式 1.0.0（`d916b6c`） | WEB-7 與 MOTION-2 已交付，Unity 未驗收。Unity 端與 Preferences 的對應待討論 |
 | Theme | 色票契約 1.0.0（`theme.css`）；Theme 存檔格式 v1（WEB-6，`d916b6c`） | WEB-6 已交付，Unity 未驗收；依決策 `phase-order` 排在設定之後 |
 | 聊天 | [WEB-2](Requirements.Web.md#unityextension-web-2--聊天面板設計) | 未開始；方向見[尚未決定](#尚未決定) |
