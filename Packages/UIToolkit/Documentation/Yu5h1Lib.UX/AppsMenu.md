@@ -2,13 +2,13 @@
 
 > Task ID: appsmenu-library-adoption
 
-Yu5h1Lib.UIToolkit 依 Web 的 AppsMenu 規格實作原生 AppsMenu，並以 Motion 的數值服務處理甩飛與吸塵器。本文件記錄 Unity 端的實作對應、採用的來源版本與驗收結果；行為要求以 Web 規格為準，不在此重寫。
+Yu5h1Lib.UIToolkit 依 Yu5h1Lib.UX 的 AppsMenu 規範實作原生 AppsMenu，並以 Motion 的數值服務處理甩飛與吸塵器。本文件記錄 Unity 端的實作對應、採用的規範版本與驗收結果；體驗要求以 UX 規範為準，不在此重寫。Web 是另一個實作端，它的結果不代表 Unity。
 
 ```text
 UnityExtension
 └─ Yu5h1Lib.UIToolkit（實作套件）
    └─ AppsMenu（本紀錄）
-      ├─ 行為規格 ← Yu5h1Lib.Web ModuleSpec/AppsMenu（APPS-*、P01–P08、11 項中性案例）
+      ├─ 體驗規範 ← Yu5h1Lib.UX ModuleSpec/AppsMenu（APPS-*、P01–P08、設計資料、11 項中性案例）
       ├─ 數值服務 ← Motion：Throw、Scatter（含 Attraction），經 Packages/Motion 原生接入
       │    └─ Unity 端數值驗收：../Motion/Throw.md、Scatter.md、Attraction.md
       └─ 驗證專案 → Yu5h1LibTest（Unity 6000.6）
@@ -19,11 +19,13 @@ UnityExtension
 | 項目 | 內容 |
 |---|---|
 | 實作套件 | `com.yu5h1.uitoolkit`（`Packages/UIToolkit`）。目前只有既有範例 `Samples~/AppsMenu/AppsMenuDemo.cs`，尚無依規格實作的模組 |
-| 來源規格 | [Web ModuleSpec/AppsMenu.md](../../../../../../Web/Documentation/ModuleSpec/AppsMenu.md)，規格 1.0.0；Web `f7abccf`，乾淨；檔案 SHA-256 `658fd825…cece`（與 `apps-delivery.json` 記錄一致） |
-| 交付資料 | `Web/dist/contracts/apps-delivery.json`：設計資料 2.1.0、案例 1.0.0（schema 1，11 項）；`apps-design.json` `fad0f43b…`、`apps-cases.json` `4075be6d…`。設定見 Web [ModuleSpec/Configuration.md](../../../../../../Web/Documentation/ModuleSpec/Configuration.md) |
+| UX 規範 | [UX ModuleSpec/AppsMenu.md](../../../../../../UX/Documentation/ModuleSpec/AppsMenu.md)，規範 1.0.1；UX `077c254`，乾淨；SHA-256 `9a36f2c5…5571` |
+| 設計資料與案例 | UX `ModuleSpec/AppsMenu/apps-design.json` 2.1.0 `fad0f43b…c585`；`apps-cases.json` schema 1／1.0.0，11 項，`4075be6d…84a1`。UX 未提供 manifest，以上為 UX commit 內的檔案雜湊；Unity 尚未匯入副本 |
+| 規範引用的其他契約 | 設定宣告與保存格式：Web [ModuleSpec/Configuration.md](../../../../../../Web/Documentation/ModuleSpec/Configuration.md)（UX 暫引用）；主題色票：Web 色票契約 1.0.0 |
+| 歷史基準 | 2026-10-07 前以 Web `f7abccf` 的規格 1.0.0 為來源，SHA-256 `658fd825…cece`（`apps-delivery.json` 記錄）；設計資料與案例雜湊與上列相同。UX 1.0.1 只改擁有者，APPS-*、P01–P08 與案例 ID 不變，因此下方實作對照沿用，但所有驗收對 UX 1.0.1 視為未驗證 |
 | Motion | Motion 規格包 `8b53e5f`（Throw、Scatter、Attraction 1.0.0）；Unity 端數值驗收見 [Motion/](../Motion/) 三份紀錄 |
 | 驗收範圍 | APPS-DATA～APPS-OPENING 全部、P01–P08、11 項中性案例。平台：Windows Editor 先行；Windows Player、Android 列入但未排程 |
-| 紀錄狀態 | **planned**：完成既有範例對照，尚未實作、尚未執行任何 APPS 驗收 |
+| 紀錄狀態 | **planned**：已採用 UX 1.0.1 作為對照基準；完成既有範例對照，尚未實作、尚未執行任何 APPS 驗收 |
 
 Unity 端的選擇（模組位置、參數匯入、案例來源、鍵盤、入場、物理範圍）在 [決策檔](../../../../decisions/cross-platform-ui-parity.decisions)。
 
@@ -45,13 +47,13 @@ Unity 端的選擇（模組位置、參數匯入、案例來源、鍵盤、入�
 | APPS-VELOCITY | 最後取樣距放手 <0.1s 且平滑速度 >180 才甩飛 | `PointerVelocity`、`Reaction.Throw`（C#） | **不同**：不是 100ms 視窗首末取樣；沒有 Apps 的 releaseForce 與徑向最低速度；甩飛用 C# 而非 Motion Throw |
 | APPS-LIFECYCLE | capture 遺失時清除手勢；背景按下停止飛行；`OnDisable` 停止動畫 | — | **缺少**：取消不還原位置；沒有失焦、隱藏、尺寸變更、第二指標、捲動的處理 |
 | APPS-CONFIG | 參數只在 Inspector | — | **缺少**：沒有 JSON 宣告、保存、套用與失敗重試 |
-| APPS-OPENING | `Transition.Opening`：總長 1.4s、間隔 0.075、收攏 0.35、逾時 3s、按下跳過 | `Transition.Entrance` | **待比對**：Web〈入場規範〉沿用這套 Unity 入場，數值與回饋基數尚未逐項核對 |
+| APPS-OPENING | `Transition.Opening`：總長 1.4s、間隔 0.075、收攏 0.35、逾時 3s、按下跳過 | `Transition.Entrance` | **待比對**：UX〈入場規範〉沿用這套 Unity 入場，數值與回饋基數尚未逐項核對 |
 
 範例另有規格沒有的行為：飛行撞擊障礙物、甩進 Apps 自動收納、收納時按鈕抖動、背景群組慣性、面板彈簧。規格說明這些不是本版復刻條件。
 
 ## 驗收對照與結果
 
-每項的預期以 Web 規格為準。目前沒有任何依規格的實作，所以全部未執行。
+每項的預期以 UX 規範 1.0.1 為準。目前沒有任何依規範的實作，所以全部未執行。
 
 | 來源 ID | 中性案例／補充檢查 | 環境 | 結果 | 證據／差異 |
 |---|---|---|---|---|
@@ -83,9 +85,9 @@ Unity 端的選擇（模組位置、參數匯入、案例來源、鍵盤、入�
 前置完成後的順序：
 
 1. 依上表決定改既有範例或另建模組；UIToolkit 的畫面與控制接上 Core 模型與物理互動入口。
-2. 建立參數與案例匯入，記錄採用的 Web commit 與雜湊（[web-replication](../../../../.agents/skills/web-replication/SKILL.md)）。
-3. 逐項執行上表的 Unity 端檢查（輸入、畫面、生命週期、平台），結果回報 Web 的 [WEB-UNITYEXTENSION-2](../../../../../../Web/Documentation/Requirements.UnityExtension.md#web-unityextension-2--appsmenu-依-web-主規格復刻)。
+2. 從 UX 匯入設計資料與案例並核對雜湊，記錄採用的 UX commit（[web-replication](../../../../.agents/skills/web-replication/SKILL.md)）。
+3. 逐項執行上表的 Unity 端檢查（輸入、畫面、生命週期、平台），結果記在本紀錄，供 UX 的 [UX-UNITYEXTENSION-1](../../../../../../UX/Documentation/Requirements.UnityExtension.md) 與 Web 的 [WEB-UNITYEXTENSION-2](../../../../../../Web/Documentation/Requirements.UnityExtension.md) 查核；兩者的狀態由提出方更新。
 
-UGUI 版等有產品需要再做（決策 `ugui-appsmenu-now`），屆時另建 `Packages/UI/Documentation/Yu5h1Lib.Web/AppsMenu.md`。
+UGUI 版等有產品需要再做（決策 `ugui-appsmenu-now`），屆時另建 `Packages/UI/Documentation/Yu5h1Lib.UX/AppsMenu.md`。
 
-Web 規格、設計資料、案例或 Motion 規格包改版時，找出受影響的 APPS-ID 重新驗收；舊結果只對應它記錄的版本。
+UX 規範、設計資料、案例或 Motion 規格包改版時，找出受影響的 APPS-ID 重新驗收；舊結果只對應它記錄的版本。規範含糊或缺漏時，在 UnityExtension 的 `Documentation/Requirements.UX.md` 提出，不自行補規則。

@@ -5,7 +5,7 @@
 - **目前依賴方式**：`Unity/Core/Runtime/Yu5h1Lib.Runtime.csproj` 以連結方式編入 `DotNet/Source` 的部分資料夾（例如 `Adapter`、`UX`、`MVVM`），建置成 `Packages/Core` 的 Core DLL。
 - **未結案需求數**：2。
 - **提出日期**：2026-10-07。
-- **背景**：Yu5h1Lib 的動態與互動規範由來源庫擁有：補間殼、插值公式、物理互動的設計規範在 Motion（[Requirements.Motion.md](Requirements.Motion.md) MOTION-3、4 與既有 ModuleSpec），AppsMenu 的操作規範在 Web。Core 以 C# 依規範建立框架與介面，因為使用端不只 Unity，還有 WPF、WinForms。依決策 `layering-doc-owner`、`core-contracts`、`ui-model-location`，使用者已授權在 Core 放這些合約。
+- **背景**：Yu5h1Lib 的動態與互動規範由來源庫擁有：補間殼、插值公式、物理互動的設計規範在 Motion（[Requirements.Motion.md](Requirements.Motion.md) MOTION-3、4 與既有 ModuleSpec），AppsMenu 的體驗規範在 Yu5h1Lib.UX。Core 以 C# 依規範建立框架與介面，因為使用端不只 Unity，還有 WPF、WinForms。依決策 `layering-doc-owner`、`core-contracts`、`ui-model-location`，使用者已授權在 Core 放這些合約。
 - **驗收責任**：DotNet 實作並以 referenced-module-acceptance 記錄對來源規格的驗收；UnityExtension 在 Unity 端接上後確認並更新本檔狀態。
 
 ## UNITYEXTENSION-DOTNET-1 — 依 Motion 規格在 Core 建立動態合約
@@ -24,8 +24,8 @@
 | 欄位 | 內容 |
 |---|---|
 | **Status** | Outstanding（2026-10-07 提出） |
-| **Requirement** | 在 `DotNet/Source` 依 Web 的 [AppsMenu 規格](../../../Web/Documentation/ModuleSpec/AppsMenu.md) 建立不碰畫面的操作模型：項目狀態、命令、可覆寫的行為規則，以及手勢判斷（長按、移動門檻、速度取樣）。UGUI、UI Toolkit 與其他 UI 系統只寫畫面適配。 |
-| **Evidence** | 決策 `ui-model-location`：操作方式與 UX 習慣的規範放 Core，因為使用端不只 Unity。UGUI 與 UI Toolkit 的物件模型不同，畫面元件無法共用；Web 的 AppsMenu 也分成不碰 DOM 的 AppsModel 與 Lit 畫面元件。既有先例：`IValuePort` 在共用層，uGUI 與 UI Toolkit 各有 adapter。UIToolkit 的 [AppsMenu 驗收紀錄](../Packages/UIToolkit/Documentation/Yu5h1Lib.Web/AppsMenu.md) 顯示既有範例沒有模型層。 |
-| **Acceptance** | 一、模型命令與 Web 同形，Web 的 11 項中性案例在 Core 的模型上執行通過，結果記在 DotNet 的驗收紀錄。二、手勢判斷以時間與座標為輸入，不依賴任何 UI 系統。三、Unity 的 UIToolkit 版能只靠畫面適配接上。 |
+| **Requirement** | 在 `DotNet/Source` 依 UX 的 [AppsMenu 規範](../../../UX/Documentation/ModuleSpec/AppsMenu.md)（1.0.1）建立不碰畫面的操作模型：項目狀態、命令、可覆寫的行為規則，以及手勢判斷（長按、移動門檻、速度取樣）。UGUI、UI Toolkit 與其他 UI 系統只寫畫面適配。 |
+| **Evidence** | 決策 `ui-model-location`：操作方式與 UX 習慣的規範放 Core，因為使用端不只 Unity。UGUI 與 UI Toolkit 的物件模型不同，畫面元件無法共用；Web 的 AppsMenu 也分成不碰 DOM 的 AppsModel 與 Lit 畫面元件。既有先例：`IValuePort` 在共用層，uGUI 與 UI Toolkit 各有 adapter。UIToolkit 的 [AppsMenu 驗收紀錄](../Packages/UIToolkit/Documentation/Yu5h1Lib.UX/AppsMenu.md) 顯示既有範例沒有模型層。 |
+| **Acceptance** | 一、模型命令與 UX 規範同形，UX 的 11 項中性案例在 Core 的模型上執行通過，結果記在 DotNet 的 `Yu5h1Lib.UX/AppsMenu.md` 驗收紀錄。二、手勢判斷以時間與座標為輸入，不依賴任何 UI 系統。三、Unity 的 UIToolkit 版能只靠畫面適配接上。 |
 | **Impact** | UIToolkit 的 AppsMenu；之後的 UGUI 版（決策 `ugui-appsmenu-now`：等有產品需要再做）；WPF、WinForms。 |
 | **Workaround** | AppsMenu 暫停，等本需求與 DOTNET-1。 |

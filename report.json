@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-07T10:09:26.780503+00:00",
+  "updated_at": "2026-10-07T12:45:10.308410+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -592,9 +592,9 @@
     },
     {
       "id": "appsmenu-library-adoption",
-      "title": "AppsMenu 引用 Web 庫與 Motion 庫的實作與驗收",
+      "title": "AppsMenu 依 UX 規範的實作與驗收（引用 Motion）",
       "status": "blocked",
-      "summary": "2026-10-07 暫停，先打基礎：AppsMenu 的操作模型與手勢判斷放 DotNet Core（DOTNET-2），甩飛與吸塵器經 Core 的物理互動入口（DOTNET-1），Unity 只寫畫面適配；UGUI 等有產品需要。已完成既有範例對照與 Motion 的 Windows Editor 數值驗收。Canonical entry：Packages/UIToolkit/Documentation/Yu5h1Lib.Web/AppsMenu.md（Task ID: appsmenu-library-adoption）。",
+      "summary": "規範來源改為 Yu5h1Lib.UX AppsMenu 1.0.1（UX 077c254），Web 為另一實作端；Web f7abccf 留作歷史基準。2026-10-07 暫停，先打基礎：操作模型與手勢判斷放 DotNet Core（DOTNET-2），甩飛與吸塵器經 Core 的物理互動入口（DOTNET-1），Unity 只寫畫面適配；UGUI 等有產品需要。已完成既有範例對照與 Motion 的 Windows Editor 數值驗收。Canonical entry：Packages/UIToolkit/Documentation/Yu5h1Lib.UX/AppsMenu.md（Task ID: appsmenu-library-adoption）。",
       "pending_items": [
         {
           "id": "item-appsmenu-library-adoption-todo-2",
@@ -616,7 +616,7 @@
         },
         {
           "id": "item-appsmenu-library-adoption-todo-5",
-          "title": "逐項執行 APPS-*、P01–P08 與 11 項中性案例，結果記在驗收紀錄並回報 WEB-UNITYEXTENSION-2",
+          "title": "逐項執行 APPS-*、P01–P08 與 11 項中性案例（UX 1.0.1），結果記在驗收紀錄，供 UX-UNITYEXTENSION-1 與 WEB-UNITYEXTENSION-2 查核",
           "priority": 2,
           "status": "planned"
         },
@@ -630,7 +630,7 @@
       "completed_items": [
         {
           "id": "item-appsmenu-library-adoption-done-2",
-          "title": "建立驗收紀錄並完成既有 Samples~/AppsMenu 對 APPS-* 的實作對照（靜態閱讀，Packages/UIToolkit/Documentation/Yu5h1Lib.Web/AppsMenu.md）（2026-10-07）",
+          "title": "建立驗收紀錄並完成既有 Samples~/AppsMenu 對 APPS-* 的實作對照（靜態閱讀，Packages/UIToolkit/Documentation/Yu5h1Lib.UX/AppsMenu.md）（2026-10-07）",
           "priority": 2,
           "status": "done"
         },

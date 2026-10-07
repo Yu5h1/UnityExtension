@@ -47,7 +47,7 @@
 |---|---|
 | **Status** | Outstanding（2026-10-07 提出） |
 | **Requirement** | Motion 擁有插值公式（緩動曲線、排程、入場的飛入、縮放與收攏）的規格與 fixtures，各平台依規格以原生方式實作。 |
-| **Evidence** | 決策 `layering-doc-owner`：公式與方程是 Motion 的責任，C# 依規格復刻。Motion [plan](../../../Motion/plan.md#定位) 已把插值列為「共用規格與 fixtures、各平台原生實作」，但 `ModuleSpec` 目前只有 Throw、Scatter、Attraction。AppsMenu 入場公式現在寫在 Web 的 [AppsMenu 規格〈入場規範〉](../../../Web/Documentation/ModuleSpec/AppsMenu.md)；Unity 的實作是 `com.yu5h1.animation` 的 `Transition.Entrance`、`Opening`。 |
-| **Acceptance** | 一、模組規格含行為 ID 與 fixtures，至少涵蓋 AppsMenu 入場用到的公式。二、Web 與 Unity 都能引用同一份公式規格；入場公式從 Web AppsMenu 規格移到 Motion 的協調由 Motion 與 Web 處理。 |
+| **Evidence** | 決策 `layering-doc-owner`：公式與方程是 Motion 的責任，C# 依規格復刻。Motion [plan](../../../Motion/plan.md#定位) 已把插值列為「共用規格與 fixtures、各平台原生實作」，但 `ModuleSpec` 目前只有 Throw、Scatter、Attraction。AppsMenu 入場公式現在寫在 UX 的 [AppsMenu 規範〈入場規範〉](../../../UX/Documentation/ModuleSpec/AppsMenu.md#入場規範)；Unity 的實作是 `com.yu5h1.animation` 的 `Transition.Entrance`、`Opening`。 |
+| **Acceptance** | 一、模組規格含行為 ID 與 fixtures，至少涵蓋 AppsMenu 入場用到的公式。二、UX 規範、Web 與 Unity 都能引用同一份公式規格；入場公式從 UX AppsMenu 規範移到 Motion 的協調由 Motion 與 UX 處理。 |
 | **Impact** | Unity `Transition`；Web `@yu5h1/web/animation` 與 AppsMenu 入場；補間殼的緩動（MOTION-3）。 |
 | **Workaround** | Unity 沿用既有 `Transition`；AppsMenu 入場以 Web 規格驗收。 |

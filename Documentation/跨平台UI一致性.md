@@ -3,14 +3,15 @@
 > Task ID: cross-platform-ui-parity
 >
 > 狀態：進行中。執行進度由 [handoff.md](../handoff.md) 擁有；Unity 端的選擇由 [決策檔](../decisions/cross-platform-ui-parity.decisions) 擁有，本文以決策 ID 引用。
-> 行為規格由 Web 擁有（例如 [AppsMenu](../../../Web/Documentation/ModuleSpec/AppsMenu.md)）。Unity 對 Web 的需求在 [Requirements.Web.md](Requirements.Web.md)，對 Motion 的需求在 [Requirements.Motion.md](Requirements.Motion.md)，對 Core 的需求在 [Requirements.DotNet.md](Requirements.DotNet.md)；Web 對 Unity 的需求在 Web 的 [Requirements.UnityExtension.md](../../../Web/Documentation/Requirements.UnityExtension.md)。
+> 體驗規範（操作與視覺）由 Yu5h1Lib.UX 擁有（例如 [AppsMenu](../../../UX/Documentation/ModuleSpec/AppsMenu.md)）；Web 是實作端。Unity 對 Web 的需求在 [Requirements.Web.md](Requirements.Web.md)，對 Motion 的需求在 [Requirements.Motion.md](Requirements.Motion.md)，對 Core 的需求在 [Requirements.DotNet.md](Requirements.DotNet.md)；Web 對 Unity 的需求在 Web 的 [Requirements.UnityExtension.md](../../../Web/Documentation/Requirements.UnityExtension.md)。
 
 ## 系統階層與關係
 
 ```text
 Yu5h1Lib
 ├─ 規範來源（唯一）
-│  ├─ Yu5h1Lib.Web：UI 行為與操作規範（ModuleSpec，如 AppsMenu 的 APPS-*）、設計資料、案例
+│  ├─ Yu5h1Lib.UX：體驗規範（操作與視覺，ModuleSpec，如 AppsMenu 的 APPS-*）、設計資料、案例
+│  ├─ Yu5h1Lib.Web：Theme 色票與設定格式（尚未移交 UX）；AppsMenu 等模組的 Web 實作
 │  └─ Motion：動態規範（ModuleSpec）——補間殼、插值公式、物理互動（Throw、Attraction、Scatter）
 │        │ 鎖定版本後復刻、驗收
 │        ▼
@@ -30,32 +31,33 @@ Yu5h1Lib
 
 | 名稱 | 位置 | 角色 |
 |---|---|---|
-| Yu5h1Lib.Web | `Yu5h1Lib/Web` | UI 行為規格與實作的唯一來源 |
+| Yu5h1Lib.UX | `Yu5h1Lib/UX` | 體驗規範（操作與視覺）的唯一來源，不寫呈現技術 |
+| Yu5h1Lib.Web | `Yu5h1Lib/Web` | 實作端；Theme 色票契約與設定格式暫由 Web 擁有 |
 | Motion | `Yu5h1Lib/Motion` | 動態規範的唯一來源；C++ 物理核心與各平台交付 |
-| DotNet Core | `Yu5h1Lib/DotNet/Source` | 依 Web、Motion 規範建立 C# 介面與操作模型；Unity 經 `Packages/Core` 的 Core DLL 使用 |
-| Yu5h1Lib.UIToolkit | `UnityExtension/Packages/UIToolkit` | 擴充 UI Toolkit：復刻 Web 的 UI 互動，匯入工具也在這裡 |
+| DotNet Core | `Yu5h1Lib/DotNet/Source` | 依 UX、Motion 規範建立 C# 介面與操作模型；Unity 經 `Packages/Core` 的 Core DLL 使用 |
+| Yu5h1Lib.UIToolkit | `UnityExtension/Packages/UIToolkit` | 擴充 UI Toolkit：依 UX 規範實作 UI，匯入工具也在這裡 |
 | Yu5h1Lib.Web package | `UnityExtension/Packages/Web` | Unity 端的 WebGL 平台能力（[遷移計畫](Web套件遷移.md)）；不屬於 UI 復刻 |
 
 ## 引用模式
 
-Unity 無法執行 Web 程式碼，因此不引用程式，而是引用 Web 的**版本化交付**，在 Unity 端復刻並重新驗證（決策 `reference-model`）。流程由 [web-replication](../.agents/skills/web-replication/SKILL.md) 擁有：
+Unity 引用的是規範與版本化資料，不是任何平台的程式：模組的體驗規範、設計資料與案例來自 UX；Theme 色票與設定格式目前仍是 Web 的交付（決策 `reference-model`）。匯入與實作流程由 [web-replication](../.agents/skills/web-replication/SKILL.md) 擁有：
 
-1. **匯入**：鎖定一個 Web commit，驗證 manifest 的版本與雜湊，產生 USS 變數（及之後的 WebTheme）、複製案例，記錄已匯入版本；過期可偵測，失敗不覆寫既有產物。
-2. **復刻**：依 Web 規格手寫 UXML 與 C#；模型命令與 Web 同形，讓案例可以直接執行。
-3. **驗證**：依共用技能 [referenced-module-acceptance](../../../.agents/skills/referenced-module-acceptance/SKILL.md)，在實作套件建立驗收紀錄 `Packages/<套件>/Documentation/<來源庫>/<模組>.md`，逐項對應來源規格的行為 ID，在 Unity 執行來源的案例與平台檢查；來源平台的測試結果不能代替 Unity 的驗證。
-4. **回報**：驗收紀錄記下採用的來源版本、逐項結果與平台差異，再回報到來源對 Unity 的需求（例如 WEB-UNITYEXTENSION-2）。
+1. **匯入**：鎖定 UX commit（Theme、設定則鎖定 Web 交付），核對版本與雜湊，產生 USS 變數（及之後的 WebTheme）、複製案例，記錄已匯入版本；過期可偵測，失敗不覆寫既有產物。
+2. **實作**：依 UX 規範手寫 UXML 與 C#；模型命令與規範同形，讓案例可以直接執行。
+3. **驗證**：依共用技能 [referenced-module-acceptance](../../../.agents/skills/referenced-module-acceptance/SKILL.md)，在實作套件建立驗收紀錄 `Packages/<套件>/Documentation/Yu5h1Lib.UX/<模組>.md`，逐項對應規範的行為 ID，在 Unity 執行案例與平台檢查；Web 等其他實作端的結果不能代替 Unity 的驗證。
+4. **回報**：驗收紀錄記下採用的規範版本、逐項結果與平台差異，供提出方（UX-UNITYEXTENSION-1、WEB-UNITYEXTENSION-2）查核；需求狀態由提出方更新。
 
 規則：
 
-- **單一規範來源**：行為只以 Web 規格為準，逐條寫清楚。Unity 不另存行為描述，也不以舊 Unity 範例補足 Web 沒寫的行為（決策 `physics-cases`、`behavior-source`）。
-- **規格缺口先補 Web**：Unity 需要的行為或資料 Web 沒有規格時，先在 [Requirements.Web.md](Requirements.Web.md) 提出，由 Web 寫進規格後再復刻（例如入場，決策 `entrance`）。舊範例與 Web 的差異本身不構成對 Web 的要求。
+- **單一規範來源**：體驗只以 UX 規範為準。Unity 不另存行為描述，也不以舊 Unity 範例或 Web 實作補足規範沒寫的行為（決策 `physics-cases`、`behavior-source`）。
+- **規範缺口先補 UX**：Unity 需要的行為或資料規範沒有寫時，在 `Requirements.UX.md` 提出，由 UX 寫進規範後再實作。舊範例與規範的差異本身不構成對 UX 的要求。Theme 與設定格式的缺口仍向 Web 提出（[Requirements.Web.md](Requirements.Web.md)）。
 - **只轉設計資料**：數值由工具轉換；結構與互動手寫。理由見[決策理由](#決策理由)。
 
 ## 模組狀態
 
 | 模組 | Web 來源 | Unity 狀態與下一步 |
 |---|---|---|
-| AppsMenu | [ModuleSpec/AppsMenu.md](../../../Web/Documentation/ModuleSpec/AppsMenu.md)（APPS-*） | 實作對照、採用版本與驗收結果見 [AppsMenu 驗收紀錄](../Packages/UIToolkit/Documentation/Yu5h1Lib.Web/AppsMenu.md) |
+| AppsMenu | [UX ModuleSpec/AppsMenu.md](../../../UX/Documentation/ModuleSpec/AppsMenu.md)（APPS-*） | 實作對照、採用版本與驗收結果見 [AppsMenu 驗收紀錄](../Packages/UIToolkit/Documentation/Yu5h1Lib.UX/AppsMenu.md) |
 | 設定（config） | 各模組以 `.json` 宣告負責的設定項目，同一份 json 是 Web 設定模組的規格，設定面板依 json 加入分頁（決策 `demo-settings`）。Web 宣告格式 1.0.0（`d916b6c`） | WEB-7 與 MOTION-2 已交付，Unity 未驗收。Unity 端與 Preferences 的對應待討論 |
 | Theme | 色票契約 1.0.0（`theme.css`）；Theme 存檔格式 v1（WEB-6，`d916b6c`） | WEB-6 已交付，Unity 未驗收；依決策 `phase-order` 排在設定之後 |
 | 聊天 | [WEB-2](Requirements.Web.md#unityextension-web-2--聊天面板設計) | 未開始；方向見[尚未決定](#尚未決定) |
@@ -68,7 +70,7 @@ Unity 無法執行 Web 程式碼，因此不引用程式，而是引用 Web 的*
 
 ## Motion
 
-補間殼、插值公式與物理互動的設計規範都由 Motion 擁有；DotNet Core 依規範以 C# 建立介面，Unity 經共用層實作（[MOTION-3、4](Requirements.Motion.md#unityextension-motion-3--補間殼成為-motion-的模組規格)、[DOTNET-1](Requirements.DotNet.md#unityextension-dotnet-1--依-motion-規格在-core-建立動態合約)）。物理互動目前經 `Packages/Motion` 原生接入，計畫見 Motion 的 [Unity 原生核心接入計畫](../../../Motion/Documentation/UnityIntegrationPlan.md)；平台先做 Windows 與 Android（決策 `physics-scope`）。操作規則（捕獲、釋放條件等）屬於 Web 規格，Motion 只提供數值服務，各使用端自行驗收；AppsMenu 使用的 Throw、Scatter、Attraction 的 Unity 端驗收紀錄在 [Packages/UIToolkit/Documentation/Motion](../Packages/UIToolkit/Documentation/Motion/Throw.md)。
+補間殼、插值公式與物理互動的設計規範都由 Motion 擁有；DotNet Core 依規範以 C# 建立介面，Unity 經共用層實作（[MOTION-3、4](Requirements.Motion.md#unityextension-motion-3--補間殼成為-motion-的模組規格)、[DOTNET-1](Requirements.DotNet.md#unityextension-dotnet-1--依-motion-規格在-core-建立動態合約)）。物理互動目前經 `Packages/Motion` 原生接入，計畫見 Motion 的 [Unity 原生核心接入計畫](../../../Motion/Documentation/UnityIntegrationPlan.md)；平台先做 Windows 與 Android（決策 `physics-scope`）。操作規則（捕獲、釋放條件等）屬於 UX 規範，Motion 只提供數值服務，各使用端自行驗收；AppsMenu 使用的 Throw、Scatter、Attraction 的 Unity 端驗收紀錄在 [Packages/UIToolkit/Documentation/Motion](../Packages/UIToolkit/Documentation/Motion/Throw.md)。
 
 ## WebGL：直接使用 Web 庫
 
@@ -95,5 +97,4 @@ VCP 的 WebGL 版確定要用某個 Web UI 時才實作。
 - **聊天的方向**：Unity 已有聊天模組，是否同樣走「Unity 設計搬到 Web，再復刻回 Unity」。
 - **uGUI 的主題**：common `Theme` 的切換、保存與色票來源是否跟 WebTheme 共用擁有者；Theme 恢復時一起決定。
 - **執行期自訂配色**：本輪只考慮預先產生的 light／dark。
-- **統一的 UX 規範來源**：是否在 Yu5h1Lib 建立一個 UX 規範（操作方式與習慣），讓 Web 與 .NET 都引用同一來源；目前 AppsMenu 的操作規範在 Web（決策 `ui-model-location` 的後續）。
 - **補間殼的名稱**：`Transition` 可能不對或已過時，由 Motion 在 MOTION-3 決定。

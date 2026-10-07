@@ -48,6 +48,6 @@ Throw 的數值行為在 Windows Editor 與規格 1.0.0 相符（THROW-01～06�
 下一步：
 
 - 補 THROW-P1 未執行的項目。
-- AppsMenu 改用 Throw 時，在 [AppsMenu 紀錄](../Yu5h1Lib.Web/AppsMenu.md) 的 APPS-RELEASE、APPS-VELOCITY 驗收接入行為。
+- AppsMenu 改用 Throw 時，在 [AppsMenu 紀錄](../Yu5h1Lib.UX/AppsMenu.md) 的 APPS-RELEASE、APPS-VELOCITY 驗收接入行為。
 
 Motion 規格、fixtures 或原生產物更新時，重新執行受影響的 THROW-ID；上表結果只對應上列版本。

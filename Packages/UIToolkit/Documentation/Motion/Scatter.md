@@ -48,5 +48,5 @@ Scatter 的數值行為在 Windows Editor 與規格 1.0.0 相符（SCATTER-01～
 下一步：
 
 - 補 SCATTER-P1 未執行的項目。
-- AppsMenu 改用 Scatter 時，在 [AppsMenu 紀錄](../Yu5h1Lib.Web/AppsMenu.md) 的 APPS-VACUUM、APPS-RAMP、APPS-RELEASE 驗收接入行為。
+- AppsMenu 改用 Scatter 時，在 [AppsMenu 紀錄](../Yu5h1Lib.UX/AppsMenu.md) 的 APPS-VACUUM、APPS-RAMP、APPS-RELEASE 驗收接入行為。
 - 每幀 Pull 前確認 `Resolve` 的陣列配置不造成問題。
