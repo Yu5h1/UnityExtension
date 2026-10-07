@@ -37,7 +37,7 @@
 
 | 欄位 | 內容 |
 |---|---|
-| **Status** | Outstanding（2026-10-02 提出）。Web 已交付規格 U1–U8、設計資料 2.0.0、案例 1.0.0（`935474c`；設計資料 2.1.0 於 `d916b6c` 加入 WEB-5 入場），並以 [WEB-UNITYEXTENSION-2](../../../Web/Documentation/Requirements.UnityExtension.md#web-unityextension-2--appsmenu-依-web-主規格復刻) 委託 Unity 復刻；Unity 匯入工具讀取並驗證設計資料與案例後結案 |
+| **Status** | Outstanding（2026-10-02 提出）。Web 已交付規格 U1–U8、設計資料 2.0.0、案例 1.0.0（`935474c`；設計資料 2.1.0 於 `d916b6c` 加入 WEB-5 入場），並以 [WEB-UNITYEXTENSION-2](../../../Web/Documentation/Requirements.UnityExtension.md#web-unityextension-2--appsmenu-依-web-主規格復刻) 委託 Unity 復刻；Unity 匯入工具讀取並驗證設計資料與案例後結案。實作對照與驗收結果見 [AppsMenu 驗收紀錄](../Packages/UIToolkit/Documentation/Yu5h1Lib.Web/AppsMenu.md) |
 | **Requirement** | 依 Unity AppsMenu 的設計，在 Yu5h1Lib.Web 建立可直接使用的 Apps 模組：有預設行為，政策可以覆寫；附 Unity 能轉換的設計參數，以及兩端都能執行的案例資料。 |
 | **Evidence** | 設計來源是 Unity 的 `Packages/UIToolkit/Samples~/AppsMenu`（`AppsMenuDemo.cs`），接線規則「手勢屬於哪個元素，那個元素就同時捕獲指標、跑自己的計時器」見 [指標互動與世界橋接](指標互動與世界橋接.md#一條規則管所有手勢)，違反時會靜默失效。Web 已有 `long-press.ts`、`reorder.ts`、`item-list.ts`；HealthAI demo 的 `desktop.js` 另有桌面行為。實作前重新核對來源現況。 |
 | **Acceptance** | 非物理行為（長按 400ms 與接續點擊抑制、移動容許量、取消／卸載、圖示拖曳、拖進 Apps 按鈕或面板、從面板拖回桌面、面板內排序、群組拖曳、面板開合、入場錯開）由正式公開入口提供，並有可執行的範例。覆寫點至少涵蓋障礙物集合、項目初始位置、落點判定、點擊與長按的產品動作、甩飛門檻，各有預設值；不寫死產品政策，不出現產品名稱分支。範例的小變體只換內容、資料與政策就能使用，不改模組。設計參數有單位與來源，格式可被 Unity 轉換；案例資料有穩定 ID、初始狀態、操作序列與預期狀態，標明版本。物理數值由 Motion 提供，Web 不另造物理引擎。 |

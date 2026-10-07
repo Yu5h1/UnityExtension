@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-07T06:36:55.658903+00:00",
+  "updated_at": "2026-10-07T09:25:18.460120+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -553,7 +553,7 @@
       "id": "cross-platform-ui-parity",
       "title": "跨平台 UI 一致性（Unity 引用 Web 交付並復刻）",
       "status": "in_progress",
-      "summary": "進行中：Unity 以 Yu5h1Lib.Web 的版本化交付引用 Web，在 Yu5h1Lib.UIToolkit 復刻並重新驗證；流程見 skill web-replication。前置已交付：Web WEB-5～7（d916b6c）、Motion MOTION-1～2（套件 8977d46），Unity 都未驗收。下一步依決策 appsmenu-approach：先逐條對照既有 Samples~/AppsMenu 與 Web U1–U8（AppsMenu對照.md），再決定改既有範例或另建模組；接入驗證另見卡片 appsmenu-library-adoption。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
+      "summary": "進行中：Unity 以 Yu5h1Lib.Web 的版本化交付引用 Web，在 Yu5h1Lib.UIToolkit 復刻並依 referenced-module-acceptance 在實作套件記錄驗收；匯入與復刻見 skill web-replication。前置已交付：Web WEB-5～7、Motion MOTION-1～2，Unity 都未驗收。AppsMenu 的實作與驗收由卡片 appsmenu-library-adoption 追蹤；本卡保留設定、Theme 與 WebGL 路線。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
       "completed_items": [
         {
           "id": "item-cross-platform-ui-parity-todo-5",
@@ -574,16 +574,6 @@
       ],
       "pending_items": [
         {
-          "id": "item-cross-platform-ui-parity-todo-1",
-          "title": "AppsMenu：匯入工具（參數、案例）與 Runtime/WebUI/AppsMenu 復刻，逐條驗證 U1–U8 並回報 WEB-UNITYEXTENSION-2",
-          "priority": 2
-        },
-        {
-          "id": "item-cross-platform-ui-parity-todo-3",
-          "title": "Motion：UNITYEXTENSION-MOTION-1（Packages/Motion，Windows＋Android）交付後接上甩飛與吸塵器",
-          "priority": 3
-        },
-        {
           "id": "item-cross-platform-ui-parity-todo-2",
           "title": "Theme：等 WEB-6（theme 與 config 互動、存檔格式），再做 WebTheme 匯入並驗收 WEB-1",
           "priority": 4
@@ -602,9 +592,9 @@
     },
     {
       "id": "appsmenu-library-adoption",
-      "title": "AppsMenu 接入驗證（使用 Motion 庫與 Web 庫）",
+      "title": "AppsMenu 引用 Web 庫與 Motion 庫的實作與驗收",
       "status": "in_progress",
-      "summary": "確認 AppsMenu 實際使用 Motion 庫與 Web 庫的交付，而不是只有套件存在。驗證專案 Yu5h1LibTest；Motion 已在 Windows Editor 跑通。驗證哪一份 AppsMenu 在 AppsMenu對照.md 完成後決定。Canonical entry：Documentation/跨平台UI一致性.md#appsmenu-接入驗證（Task ID: appsmenu-library-adoption）。",
+      "summary": "Yu5h1Lib.UIToolkit 依 Web ModuleSpec/AppsMenu（f7abccf）實作 AppsMenu，甩飛與吸塵器用 Motion Throw、Scatter（8b53e5f）；依 referenced-module-acceptance 逐項記錄。已完成既有範例對照與 Motion 的 Windows Editor 數值驗收；下一步由使用者依對照選擇改既有範例或另建模組。Canonical entry：Packages/UIToolkit/Documentation/Yu5h1Lib.Web/AppsMenu.md（Task ID: appsmenu-library-adoption）。",
       "pending_items": [
         {
           "id": "item-appsmenu-library-adoption-todo-2",
@@ -617,12 +607,36 @@
           "title": "AppsMenu 使用 Web 交付：參數與案例來自 Web 版本化交付，記錄採用的 Web commit、版本與雜湊",
           "priority": 2,
           "status": "planned"
+        },
+        {
+          "id": "item-appsmenu-library-adoption-todo-4",
+          "title": "依對照選擇改既有範例或另建模組（決策 appsmenu-approach 的後續）",
+          "priority": 1,
+          "status": "planned"
+        },
+        {
+          "id": "item-appsmenu-library-adoption-todo-5",
+          "title": "逐項執行 APPS-*、P01–P08 與 11 項中性案例，結果記在驗收紀錄並回報 WEB-UNITYEXTENSION-2",
+          "priority": 2,
+          "status": "planned"
+        },
+        {
+          "id": "item-appsmenu-library-adoption-todo-6",
+          "title": "補 Motion THROW-P1、SCATTER-P1 未執行的生命週期項目",
+          "priority": 3,
+          "status": "planned"
         }
       ],
       "completed_items": [
         {
+          "id": "item-appsmenu-library-adoption-done-2",
+          "title": "建立驗收紀錄並完成既有 Samples~/AppsMenu 對 APPS-* 的實作對照（靜態閱讀，Packages/UIToolkit/Documentation/Yu5h1Lib.Web/AppsMenu.md）（2026-10-07）",
+          "priority": 2,
+          "status": "done"
+        },
+        {
           "id": "item-appsmenu-library-adoption-todo-1",
-          "title": "Motion 在 Unity 能跑：Yu5h1LibTest 加入 com.yu5h1.motion（含 testables），Windows Editor（6000.6）EditMode 2/2 通過：EditorFixtures（共用 fixtures 重播，經原生 DLL）、EditorLifecycle（建立／呼叫／銷毀與實例隔離）（2026-10-07）。Player 與 Android IL2CPP 未跑",
+          "title": "Motion 在 Unity 能跑：Windows Editor（6000.6）EditMode 2/2 通過，Throw／Scatter 數值相符、生命週期部分驗證（2026-10-07）；逐項見 Packages/UIToolkit/Documentation/Motion/。Player 與 Android 未執行",
           "priority": 2,
           "status": "done"
         }

@@ -12,7 +12,7 @@
 
 | 欄位 | 內容 |
 |---|---|
-| **Status** | Outstanding（2026-10-07 提出）。Motion 已交付（Motion `bb0dcca`，`Packages/Motion` 進 UnityExtension `8977d46`），Unity 尚未驗收。2026-10-07 Yu5h1LibTest Windows Editor（6000.6）EditMode 套件測試 2/2 通過（fixtures 重播、生命週期）；Windows Player 與 Android IL2CPP 未跑 |
+| **Status** | Outstanding（2026-10-07 提出）。Motion 已交付（Motion `bb0dcca`，`Packages/Motion` 進 UnityExtension `8977d46`），Unity 尚未驗收；逐項結果見 [Throw](../Packages/UIToolkit/Documentation/Motion/Throw.md)、[Scatter](../Packages/UIToolkit/Documentation/Motion/Scatter.md)、[Attraction](../Packages/UIToolkit/Documentation/Motion/Attraction.md) 驗收紀錄 |
 | **Requirement** | 依 Motion 的接入計畫交付 `Packages/Motion`（Throw2D、Scatter2D），平台涵蓋 Windows x64（Editor 與 Player）及 Android arm64-v8a。 |
 | **Evidence** | Motion 計畫的第一個切片只有 Windows x64，Android 列為依需求追加；現在的具名使用端是 Yu5h1Lib.UIToolkit 的 AppsMenu，平台為 Windows 與 Android。Motion 環境清單沒有 Android NDK。 |
 | **Acceptance** | 一、Windows 依 Motion 計畫第 1–3 階段驗收。二、Android 由同一份來源建置 `.so`，插件設定只啟用已驗證的平台；IL2CPP 建置可載入並通過同一份 fixtures，manifest 記錄平台、架構與雜湊；實機驗證可由使用者執行，未驗部分列明。三、驗證用 Unity 專案為 Yu5h1LibTest，使用端是 AppsMenu 復刻的 demo（`Samples~/AppsMenuModule`）。四、Motion 只驗收數值服務；捕獲、釋放條件等操作規則由各使用端自行驗收（Web、Unity 各自），Motion 計畫第 4 階段不以「全部收納後釋放」為準。五、C# 命名空間不使用 `Yu5h1Lib.Physics`、`Yu5h1Lib.Motion`。 |

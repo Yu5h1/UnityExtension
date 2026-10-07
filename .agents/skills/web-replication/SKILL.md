@@ -22,10 +22,10 @@ UnityExtension owns this skill. Direction, module status and conventions: [跨�
 
 ## Steps
 
-1. **Pin.** Record the Web commit and the manifest versions/hashes being adopted. Refuse an unknown major version or a dirty delivery unless the user accepts it.
+1. **Pin.** Record the Web commit and the manifest versions/hashes being adopted in the module's acceptance record (step 4). Refuse an unknown major version or a dirty delivery unless the user accepts it.
 2. **Import.** Run the Yu5h1Lib.UIToolkit Editor importer: validate everything before writing, generate USS variables (and WebTheme when Theme is active), copy cases into the package `Tests/`, write the imported-version stamp. On failure keep the previous output and report it as not updated. Re-importing the same input must produce no diff.
 3. **Replicate.** Write `Runtime/WebUI/<Module>/` by hand: a model whose commands match Web's (so cases run unchanged) and a control for input, capture and lifecycle. Follow the single-owner gesture rule in `Documentation/指標互動與世界橋接.md`.
-4. **Verify.** Run Web's cases through the generic C# case runner; check each spec item, including branches the cases do not cover; check target platforms. Hand-feel and device input are the user's checks — list them, do not mark them passed.
-5. **Report.** Per spec item: pass, fail, platform difference, or waiting on spec/Motion; plus the pinned commit and versions. Update the parity plan's module status and the handoff; send the result to Web's requirement for Web to close.
+4. **Verify.** Follow the shared [referenced-module-acceptance](../../../../../.agents/skills/referenced-module-acceptance/SKILL.md) skill: the record is `Packages/UIToolkit/Documentation/Yu5h1Lib.Web/<Module>.md` (AppsMenu's exists). Run Web's cases through the generic C# case runner; check each spec ID, including branches the cases do not cover; check target platforms. Hand-feel and device input are the user's checks — list them, do not mark them passed.
+5. **Report.** Results, the pinned versions and platform differences go in that record only; update the handoff, then send the result to Web's requirement for Web to close.
 
 When Web's delivery changes, repeat from step 1; the stamp shows what is stale.
