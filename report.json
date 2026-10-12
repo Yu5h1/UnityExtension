@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-07T12:45:10.308410+00:00",
+  "updated_at": "2026-10-12T10:28:37.219181+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -184,6 +184,11 @@
           "id": "item-uitoolkit-decoupling-done-4",
           "title": "聊天面板模組（ChatPresenter／ChatComposer）實作完成並調到裝上即用；新增 DevicePanel（裝置縮放＋safe area）helper，Device Simulator 實測正常，EditMode 210、PlayMode 12 全過（2026-10-01）。詳見 Documentation/聊天面板模組.md",
           "priority": 4
+        },
+        {
+          "id": "item-uitoolkit-decoupling-done-5",
+          "title": "聊天面板 demo 從 _dev/ChatModule 搬到 Samples~/ChatModule，登記為 Chat Module 範例（2026-10-12）",
+          "priority": 4
         }
       ],
       "pending_items": [
@@ -195,11 +200,6 @@
         {
           "id": "item-uitoolkit-decoupling-todo-4",
           "title": "實作 HEALTHAI-UNITYEXTENSION-14：輸入框上方／下方擴充列（擴充方向，不擋遷移）",
-          "priority": 4
-        },
-        {
-          "id": "item-uitoolkit-decoupling-todo-2",
-          "title": "聊天面板 demo 從 _dev/ChatModule 搬到 Samples~/ChatModule——使用者決定整體滿意後再搬",
           "priority": 4
         },
         {

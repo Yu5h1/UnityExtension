@@ -23,6 +23,11 @@
       "displayName": "Apps Menu",
       "description": "A draggable, throwable desktop with a float Apps panel, assembled only from Yu5h1Lib packages. The hands-on rig for the things no unit test judges: group drag, inertia, the throw, the hold and its swallowed click, the catch wobble, the staggered entrance.",
       "path": "Samples~/AppsMenu"
+    },
+    {
+      "displayName": "Chat Module",
+      "description": "A chat panel and capsule composer assembled from Yu5h1Lib.UIToolkit's ChatPresenter and ChatComposer: bottom-anchored message stacking, streamed replies with a thinking indicator, position fade, overlay scrollbar, Enter-to-send with an IME guard, and DevicePanel scaling with safe-area padding. Reply texts and thinking times are editable in the Inspector.",
+      "path": "Samples~/ChatModule"
     }
   ]
 }
