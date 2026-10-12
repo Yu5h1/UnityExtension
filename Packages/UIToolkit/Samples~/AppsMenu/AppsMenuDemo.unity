@@ -145,7 +145,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 338701468}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f721249075eb8044abd5a75dfb8534dc, type: 3}
+  m_Script: {fileID: 11500000, guid: 8bc5bbbc3a57f0443b11338474b40c34, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Yu5h1LibTest.Demos::Yu5h1LibTest.AppsMenuDemo
   appCount: 8
@@ -159,6 +159,11 @@ MonoBehaviour:
   throwThreshold: 180
   holdDuration: 400
   moveTolerance: 6
+  vacuumRadius: 170
+  vacuumForce: 5
+  vacuumDragThreshold: 8
+  releaseSpread: 1.6
+  trace: 0
 --- !u!4 &338701470
 Transform:
   m_ObjectHideFlags: 0

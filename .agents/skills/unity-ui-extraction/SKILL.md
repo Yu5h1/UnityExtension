@@ -52,7 +52,7 @@ Before moving assets, inspect `.meta` GUIDs, serialized type/field identities, a
 
 Keep runtime assemblies independent of Editor-only APIs and consumer assemblies. Follow the Unity knowledge entry for the real Core sources; backup folders are not implementation targets. Preserve attach/detach or enable/disable semantics, callback registration, scheduled work, cancellation and cleanup. Reopening or remounting a panel must not duplicate subscriptions or allow stale asynchronous results to update it.
 
-Reuse current public package capabilities. Samples demonstrate composition and must not become an alternative runtime implementation. Avoid introducing a generic framework solely to relocate one product's view.
+Reuse current public package capabilities. Samples demonstrate composition and must not become an alternative runtime implementation. Keep a sample's single source in the package `Samples~/<Name>` with its `.meta` files; develop it in a test project through a directory junction from `Assets/Samples/<Package>/<Version>/<Display Name>` to that folder rather than a compiled `_dev` folder, which every consumer would compile and whose `Resources` would ship. Never Reimport or Remove a junctioned sample in Package Manager: it overwrites or deletes the package source. Avoid introducing a generic framework solely to relocate one product's view.
 
 ## Validate and adopt
 
