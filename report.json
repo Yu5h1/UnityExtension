@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-12T10:28:37.219181+00:00",
+  "updated_at": "2026-10-14T11:54:09.5594175+08:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -253,11 +253,11 @@
       "id": "recycler-refactor",
       "title": "Recycler／Pool 系列統合",
       "status": "in_progress",
-      "summary": "Core Recycler 四個主要檔案已落地；Unity Phase 1.5、Core 單元測試及既有 Pool callsite 遷移仍待完成。",
+      "summary": "Core Recycler 四檔已落地，尚未完成正確性與效能驗收。後續依 Core 正確性、穩態配置與保留量、Unity 接合、舊 Pool 遷移推進；最小注入討論不阻擋 Core 驗證。",
       "completed_items": [
         {
           "id": "item-recycler-refactor-done-1",
-          "title": "完成 IRecyclable、IRecycler、Recycler 與 Recycler<T> Core 實作",
+          "title": "IRecyclable、IRecycler、Recycler 與 Recycler<T> 基礎實作已落地（行為與效能尚待驗收）",
           "priority": 4
         },
         {
@@ -269,22 +269,27 @@
       "pending_items": [
         {
           "id": "item-recycler-refactor-todo-1",
-          "title": "補 Core lazy build、容量通知、discard 與 callback 單元測試",
+          "title": "A：補 Core 實例身分、借還生命週期、容量、查找與例外／重入驗證（CORE-01～05）",
           "priority": 4
         },
         {
-          "id": "item-recycler-refactor-todo-2",
-          "title": "討論 IRecyclable 最小注入與預設行為",
+          "id": "item-recycler-refactor-todo-5",
+          "title": "B：建立效能基準、消除穩態借還配置並驗證閒置保留量（PERF-01～04）",
           "priority": 4
         },
         {
           "id": "item-recycler-refactor-todo-3",
-          "title": "實作 UnityObjectPoolAdapter、Recyclable、RecyclerEx 與 Unity reset/bootstrap",
+          "title": "C：完成 Unity adapter、宿主生命週期、Play Mode reset 與獨立 AOT 驗證（UNITY-01～04）",
           "priority": 4
         },
         {
           "id": "item-recycler-refactor-todo-4",
-          "title": "規劃 V1、V2、V3 callsite 遷移",
+          "title": "D：驗證 V1／V2／V3 遷移，保留固定場景池耗盡語意，確認呼叫端後再淘汰舊實作（MIG-01～03）",
+          "priority": 4
+        },
+        {
+          "id": "item-recycler-refactor-todo-2",
+          "title": "依 Unity 案例討論 IRecyclable 最小注入與預設行為，不阻擋 A／B",
           "priority": 4
         }
       ]

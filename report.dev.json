@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "report_id": "unity-extension-progress",
-  "updated_at": "2026-09-30T14:12:40.727271+00:00",
+  "updated_at": "2026-10-14T11:54:09.5594175+08:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -27,14 +27,12 @@
     },
     {
       "id": "recycler-refactor",
-      "next_step": "先決定 issue 13 的 IRecyclable 最小注入方向，再補 Core tests，之後進入 Unity Phase 1.5。",
-      "blockers": [
-        "IRecyclable 是否維持介面、改為 class，或由庫提供預設 callback 組合尚未決定。"
-      ],
+      "next_step": "依計畫 A→B→C→D：先補 Core 身分、生命週期與容量驗證，再量測並改善穩態配置，之後完成 Unity 接合及舊系統遷移。最小注入議題不阻擋 Core 驗證。",
+      "blockers": [],
       "decisions": [
         {
           "summary": "Core 使用 Recycler facade + object pool；Unity 特有建立、銷毀與 reset 行為留在 UnityExtension。",
-          "reference": ".agents/plans/Recycler_Refactor.md"
+          "reference": "Documentation/Recycler_Refactor.md"
         }
       ]
     },

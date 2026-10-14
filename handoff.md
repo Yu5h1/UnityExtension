@@ -24,6 +24,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 ## Next Steps
 
+- Recycler: follow [Core correctness](Documentation/Recycler_Refactor.md#a--core-正確性), then [allocation and performance](Documentation/Recycler_Refactor.md#b--配置保留量與效能), before Unity integration and migration. On 2026-10-14 the user authorized synchronizing the plan, handoff and reports only; implementation remains pending. The root plan routes to the detailed design, and report.json/report.dev.json project its A–D sequence without claiming new implementation completion. Core's four files exist and the prior plan records a 2026-05-21 successful build; no new build, benchmark, unit test, or Unity acceptance was run. Source inspection found per-Get LinkedListNode allocation and value-equality-based active tracking. These remain findings to address, not completed fixes. The minimum-injection discussion does not block Core validation.
+
 - Until Core is built against the oldest supported editor (6000.3.9f1, BonghuoVR), rerun the 6000.3 compile check after Core changes (command in Recent Work 2026-10-06).
 
 - Use [unity-ui-extraction](.agents/skills/unity-ui-extraction/SKILL.md) for the next actual Unity UI extraction or replication, within the source project's existing plan.
@@ -212,6 +214,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 - Decision: use `unified-solver` for large-scale collision, stacking, and container interactions. The retrospective is recorded in [DevelopmentLog.md](Documentation/DevelopmentLog.md).
 
 ## Open decisions
+
+- [Recycler — 後續決策](Documentation/Recycler_Refactor.md#後續決策): failure/reentrancy and retention semantics before the corresponding Core implementation; Unity convenience and migration choices before their slices.
 
 - [Web 套件遷移 — 尚未決定](Documentation/Web套件遷移.md#尚未決定): `WebRequestEvent.cs` delete vs move, `IndexHtmlEditor.cs` encoding, common version number.
 

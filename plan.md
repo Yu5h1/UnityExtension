@@ -37,6 +37,7 @@ UnityExtension 的目標不是建立單一大型框架，而是整理一套能�
 
 ## 4. 近期工作
 
+- 依 [Recycler 重構計畫](Documentation/Recycler_Refactor.md#後續實作與驗收)，先驗證 Core 正確性與穩態配置，再完成 Unity 接合及舊 Pool 遷移；以目標 runtime 的量測決定重用範圍。
 - 盤點現有 UnityExtension packages 的責任與依賴方向。
 - 從 CombatAesthetic 等實際專案中辨識可回收的通用能力。
 - 將通用能力規劃到對應 package，而不是留在單一應用專案。

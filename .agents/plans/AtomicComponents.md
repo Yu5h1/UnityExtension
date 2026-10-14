@@ -264,7 +264,7 @@ public class ShuffleResolver : IResolver<int> {
 
 ## 跟其他計畫的關聯
 
-- [Recycler_Refactor.md](Recycler_Refactor.md) — Recycler 系列重構，獨立軌道
+- [Recycler_Refactor.md](../../Documentation/Recycler_Refactor.md) — Recycler 系列重構，獨立軌道
 - [Motion_System_Refactor.md](Motion_System_Refactor.md) — Motion/Tween 重構（前身 Tween_Refactor，已併入），可能受益 `IResolver<float>`（未來）
 - [InputLayer_Refactor.md](../../../../.agents/plans/InputLayer_Refactor.md) — Input 重構，由共享 Yu5h1Lib agent scope 管理
 - 本計畫 = 為上述計畫之外的「跨領域 primitive」做準備
