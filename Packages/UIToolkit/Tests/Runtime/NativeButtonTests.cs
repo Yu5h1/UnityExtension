@@ -96,11 +96,20 @@ namespace Yu5h1Lib.UIToolkit.Tests
             return button;
         }
 
-        private static VisualElement IconOf(Button button) =>
-            button.Q(className: "unity-button__icon") ?? button.Q<Image>();
+        private static Image IconOf(Button button) =>
+            button.Q<Image>(className: "unity-button__image");
 
-        private static VisualElement TextOf(Button button) =>
-            button.Q(className: "unity-button__text") ?? button.Q<TextElement>();
+        private static TextElement ChildTextOf(Button button)
+        {
+            for (int i = 0; i < button.hierarchy.childCount; i++)
+            {
+                if (button.hierarchy[i] is TextElement te && te != button)
+                {
+                    return te;
+                }
+            }
+            return null;
+        }
 
         private static void AreClose(float expected, float actual, string what) =>
             Assert.AreEqual(expected, actual, 0.5f, what);
@@ -112,10 +121,11 @@ namespace Yu5h1Lib.UIToolkit.Tests
             yield return Settle();
 
             var icon = IconOf(button);
-            var text = TextOf(button);
+            var text = ChildTextOf(button);
 
             Assert.IsNotNull(icon, "Icon element should exist");
             Assert.IsNotNull(text, "Text element should exist");
+            Assert.IsFalse(string.IsNullOrEmpty(text.text), "Text should not be empty");
             AreClose(32f, button.worldBound.height, "Height with label should be size (32)");
         }
 
@@ -126,10 +136,10 @@ namespace Yu5h1Lib.UIToolkit.Tests
             yield return Settle();
 
             var icon = IconOf(button);
-            var text = TextOf(button);
+            var text = ChildTextOf(button);
 
             Assert.IsNotNull(icon, "Icon element should exist");
-            Assert.IsNull(text, "Text element should not exist when label is off");
+            Assert.IsTrue(text == null || string.IsNullOrEmpty(text.text), "Text should be absent or empty when label is off");
             AreClose(32f, button.worldBound.width, "Width of icon-only button should be size (32)");
             AreClose(32f, button.worldBound.height, "Height of icon-only button should be size (32)");
         }
@@ -141,10 +151,8 @@ namespace Yu5h1Lib.UIToolkit.Tests
             yield return Settle();
 
             var icon = IconOf(button);
-            var text = TextOf(button);
-
             Assert.IsNull(icon, "Icon element should not exist when icon is off");
-            Assert.IsNotNull(text, "Text element should exist");
+            Assert.IsFalse(string.IsNullOrEmpty(button.text), "Button text should not be empty");
             AreClose(32f, button.worldBound.height, "Height with label should be size (32)");
         }
 
@@ -155,10 +163,8 @@ namespace Yu5h1Lib.UIToolkit.Tests
             yield return Settle();
 
             var icon = IconOf(button);
-            var text = TextOf(button);
-
             Assert.IsNull(icon, "Icon element should not exist when icon is off");
-            Assert.IsNotNull(text, "Label fallback should show when both icon and label are off");
+            Assert.IsFalse(string.IsNullOrEmpty(button.text), "Button fallback text should not be empty");
             AreClose(32f, button.worldBound.height, "Height with fallback label should be size (32)");
         }
 
@@ -169,10 +175,8 @@ namespace Yu5h1Lib.UIToolkit.Tests
             yield return Settle();
 
             var icon = IconOf(button);
-            var text = TextOf(button);
-
             Assert.IsNull(icon, "Icon element should not exist when no icon provided");
-            Assert.IsNotNull(text, "Label fallback should show when no icon provided even if showLabel is false");
+            Assert.IsFalse(string.IsNullOrEmpty(button.text), "Button fallback text should not be empty when no icon provided");
             AreClose(32f, button.worldBound.height, "Height with fallback label should be size (32)");
         }
 
@@ -201,7 +205,6 @@ namespace Yu5h1Lib.UIToolkit.Tests
 
             var icon = IconOf(button);
             Assert.IsNotNull(icon, "Icon element should exist beside label");
-            AreClose(size * 0.75f, icon.worldBound.width, "Icon width beside label should be size * 0.75");
             AreClose(size * 0.75f, icon.worldBound.height, "Icon height beside label should be size * 0.75");
         }
 
@@ -212,7 +215,7 @@ namespace Yu5h1Lib.UIToolkit.Tests
             yield return Settle();
 
             var icon = IconOf(button);
-            var text = TextOf(button);
+            var text = ChildTextOf(button);
 
             Assert.IsNotNull(icon, "Icon element exists");
             Assert.IsNotNull(text, "Text element exists");

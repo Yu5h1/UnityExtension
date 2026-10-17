@@ -36,7 +36,7 @@
 }
 
 /* BTN-SIZE: icon side is 75% of button size (size * 0.75) with or without label */
-.yu5h1-button > .unity-button__icon,
+.yu5h1-button > .unity-button__image,
 .yu5h1-button > .unity-image {
     height: 75%;
     width: 75%;
@@ -47,12 +47,10 @@
 }
 
 /* BTN-LAYOUT: 8px gap between icon and label */
-.yu5h1-button.unity-button--with-icon > .unity-button__text,
 .yu5h1-button.unity-button--with-icon > .unity-text-element {
     margin-left: 8px;
 }
 
-.yu5h1-button > .unity-button__text,
 .yu5h1-button > .unity-text-element {
     margin: 0;
     padding: 0;
