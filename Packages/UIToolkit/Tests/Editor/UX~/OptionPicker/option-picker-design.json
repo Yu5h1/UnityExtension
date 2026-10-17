@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "contractVersion": "2.0.0",
+  "tokens": {
+    "pickerGap": { "value": 4, "unit": "px", "source": "Web src/ui/choice-picker.ts adjacent placement gap (moved from Input design 1.1.0)" },
+    "pickerViewportMargin": { "value": 4, "unit": "px", "source": "Web src/ui/choice-picker.ts viewport clamp margin (moved from Input design 1.1.0)" },
+    "panelPadding": { "value": 4, "unit": "px", "source": "TaskProgress viewer/assets/styles.css .icon-choice-options padding" },
+    "optionGap": { "value": 4, "unit": "px", "source": "TaskProgress viewer/assets/styles.css .icon-choice-options gap" }
+  }
+}

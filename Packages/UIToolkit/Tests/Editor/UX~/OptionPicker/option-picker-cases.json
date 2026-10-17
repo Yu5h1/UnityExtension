@@ -1,0 +1,763 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.0",
+  "cases": [
+    {
+      "id": "choice-tap-opens-on-selected-and-escape-returns-focus",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "aligned",
+        "interaction": "picker",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ],
+            "focus": "two",
+            "panel": {
+              "x": 60,
+              "y": 100
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 200,
+            "key": "Escape",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "close"
+              }
+            ],
+            "focus": "trigger"
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice-hold-release-in-place-chooses-current",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "aligned",
+        "interaction": "both",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 400
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 450,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "close"
+              },
+              {
+                "type": "choose",
+                "id": "two"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice-disabled-options-are-skipped",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "aligned",
+        "interaction": "picker",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40,
+            "disabled": true
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "key",
+            "t": 0,
+            "key": "ArrowLeft",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ],
+            "focus": "two"
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 10,
+            "key": "ArrowRight",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [],
+            "focus": "one"
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 20,
+            "key": "ArrowLeft",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [],
+            "focus": "two"
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice-adjacent-flips-to-fit",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "adjacent",
+        "interaction": "picker",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 300,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "key",
+            "t": 0,
+            "key": "Enter",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ],
+            "focus": "two",
+            "panel": {
+              "x": 176,
+              "y": 100
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice-adjacent-vertical-flips-above",
+      "initial": {
+        "kind": "choice",
+        "orientation": "vertical",
+        "placement": "adjacent",
+        "interaction": "picker",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 250,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "key",
+            "t": 0,
+            "key": "Enter",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ],
+            "panel": {
+              "x": 100,
+              "y": 126
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice-aligned-clamps-to-viewport",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "aligned",
+        "interaction": "picker",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 0,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "key",
+            "t": 0,
+            "key": "Enter",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ],
+            "panel": {
+              "x": 4,
+              "y": 100
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "option-both-tap-cycles-and-arrow-opens",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "aligned",
+        "interaction": "both",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "choose",
+                "id": "three"
+              }
+            ],
+            "focus": "trigger"
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 200,
+            "key": "ArrowRight",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ],
+            "focus": "two"
+          }
+        }
+      ]
+    },
+    {
+      "id": "option-cycle-tap-wraps-to-first",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "aligned",
+        "interaction": "cycle",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "choose",
+                "id": "one"
+              }
+            ],
+            "focus": "trigger"
+          }
+        }
+      ]
+    },
+    {
+      "id": "option-cycle-skips-disabled",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "aligned",
+        "interaction": "cycle",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "disabled": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "choose",
+                "id": "three"
+              }
+            ],
+            "focus": "trigger"
+          }
+        }
+      ]
+    },
+    {
+      "id": "option-cycle-keyboard-never-opens",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "aligned",
+        "interaction": "cycle",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "key",
+            "t": 0,
+            "key": "Enter",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "choose",
+                "id": "two"
+              }
+            ],
+            "focus": "trigger"
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 10,
+            "key": "ArrowRight",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [],
+            "focus": "trigger"
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 20,
+            "key": "End",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [],
+            "focus": "trigger"
+          }
+        }
+      ]
+    }
+  ]
+}
