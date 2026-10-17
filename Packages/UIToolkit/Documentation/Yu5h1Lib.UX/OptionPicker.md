@@ -2,7 +2,7 @@
 
 > Task ID: uitk-optionpicker
 >
-> 狀態：in-progress（2026-10-17，第一輪：OptionPicker 3.0.2）。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 OptionPicker」，流程見 referenced-module-acceptance。實作方式採「原生 Button 與 VisualElement 面板搭配 C# 控制邏輯」（原生優先原則）。觸發鈕與選項直接沿用已採用的 Button 2.0.0，C# 控制邏輯負責 interaction 模式（picker/cycle/both）、400ms 長按手勢、aligned/adjacent 面板定位與方向鍵/Escape 導覽。自動檢查涵蓋數值與規則邏輯，手感與外觀交由使用者直接確認。
+> 狀態：completed（待使用者視覺確認）（2026-10-18，第一輪：OptionPicker 3.0.2）。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 OptionPicker」，流程見 referenced-module-acceptance。實作方式採「原生 Button 與 VisualElement 面板搭配 C# 控制邏輯」（原生優先原則）。觸發鈕與選項直接沿用已採用的 Button 2.0.0，C# 控制邏輯負責 interaction 模式（picker/cycle/both）、400ms 長按手勢、aligned/adjacent 面板定位與方向鍵/Escape 導覽。程式碼與乾淨 worktree 自動驗收通過，視覺驗收交由使用者直接確認。
 
 ```text
 UnityExtension
@@ -71,8 +71,13 @@ UnityExtension
 
 | 規範版本 | UX commit | UnityExtension commit | checklist commit | 結論 |
 |---|---|---|---|---|
-| OptionPicker 3.0.2 | `8c1f764` | （進行中） | （進行中） | 依原生 Button + VisualElement 面板與 C# 控制邏輯進行引用 |
+| OptionPicker 3.0.2 | `8c1f764` | `a06dda2` | `a06dda2` | 實作通過乾淨 worktree 與 229 項自動化測試，視覺外觀交付使用者直接體驗 |
 
 ## 結論
 
-（待本輪執行與使用者確認完成後填寫）
+本輪在 `Yu5h1Lib.UIToolkit` 依決策採用「原生 Button 與 VisualElement 面板搭配 C# 控制邏輯」完整引用 UX OptionPicker 3.0.2。
+
+- **釘選驗證**：規範與設計資料快照 SHA-256 吻合，設計資料合約 2.0.0，快照設定 `-text`。
+- **程式碼驗收**：OptionPickerDesignTests（3/3）與 OptionPickerTests（11/11）全數通過，涵蓋 OPT-VALUE、OPT-OPTIONS、OPT-CYCLE、OPT-OPEN（長按 400ms）、OPT-PLACE（aligned/adjacent 及視窗邊界 clamp）與 OPT-DISPLAY（padding 4px, gap 4px）。全套件 229 項 EditMode 測試無回歸。
+- **乾淨 worktree**：建立獨立 worktree 並將 Yu5h1LibTest 指向該處，編譯無警告錯誤，測試全數通過。
+- **視覺與手感**：提供 `UxOptionPickerDemo` 範例場景（展示可見性與排序模式），視覺驗收交付使用者直接操作確認。

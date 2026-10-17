@@ -4,13 +4,13 @@ Current round: `../../../UX/Documentation/ModuleSpec/Controls/OptionPicker.md#�
 
 本輪對應 UX OptionPicker 3.0.2（UX 8c1f764），在 Yu5h1Lib.UIToolkit 首次引用。實作方式採原生 Button + VisualElement 面板搭配 C# 行為控制（決策：原生元件優先）。觸發鈕與選項沿用已引用的 Button 2.0.0，C# 控制邏輯處理 interaction（picker/cycle/both）、400ms 長按手勢、aligned/adjacent 面板定位與方向鍵/Escape 鍵盤導覽。一個檔案只放一輪。
 
-- [ ] **1. 釘選 OptionPicker 3.0.2**
+- [x] **1. 釘選 OptionPicker 3.0.2**
   Outcome: 套件內有 OptionPicker 規範、設計資料與案例快照，雜湊與 UX manifest 一致。
   Checks:
     - [x] **快照與雜湊**
       - Action: 執行 EditMode 測試 OptionPickerDesignTests。
       - Expect: 快照的 SHA-256 等於 UX manifest 的值（OptionPicker.md 31591500..., option-picker-design.json 551517bc..., option-picker-cases.json 3d4d2a26...）；設計資料合約版本為 2.0.0；快照路徑在 .gitattributes 有 -text 規則。
-    - [ ] **乾淨 checkout 編譯**
+    - [x] **乾淨 checkout 編譯**
       - Action: 從本分支開新 worktree，把 Yu5h1LibTest 的 com.yu5h1.uitoolkit 指向該 worktree，重新整理 Unity。
       - Expect: Console 沒有編譯錯誤。
 
