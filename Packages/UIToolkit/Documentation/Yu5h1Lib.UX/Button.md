@@ -2,7 +2,7 @@
 
 > Task ID: uitk-button
 >
-> 狀態：planned（2026-10-17，第一輪：Button 1.1.0）。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 Button」，流程見 referenced-module-acceptance。範圍依決策 `uitk-button-scope`（button-first）：只引用 Button，依賴部分記為缺口。檢查都還沒執行。
+> 狀態：verification pending（2026-10-17，第一輪：Button 1.1.0）。9 項自動檢查在乾淨 worktree 全部通過，待使用者直接確認外觀（含滑過）。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 Button」，流程見 referenced-module-acceptance。範圍依決策 `uitk-button-scope`（button-first）：只引用 Button，依賴部分記為缺口。
 
 ```text
 UnityExtension
@@ -68,8 +68,25 @@ UnityExtension
 
 | 規範版本 | UX commit | UnityExtension commit | checklist commit | 結論 |
 |---|---|---|---|---|
-| Button 1.1.0 | `d9a9790` | — | 與本列同一提交（planned） | 未執行 |
+| Button 1.1.0 | `d9a9790` | `9b53f9b` | 與本列同一提交 | 自動檢查全部通過；待使用者確認（範圍內相容，缺口見上） |
 
 ## 結論
 
-尚未驗收。
+在本輪範圍內（BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT，BTN-APPEARANCE 的結構），`UxButton` 於 UnityExtension `9b53f9b` 符合 Button 1.1.0；9 項自動檢查全部通過，沒有偏差。「本輪未引用的部分」所列缺口不在本結論內，滑過與整體外觀由使用者直接確認。這是自動檢查完成，不是驗收完成。
+
+驗收環境與做法（2026-10-17，由未參與實作的 agent 執行）：
+
+- 乾淨 checkout：`git worktree add --detach ../UnityExtension-accept-button 9b53f9b`。快照 `Button.md`、`button-design.json` 的 SHA-256 與 UX `manifest.json`、UX 工作目錄的檔案相同；`git check-attr` 顯示兩檔 `text: unset`，新 checkout 保留位元組。
+- 宿主：Yu5h1LibTest（Unity 6000.6.0f1，Windows 11）。備份 `Packages/manifest.json` 後只把 `com.yu5h1.uitoolkit` 改指向 worktree，強制重新整理並要求編譯：Console 沒有錯誤，`packages-lock.json` 與 `PackageInfo.resolvedPath` 都是 worktree 路徑。驗收後還原 manifest（SHA-256 與備份相同），重新整理後 Console 沒有錯誤，`resolvedPath` 回到主 checkout，`packages-lock.json` 與驗收前相同；worktree 已移除。
+- EditMode `Yu5h1Lib.UIToolkit.Editor.Tests`：79／79 通過（分支前 76，加上 `ButtonDesignTests` 3 項）。
+- PlayMode `Yu5h1Lib.UIToolkit.Tests`：27／27 通過（分支前 13，加上 `UxButtonTests` 14 項，含參數化案例）。
+
+審查備註（不違反規範，不影響結果；值得修正的放進下一次給實作者的指示）：
+
+- 測試品質：PlayMode 面板沒有設定 theme style sheet（每項測試都輸出 Unity 的 “No Theme Style Sheet set to PanelSettings” 警告）。因此量到的是無主題面板的結果：Unity 預設主題的 `.unity-button` 內距、邊框與 `--unity-colors-button-*` 顏色變數沒有參與，外觀像素測試用的是 USS 的備用色；名稱是否真的畫出文字也沒有被驗證。
+- 測試品質：顯示與否用 `resolvedStyle.display` 判斷，屬讀回設定；名稱「仍顯示」沒有另外確認名稱元素有非零的實際大小。尺寸類檢查則是量 `worldBound`，符合 BT03。
+- 測試品質：名稱旁圖示的測試把字型設成 14px，正好等於程式在讀不到字型大小時的預設值，所以「跟著字型等比例變化」的路徑（例如 12px → 約 15.4px）沒有被觀察到；`size` 24 時上限 18 剛好等於 18，上限真正生效的情況（例如 `size` 20 → 15）也沒有被觀察到。本輪 checklist 只要求 14px 的結果，所以不算失敗。
+- 測試品質：接受圖示的測試用空白的 `VectorImage`，確認的是圖示元素顯示且尺寸正確，不是圖示有畫出來；圖示來源屬本輪缺口（Icon）。
+- 實作：實心按鈕的 `.yu5h1-button:hover` 選擇器權重高於 `.yu5h1-button--selected`，已選中的實心按鈕在滑過時改顯示滑過色、看不出選中。規範沒有規定狀態疊加，屬待使用者確認外觀時留意的點。
+- 實作：實心按鈕沒有自己的焦點樣式，完全依賴主題；規範只要求無底按鈕的焦點看得出來，所以不違反。
+- 實作：繼承自原生 `Button` 的 `text` 沒有被擋下，宿主若設定 `text` 會在子元素之外再畫一份文字；文件已說明應使用 `LabelText`。
