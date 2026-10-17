@@ -169,22 +169,26 @@ namespace Yu5h1Lib.UIToolkit
         private void OnTriggerPointerDown(PointerDownEvent evt)
         {
             if (evt.button != 0 || pointerId >= 0) return;
-            if (Model.interaction == OptionPickerInteraction.Cycle) return;
 
             pointerId = evt.pointerId;
             isHeld = false;
             pointerDownPos = evt.position;
 
             holdSchedule?.Pause();
-            holdSchedule = triggerButton.schedule.Execute(() =>
+
+            // 只有在支援長按開面板的模式（Picker 或 Both）才啟動 hold timer；Cycle 模式純點擊循環不啟動
+            if (Model.interaction != OptionPickerInteraction.Cycle)
             {
-                if (pointerId < 0) return;
-                isHeld = true;
-                triggerButton.CapturePointer(pointerId);
-                Model.HandleTriggerHold();
-                panelElement?.BringToFront();
-                panel?.visualTree?.MarkDirtyRepaint();
-            }).StartingIn((long)(OptionPickerModel.DefaultHoldDuration * 1000));
+                holdSchedule = triggerButton.schedule.Execute(() =>
+                {
+                    if (pointerId < 0) return;
+                    isHeld = true;
+                    triggerButton.CapturePointer(pointerId);
+                    Model.HandleTriggerHold();
+                    panelElement?.BringToFront();
+                    panel?.visualTree?.MarkDirtyRepaint();
+                }).StartingIn((long)(OptionPickerModel.DefaultHoldDuration * 1000));
+            }
         }
 
         private void CancelHoldTimer()
@@ -367,7 +371,7 @@ namespace Yu5h1Lib.UIToolkit
 
         private void OnModelChosen(string id)
         {
-            UpdateTriggerDisplay();
+            SetValue(id);
         }
 
         private void OpenPanel()

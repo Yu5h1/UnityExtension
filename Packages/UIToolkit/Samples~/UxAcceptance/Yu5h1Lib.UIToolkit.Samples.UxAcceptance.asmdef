@@ -1,5 +1,5 @@
 {
-    "name": "Yu5h1Lib.UIToolkit.Samples.UxButton",
+    "name": "Yu5h1Lib.UIToolkit.Samples.UxAcceptance",
     "rootNamespace": "Yu5h1LibTest",
     "references": [
         "Yu5h1Lib.Common",
