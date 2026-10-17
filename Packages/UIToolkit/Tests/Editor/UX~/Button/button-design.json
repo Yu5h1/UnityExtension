@@ -1,10 +1,9 @@
 {
   "schemaVersion": 1,
-  "contractVersion": "2.0.0",
+  "contractVersion": "3.0.0",
   "tokens": {
     "size": { "value": 32, "unit": "px", "source": "TaskProgress viewer/assets/styles.css .card-toolbar-icon width/height; renamed from iconOnlySize (design 1.0.0), now also the height with a label (decision 62)" },
-    "iconRatio": { "value": 0.75, "unit": "ratio", "source": "TaskProgress .card-toolbar-icon 24px icon area in 32px (decisions 58, 61)" },
-    "iconWithLabelSize": { "value": 18, "unit": "px", "labelFontSize": 14, "source": "Web demo/option-picker/demo.css .picker-icon 18px beside 14px text (decision 58)" },
+    "iconRatio": { "value": 0.75, "unit": "ratio", "source": "TaskProgress .card-toolbar-icon 24px icon area in 32px; applies with or without a label (decisions 58, 61, 63)" },
     "iconLabelGap": { "value": 8, "unit": "px", "source": "Web demo/option-picker/demo.css .picker-trigger and .picker-option gap (decision 59)" }
   }
 }

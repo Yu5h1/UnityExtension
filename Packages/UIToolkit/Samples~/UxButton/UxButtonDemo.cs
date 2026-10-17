@@ -1,19 +1,21 @@
 using UnityEngine;
 using UnityEngine.UIElements;
-using Yu5h1Lib.UIToolkit;
 
 namespace Yu5h1LibTest
 {
     /// <summary>
-    /// Minimal visual sample for Yu5h1Lib.UX Button (UxButton) under the default runtime theme.
-    /// Demonstrates appearances, display combinations, sizes, and selection states.
+    /// Minimal visual sample for Yu5h1Lib.UX Button 2.0.0 on native <see cref="Button"/> with USS.
+    /// Demonstrates appearances, display combinations, sizes, and selection states under the default runtime theme.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public class UxButtonDemo : MonoBehaviour
     {
+        private const string ButtonStyleResource = "Yu5h1Lib.UIToolkit/Yu5h1Button";
+
         private UIDocument document;
         private PanelSettings settings;
         private Texture2D iconTexture;
+        private StyleSheet buttonStyle;
 
         private void Start()
         {
@@ -48,6 +50,7 @@ namespace Yu5h1LibTest
 #endif
             }
 
+            buttonStyle = Resources.Load<StyleSheet>(ButtonStyleResource);
             iconTexture = CreateDarkIconTexture();
             BuildUI(document.rootVisualElement);
         }
@@ -74,7 +77,7 @@ namespace Yu5h1LibTest
             container.style.backgroundColor = new Color(0.94f, 0.94f, 0.96f, 1f);
             root.Add(container);
 
-            var title = new Label("UxButton Demo (Yu5h1Lib.UX Button 1.1.0)");
+            var title = new Label("Native Button Demo (Yu5h1Lib.UX Button 2.0.0)");
             title.style.fontSize = 20;
             title.style.unityFontStyleAndWeight = FontStyle.Bold;
             title.style.color = new Color(0.12f, 0.14f, 0.18f, 1f);
@@ -85,13 +88,13 @@ namespace Yu5h1LibTest
 
             // 1. 外觀：實心、無底各一顆（圖示加名稱）
             var sectionAppearance = CreateSection("外觀 (Appearance)", container);
-            var solidBtn = CreateButton(icon, "Solid", appearance: ButtonAppearance.Solid);
-            var ghostBtn = CreateButton(icon, "Ghost", appearance: ButtonAppearance.Ghost);
+            var solidBtn = CreateButton(icon, "Solid", isGhost: false);
+            var ghostBtn = CreateButton(icon, "Ghost", isGhost: true);
             sectionAppearance.Add(solidBtn);
             sectionAppearance.Add(ghostBtn);
 
-            // 2. 顯示組合：四顆，分別是圖示加名稱、只顯示圖示、只顯示名稱、兩者都關（應該仍顯示名稱）；
-            //    另加一顆沒有圖示但 ShowLabel=false 的（也應該顯示名稱）。
+            // 2. 顯示組合：四顆，分別是圖示加名稱、只顯示圖示、只顯示名稱、兩者都關（顯示名稱備援）；
+            //    另加一顆沒有圖示但 ShowLabel=false 的（也顯示名稱備援）。
             var sectionDisplay = CreateSection("顯示組合 (Display Combinations)", container);
             var btnIconLabel = CreateButton(icon, "Icon + Label", showIcon: true, showLabel: true);
             var btnIconOnly = CreateButton(icon, "Icon Only", showIcon: true, showLabel: false);
@@ -121,10 +124,10 @@ namespace Yu5h1LibTest
 
             // 4. 選中：實心與無底各一顆 Selected=true，旁邊各放一顆未選中的對照。
             var sectionSelected = CreateSection("選中 (Selected State)", container);
-            var solidNormal = CreateButton(icon, "Solid Normal", appearance: ButtonAppearance.Solid, selected: false);
-            var solidSelected = CreateButton(icon, "Solid Selected", appearance: ButtonAppearance.Solid, selected: true);
-            var ghostNormal = CreateButton(icon, "Ghost Normal", appearance: ButtonAppearance.Ghost, selected: false);
-            var ghostSelected = CreateButton(icon, "Ghost Selected", appearance: ButtonAppearance.Ghost, selected: true);
+            var solidNormal = CreateButton(icon, "Solid Normal", isGhost: false, selected: false);
+            var solidSelected = CreateButton(icon, "Solid Selected", isGhost: false, selected: true);
+            var ghostNormal = CreateButton(icon, "Ghost Normal", isGhost: true, selected: false);
+            var ghostSelected = CreateButton(icon, "Ghost Selected", isGhost: true, selected: true);
             sectionSelected.Add(solidNormal);
             sectionSelected.Add(solidSelected);
             sectionSelected.Add(ghostNormal);
@@ -151,29 +154,63 @@ namespace Yu5h1LibTest
             return row;
         }
 
-        private static UxButton CreateButton(
+        private Button CreateButton(
             Background icon,
             string labelText,
-            ButtonAppearance appearance = ButtonAppearance.Solid,
-            float size = ButtonDesign.Size,
+            bool isGhost = false,
+            float size = 32f,
             bool showIcon = true,
             bool showLabel = true,
             bool selected = false)
         {
-            var btn = new UxButton
+            var btn = new Button();
+            if (buttonStyle != null)
             {
-                Appearance = appearance,
-                Size = size,
-                Icon = icon,
-                ShowIcon = showIcon,
-                ShowLabel = showLabel,
-                LabelText = labelText,
-                Selected = selected
-            };
+                btn.styleSheets.Add(buttonStyle);
+            }
+            btn.AddToClassList("yu5h1-button");
+
+            bool hasIcon = !icon.IsEmpty();
+            bool displayIcon = showIcon && hasIcon;
+            bool displayLabel = showLabel || !displayIcon;
+            bool iconOnly = displayIcon && !displayLabel;
+
+            if (displayIcon)
+            {
+                btn.iconImage = icon;
+            }
+            if (displayLabel)
+            {
+                btn.text = labelText;
+            }
+
+            if (isGhost)
+            {
+                btn.AddToClassList("yu5h1-button--ghost");
+            }
+
+            if (iconOnly)
+            {
+                btn.AddToClassList("yu5h1-button--icon-only");
+                btn.style.width = size;
+                btn.style.minWidth = size;
+            }
+
+            btn.style.height = size;
+            btn.style.minHeight = size;
+
+            if (selected)
+            {
+                btn.AddToClassList("yu5h1-button--selected");
+            }
+
             btn.style.marginRight = 10;
             btn.style.marginTop = 4;
             btn.style.marginBottom = 4;
-            btn.clicked += () => { btn.Selected = !btn.Selected; };
+            btn.clicked += () =>
+            {
+                btn.ToggleInClassList("yu5h1-button--selected");
+            };
             return btn;
         }
 
