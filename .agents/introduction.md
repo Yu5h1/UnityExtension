@@ -43,7 +43,7 @@ Reasoning for the first two is in [data-architecture.md](skills/data-architectur
 Read only what matches the current task:
 
 - [Unity UI extraction](skills/unity-ui-extraction/SKILL.md) — extract reusable Unity UI from consumer projects into shared packages, preserve assets/lifecycle, verify a second use, and migrate callers. Existing-control adoption routes to the relevant domain skill; Web extraction remains owned by Web.
-- [Web replication](skills/web-replication/SKILL.md) — replicate a Yu5h1Lib.Web UI module in Yu5h1Lib.UIToolkit from Web's versioned delivery: pin, import, replicate to the Web spec, run Web's cases, report per spec item.
+- [Web replication](skills/web-replication/SKILL.md) — implement a Yu5h1Lib.UX module natively in Yu5h1Lib.UIToolkit: pin and import the UX spec data (theme and config still from Web's delivery), implement to the UX spec, run the shared cases in Unity, report per spec item.
 
 - [data-architecture.md](skills/data-architecture.md) — ScriptableObject architecture, Parameter/Member/Invocation objects, ValuePort, Theme, and presets. Load its linked architecture plan only for design or Timeline integration changes.
 - [editor-tooling.md](skills/editor-tooling.md) — Inspector and Editor extensions, SubAssets, Undo, shortcuts, and internal Unity APIs.

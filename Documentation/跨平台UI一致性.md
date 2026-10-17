@@ -55,9 +55,10 @@ Unity 引用的是規範與版本化資料，不是任何平台的程式：模�
 
 ## 模組狀態
 
-| 模組 | Web 來源 | Unity 狀態與下一步 |
+| 模組 | 規範來源 | Unity 狀態與下一步 |
 |---|---|---|
-| AppsMenu | [UX ModuleSpec/AppsMenu.md](../../../UX/Documentation/ModuleSpec/AppsMenu.md)（APPS-*） | 實作對照、採用版本與驗收結果見 [AppsMenu 驗收紀錄](../Packages/UIToolkit/Documentation/Yu5h1Lib.UX/AppsMenu.md) |
+| Button | [UX Controls/Button.md](../../../UX/Documentation/ModuleSpec/Controls/Button.md)（BTN-*） | Unity 第一個實作與驗收的模組（使用者 2026-10-17）；Unity 目標與需求由 UX 先訂，進度見 [handoff](../handoff.md) |
+| AppsMenu | [UX ModuleSpec/AppsMenu.md](../../../UX/Documentation/ModuleSpec/AppsMenu.md)（APPS-*） | 暫停（UX AppsMenu 目標 1：Web 已通過，Unity 待恢復）。實作對照、採用版本與驗收結果見 [AppsMenu 驗收紀錄](../Packages/UIToolkit/Documentation/Yu5h1Lib.UX/AppsMenu.md) |
 | 設定（config） | 各模組以 `.json` 宣告負責的設定項目，同一份 json 是 Web 設定模組的規格，設定面板依 json 加入分頁（決策 `demo-settings`）。Web 宣告格式 1.0.0（`d916b6c`） | WEB-7 與 MOTION-2 已交付，Unity 未驗收。Unity 端與 Preferences 的對應待討論 |
 | Theme | 色票契約 1.0.0（`theme.css`）；Theme 存檔格式 v1（WEB-6，`d916b6c`） | WEB-6 已交付，Unity 未驗收；依決策 `phase-order` 排在設定之後 |
 | 聊天 | [WEB-2](Requirements.Web.md#unityextension-web-2--聊天面板設計) | 未開始；方向見[尚未決定](#尚未決定) |
