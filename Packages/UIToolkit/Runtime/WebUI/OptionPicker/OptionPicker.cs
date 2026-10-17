@@ -52,9 +52,11 @@ namespace Yu5h1Lib.UIToolkit
 
             Add(triggerButton);
 
-            triggerButton.RegisterCallback<PointerDownEvent>(OnTriggerPointerDown);
-            triggerButton.RegisterCallback<PointerUpEvent>(OnTriggerPointerUp);
-            triggerButton.RegisterCallback<PointerMoveEvent>(OnTriggerPointerMove);
+            triggerButton.RegisterCallback<PointerDownEvent>(OnTriggerPointerDown, TrickleDown.TrickleDown);
+            triggerButton.RegisterCallback<PointerUpEvent>(OnTriggerPointerUp, TrickleDown.TrickleDown);
+            triggerButton.RegisterCallback<PointerMoveEvent>(OnTriggerPointerMove, TrickleDown.TrickleDown);
+            triggerButton.RegisterCallback<PointerCancelEvent>(OnTriggerPointerCancel);
+            triggerButton.RegisterCallback<PointerCaptureOutEvent>(OnTriggerPointerCaptureOut);
             triggerButton.RegisterCallback<KeyDownEvent>(OnTriggerKeyDown);
 
             Model.OnOpened += OnModelOpened;
@@ -73,6 +75,7 @@ namespace Yu5h1Lib.UIToolkit
         private void OnDetachFromPanel(DetachFromPanelEvent evt)
         {
             panel?.visualTree.UnregisterCallback<PointerDownEvent>(OnRootPointerDown, TrickleDown.TrickleDown);
+            CancelHoldTimer();
             ClosePanel();
         }
 
@@ -161,59 +164,171 @@ namespace Yu5h1Lib.UIToolkit
             btn.style.minHeight = config.size;
         }
 
+        private int pointerId = -1;
+
         private void OnTriggerPointerDown(PointerDownEvent evt)
         {
-            if (evt.button != 0) return;
+            if (evt.button != 0 || pointerId >= 0) return;
+            if (Model.interaction == OptionPickerInteraction.Cycle) return;
 
+            pointerId = evt.pointerId;
             isHeld = false;
             pointerDownPos = evt.position;
 
             holdSchedule?.Pause();
-            holdSchedule = schedule.Execute(() =>
+            holdSchedule = triggerButton.schedule.Execute(() =>
             {
+                if (pointerId < 0) return;
                 isHeld = true;
+                triggerButton.CapturePointer(pointerId);
                 Model.HandleTriggerHold();
+                panelElement?.BringToFront();
+                panel?.visualTree?.MarkDirtyRepaint();
             }).StartingIn((long)(OptionPickerModel.DefaultHoldDuration * 1000));
+        }
+
+        private void CancelHoldTimer()
+        {
+            holdSchedule?.Pause();
+            if (pointerId >= 0 && triggerButton.HasPointerCapture(pointerId))
+            {
+                triggerButton.ReleasePointer(pointerId);
+            }
         }
 
         private void OnTriggerPointerMove(PointerMoveEvent evt)
         {
-            if (holdSchedule != null && !isHeld)
+            if (evt.pointerId != pointerId) return;
+
+            if (!isHeld)
             {
-                // 若超出拖曳閾值（8px），取消長按計時
-                if (Vector2.Distance(evt.position, pointerDownPos) > 8f)
+                // 超過 16px 拖曳才算移動，避免輕微抖動取消長按
+                if (Vector2.Distance(evt.position, pointerDownPos) > 16f)
                 {
-                    holdSchedule.Pause();
+                    CancelHoldTimer();
+                    pointerId = -1;
+                }
+            }
+            else
+            {
+                UpdateHoveredOption(evt.position);
+                evt.StopImmediatePropagation();
+            }
+        }
+
+        private void UpdateHoveredOption(Vector2 screenPos)
+        {
+            var picked = panel?.Pick(screenPos);
+            for (int i = 0; i < optionButtons.Count; i++)
+            {
+                var btn = optionButtons[i];
+                bool isDisabled = i < Model.Options.Count && Model.Options[i].disabled;
+                bool isHovered = !isDisabled &&
+                                 ((picked != null && (btn == picked || btn.Contains(picked))) ||
+                                  btn.worldBound.Contains(screenPos) ||
+                                  btn.ContainsPoint(btn.WorldToLocal(screenPos)));
+                if (isHovered)
+                {
+                    btn.AddToClassList("yu5h1-button--hover");
+                    btn.AddToClassList("yu5h1-optionpicker__option--hover");
+                }
+                else
+                {
+                    btn.RemoveFromClassList("yu5h1-button--hover");
+                    btn.RemoveFromClassList("yu5h1-optionpicker__option--hover");
                 }
             }
         }
 
-        private void OnTriggerPointerUp(PointerUpEvent evt)
+        private void ClearHoveredOptions()
         {
-            if (evt.button != 0) return;
-
-            if (holdSchedule != null)
+            for (int i = 0; i < optionButtons.Count; i++)
             {
-                holdSchedule.Pause();
+                optionButtons[i].RemoveFromClassList("yu5h1-button--hover");
+                optionButtons[i].RemoveFromClassList("yu5h1-optionpicker__option--hover");
             }
+        }
 
-            if (!isHeld)
+        private OptionItem GetOptionAtPosition(Vector2 screenPos)
+        {
+            if (panelElement == null || !Model.isOpen) return null;
+            var picked = panel?.Pick(screenPos);
+            for (int i = 0; i < optionButtons.Count; i++)
             {
-                Model.HandleTriggerTap();
-            }
-            else
-            {
-                // 長按放開：若面板已開啟且原地放開，選到目前的值（choice-hold-release-in-place-chooses-current）
-                if (Model.isOpen && triggerButton.ContainsPoint(triggerButton.WorldToLocal(evt.position)))
+                var btn = optionButtons[i];
+                bool isOver = (picked != null && (btn == picked || btn.Contains(picked))) ||
+                              btn.worldBound.Contains(screenPos) ||
+                              btn.ContainsPoint(btn.WorldToLocal(screenPos));
+                if (isOver)
                 {
-                    var cur = Model.GetResolvedCurrentOption();
-                    if (cur != null)
+                    if (i < Model.Options.Count && !Model.Options[i].disabled)
                     {
-                        Model.Choose(cur.id);
+                        return Model.Options[i];
                     }
                 }
             }
+            return null;
+        }
+
+        private void OnTriggerPointerUp(PointerUpEvent evt)
+        {
+            if (evt.pointerId != pointerId) return;
+
+            holdSchedule?.Pause();
+
+            if (isHeld)
+            {
+                evt.StopImmediatePropagation();
+
+                var hoveredOpt = GetOptionAtPosition(evt.position);
+                if (hoveredOpt != null)
+                {
+                    // 長按移至選項放開：選定該選項
+                    Model.Choose(hoveredOpt.id);
+                }
+                else if (triggerButton.worldBound.Contains(evt.position) ||
+                         (panelElement != null && panelElement.worldBound.Contains(evt.position)))
+                {
+                    // 原地放開或在面板內放開：保持面板開啟，供使用者直接點選
+                }
+                else
+                {
+                    // 在面板與按鈕外放開：關閉
+                    Model.Close();
+                }
+            }
+            else
+            {
+                Model.HandleTriggerTap();
+            }
+
+            ClearHoveredOptions();
+
+            if (triggerButton.HasPointerCapture(pointerId))
+            {
+                triggerButton.ReleasePointer(pointerId);
+            }
+            pointerId = -1;
             isHeld = false;
+        }
+
+        private void OnTriggerPointerCancel(PointerCancelEvent evt)
+        {
+            CancelHoldTimer();
+            ClearHoveredOptions();
+            if (isHeld) Model.Close();
+            pointerId = -1;
+            isHeld = false;
+        }
+
+        private void OnTriggerPointerCaptureOut(PointerCaptureOutEvent evt)
+        {
+            if (pointerId >= 0 && !isHeld)
+            {
+                CancelHoldTimer();
+                ClearHoveredOptions();
+                pointerId = -1;
+            }
         }
 
         private void OnTriggerKeyDown(KeyDownEvent evt)
@@ -295,6 +410,10 @@ namespace Yu5h1Lib.UIToolkit
                 {
                     btn.styleSheets.Add(buttonStyle);
                 }
+                if (optionPickerStyle != null)
+                {
+                    btn.styleSheets.Add(optionPickerStyle);
+                }
                 btn.AddToClassList("yu5h1-button");
                 btn.AddToClassList("yu5h1-optionpicker__option");
                 if (i == Model.Options.Count - 1)
@@ -325,12 +444,14 @@ namespace Yu5h1Lib.UIToolkit
             var root = panel?.visualTree ?? this;
             root.Add(panelElement);
 
+            // 立即給予估算位置，避免在 (0, 0) 閃爍或不渲染
+            UpdatePanelPosition();
+
             panelElement.RegisterCallback<GeometryChangedEvent>(OnPanelGeometryChanged);
         }
 
         private void OnPanelGeometryChanged(GeometryChangedEvent evt)
         {
-            panelElement.UnregisterCallback<GeometryChangedEvent>(OnPanelGeometryChanged);
             UpdatePanelPosition();
         }
 
@@ -340,20 +461,40 @@ namespace Yu5h1Lib.UIToolkit
 
             var root = panel?.visualTree ?? this;
             Rect viewportRect = new Rect(0, 0, root.resolvedStyle.width, root.resolvedStyle.height);
-            if (viewportRect.width <= 0 || viewportRect.height <= 0)
+            if (float.IsNaN(viewportRect.width) || viewportRect.width <= 0 || float.IsNaN(viewportRect.height) || viewportRect.height <= 0)
             {
                 viewportRect = new Rect(0, 0, 1920, 1080);
             }
 
             Rect triggerRect = triggerButton.worldBound;
+            if (float.IsNaN(triggerRect.width) || triggerRect.width <= 0 || float.IsNaN(triggerRect.x))
+            {
+                float tw = float.IsNaN(triggerButton.layout.width) || triggerButton.layout.width <= 0 ? TriggerConfig.size : triggerButton.layout.width;
+                float th = float.IsNaN(triggerButton.layout.height) || triggerButton.layout.height <= 0 ? TriggerConfig.size : triggerButton.layout.height;
+                float tx = float.IsNaN(triggerButton.worldBound.x) ? 0 : triggerButton.worldBound.x;
+                float ty = float.IsNaN(triggerButton.worldBound.y) ? 0 : triggerButton.worldBound.y;
+                triggerRect = new Rect(tx, ty, tw, th);
+            }
+
             Vector2 panelSize = new Vector2(panelElement.resolvedStyle.width, panelElement.resolvedStyle.height);
+            if (float.IsNaN(panelSize.x) || panelSize.x <= 0 || float.IsNaN(panelSize.y) || panelSize.y <= 0)
+            {
+                float count = Model.Options.Count;
+                if (Model.orientation == OptionPickerOrientation.Horizontal)
+                {
+                    panelSize = new Vector2(8f + count * OptionConfig.size + Math.Max(0, count - 1) * 4f, 8f + OptionConfig.size);
+                }
+                else
+                {
+                    panelSize = new Vector2(8f + OptionConfig.size, 8f + count * OptionConfig.size + Math.Max(0, count - 1) * 4f);
+                }
+            }
 
             // 計算選中項目在面板內的局部位置
             var resolvedCurrent = Model.GetResolvedCurrentOption();
             int selectedIndex = 0;
             if (resolvedCurrent != null)
             {
-                selectedIndex = 0;
                 for (int i = 0; i < Model.Options.Count; i++)
                 {
                     if (Model.Options[i].id == resolvedCurrent.id)
@@ -368,11 +509,25 @@ namespace Yu5h1Lib.UIToolkit
             if (selectedIndex >= 0 && selectedIndex < optionButtons.Count)
             {
                 var selBtn = optionButtons[selectedIndex];
-                selectedLocalRect = new Rect(selBtn.layout.x, selBtn.layout.y, selBtn.layout.width, selBtn.layout.height);
+                float sx = selBtn.layout.x;
+                float sy = selBtn.layout.y;
+                float sw = selBtn.layout.width;
+                float sh = selBtn.layout.height;
+                if (!float.IsNaN(sw) && sw > 0 && !float.IsNaN(sh) && sh > 0)
+                {
+                    selectedLocalRect = new Rect(sx, sy, sw, sh);
+                }
             }
             if (selectedLocalRect.width <= 0)
             {
-                selectedLocalRect = new Rect(0, 0, OptionConfig.size, OptionConfig.size);
+                if (Model.orientation == OptionPickerOrientation.Horizontal)
+                {
+                    selectedLocalRect = new Rect(4f + selectedIndex * (OptionConfig.size + 4f), 4f, OptionConfig.size, OptionConfig.size);
+                }
+                else
+                {
+                    selectedLocalRect = new Rect(4f, 4f + selectedIndex * (OptionConfig.size + 4f), OptionConfig.size, OptionConfig.size);
+                }
             }
 
             Vector2 pos = OptionPickerPlacementSolver.ComputePanelPosition(
@@ -389,6 +544,7 @@ namespace Yu5h1Lib.UIToolkit
 
         private void ClosePanel()
         {
+            ClearHoveredOptions();
             if (panelElement != null)
             {
                 panelElement.RemoveFromHierarchy();

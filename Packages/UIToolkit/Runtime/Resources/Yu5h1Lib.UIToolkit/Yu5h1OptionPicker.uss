@@ -46,3 +46,30 @@
     background-color: rgba(0, 0, 0, 0);
     border-width: 0;
 }
+
+.yu5h1-optionpicker__panel .yu5h1-button:hover,
+.yu5h1-optionpicker__panel .yu5h1-button--hover,
+.yu5h1-optionpicker__panel .yu5h1-optionpicker__option:hover,
+.yu5h1-optionpicker__panel .yu5h1-optionpicker__option--hover {
+    background-color: var(--unity-colors-button-background-hover, rgb(210, 210, 210));
+}
+
+.yu5h1-optionpicker__panel .yu5h1-button--selected:hover,
+.yu5h1-optionpicker__panel .yu5h1-button--selected.yu5h1-button--hover {
+    background-color: var(--unity-colors-button-background-pressed, rgb(130, 130, 130));
+}
+
+.yu5h1-optionpicker__panel .yu5h1-button--ghost:hover,
+.yu5h1-optionpicker__panel .yu5h1-button--ghost.yu5h1-button--hover,
+.yu5h1-optionpicker__panel--ghost .yu5h1-optionpicker__option:hover,
+.yu5h1-optionpicker__panel--ghost .yu5h1-optionpicker__option--hover,
+.yu5h1-optionpicker__panel--ghost .yu5h1-button--hover {
+    background-color: var(--unity-colors-button-background-hover, rgba(0, 0, 0, 0.15));
+}
+
+.yu5h1-optionpicker__panel .yu5h1-button--ghost.yu5h1-button--selected:hover,
+.yu5h1-optionpicker__panel .yu5h1-button--ghost.yu5h1-button--selected.yu5h1-button--hover,
+.yu5h1-optionpicker__panel--ghost .yu5h1-button--selected:hover,
+.yu5h1-optionpicker__panel--ghost .yu5h1-button--selected.yu5h1-button--hover {
+    background-color: var(--unity-colors-button-background-pressed, rgba(0, 0, 0, 0.32));
+}
