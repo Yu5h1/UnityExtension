@@ -33,6 +33,11 @@
       "displayName": "UxButton",
       "description": "A minimal visual sample demonstrating UxButton appearance (solid/ghost), display combinations, size scaling, and selection states under the default runtime theme.",
       "path": "Samples~/UxButton"
+    },
+    {
+      "displayName": "UxOptionPicker",
+      "description": "A visual and interaction sample for UX OptionPicker 3.0.2 demonstrating Visibility (picker, aligned) and Sorting (both, adjacent) option pickers.",
+      "path": "Samples~/UxOptionPicker"
     }
   ]
 }
