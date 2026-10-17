@@ -2,7 +2,7 @@
 
 > Task ID: uitk-button
 >
-> 狀態：verification pending（2026-10-17，第一輪：Button 1.1.0）。9 項自動檢查在乾淨 worktree 全部通過，待使用者直接確認外觀（含滑過）。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 Button」，流程見 referenced-module-acceptance。範圍依決策 `uitk-button-scope`（button-first）：只引用 Button，依賴部分記為缺口。
+> 狀態：verified（2026-10-17，第一輪：Button 1.1.0，本輪範圍內）。9 項自動檢查在乾淨 worktree 全部通過；使用者以範例 `Samples~/UxButton`（`9b2a2f6`）確認外觀。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 Button」，流程見 referenced-module-acceptance。範圍依決策 `uitk-button-scope`（button-first）：只引用 Button，依賴部分記為缺口。
 
 ```text
 UnityExtension
@@ -68,9 +68,11 @@ UnityExtension
 
 | 規範版本 | UX commit | UnityExtension commit | checklist commit | 結論 |
 |---|---|---|---|---|
-| Button 1.1.0 | `d9a9790` | `9b53f9b` | 與本列同一提交 | 自動檢查全部通過；待使用者確認（範圍內相容，缺口見上） |
+| Button 1.1.0 | `d9a9790` | `9b53f9b`（範例 `9b2a2f6`） | `e70ad14` | 本輪範圍內相容：自動檢查全部通過，使用者確認外觀；缺口見上 |
 
 ## 結論
+
+使用者確認（2026-10-17）：在 Yu5h1LibTest 開啟範例 `Samples~/UxButton`（Gemini `9b2a2f6`，Unity 預設 runtime 主題），實心／無底、四種顯示組合與兩種後備、size 24／32／40、選中狀態，外觀沒有問題。Claude 也在同一場景進入 Play，Console 沒有錯誤。範例不在 checklist 內，是給使用者直接看的工具。
 
 在本輪範圍內（BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT，BTN-APPEARANCE 的結構），`UxButton` 於 UnityExtension `9b53f9b` 符合 Button 1.1.0；9 項自動檢查全部通過，沒有偏差。「本輪未引用的部分」所列缺口不在本結論內，滑過與整體外觀由使用者直接確認。這是自動檢查完成，不是驗收完成。
 
