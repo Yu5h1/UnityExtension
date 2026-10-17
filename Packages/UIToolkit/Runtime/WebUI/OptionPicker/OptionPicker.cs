@@ -21,17 +21,15 @@ namespace Yu5h1Lib.UIToolkit
         public OptionPickerButtonConfig OptionConfig { get; set; } = OptionPickerButtonConfig.Default;
         public OptionPickerAppearance PanelAppearance { get; set; } = OptionPickerAppearance.Solid;
         public VisualElement PanelElement => panelElement;
+        public HoldManipulator TriggerHoldManipulator => holdManipulator;
 
         private readonly Button triggerButton;
+        private readonly HoldManipulator holdManipulator;
         private VisualElement panelElement;
         private readonly List<Button> optionButtons = new List<Button>();
 
         private StyleSheet buttonStyle;
         private StyleSheet optionPickerStyle;
-
-        private IVisualElementScheduledItem holdSchedule;
-        private bool isHeld;
-        private Vector2 pointerDownPos;
 
         public OptionPicker()
         {
@@ -52,11 +50,19 @@ namespace Yu5h1Lib.UIToolkit
 
             Add(triggerButton);
 
-            triggerButton.RegisterCallback<PointerDownEvent>(OnTriggerPointerDown, TrickleDown.TrickleDown);
-            triggerButton.RegisterCallback<PointerUpEvent>(OnTriggerPointerUp, TrickleDown.TrickleDown);
-            triggerButton.RegisterCallback<PointerMoveEvent>(OnTriggerPointerMove, TrickleDown.TrickleDown);
-            triggerButton.RegisterCallback<PointerCancelEvent>(OnTriggerPointerCancel);
-            triggerButton.RegisterCallback<PointerCaptureOutEvent>(OnTriggerPointerCaptureOut);
+            holdManipulator = new HoldManipulator
+            {
+                HoldDurationMs = (long)(OptionPickerModel.DefaultHoldDuration * 1000f),
+                DragThreshold = HoldManipulator.DefaultDragThreshold,
+                CanStartHold = _ => Model.interaction != OptionPickerInteraction.Cycle
+            };
+            holdManipulator.HoldTriggered += OnTriggerHoldTriggered;
+            holdManipulator.HoldMoved += OnTriggerHoldMoved;
+            holdManipulator.HoldEnded += OnTriggerHoldEnded;
+            holdManipulator.HoldCanceled += OnTriggerHoldCanceled;
+            holdManipulator.TapTriggered += OnTriggerTapTriggered;
+            triggerButton.AddManipulator(holdManipulator);
+
             triggerButton.RegisterCallback<KeyDownEvent>(OnTriggerKeyDown);
 
             Model.OnOpened += OnModelOpened;
@@ -75,7 +81,7 @@ namespace Yu5h1Lib.UIToolkit
         private void OnDetachFromPanel(DetachFromPanelEvent evt)
         {
             panel?.visualTree.UnregisterCallback<PointerDownEvent>(OnRootPointerDown, TrickleDown.TrickleDown);
-            CancelHoldTimer();
+            holdManipulator?.Cancel();
             ClosePanel();
         }
 
@@ -164,60 +170,54 @@ namespace Yu5h1Lib.UIToolkit
             btn.style.minHeight = config.size;
         }
 
-        private int pointerId = -1;
-
-        private void OnTriggerPointerDown(PointerDownEvent evt)
+        private void OnTriggerHoldTriggered(Vector2 screenPos)
         {
-            if (evt.button != 0 || pointerId >= 0) return;
-
-            pointerId = evt.pointerId;
-            isHeld = false;
-            pointerDownPos = evt.position;
-
-            holdSchedule?.Pause();
-
-            // 只有在支援長按開面板的模式（Picker 或 Both）才啟動 hold timer；Cycle 模式純點擊循環不啟動
-            if (Model.interaction != OptionPickerInteraction.Cycle)
-            {
-                holdSchedule = triggerButton.schedule.Execute(() =>
-                {
-                    if (pointerId < 0) return;
-                    isHeld = true;
-                    triggerButton.CapturePointer(pointerId);
-                    Model.HandleTriggerHold();
-                    panelElement?.BringToFront();
-                    panel?.visualTree?.MarkDirtyRepaint();
-                }).StartingIn((long)(OptionPickerModel.DefaultHoldDuration * 1000));
-            }
+            Model.HandleTriggerHold();
+            panelElement?.BringToFront();
+            panel?.visualTree?.MarkDirtyRepaint();
+            UpdateHoveredOption(screenPos);
         }
 
-        private void CancelHoldTimer()
+        private void OnTriggerHoldMoved(Vector2 screenPos)
         {
-            holdSchedule?.Pause();
-            if (pointerId >= 0 && triggerButton.HasPointerCapture(pointerId))
-            {
-                triggerButton.ReleasePointer(pointerId);
-            }
+            UpdateHoveredOption(screenPos);
         }
 
-        private void OnTriggerPointerMove(PointerMoveEvent evt)
+        private void OnTriggerHoldEnded(Vector2 screenPos)
         {
-            if (evt.pointerId != pointerId) return;
-
-            if (!isHeld)
+            var hoveredOpt = GetOptionAtPosition(screenPos);
+            if (hoveredOpt != null)
             {
-                // 超過 16px 拖曳才算移動，避免輕微抖動取消長按
-                if (Vector2.Distance(evt.position, pointerDownPos) > 16f)
-                {
-                    CancelHoldTimer();
-                    pointerId = -1;
-                }
+                // 長按移至選項放開：選定該選項
+                Model.Choose(hoveredOpt.id);
+            }
+            else if (triggerButton.worldBound.Contains(screenPos) ||
+                     (panelElement != null && panelElement.worldBound.Contains(screenPos)))
+            {
+                // 原地放開或在面板內放開：保持面板開啟，供使用者直接點選
             }
             else
             {
-                UpdateHoveredOption(evt.position);
-                evt.StopImmediatePropagation();
+                // 在面板與按鈕外放開：關閉
+                Model.Close();
             }
+
+            ClearHoveredOptions();
+        }
+
+        private void OnTriggerHoldCanceled()
+        {
+            ClearHoveredOptions();
+            if (Model.isOpen)
+            {
+                Model.Close();
+            }
+        }
+
+        private void OnTriggerTapTriggered()
+        {
+            Model.HandleTriggerTap();
+            ClearHoveredOptions();
         }
 
         private void UpdateHoveredOption(Vector2 screenPos)
@@ -272,67 +272,6 @@ namespace Yu5h1Lib.UIToolkit
                 }
             }
             return null;
-        }
-
-        private void OnTriggerPointerUp(PointerUpEvent evt)
-        {
-            if (evt.pointerId != pointerId) return;
-
-            holdSchedule?.Pause();
-
-            if (isHeld)
-            {
-                evt.StopImmediatePropagation();
-
-                var hoveredOpt = GetOptionAtPosition(evt.position);
-                if (hoveredOpt != null)
-                {
-                    // 長按移至選項放開：選定該選項
-                    Model.Choose(hoveredOpt.id);
-                }
-                else if (triggerButton.worldBound.Contains(evt.position) ||
-                         (panelElement != null && panelElement.worldBound.Contains(evt.position)))
-                {
-                    // 原地放開或在面板內放開：保持面板開啟，供使用者直接點選
-                }
-                else
-                {
-                    // 在面板與按鈕外放開：關閉
-                    Model.Close();
-                }
-            }
-            else
-            {
-                Model.HandleTriggerTap();
-            }
-
-            ClearHoveredOptions();
-
-            if (triggerButton.HasPointerCapture(pointerId))
-            {
-                triggerButton.ReleasePointer(pointerId);
-            }
-            pointerId = -1;
-            isHeld = false;
-        }
-
-        private void OnTriggerPointerCancel(PointerCancelEvent evt)
-        {
-            CancelHoldTimer();
-            ClearHoveredOptions();
-            if (isHeld) Model.Close();
-            pointerId = -1;
-            isHeld = false;
-        }
-
-        private void OnTriggerPointerCaptureOut(PointerCaptureOutEvent evt)
-        {
-            if (pointerId >= 0 && !isHeld)
-            {
-                CancelHoldTimer();
-                ClearHoveredOptions();
-                pointerId = -1;
-            }
         }
 
         private void OnTriggerKeyDown(KeyDownEvent evt)

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "contractVersion": "2.0.0",
+  "tokens": {
+    "holdDuration": { "value": 400, "unit": "ms", "source": "UX AppsMenu apps-design.json holdDuration (AppsMenuDemo.cs holdDuration)" },
+    "dragThreshold": { "value": 6, "unit": "px", "source": "UX AppsMenu apps-design.json moveTolerance; Web drag activation" },
+    "velocityWindow": { "value": 100, "unit": "ms", "source": "UX AppsMenu APPS-VELOCITY sample window" },
+    "reorderThreshold": { "value": 8, "unit": "px", "source": "Web src/ui/reorder.ts touch/pen start distance" }
+  }
+}

@@ -93,6 +93,10 @@ namespace Yu5h1LibTest
             {
                 UxModuleRegistry.Register(new UxOptionPickerDemoCase());
             }
+            if (!UxModuleRegistry.Contains("input"))
+            {
+                UxModuleRegistry.Register(new UxInputHoldDemoCase());
+            }
         }
 
         private void BuildHostUI(VisualElement root)

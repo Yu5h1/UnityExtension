@@ -22,7 +22,7 @@ UnityExtension
 | 設計資料 | `OptionPicker/option-picker-design.json` 2.0.0，SHA-256 `551517bc380470057011e41ca7e8366af7dade1f432e3a1cd60134a629417e5a`：`pickerGap` 4、`pickerViewportMargin` 4、`panelPadding` 4、`optionGap` 4 |
 | 中性案例 | `OptionPicker/option-picker-cases.json` 1.0.0，SHA-256 `3d4d2a26a63e603267ac360f0f2a3ee6c8893a7bfb5e924b87b96dac0b58ccd4` |
 | UX commit | `8c1f764e22dc54960558c6bc81b364c31d3760b5` |
-| 依賴模組 | `Button` 2.0.0（已引用，`Yu5h1Button.uss`）、`Input` 3.0.0（`holdDuration` 400ms） |
+| 依賴模組 | `Button` 2.0.0（已引用，`Yu5h1Button.uss`）、`Input` 3.0.1（`HoldManipulator`，`holdDuration` 400ms、`dragThreshold` 6px） |
 | 套件釘選 | 快照 `Tests/Editor/UX~/OptionPicker/`（`OptionPicker.md`、`option-picker-design.json`、`option-picker-cases.json`）；`OptionPickerDesignTests` 核對雜湊與數值 |
 | 範圍 | OPT-VALUE、OPT-OPTIONS、OPT-OPEN、OPT-CYCLE、OPT-PLACE、OPT-DISPLAY、OPT-APPEARANCE、OPT-ICON 全部 |
 | 環境 | Windows 11、Unity 6000.6.0f1 Editor、PlayMode |

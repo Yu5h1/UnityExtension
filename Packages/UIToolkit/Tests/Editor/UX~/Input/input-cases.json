@@ -1,0 +1,3323 @@
+{
+  "schemaVersion": 1,
+  "version": "2.0.0",
+  "cases": [
+    {
+      "id": "release-on-left-edge-activates",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": -28,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": -31,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "activate"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "release-on-top-edge-activates",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": -28
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 0,
+            "y": -31
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "activate"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "release-on-right-edge-is-silent",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 28,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 31,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "release-on-bottom-edge-is-silent",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": 28
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 0,
+            "y": 31
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "release-outside-is-silent",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 28,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 50,
+            "x": 32,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 32,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 1000
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "tap-activates",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 399
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 399,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "activate"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "hold-at-duration-suppresses-pointer-activate",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 399
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 400
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "hold"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 500,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 600,
+            "key": "Enter",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "activate"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "threshold-equal-is-not-drag",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 50,
+            "x": 6,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 6,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "activate"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "drag-starts-past-threshold-and-cancels-hold",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 50,
+            "x": 3,
+            "y": 4
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 60,
+            "x": 5,
+            "y": 4
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dragBegin"
+              },
+              {
+                "type": "dragMove",
+                "dx": 5,
+                "dy": 4
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 400
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 500,
+            "x": 5,
+            "y": 4
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dragEnd",
+                "vx": 0,
+                "vy": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "drag-move-is-total-displacement",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 10,
+            "y": 10
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 10,
+            "x": 20,
+            "y": 10
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dragBegin"
+              },
+              {
+                "type": "dragMove",
+                "dx": 10,
+                "dy": 0
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 20,
+            "x": 25,
+            "y": 30
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dragMove",
+                "dx": 15,
+                "dy": 20
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 50,
+            "x": 25,
+            "y": 30
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dragEnd",
+                "vx": 300,
+                "vy": 400
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "velocity-window-keeps-boundary-sample",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 50,
+            "x": 10,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dragBegin"
+              },
+              {
+                "type": "dragMove",
+                "dx": 10,
+                "dy": 0
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 20,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dragEnd",
+                "vx": 200,
+                "vy": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "velocity-is-zero-after-pause",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 20,
+            "x": 20,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dragBegin"
+              },
+              {
+                "type": "dragMove",
+                "dx": 20,
+                "dy": 0
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 200,
+            "x": 20,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dragEnd",
+                "vx": 0,
+                "vy": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "drag-after-hold",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 400
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "hold"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 450,
+            "x": 10,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dragBegin"
+              },
+              {
+                "type": "dragMove",
+                "dx": 10,
+                "dy": 0
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 500,
+            "x": 10,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dragEnd",
+                "vx": 0,
+                "vy": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "interrupt-cancels-drag-once",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 10,
+            "x": 10,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dragBegin"
+              },
+              {
+                "type": "dragMove",
+                "dx": 10,
+                "dy": 0
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "interrupt",
+            "t": 20,
+            "reason": "scroll"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "cancel"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 30,
+            "x": 20,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 40,
+            "x": 20,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 1000
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "escape-cancels-pending-press",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 100,
+            "key": "Escape",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "cancel"
+              },
+              {
+                "type": "dismiss"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 400
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 450,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "second-pointer-cancels-and-does-not-start",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 2,
+            "button": 0,
+            "t": 50,
+            "x": 40,
+            "y": 40
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "cancel"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 400
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 2,
+            "t": 450,
+            "x": 40,
+            "y": 40
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 460,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 500,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 520,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "activate"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "interrupt-without-gesture-is-silent",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "interrupt",
+            "t": 0,
+            "reason": "blur"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "interrupt",
+            "t": 10,
+            "reason": "resize"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 20,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 30,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "activate"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "non-primary-button-is-ignored",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 2,
+            "t": 0,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 400
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 450,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "dispose-cancels-and-ignores",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "interrupt",
+            "t": 10,
+            "reason": "dispose"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "cancel"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 400
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 500,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 510,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 520,
+            "key": "Enter",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "keyboard-commands",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "key",
+            "t": 0,
+            "key": "Enter",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "activate"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 10,
+            "key": " ",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "activate"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 20,
+            "key": "Enter",
+            "shift": true,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "hold"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 30,
+            "key": "ArrowLeft",
+            "shift": false,
+            "alt": true
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "moveBackward"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 40,
+            "key": "ArrowRight",
+            "shift": false,
+            "alt": true
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "moveForward"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 50,
+            "key": "Escape",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dismiss"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "reorder-ignored-during-pointer-gesture",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 10,
+            "key": "ArrowRight",
+            "shift": false,
+            "alt": true
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 20,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "activate"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "module-overrides-drag-threshold",
+      "initial": {
+        "target": {
+          "x": -31,
+          "y": -31,
+          "width": 62,
+          "height": 62
+        },
+        "parameters": {
+          "dragThreshold": 8
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 0,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 10,
+            "x": 8,
+            "y": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 20,
+            "x": 9,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dragBegin"
+              },
+              {
+                "type": "dragMove",
+                "dx": 9,
+                "dy": 0
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 30,
+            "x": 9,
+            "y": 0
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "dragEnd",
+                "vx": 300,
+                "vy": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "reorder-starts-past-threshold-on-main-axis",
+      "initial": {
+        "kind": "reorder",
+        "axis": "horizontal",
+        "items": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          },
+          {
+            "id": "b",
+            "x": 60,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          },
+          {
+            "id": "c",
+            "x": 120,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 30,
+            "y": 20,
+            "pointerType": "touch"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 50,
+            "x": 38,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 100,
+            "x": 100,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 150,
+            "x": 100,
+            "y": 20
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "reorder",
+                "id": "a",
+                "targetId": "b",
+                "placement": "after"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "reorder-midpoint-is-after",
+      "initial": {
+        "kind": "reorder",
+        "axis": "horizontal",
+        "items": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          },
+          {
+            "id": "b",
+            "x": 60,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          },
+          {
+            "id": "c",
+            "x": 120,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 30,
+            "y": 20,
+            "pointerType": "touch"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 50,
+            "x": 40,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 90,
+            "y": 20
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "reorder",
+                "id": "a",
+                "targetId": "b",
+                "placement": "after"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 200,
+            "x": 30,
+            "y": 20,
+            "pointerType": "touch"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 250,
+            "x": 40,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 300,
+            "x": 89,
+            "y": 20
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "reorder",
+                "id": "a",
+                "targetId": "b",
+                "placement": "before"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "reorder-cross-axis-cancels-press",
+      "initial": {
+        "kind": "reorder",
+        "axis": "horizontal",
+        "items": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          },
+          {
+            "id": "b",
+            "x": 60,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          },
+          {
+            "id": "c",
+            "x": 120,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 30,
+            "y": 20,
+            "pointerType": "touch"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 50,
+            "x": 34,
+            "y": 30
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 100,
+            "x": 100,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 150,
+            "x": 100,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 300,
+            "x": 30,
+            "y": 20,
+            "pointerType": "touch"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 350,
+            "x": 37,
+            "y": 27
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 400,
+            "x": 100,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 450,
+            "x": 100,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "reorder-fixed-items-are-skipped",
+      "initial": {
+        "kind": "reorder",
+        "axis": "horizontal",
+        "items": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          },
+          {
+            "id": "b",
+            "x": 60,
+            "y": 0,
+            "width": 60,
+            "height": 40,
+            "sortable": false
+          },
+          {
+            "id": "c",
+            "x": 120,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 30,
+            "y": 20,
+            "pointerType": "touch"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 50,
+            "x": 90,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 90,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 200,
+            "x": 90,
+            "y": 20,
+            "pointerType": "touch"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 250,
+            "x": 160,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 300,
+            "x": 160,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 400,
+            "key": "ArrowRight",
+            "shift": false,
+            "alt": true,
+            "target": "a"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "reorder",
+                "id": "a",
+                "targetId": "c",
+                "placement": "after"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 410,
+            "key": "ArrowLeft",
+            "shift": false,
+            "alt": true,
+            "target": "c"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "reorder",
+                "id": "c",
+                "targetId": "a",
+                "placement": "before"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 420,
+            "key": "ArrowRight",
+            "shift": false,
+            "alt": true,
+            "target": "b"
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "reorder-keyboard-follows-axis",
+      "initial": {
+        "kind": "reorder",
+        "axis": "vertical",
+        "items": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 0,
+            "width": 100,
+            "height": 40
+          },
+          {
+            "id": "b",
+            "x": 0,
+            "y": 40,
+            "width": 100,
+            "height": 40
+          },
+          {
+            "id": "c",
+            "x": 0,
+            "y": 80,
+            "width": 100,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "key",
+            "t": 0,
+            "key": "ArrowUp",
+            "shift": false,
+            "alt": true,
+            "target": "b"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "reorder",
+                "id": "b",
+                "targetId": "a",
+                "placement": "before"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 10,
+            "key": "ArrowDown",
+            "shift": false,
+            "alt": true,
+            "target": "b"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "reorder",
+                "id": "b",
+                "targetId": "c",
+                "placement": "after"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 20,
+            "key": "ArrowLeft",
+            "shift": false,
+            "alt": true,
+            "target": "b"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 30,
+            "key": "ArrowUp",
+            "shift": false,
+            "alt": true,
+            "target": "a"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 40,
+            "key": "ArrowUp",
+            "shift": true,
+            "alt": true,
+            "target": "b"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 50,
+            "key": "ArrowUp",
+            "shift": false,
+            "alt": false,
+            "target": "b"
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "reorder-release-on-source-or-outside-is-silent",
+      "initial": {
+        "kind": "reorder",
+        "axis": "horizontal",
+        "items": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          },
+          {
+            "id": "b",
+            "x": 60,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          },
+          {
+            "id": "c",
+            "x": 120,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 30,
+            "y": 20,
+            "pointerType": "touch"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 50,
+            "x": 50,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 50,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 200,
+            "x": 30,
+            "y": 20,
+            "pointerType": "touch"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 250,
+            "x": 300,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 300,
+            "x": 300,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "reorder-interrupt-and-second-pointer-cancel",
+      "initial": {
+        "kind": "reorder",
+        "axis": "horizontal",
+        "items": [
+          {
+            "id": "a",
+            "x": 0,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          },
+          {
+            "id": "b",
+            "x": 60,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          },
+          {
+            "id": "c",
+            "x": 120,
+            "y": 0,
+            "width": 60,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 30,
+            "y": 20,
+            "pointerType": "touch"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 50,
+            "x": 100,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "interrupt",
+            "t": 80,
+            "reason": "scroll"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 100,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 200,
+            "x": 30,
+            "y": 20,
+            "pointerType": "touch"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 250,
+            "x": 100,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 2,
+            "button": 0,
+            "t": 260,
+            "x": 150,
+            "y": 60,
+            "pointerType": "touch"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 2,
+            "t": 270,
+            "x": 150,
+            "y": 60
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 300,
+            "x": 100,
+            "y": 20
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice-hold-drag-release-chooses",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "aligned",
+        "interaction": "both",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 400
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ],
+            "focus": "trigger",
+            "panel": {
+              "x": 60,
+              "y": 100
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 450,
+            "x": 160,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 500,
+            "x": 160,
+            "y": 120
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "close"
+              },
+              {
+                "type": "choose",
+                "id": "three"
+              }
+            ],
+            "focus": "trigger"
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice-hold-release-outside-closes",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "aligned",
+        "interaction": "picker",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 400
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 450,
+            "x": 300,
+            "y": 250
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 500,
+            "x": 300,
+            "y": 250
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "close"
+              }
+            ],
+            "focus": "trigger"
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice-hold-tolerance-is-drag-threshold",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "aligned",
+        "interaction": "picker",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 100,
+            "x": 126,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 400
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 450,
+            "x": 300,
+            "y": 250
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "close"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 600,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "move",
+            "pointer": 1,
+            "t": 700,
+            "x": 127,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 1000
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 1050,
+            "x": 127,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice-second-pointer-cancels-hold",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "aligned",
+        "interaction": "picker",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 2,
+            "button": 0,
+            "t": 100,
+            "x": 300,
+            "y": 250
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "advance",
+            "t": 400
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 2,
+            "t": 450,
+            "x": 300,
+            "y": 250
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 500,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice-keyboard-cycles-and-chooses",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "aligned",
+        "interaction": "picker",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "key",
+            "t": 0,
+            "key": "Enter",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ],
+            "focus": "two"
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 10,
+            "key": "ArrowRight",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [],
+            "focus": "three"
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 20,
+            "key": "ArrowRight",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [],
+            "focus": "one"
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 30,
+            "key": "ArrowDown",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [],
+            "focus": "one"
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 40,
+            "key": "End",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [],
+            "focus": "three"
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 50,
+            "key": "Home",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [],
+            "focus": "one"
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "t": 60,
+            "key": "Enter",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "close"
+              },
+              {
+                "type": "choose",
+                "id": "one"
+              }
+            ],
+            "focus": "trigger"
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice-click-option-chooses",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "aligned",
+        "interaction": "picker",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ],
+            "focus": "two"
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 200,
+            "x": 80,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 250,
+            "x": 80,
+            "y": 120
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "close"
+              },
+              {
+                "type": "choose",
+                "id": "one"
+              }
+            ],
+            "focus": "trigger"
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice-tap-open-trigger-closes",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "adjacent",
+        "interaction": "picker",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 0,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 100,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ],
+            "focus": "two",
+            "panel": {
+              "x": 144,
+              "y": 100
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 200,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 250,
+            "x": 120,
+            "y": 120
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "close"
+              }
+            ],
+            "focus": "trigger"
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice-outside-pointer-closes",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "adjacent",
+        "interaction": "picker",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "key",
+            "t": 0,
+            "key": "Enter",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "down",
+            "pointer": 1,
+            "button": 0,
+            "t": 100,
+            "x": 380,
+            "y": 280
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "close"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "up",
+            "pointer": 1,
+            "t": 150,
+            "x": 380,
+            "y": 280
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "choice-interrupt-closes-and-returns-focus",
+      "initial": {
+        "kind": "choice",
+        "orientation": "horizontal",
+        "placement": "adjacent",
+        "interaction": "picker",
+        "viewport": {
+          "width": 400,
+          "height": 300
+        },
+        "trigger": {
+          "x": 100,
+          "y": 100,
+          "width": 40,
+          "height": 40
+        },
+        "focus": "trigger",
+        "options": [
+          {
+            "id": "one",
+            "width": 40,
+            "height": 40
+          },
+          {
+            "id": "two",
+            "width": 40,
+            "height": 40,
+            "pressed": true
+          },
+          {
+            "id": "three",
+            "width": 40,
+            "height": 40
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "key",
+            "t": 0,
+            "key": "Enter",
+            "shift": false,
+            "alt": false
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ],
+            "focus": "two"
+          }
+        },
+        {
+          "action": {
+            "op": "interrupt",
+            "t": 100,
+            "reason": "resize"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "close"
+              }
+            ],
+            "focus": "trigger"
+          }
+        },
+        {
+          "action": {
+            "op": "interrupt",
+            "t": 200,
+            "reason": "scroll"
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    }
+  ]
+}
