@@ -21,7 +21,7 @@ UnityExtension
 | UX 規範 | [UX ModuleSpec/Controls/Button.md](../../../../../../UX/Documentation/ModuleSpec/Controls/Button.md) 1.1.0，SHA-256 `3633818b362a902fbd53de13188b7757bf01c9db52339d332697f304b25e71c3` |
 | 設計資料 | `Button/button-design.json` 2.0.0，SHA-256 `8082bb56a9eb493e9c9d338527659efa389d8b01817a72f4aec8b535e2974075`：`size` 32、`iconRatio` 0.75、`iconWithLabelSize` 18（名稱 14px）、`iconLabelGap` 8 |
 | UX commit | `d9a9790`（Button 檔案自 `1e7152e` 起未變；雜湊與 UX `manifest.json` 一致） |
-| 套件釘選 | 待實作：快照與雜湊放在套件內，C# 常數由測試核對與快照一致 |
+| 套件釘選 | 快照 `Tests/Editor/UX~/Button/`（`Button.md`、`button-design.json`，位元組與 UX 相同，`.gitattributes` 設 `-text`）；數值在 `Runtime/WebUI/Button/ButtonDesign.cs`，`ButtonDesignTests` 核對雜湊與數值 |
 | 範圍 | BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT 全部；BTN-APPEARANCE 的結構（實心有底、無底沒有底、狀態看得出差異） |
 | 環境 | Windows 11、Unity 6000.6.0f1 Editor、PlayMode（runtime 面板只在 Game view 繪製時才解析排版） |
 
@@ -39,7 +39,13 @@ UnityExtension
 
 ## 實作對照
 
-待實作。
+| UX 行為 | UI Toolkit 實作 | 說明 |
+|---|---|---|
+| 公開入口 | `UxButton`（`Runtime/WebUI/Button/UxButton.cs`），繼承原生 `UnityEngine.UIElements.Button`，`[UxmlElement]` | 型別名稱避開 `UnityEngine.UIElements.Button`；按下與鍵盤沿用原生按鈕 |
+| BTN-DISPLAY | `ShowIcon`、`ShowLabel`、`Icon`（`Background`：Texture2D、Sprite、RenderTexture、VectorImage）、`LabelText`；子元素 `yu5h1-button__icon`、`yu5h1-button__label` | 沒有圖示或兩者都關時仍顯示名稱；只顯示圖示時寬高都是 `Size`，有名稱時高度是 `Size`。原生 `text` 保持空白 |
+| BTN-SIZE | `Size`（UXML `size`，預設 `ButtonDesign.Size` 32）；`IconSide` | 只顯示圖示：`Size × IconRatio`；有名稱：名稱字型大小 × 18／14，上限 `Size × IconRatio`。字型大小在名稱排版變動時重讀 |
+| BTN-LAYOUT | USS `flex-direction: row`、`align-items: center`；圖示 `margin-right` 8 | 圖示在前（UI Toolkit 只有由左至右）；內容水平置中 |
+| BTN-APPEARANCE | `Appearance`（`Solid`／`Ghost`）、`Selected`；`Resources/Yu5h1Lib.UIToolkit/UxButton.uss` | 顏色暫用 Unity 預設主題的按鈕變數（附備用值），不是 VisualFoundation 角色（缺口） |
 
 ## 驗收對照
 
