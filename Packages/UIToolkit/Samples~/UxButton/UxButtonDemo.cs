@@ -62,6 +62,11 @@ namespace Yu5h1LibTest
                 Destroy(iconTexture);
                 iconTexture = null;
             }
+            if (settings != null)
+            {
+                Destroy(settings);
+                settings = null;
+            }
         }
 
         private void BuildUI(VisualElement root)
@@ -231,10 +236,10 @@ namespace Yu5h1LibTest
                 {
                     float px = x + 0.5f;
                     float py = y + 0.5f;
-                    if (px >= 9f && px <= 23f)
+                    if (px >= 6f && px <= 28f)
                     {
-                        float progress = (px - 9f) / (23f - 9f);
-                        float halfHeight = (1f - progress) * 7.5f;
+                        float progress = (px - 6f) / (28f - 6f);
+                        float halfHeight = (1f - progress) * 12.5f;
                         float dy = Mathf.Abs(py - 16f);
                         float alpha = Mathf.Clamp01(halfHeight - dy + 0.5f);
                         tex.SetPixel(x, y, new Color(dark.r, dark.g, dark.b, dark.a * alpha));

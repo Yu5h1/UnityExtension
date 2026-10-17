@@ -66,8 +66,11 @@ UnityExtension
 | 規範版本 | UX commit | UnityExtension commit | checklist commit | 結論 |
 |---|---|---|---|---|
 | Button 1.1.0 | `d9a9790` | `9b53f9b`（範例 `9b2a2f6`） | `e70ad14` | 本輪範圍內相容：自動檢查全部通過，使用者確認外觀；缺口見第一輪紀錄 |
-| Button 2.0.0 | `8c1f764` | （進行中） | （進行中） | 依原生 Button + USS 重新引用 |
+| Button 2.0.0 | `8c1f764` | `5db20f7` | `5db20f7` | 依原生 Button + USS 重新引用。釘選核對與乾淨 worktree 編譯/測試通過（EditMode 215/215），排版與置中修正完成。 |
 
 ## 結論
 
-（待本輪執行與使用者確認完成後填寫）
+- **釘選與編譯**：快照 SHA-256 與 UX commit `8c1f764` 完全一致，乾淨 worktree 下 `Yu5h1LibTest` 通過 215 項 EditMode 測試無編譯錯誤。
+- **架構轉換**：移除自訂 `UxButton` 與 `ButtonDesign` 常數，改為原生 `UnityEngine.UIElements.Button` 與樣式表 `Yu5h1Button.uss`。
+- **規則對照**：BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT 邏輯已由 USS 與 NativeButtonTests 表達；外觀交付使用者在 `Samples~/UxButton/UxButtonDemo.unity` 檢視。
+

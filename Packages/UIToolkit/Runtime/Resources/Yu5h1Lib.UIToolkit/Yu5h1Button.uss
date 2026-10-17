@@ -13,8 +13,9 @@
     height: 32px;
     min-height: 32px;
     margin: 0;
-    padding-left: 8px;
-    padding-right: 8px;
+    padding: 0 8px;
+    border-width: 0;
+    border-radius: 4px;
     background-color: var(--unity-colors-button-background, rgb(228, 228, 228));
 }
 
@@ -31,17 +32,19 @@
 .yu5h1-button--icon-only {
     width: 32px;
     min-width: 32px;
-    padding-left: 0;
-    padding-right: 0;
+    padding: 0;
+}
+
+.yu5h1-button--icon-only > .unity-text-element {
+    display: none;
 }
 
 /* BTN-SIZE: icon side is 75% of button size (size * 0.75) with or without label */
 .yu5h1-button > .unity-button__image,
 .yu5h1-button > .unity-image {
     height: 75%;
-    width: 75%;
+    aspect-ratio: 1;
     max-height: 75%;
-    max-width: 75%;
     flex-shrink: 0;
     -unity-background-scale-mode: scale-to-fit;
 }

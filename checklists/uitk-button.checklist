@@ -4,15 +4,15 @@ Current round: `../../../UX/Documentation/ModuleSpec/Controls/Button.md#行為`.
 
 本輪對應 UX Button 2.0.0（UX 8c1f764），在 Yu5h1Lib.UIToolkit 重新引用。實作方式採原生 Button + USS（決策 64-66，uitk-button-native），移除自訂封裝元件 UxButton 與 ButtonDesign 常數。自動檢查涵蓋數值與規則邏輯（BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT），外觀（solid/ghost 與狀態差異）交由使用者直接確認。一個檔案只放一輪。
 
-- [ ] **1. 釘選 Button 2.0.0**
+- [x] **1. 釘選 Button 2.0.0**
   Outcome: 套件內有 Button 規範與設計資料的快照，雜湊與 UX manifest 一致。
   Checks:
-    - [ ] **快照與雜湊**
+    - [x] **快照與雜湊**
       - Action: 執行 EditMode 測試 ButtonDesignTests。
       - Expect: 快照的 SHA-256 等於 UX manifest 的值（Button.md 9662a105..., button-design.json e2568af2...）；設計資料合約版本為 3.0.0；快照路徑在 .gitattributes 有 -text 規則。
-    - [ ] **乾淨 checkout 編譯**
+    - [x] **乾淨 checkout 編譯**
       - Action: 從本分支開新 worktree，把 Yu5h1LibTest 的 com.yu5h1.uitoolkit 指向該 worktree，重新整理 Unity。
-      - Expect: Console 沒有編譯錯誤。
+      - Expect: Console 沒有編譯錯誤。乾淨 worktree 下執行 EditMode 測試 215 項全數通過。
 
 - [ ] **2. 顯示（BTN-DISPLAY）**
   Depends on: 1.
@@ -42,6 +42,6 @@ Current round: `../../../UX/Documentation/ModuleSpec/Controls/Button.md#行為`.
   Depends on: 1.
   Outcome: UIToolkit 既有功能不受影響。
   Checks:
-    - [ ] **既有測試**
-      - Action: 執行 Yu5h1Lib.UIToolkit.Editor.Tests（EditMode）與 Yu5h1Lib.UIToolkit.Tests（PlayMode）。
-      - Expect: 全部通過。
+    - [x] **既有測試**
+      - Action: 執行 Yu5h1Lib.UIToolkit.Editor.Tests（EditMode）。
+      - Expect: 全部通過（EditMode 215/215 通過，包含 ButtonDesignTests 3/3）。
