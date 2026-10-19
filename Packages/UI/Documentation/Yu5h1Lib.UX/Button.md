@@ -2,7 +2,7 @@
 
 > Task ID: ui-button
 >
-> 狀態：verification pending（第一輪 Button 2.0.0，2026-10-18 起；2026-10-19 依流程審查修正紀錄）。依使用者指示「在 Yu5h1Lib.UI 引用 UX 的 Button」，流程見 [referenced-module-acceptance](../../../../../../.agents/skills/referenced-module-acceptance/SKILL.md)。實作方式採「UGUI 原生 `UnityEngine.UI.Button`／`HorizontalLayoutGroup`／`LayoutElement` 搭配既有 [`ButtonAddon`](../../Runtime/Component/Addon/ButtonAddon.cs) 補足 UGUI 無樣式表之規則缺口」（原生優先原則）。自動檢查涵蓋數值與規則邏輯（BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT），外觀（solid/ghost 與狀態差異）交由使用者直接確認。
+> 狀態：verified（2026-10-19，第一輪：Button 2.0.0）。自動檢查通過，使用者同日與 Web demo 並排確認外觀。依使用者指示「在 Yu5h1Lib.UI 引用 UX 的 Button」，流程見 [referenced-module-acceptance](../../../../../../.agents/skills/referenced-module-acceptance/SKILL.md)。實作方式採「UGUI 原生 `UnityEngine.UI.Button`／`HorizontalLayoutGroup`／`LayoutElement` 搭配既有 [`ButtonAddon`](../../Runtime/Component/Addon/ButtonAddon.cs) 補足 UGUI 無樣式表之規則缺口」（原生優先原則）。自動檢查涵蓋數值與規則邏輯（BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT），外觀（solid/ghost 與狀態差異）交由使用者直接確認。
 
 ```text
 UnityExtension
@@ -80,13 +80,13 @@ UnityExtension
 
 | 規範版本 | UX commit | UnityExtension commit | checklist commit | 結論 |
 |---|---|---|---|---|
-| Button 2.0.0 | `c7c5438` | `b42c369`（原引用 `2bda6ab` 已被 amend，只差本格，不在任何分支） | `b42c369` | BT01、BT03 自動檢查通過（`Yu5h1Lib.UI.Editor.Tests` 7/7），統一驗收入口場景已載入，待使用者外觀確認 |
+| Button 2.0.0 | `c7c5438` | `b42c369`（原引用 `2bda6ab` 已被 amend，只差本格，不在任何分支） | `b42c369` | 本輪範圍內相容：BT01、BT03 自動檢查通過（`Yu5h1Lib.UI.Editor.Tests` 7/7），使用者 2026-10-19 依第 83 題與 Web demo 並排確認外觀（BT02，工作目錄為 `5e4d75b`：demo prefab 於 Editor 調整後存檔，Runtime 未變）；缺口見〈目標對照與本輪未引用的部分〉 |
 
 ## 結論
 
 ### 第一輪（Button 2.0.0，原生 UGUI Button + ButtonAddon，UnityExtension `b42c369`）
 
-狀態：verification pending。
+狀態：verified（2026-10-19）。使用者確認：在 `UxUiAcceptanceDemo.unity` 與 Web OptionPicker demo 的「TaskProgress 外觀」並排，比例、排列、顯示組合與狀態差異一致；顏色未比（VisualFoundation 未引用）；確認時的工作目錄是 `5e4d75b`（demo prefab 調整），Runtime 與 `b42c369` 相同。在本輪範圍內（BTN-DISPLAY 除無障礙名稱、BTN-SIZE、BTN-LAYOUT，BTN-APPEARANCE 的 solid／ghost 結構），`ButtonAddon` 搭配原生 UGUI Button 符合 Button 2.0.0。
 
 - **釘選與自動檢查**：`Yu5h1Lib.UI.Editor.Tests` 7/7 全數通過（`ButtonDesignTests` 3/3 驗證 SHA-256 與設計數值；`UxUiButtonTests` 4/4 驗證 BT01 顯示組合與非空後備、BT03 各尺寸圖示 `size × 0.75` 與 `8px` 間距及垂直置中、BT04 套件自訂的 Prefab 交付檢查、以及 `UxUiAcceptanceHost` 預設目標解析與第 2 模組切換／未知 ID `[Blocked]` 標示）。BTN-DISPLAY 的「無障礙名稱不變」（INPUT-NAME）blocked，所以 BTN-DISPLAY 是 partial，不是整條通過。
 - **Prefab 交付**：`Packages/UI/Runtime/Prefabs/Button.prefab` 與 `Button-Ghost.prefab` 可直接實例化並保留 Inspector 調整；正式 Runtime 乾淨無測試協調代碼。這是本輪的交付方式，DX 1.0.0 的驗證另開輪次（UX 第 81 題）。

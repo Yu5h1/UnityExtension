@@ -38,14 +38,14 @@ Current round: `../../../UX/Documentation/ModuleSpec/Controls/Button.md#行為`.
       - Action: 執行 `UxUiButtonTests` 的 `BT04_DxPrefabDelivery_InstantiatesWithMinimalTokens_AndPreservesInspectorAdjustability` 案例。
       - Expect: `Button.prefab` 與 `Button-Ghost.prefab` 存在且可載入；單行實例化即可獲得完整原生階層（`ButtonAddon`、`Button`、`HorizontalLayoutGroup`、`Icon`、`Label`）；Inspector 欄位調整（`label`、`icon`、`size`、`appearance`）立即生效且未被運行時代碼強行覆蓋。（通過）
 
-- [ ] **5. 共享驗收入口與外觀確認**
+- [x] **5. 共享驗收入口與外觀確認**
   Depends on: 4.
   Outcome: `Yu5h1Lib.UI` 具備共享驗收入口 `Samples~/UxAcceptance`（匯入於 `Assets/Samples/Yu5h1Lib.UI/1.0.0/UxAcceptance`），預設目標指向 `"button"`，正式 Runtime DLL 不受測試程式碼污染，並由使用者確認實心、無底與各狀態外觀。
   Checks:
     - [x] **共享入口註冊與切換驗證**
       - Action: 執行 `UxUiButtonTests` 的 `AcceptanceHost_ResolvesDefaultButtonTarget_SupportsSecondModuleAndSurfacesBlockedForUnknownId` 案例：驗證 `UxUiAcceptanceTarget` 解析 `"button"`、不修改協調器即可註冊並切換第二個模組案例、未知 ID 顯示為 `[Blocked]`。
       - Expect: 預設目標為 `"button"`，切換與重置會卸載舊內容且不殘留物件，未知 ID 正確標示 `[Blocked]`。（通過）
-    - [ ] **與 Web demo 並排比對（BT02）** `[manual]`
+    - [x] **與 Web demo 並排比對（BT02）** `[manual]`
       - Action: 在 `Yu5h1LibTest` 開啟已載入的範例場景 `Assets/Samples/Yu5h1Lib.UI/1.0.0/UxAcceptance/UxUiAcceptanceDemo.unity` 進入 Play Mode；同時開啟 Web OptionPicker demo（127.0.0.1:8015）的「TaskProgress 外觀」快速設定，兩邊用同一個 size（32 與另一個值）並排。
       - Expect: 比例、圖示與名稱的排列、四種顯示組合、只顯示圖示的正方形，以及滑過、選中、焦點有無差異，兩邊一致；顏色不比（Yu5h1Lib.UI 尚未引用 VisualFoundation）。
       - Reason: 外觀由使用者判（UX 第 65 題），對照基準依第 83 題。

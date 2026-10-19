@@ -2,7 +2,7 @@
 
 > Task ID: uitk-button
 >
-> 狀態：verification pending（第二輪 Button 2.0.0，2026-10-17 起；2026-10-19 依流程審查修正紀錄）。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 Button」，流程見 referenced-module-acceptance。實作方式採「原生 Button + USS」（決策 64-66，uitk-button-native），移除自訂封裝元件 UxButton 與 ButtonDesign 常數。自動檢查涵蓋數值與規則邏輯（BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT），外觀（solid/ghost 與狀態差異）交由使用者直接確認。
+> 狀態：verified（2026-10-19，第二輪：Button 2.0.0）。自動檢查在乾淨 worktree 通過，使用者同日與 Web demo 並排確認外觀。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 Button」，流程見 referenced-module-acceptance。實作方式採「原生 Button + USS」（決策 64-66，uitk-button-native），移除自訂封裝元件 UxButton 與 ButtonDesign 常數。自動檢查涵蓋數值與規則邏輯（BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT），外觀（solid/ghost 與狀態差異）交由使用者直接確認。
 
 ```text
 UnityExtension
@@ -67,13 +67,13 @@ UnityExtension
 | 規範版本 | UX commit | UnityExtension commit | checklist commit | 結論 |
 |---|---|---|---|---|
 | Button 1.1.0 | `d9a9790` | `9b53f9b`（範例 `9b2a2f6`） | `e70ad14` | 本輪範圍內相容：自動檢查全部通過，使用者確認外觀；缺口見第一輪紀錄 |
-| Button 2.0.0 | `8c1f764` | `fb13d38`（原引用 `5db20f7` 已被 amend，只差本格，不在任何分支） | 本紀錄所在提交 | 自動檢查全部通過：釘選核對、乾淨 worktree EditMode 215/215、PlayMode `NativeButtonTests` 11/11（BT01、BT03）；待使用者外觀確認 |
+| Button 2.0.0 | `8c1f764` | `fb13d38`（原引用 `5db20f7` 已被 amend，只差本格，不在任何分支） | 本紀錄所在提交 | 本輪範圍內相容：釘選核對、乾淨 worktree EditMode 215/215、PlayMode `NativeButtonTests` 11/11（BT01、BT03）通過，使用者 2026-10-19 依第 83 題與 Web demo 並排確認外觀（BT02）；缺口見〈本輪未引用的部分〉 |
 
 ## 結論
 
 ### 第二輪（Button 2.0.0，原生 Button + USS，UnityExtension `fb13d38`）
 
-狀態：verification pending。
+狀態：verified（2026-10-19）。使用者確認：在 Yu5h1LibTest 的 `Samples~/UxAcceptance`（`button`）與 Web OptionPicker demo 的「TaskProgress 外觀」並排，比例、排列、顯示組合與狀態差異一致；顏色未比（VisualFoundation 未引用）。在本輪範圍內（BTN-DISPLAY 除無障礙名稱、BTN-SIZE、BTN-LAYOUT，BTN-APPEARANCE 的 solid／ghost 結構），原生 Button + USS 於 `fb13d38` 符合 Button 2.0.0。
 
 - **釘選與編譯**：快照 SHA-256 與 UX commit `8c1f764` 完全一致，乾淨 worktree 下 `Yu5h1LibTest` 通過 215 項 EditMode 測試無編譯錯誤。
 - **架構轉換**：移除自訂 `UxButton` 與 `ButtonDesign` 常數，改為原生 `UnityEngine.UIElements.Button` 與樣式表 `Yu5h1Button.uss`。

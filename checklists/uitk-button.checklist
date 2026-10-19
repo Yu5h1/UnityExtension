@@ -30,11 +30,11 @@ Current round: `../../../UX/Documentation/ModuleSpec/Controls/Button.md#行為`.
       - Action: PlayMode 測試 NativeButtonTests 的 BT03 案例：只顯示圖示與有名稱時在 24/32/40 各 size 下的圖示大小與間距。
       - Expect: 圖示邊長均為 size × 0.75；圖示在名稱左側且水平間距 8px；兩者垂直中心一致。
 
-- [ ] **4. 外觀確認（BT02）**
+- [x] **4. 外觀確認（BT02）**
   Depends on: 3.
   Outcome: 使用者確認原生 Button + USS 的外觀與已通過 Button 規範的 Web 實作一致。
   Checks:
-    - [ ] **與 Web demo 並排比對** `[manual]`
+    - [x] **與 Web demo 並排比對** `[manual]`
       - Action: 在 Yu5h1LibTest 開啟 Samples~/UxAcceptance（CurrentTarget.json 的 targetId 設為 button）進入 Play Mode；同時開啟 Web OptionPicker demo（127.0.0.1:8015）的「TaskProgress 外觀」快速設定，兩邊用同一個 size（32 與另一個值）並排。
       - Expect: 比例、圖示與名稱的排列、四種顯示組合、只顯示圖示的正方形，以及滑過、選中、焦點有無差異，兩邊一致；顏色不比（UIToolkit 尚未引用 VisualFoundation）。
       - Reason: 外觀由使用者判（UX 第 65 題），對照基準依第 83 題。
