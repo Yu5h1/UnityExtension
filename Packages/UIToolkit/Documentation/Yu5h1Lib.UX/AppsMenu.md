@@ -85,7 +85,7 @@ Unity 端的選擇（模組位置、參數匯入、案例來源、鍵盤、入�
 前置完成後的順序：
 
 1. 依上表決定改既有範例或另建模組；UIToolkit 的畫面與控制接上 Core 模型與物理互動入口。
-2. 從 UX 匯入設計資料與案例並核對雜湊，記錄採用的 UX commit（[web-replication](../../../../.agents/skills/web-replication/SKILL.md)）。
+2. 從 UX 匯入設計資料與案例並核對雜湊，記錄採用的 UX commit（[UnityExtension agent knowledge〈Adopting a UX module in a package〉](../../../../.agents/introduction.md#adopting-a-ux-module-in-a-package)）。
 3. 逐項執行上表的 Unity 端檢查（輸入、畫面、生命週期、平台），結果記在本紀錄，供 UX 的 [UX-UNITYEXTENSION-1](../../../../../../UX/Documentation/Requirements.UnityExtension.md) 與 Web 的 [WEB-UNITYEXTENSION-2](../../../../../../Web/Documentation/Requirements.UnityExtension.md) 查核；兩者的狀態由提出方更新。
 
 UGUI 版等有產品需要再做（決策 `ugui-appsmenu-now`），屆時另建 `Packages/UI/Documentation/Yu5h1Lib.UX/AppsMenu.md`。

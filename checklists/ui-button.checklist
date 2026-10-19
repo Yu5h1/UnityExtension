@@ -2,7 +2,7 @@
 
 Current round: `../../../UX/Documentation/ModuleSpec/Controls/Button.md#行為`.
 
-本輪對應 UX Button 2.0.0（UX `c7c5438`），在 `Yu5h1Lib.UI`（UGUI）引用。實作方式採原生 `UnityEngine.UI.Button`、`HorizontalLayoutGroup`、`LayoutElement` 搭配 `ButtonAddon` 補足 UGUI 無樣式表之規則缺口。自動檢查涵蓋數值與規則邏輯（BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT），外觀（solid/ghost 與狀態差異）交由使用者直接確認。一個檔案只放一輪。
+本輪對應 UX Button 2.0.0（UX `c7c5438`），在 `Yu5h1Lib.UI`（UGUI）引用。實作方式採原生 `UnityEngine.UI.Button`、`HorizontalLayoutGroup`、`LayoutElement` 搭配 `ButtonAddon` 補足 UGUI 無樣式表之規則缺口。自動檢查涵蓋數值與規則邏輯（BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT），外觀（solid/ghost 與狀態差異）交由使用者直接確認。第 4 項 BT04 是依 DX 草稿自訂的套件檢查，不在 UX Button 規格內，不計入行為相容結論（UX 第 81 題）。一個檔案只放一輪。
 
 - [x] **1. 釘選 Button 2.0.0**
   Outcome: 套件內有 Button 規範與設計資料的快照，雜湊與 UX manifest 一致，且編譯與測試通過。
@@ -45,9 +45,7 @@ Current round: `../../../UX/Documentation/ModuleSpec/Controls/Button.md#行為`.
     - [x] **共享入口註冊與切換驗證**
       - Action: 執行 `UxUiButtonTests` 的 `AcceptanceHost_ResolvesDefaultButtonTarget_SupportsSecondModuleAndSurfacesBlockedForUnknownId` 案例：驗證 `UxUiAcceptanceTarget` 解析 `"button"`、不修改協調器即可註冊並切換第二個模組案例、未知 ID 顯示為 `[Blocked]`。
       - Expect: 預設目標為 `"button"`，切換與重置會卸載舊內容且不殘留物件，未知 ID 正確標示 `[Blocked]`。（通過）
-    - [ ] **範例外觀** `[manual]`
-      - Action: 在 `Yu5h1LibTest` 開啟已載入的範例場景 `Assets/Samples/Yu5h1Lib.UI/1.0.0/UxAcceptance/UxUiAcceptanceDemo.unity` 進入 Play Mode，檢視 UGUI Button 的實心（Solid）、無底（Ghost）、顯示組合、各尺寸（40/32/24）與滑過／選中／停用狀態。
-      - Expect: 外觀、圖示比例與文字排列正常且符合預期。
-      - Reason: 外觀、色彩與滑過狀態需由使用者親眼確認（決策 65）。
-
-
+    - [ ] **與 Web demo 並排比對（BT02）** `[manual]`
+      - Action: 在 `Yu5h1LibTest` 開啟已載入的範例場景 `Assets/Samples/Yu5h1Lib.UI/1.0.0/UxAcceptance/UxUiAcceptanceDemo.unity` 進入 Play Mode；同時開啟 Web OptionPicker demo（127.0.0.1:8015）的「TaskProgress 外觀」快速設定，兩邊用同一個 size（32 與另一個值）並排。
+      - Expect: 比例、圖示與名稱的排列、四種顯示組合、只顯示圖示的正方形，以及滑過、選中、焦點有無差異，兩邊一致；顏色不比（Yu5h1Lib.UI 尚未引用 VisualFoundation）。
+      - Reason: 外觀由使用者判（UX 第 65 題），對照基準依第 83 題。

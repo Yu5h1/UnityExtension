@@ -34,6 +34,15 @@ Reasoning for the first two is in [data-architecture.md](skills/data-architectur
 - Application validation of reusable capabilities: BonghuoVR, entry `W:/UnityProject/BonghuoVR/handoff.md` (TaskProgress scope `bonghuo-vr`).
 - Reusable Unity techniques: [skills/](skills/), loading only the file that matches the task.
 
+## Adopting a UX module in a package
+
+The workflow (inspect, implement the gaps, accept) is the shared [referenced-module-acceptance](../../../.agents/skills/referenced-module-acceptance/SKILL.md) skill — the only adoption skill (UX decision 82; the former `web-replication` skill is deleted). This section keeps only what is Unity-specific.
+
+- **Sources.** Behavior comes from the module's UX spec, `UX/Documentation/ModuleSpec/[<layer>/]<Module>.md`, and nothing else: never derive behavior from old Unity samples or from Web source when the spec is silent — raise the gap in `Documentation/Requirements.UX.md` and wait. Theme (`Web/dist/theme/theme.css`) and config declarations stay Web deliveries with their manifests until UX takes them over (gaps go to `Requirements.Web.md`). Web tests passing never counts as Unity verification. Unity-side choices live in `decisions/cross-platform-ui-parity.decisions`.
+- **Pinning.** Snapshot the spec, design data and cases byte-identically into `Packages/<package>/Tests/Editor/UX~/<Module>/` (`.gitattributes` `-text`), and let an EditMode `<Module>DesignTests` check the SHA-256 against the UX manifest and the design values. Refuse an unknown major version or a dirty delivery unless the user accepts it. The Yu5h1Lib.UIToolkit Editor importer is for Theme and config only (USS variables, WebTheme, imported-version stamp; re-import of the same input produces no diff).
+- **Implementing.** Native first (UX decisions 64, 80): UI Toolkit or UGUI components plus USS/`Selectable` colours; write code only for rules they cannot express. Physics goes through `Packages/Motion`; never re-implement a Motion solver in a UI module. Gestures follow the single-owner rule in [指標互動與世界橋接](../Documentation/指標互動與世界橋接.md#一條規則管所有手勢). UI Toolkit code that needs its own logic lives under `Packages/UIToolkit/Runtime/WebUI/<Module>/`.
+- **Accepting.** Record: `Packages/<package>/Documentation/Yu5h1Lib.UX/<Module>.md`; round: `checklists/<task-id>.checklist`. Run automated checks on a clean worktree by repointing `Yu5h1LibTest`'s `Packages/manifest.json` at it (decision `uitk-clean-checkout-host`), then restore it. PlayMode layout tests only resolve when the panel is drawn (Game view). The shared acceptance entry is each package's `Samples~/UxAcceptance` (junctioned into `Yu5h1LibTest/Assets/Samples/…`), with `CurrentTarget.json` naming the module case the user opens; visual acceptance compares side by side with the Web demo per UX decision 83. UI Toolkit and UGUI are separate implementations with separate records.
+
 ## Structure
 
 - [skills/](skills/) — reusable techniques, separated by development scope.
@@ -44,7 +53,7 @@ Reasoning for the first two is in [data-architecture.md](skills/data-architectur
 Read only what matches the current task:
 
 - [Unity UI extraction](skills/unity-ui-extraction/SKILL.md) — extract reusable Unity UI from consumer projects into shared packages, preserve assets/lifecycle, verify a second use, and migrate callers. Existing-control adoption routes to the relevant domain skill; Web extraction remains owned by Web.
-- [Web replication](skills/web-replication/SKILL.md) — implement a Yu5h1Lib.UX module natively in Yu5h1Lib.UIToolkit: pin and import the UX spec data (theme and config still from Web's delivery), implement to the UX spec, run the shared cases in Unity, report per spec item.
+- Adopting a Yu5h1Lib.UX module in a package has no skill of its own here: the shared referenced-module-acceptance skill plus [the section above](#adopting-a-ux-module-in-a-package).
 
 - [data-architecture.md](skills/data-architecture.md) — ScriptableObject architecture, Parameter/Member/Invocation objects, ValuePort, Theme, and presets. Load its linked architecture plan only for design or Timeline integration changes.
 - [editor-tooling.md](skills/editor-tooling.md) — Inspector and Editor extensions, SubAssets, Undo, shortcuts, and internal Unity APIs.

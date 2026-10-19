@@ -40,10 +40,10 @@ Yu5h1Lib
 
 ## 引用模式
 
-Unity 引用的是規範與版本化資料，不是任何平台的程式：模組的體驗規範、設計資料與案例來自 UX；Theme 色票與設定格式目前仍是 Web 的交付（決策 `reference-model`）。匯入與實作流程由 [web-replication](../.agents/skills/web-replication/SKILL.md) 擁有：
+Unity 引用的是規範與版本化資料，不是任何平台的程式：模組的體驗規範、設計資料與案例來自 UX；Theme 色票與設定格式目前仍是 Web 的交付（決策 `reference-model`）。流程由共用 skill [referenced-module-acceptance](../../../.agents/skills/referenced-module-acceptance/SKILL.md) 擁有（唯一的引用 skill，UX 第 82 題）；Unity 端的機制見 [.agents/introduction.md〈Adopting a UX module in a package〉](../.agents/introduction.md#adopting-a-ux-module-in-a-package)：
 
-1. **匯入**：鎖定 UX commit（Theme、設定則鎖定 Web 交付），核對版本與雜湊，產生 USS 變數（及之後的 WebTheme）、複製案例，記錄已匯入版本；過期可偵測，失敗不覆寫既有產物。
-2. **實作**：依 UX 規範手寫 UXML 與 C#；模型命令與規範同形，讓案例可以直接執行。
+1. **釘選**：模組規範、設計資料與案例以套件內快照（`Packages/<套件>/Tests/Editor/UX~/<模組>/`，位元組相同、`-text`）釘住 UX commit，由 `<模組>DesignTests` 核對雜湊與數值；Theme 與設定仍用 Editor 匯入器鎖定 Web 交付（產生 USS 變數與 WebTheme，過期可偵測，失敗不覆寫既有產物）。
+2. **實作**：原生優先（UX 第 64、80 題）：先用 UI Toolkit／UGUI 原生元件與樣式表，只為原生表達不了的規則寫程式；需要自寫模型時，模型命令與規範同形，讓案例可以直接執行。
 3. **驗證**：依共用技能 [referenced-module-acceptance](../../../.agents/skills/referenced-module-acceptance/SKILL.md)，在實作套件建立驗收紀錄 `Packages/<套件>/Documentation/Yu5h1Lib.UX/<模組>.md`，逐項對應規範的行為 ID，在 Unity 執行案例與平台檢查；Web 等其他實作端的結果不能代替 Unity 的驗證。
 4. **回報**：驗收紀錄記下採用的規範版本、逐項結果與平台差異，供提出方（UX-UNITYEXTENSION-1、WEB-UNITYEXTENSION-2）查核；需求狀態由提出方更新。
 

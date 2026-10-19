@@ -2,7 +2,7 @@
 
 Current round: `../../../UX/Documentation/ModuleSpec/Controls/Button.md#行為`.
 
-本輪對應 UX Button 2.0.0（UX 8c1f764），在 Yu5h1Lib.UIToolkit 重新引用。實作方式採原生 Button + USS（決策 64-66，uitk-button-native），移除自訂封裝元件 UxButton 與 ButtonDesign 常數。自動檢查涵蓋數值與規則邏輯（BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT），外觀（solid/ghost 與狀態差異）交由使用者直接確認。一個檔案只放一輪。
+本輪對應 UX Button 2.0.0（UX 8c1f764），在 Yu5h1Lib.UIToolkit 重新引用。實作方式採原生 Button + USS（決策 64-66，uitk-button-native），移除自訂封裝元件 UxButton 與 ButtonDesign 常數。自動檢查涵蓋數值與規則邏輯（BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT），外觀（solid/ghost 與狀態差異）交由使用者直接確認。第 2、3 項的 PlayMode 檢查於 2026-10-19 由未參與實作的 agent 在乾淨 worktree（fb13d38）執行並記錄。一個檔案只放一輪。
 
 - [x] **1. 釘選 Button 2.0.0**
   Outcome: 套件內有 Button 規範與設計資料的快照，雜湊與 UX manifest 一致。
@@ -14,31 +14,32 @@ Current round: `../../../UX/Documentation/ModuleSpec/Controls/Button.md#行為`.
       - Action: 從本分支開新 worktree，把 Yu5h1LibTest 的 com.yu5h1.uitoolkit 指向該 worktree，重新整理 Unity。
       - Expect: Console 沒有編譯錯誤。乾淨 worktree 下執行 EditMode 測試 215 項全數通過。
 
-- [ ] **2. 顯示（BTN-DISPLAY）**
+- [x] **2. 顯示（BTN-DISPLAY）**
   Depends on: 1.
   Outcome: 原生 Button 在 USS 與設定下依 icon/label 顯示，內容不變空，只顯示圖示時為 size 正方形，有名稱時高度為 size。
   Checks:
-    - [ ] **四種組合與後備**
+    - [x] **四種組合與後備**
       - Action: PlayMode 測試 NativeButtonTests 的 BT01 案例：有圖示時 icon/label 四種組合，以及沒有圖示時 label 關閉。
       - Expect: icon 開、label 開顯示兩者；icon 開、label 關只顯示圖示，按鈕量得 32×32 正方形；icon 關、label 開只顯示名稱；兩者都關或沒有圖示時備援顯示名稱；有名稱時按鈕高度 32。
 
-- [ ] **3. 大小與排列（BTN-SIZE、BTN-LAYOUT）**
+- [x] **3. 大小與排列（BTN-SIZE、BTN-LAYOUT）**
   Depends on: 2.
   Outcome: 圖示一律 fit 按鈕（size × 0.75），圖示在名稱前、間距 8px、兩者垂直置中。
   Checks:
-    - [ ] **大小縮放與排列**
+    - [x] **大小縮放與排列**
       - Action: PlayMode 測試 NativeButtonTests 的 BT03 案例：只顯示圖示與有名稱時在 24/32/40 各 size 下的圖示大小與間距。
       - Expect: 圖示邊長均為 size × 0.75；圖示在名稱左側且水平間距 8px；兩者垂直中心一致。
 
-- [ ] **4. 外觀確認 `[manual]`**
+- [ ] **4. 外觀確認（BT02）**
   Depends on: 3.
-  Outcome: 使用者在範例中確認外觀符合預期。
+  Outcome: 使用者確認原生 Button + USS 的外觀與已通過 Button 規範的 Web 實作一致。
   Checks:
-    - [ ] **範例外觀**
-      - Action: 使用者在 Yu5h1LibTest 專案開啟範例場景 Samples~/UxButton/UxButtonDemo.unity（原生 Button + USS），檢視實心、無底、顯示組合、各尺寸與選中狀態。
-      - Expect: 外觀正常且符合預期。
+    - [ ] **與 Web demo 並排比對** `[manual]`
+      - Action: 在 Yu5h1LibTest 開啟 Samples~/UxAcceptance（CurrentTarget.json 的 targetId 設為 button）進入 Play Mode；同時開啟 Web OptionPicker demo（127.0.0.1:8015）的「TaskProgress 外觀」快速設定，兩邊用同一個 size（32 與另一個值）並排。
+      - Expect: 比例、圖示與名稱的排列、四種顯示組合、只顯示圖示的正方形，以及滑過、選中、焦點有無差異，兩邊一致；顏色不比（UIToolkit 尚未引用 VisualFoundation）。
+      - Reason: 外觀由使用者判（UX 第 65 題），對照基準依第 83 題。
 
-- [ ] **5. 回歸**
+- [x] **5. 回歸**
   Depends on: 1.
   Outcome: UIToolkit 既有功能不受影響。
   Checks:
