@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-19T13:19:02.951771+00:00",
+  "updated_at": "2026-10-19T15:09:32.606060+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -558,8 +558,13 @@
       "id": "cross-platform-ui-parity",
       "title": "跨平台 UI 一致性（Unity 引用 Web 交付並復刻）",
       "status": "in_progress",
-      "summary": "進行中：Unity 以 Yu5h1Lib.Web 的版本化交付引用 Web，在 Yu5h1Lib.UIToolkit 復刻並依 referenced-module-acceptance 在實作套件記錄驗收；匯入與復刻見 skill web-replication。前置已交付：Web WEB-5～7、Motion MOTION-1～2，Unity 都未驗收。AppsMenu 的實作與驗收由卡片 appsmenu-library-adoption 追蹤；本卡保留設定、Theme 與 WebGL 路線。Canonical entry：Documentation/跨平台UI一致性.md（Task ID: cross-platform-ui-parity）。",
+      "summary": "進行中：Yu5h1Lib.UX 是體驗規範的唯一來源，Unity 以套件內快照釘選版本與雜湊，依共用 skill referenced-module-acceptance 在實作套件記錄驗收（Theme 與設定仍是 Web 交付）。Button 2.0.0 於 2026-10-19 在 Yu5h1Lib.UI 與 Yu5h1Lib.UIToolkit 驗收通過（自動檢查加使用者與 Web demo 並排確認）；VisualFoundation、無障礙名稱與 Icon 的缺口仍 blocked。AppsMenu 暫停（卡片 appsmenu-library-adoption）；Theme 與 WebGL 待排。Canonical entry：Documentation/跨平台UI一致性.md（Task ID cross-platform-ui-parity）。",
       "completed_items": [
+        {
+          "status": "done",
+          "title": "Button 2.0.0 在 Yu5h1Lib.UI（b42c369）與 Yu5h1Lib.UIToolkit（fb13d38）引用並驗收通過：BT01／BT03 自動檢查在乾淨 worktree 通過，使用者 2026-10-19 與 Web demo 並排確認外觀；紀錄 verified，UX-UNITYEXTENSION-6 Implemented",
+          "id": "button-adopted-both-packages"
+        },
         {
           "id": "item-cross-platform-ui-parity-todo-5",
           "title": "Web（WEB-5～7，d916b6c）與 Motion（MOTION-1～2，bb0dcca／8977d46）已交付；Unity 尚未驗收（2026-10-07）",

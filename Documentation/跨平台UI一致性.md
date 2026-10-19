@@ -57,7 +57,7 @@ Unity 引用的是規範與版本化資料，不是任何平台的程式：模�
 
 | 模組 | 規範來源 | Unity 狀態與下一步 |
 |---|---|---|
-| Button | [UX Controls/Button.md](../../../UX/Documentation/ModuleSpec/Controls/Button.md)（BTN-*） | Unity 第一個引用的模組（使用者 2026-10-17）：UGUI（[Yu5h1Lib.UI 驗收紀錄](../Packages/UI/Documentation/Yu5h1Lib.UX/Button.md)）與 UI Toolkit（[Yu5h1Lib.UIToolkit 驗收紀錄](../Packages/UIToolkit/Documentation/Yu5h1Lib.UX/Button.md)）各自引用、各有驗收紀錄；進度見 [handoff](../handoff.md) |
+| Button | [UX Controls/Button.md](../../../UX/Documentation/ModuleSpec/Controls/Button.md)（BTN-*） | Unity 第一個引用的模組（使用者 2026-10-17）：UGUI（[Yu5h1Lib.UI 驗收紀錄](../Packages/UI/Documentation/Yu5h1Lib.UX/Button.md)）與 UI Toolkit（[Yu5h1Lib.UIToolkit 驗收紀錄](../Packages/UIToolkit/Documentation/Yu5h1Lib.UX/Button.md)）各自引用、各有驗收紀錄。Button 2.0.0 於 2026-10-19 在兩套件驗收通過（自動檢查加使用者與 Web demo 並排確認；UX Button 目標 2 達成，UX-UNITYEXTENSION-6 Implemented）；VisualFoundation 色票、無障礙名稱與 Icon 來源在兩份紀錄列為 blocked，等各自引用。下一步由 UX 點名（Toggle 為 UX 的下一個驗證目標） |
 | AppsMenu | [UX ModuleSpec/AppsMenu.md](../../../UX/Documentation/ModuleSpec/AppsMenu.md)（APPS-*） | 暫停（UX AppsMenu 目標 1：Web 已通過，Unity 待恢復）。實作對照、採用版本與驗收結果見 [AppsMenu 驗收紀錄](../Packages/UIToolkit/Documentation/Yu5h1Lib.UX/AppsMenu.md) |
 | 設定（config） | 各模組以 `.json` 宣告負責的設定項目，同一份 json 是 Web 設定模組的規格，設定面板依 json 加入分頁（決策 `demo-settings`）。Web 宣告格式 1.0.0（`d916b6c`） | WEB-7 與 MOTION-2 已交付，Unity 未驗收。Unity 端與 Preferences 的對應待討論 |
 | Theme | 色票契約 1.0.0（`theme.css`）；Theme 存檔格式 v1（WEB-6，`d916b6c`） | WEB-6 已交付，Unity 未驗收；依決策 `phase-order` 排在設定之後 |
