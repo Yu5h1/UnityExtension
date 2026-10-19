@@ -1,0 +1,28 @@
+{
+    "name": "Yu5h1Lib.UI.Editor.Tests",
+    "rootNamespace": "Yu5h1Lib.UI.Tests",
+    "references": [
+        "Yu5h1Lib.UI",
+        "Yu5h1Lib.Common",
+        "UnityEngine.UI",
+        "Yu5h1Lib.UI.Samples.UxAcceptance",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "Yu5h1Lib.Runtime.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -15,5 +15,12 @@
     "name": "Yu5h1",
     "url": "https://github.com/Yu5h1",
     "email": "jenyu5h10415@gmail.com"
-  }
+  },
+  "samples": [
+    {
+      "displayName": "UxAcceptance",
+      "description": "Unified acceptance demo entry for Yu5h1Lib.UX modules on Yu5h1Lib.UI (UGUI). Supports modular demo case registration, dynamic switching, and durable acceptance target resolution.",
+      "path": "Samples~/UxAcceptance"
+    }
+  ]
 }

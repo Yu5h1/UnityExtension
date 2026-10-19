@@ -1,0 +1,53 @@
+# UI Button Checklist
+
+Current round: `../../../UX/Documentation/ModuleSpec/Controls/Button.md#行為`.
+
+本輪對應 UX Button 2.0.0（UX `c7c5438`），在 `Yu5h1Lib.UI`（UGUI）引用。實作方式採原生 `UnityEngine.UI.Button`、`HorizontalLayoutGroup`、`LayoutElement` 搭配 `ButtonAddon` 補足 UGUI 無樣式表之規則缺口。自動檢查涵蓋數值與規則邏輯（BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT），外觀（solid/ghost 與狀態差異）交由使用者直接確認。一個檔案只放一輪。
+
+- [x] **1. 釘選 Button 2.0.0**
+  Outcome: 套件內有 Button 規範與設計資料的快照，雜湊與 UX manifest 一致，且編譯與測試通過。
+  Checks:
+    - [x] **快照與雜湊**
+      - Action: 執行 EditMode 測試 `Yu5h1Lib.UI.Tests.ButtonDesignTests`。
+      - Expect: 快照的 SHA-256 等於 UX manifest 的值（`Button.md` `9662a105...`、`button-design.json` `e2568af2...`）；設計資料合約版本為 `3.0.0`；`size == 32`、`iconRatio == 0.75`、`iconLabelGap == 8`；快照路徑在 `.gitattributes` 有 `-text` 規則。（3/3 通過）
+    - [x] **編譯與測試**
+      - Action: 在 `Yu5h1LibTest` 將 `com.yu5h1.ui` 加入 `testables`、建立 `Assets/Samples/Yu5h1Lib.UI/1.0.0/UxAcceptance` Junction 並重新整理 Unity 與執行 `Yu5h1Lib.UI.Editor.Tests`。
+      - Expect: Console 沒有編譯錯誤或警告，`Yu5h1Lib.UI.Editor.Tests` 6/6 全數通過，`UxUiAcceptanceDemo.unity` 場景驗證 `missingScripts: 0`。
+
+- [x] **2. 顯示（BTN-DISPLAY）**
+  Depends on: 1.
+  Outcome: UGUI `Button` + `ButtonAddon` 依 `showIcon`／`showLabel` 顯示正確內容，內容不變空，只顯示圖示時為 `size × size` 正方形且圖示置中，有名稱時高度為 `size`。
+  Checks:
+    - [x] **四種組合與後備（BT01）**
+      - Action: 執行 `UxUiButtonTests` 的 `BT01_DisplayCombinationsAndFallback_WithAndWithoutSprite` 案例：有圖示時 `showIcon`／`showLabel` 四種組合，以及沒有圖示（`sprite == null`）時 `showLabel` 關閉。
+      - Expect: `showIcon` 開、`showLabel` 開顯示兩者；`showIcon` 開、`showLabel` 關只顯示圖示，排版後按鈕量得 `32×32` 正方形且圖示中心對齊按鈕中心；`showIcon` 關、`showLabel` 開只顯示名稱；兩者都關或沒有圖示時後備顯示名稱；有名稱時按鈕高度為 `32`。（通過）
+
+- [x] **3. 大小與排列（BTN-SIZE、BTN-LAYOUT）**
+  Depends on: 2.
+  Outcome: 圖示一律 fit 按鈕（`size × 0.75`），圖示在名稱前、水平間距 `8px`、兩者垂直置中。
+  Checks:
+    - [x] **大小縮放與排列（BT03）**
+      - Action: 執行 `UxUiButtonTests` 的 `BT03_SizesAndLayout_IconFitsButtonAndPrecedesLabelWith8pxGap` 案例：只顯示圖示與有名稱時在 `24`、`32`、`40` 各 `size` 下量測排版後的實際尺寸與座標。
+      - Expect: 只顯示圖示時按鈕為 `size × size`，有名稱時按鈕高度為 `size`；兩種情況下圖示寬高均為 `size × 0.75`（`18`、`24`、`30`）；圖示在名稱左側且水平間距為 `8px`；圖示與名稱垂直中心一致。（通過）
+
+- [x] **4. Agentic DX 實體 Prefab 交付與 Token 效率（BT04）**
+  Depends on: 3.
+  Outcome: 套件交付標準開箱即用的 `Packages/UI/Runtime/Prefabs/Button.prefab`（Solid）與 `Button-Ghost.prefab`（Ghost），下游 Agent 僅需 1 行代碼即可實例化合規按鈕，且完整保留 Inspector 原生自訂與微調能力。
+  Checks:
+    - [x] **實體資產與 Token 效率檢驗（BT04）**
+      - Action: 執行 `UxUiButtonTests` 的 `BT04_DxPrefabDelivery_InstantiatesWithMinimalTokens_AndPreservesInspectorAdjustability` 案例。
+      - Expect: `Button.prefab` 與 `Button-Ghost.prefab` 存在且可載入；單行實例化即可獲得完整原生階層（`ButtonAddon`、`Button`、`HorizontalLayoutGroup`、`Icon`、`Label`）；Inspector 欄位調整（`label`、`icon`、`size`、`appearance`）立即生效且未被運行時代碼強行覆蓋。（通過）
+
+- [ ] **5. 共享驗收入口與外觀確認**
+  Depends on: 4.
+  Outcome: `Yu5h1Lib.UI` 具備共享驗收入口 `Samples~/UxAcceptance`（匯入於 `Assets/Samples/Yu5h1Lib.UI/1.0.0/UxAcceptance`），預設目標指向 `"button"`，正式 Runtime DLL 不受測試程式碼污染，並由使用者確認實心、無底與各狀態外觀。
+  Checks:
+    - [x] **共享入口註冊與切換驗證**
+      - Action: 執行 `UxUiButtonTests` 的 `AcceptanceHost_ResolvesDefaultButtonTarget_SupportsSecondModuleAndSurfacesBlockedForUnknownId` 案例：驗證 `UxUiAcceptanceTarget` 解析 `"button"`、不修改協調器即可註冊並切換第二個模組案例、未知 ID 顯示為 `[Blocked]`。
+      - Expect: 預設目標為 `"button"`，切換與重置會卸載舊內容且不殘留物件，未知 ID 正確標示 `[Blocked]`。（通過）
+    - [ ] **範例外觀** `[manual]`
+      - Action: 在 `Yu5h1LibTest` 開啟已載入的範例場景 `Assets/Samples/Yu5h1Lib.UI/1.0.0/UxAcceptance/UxUiAcceptanceDemo.unity` 進入 Play Mode，檢視 UGUI Button 的實心（Solid）、無底（Ghost）、顯示組合、各尺寸（40/32/24）與滑過／選中／停用狀態。
+      - Expect: 外觀、圖示比例與文字排列正常且符合預期。
+      - Reason: 外觀、色彩與滑過狀態需由使用者親眼確認（決策 65）。
+
+
