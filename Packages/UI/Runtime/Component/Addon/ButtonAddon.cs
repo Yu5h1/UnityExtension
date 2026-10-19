@@ -339,8 +339,17 @@ namespace Yu5h1Lib.UI
             ui.colors = colors;
         }
 
+#if UNITY_EDITOR
+        public const string SolidPrefabPath = "Packages/com.yu5h1.ui/Runtime/Prefabs/Button.prefab";
+        public const string GhostPrefabPath = "Packages/com.yu5h1.ui/Runtime/Prefabs/Button-Ghost.prefab";
+        private const string FallbackSolidPath = "Packages/UI/Runtime/Prefabs/Button.prefab";
+        private const string FallbackGhostPath = "Packages/UI/Runtime/Prefabs/Button-Ghost.prefab";
+#endif
+
         /// <summary>
-        /// Creates a UGUI <see cref="Button"/> hierarchy wired with <see cref="ButtonAddon"/>.
+        /// Creates or instantiates a UGUI <see cref="Button"/> hierarchy wired with <see cref="ButtonAddon"/>.
+        /// In Editor mode, instantiates the delivered Prefab asset (<see cref="SolidPrefabPath"/> / <see cref="GhostPrefabPath"/>)
+        /// to guarantee true asset parity and minimal token cost.
         /// </summary>
         public static ButtonAddon Create(
             Transform parent,
@@ -352,6 +361,33 @@ namespace Yu5h1Lib.UI
             bool isSelected = false,
             float size = DefaultSize)
         {
+#if UNITY_EDITOR
+            string targetPath = appearance == ButtonAppearance.Ghost ? GhostPrefabPath : SolidPrefabPath;
+            var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(targetPath);
+            if (prefab == null)
+            {
+                string fallback = appearance == ButtonAppearance.Ghost ? FallbackGhostPath : FallbackSolidPath;
+                prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(fallback);
+            }
+            if (prefab != null)
+            {
+                var instance = Object.Instantiate(prefab, parent);
+                instance.name = appearance == ButtonAppearance.Ghost ? "Button-Ghost" : "Button";
+                var prefabAddon = instance.GetComponent<ButtonAddon>();
+                if (prefabAddon != null)
+                {
+                    prefabAddon.appearance = appearance;
+                    prefabAddon.icon = icon;
+                    prefabAddon.label = label;
+                    prefabAddon.showIcon = showIcon;
+                    prefabAddon.showLabel = showLabel;
+                    prefabAddon.isSelected = isSelected;
+                    prefabAddon.size = size;
+                    prefabAddon.Apply();
+                    return prefabAddon;
+                }
+            }
+#endif
             var go = new GameObject(
                 "Button",
                 typeof(RectTransform),

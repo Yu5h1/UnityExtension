@@ -16,6 +16,23 @@ namespace Yu5h1Lib.UI.Acceptance
         private Texture2D _iconTexture;
         private Sprite _iconSprite;
 
+#if UNITY_EDITOR
+        private const string SolidPrefabPath = "Packages/com.yu5h1.ui/Runtime/Prefabs/Button.prefab";
+        private const string GhostPrefabPath = "Packages/com.yu5h1.ui/Runtime/Prefabs/Button-Ghost.prefab";
+        private const string FallbackSolidPath = "Packages/UI/Runtime/Prefabs/Button.prefab";
+        private const string FallbackGhostPath = "Packages/UI/Runtime/Prefabs/Button-Ghost.prefab";
+
+        private static GameObject LoadPrefab(string path, string fallback)
+        {
+            var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (prefab == null)
+            {
+                prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(fallback);
+            }
+            return prefab;
+        }
+#endif
+
         public void Mount(RectTransform container)
         {
             Unmount();
@@ -54,6 +71,7 @@ namespace Yu5h1Lib.UI.Acceptance
             vLayout.childForceExpandWidth = true;
             vLayout.childForceExpandHeight = false;
 
+
             CreateText(
                 _rootPanel.transform,
                 "Title",
@@ -62,7 +80,26 @@ namespace Yu5h1Lib.UI.Acceptance
                 FontStyle.Bold,
                 new Color(0.12f, 0.14f, 0.18f, 1f));
 
-            var rowAppearance = CreateSection("1. 外觀 (Appearance: Solid / Ghost)", _rootPanel.transform);
+            var rowRaw = CreateSection("0. 交付實體 Prefab 資產原樣 (Raw Prefab Assets: Button.prefab & Button-Ghost.prefab)", _rootPanel.transform);
+#if UNITY_EDITOR
+            var solidAsset = LoadPrefab(SolidPrefabPath, FallbackSolidPath);
+            var ghostAsset = LoadPrefab(GhostPrefabPath, FallbackGhostPath);
+            if (solidAsset != null)
+            {
+                var rawSolid = Object.Instantiate(solidAsset, rowRaw);
+                rawSolid.name = "Raw_Button_Solid_Prefab";
+            }
+            if (ghostAsset != null)
+            {
+                var rawGhost = Object.Instantiate(ghostAsset, rowRaw);
+                rawGhost.name = "Raw_Button_Ghost_Prefab";
+            }
+#else
+            ButtonAddon.Create(rowRaw, label: "Button (Prefab)", appearance: ButtonAppearance.Solid);
+            ButtonAddon.Create(rowRaw, label: "Button-Ghost (Prefab)", appearance: ButtonAppearance.Ghost);
+#endif
+
+            var rowAppearance = CreateSection("1. 外觀變體 (Appearance: Solid / Ghost via Prefabs)", _rootPanel.transform);
             ButtonAddon.Create(rowAppearance, _iconSprite, "Solid", ButtonAppearance.Solid);
             ButtonAddon.Create(rowAppearance, _iconSprite, "Ghost", ButtonAppearance.Ghost);
 
