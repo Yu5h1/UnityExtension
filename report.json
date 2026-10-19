@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-14T11:54:09.5594175+08:00",
+  "updated_at": "2026-10-19T13:19:02.951771+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -644,6 +644,34 @@
           "title": "Motion 在 Unity 能跑：Windows Editor（6000.6）EditMode 2/2 通過，Throw／Scatter 數值相符、生命週期部分驗證（2026-10-07）；逐項見 Packages/UIToolkit/Documentation/Motion/。Player 與 Android 未執行",
           "priority": 2,
           "status": "done"
+        }
+      ]
+    },
+    {
+      "id": "ux-button-adoption",
+      "title": "Button 依 UX 規範的引用與驗收",
+      "status": "in_progress",
+      "summary": "Yu5h1Lib.UI（UGUI）與 Yu5h1Lib.UIToolkit 各自引用 UX Button 2.0.0，自動檢查已通過，待使用者於 demo 場景確認外觀（UX-UNITYEXTENSION-6）。驗收紀錄在各套件 Documentation/Yu5h1Lib.UX/Button.md。",
+      "pending_items": [
+        {
+          "id": "ui-button-acceptance",
+          "title": "驗收 Yu5h1Lib.UI（UGUI）Button 2.0.0",
+          "status": "in_progress",
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "ui-button"
+          }
+        },
+        {
+          "id": "uitk-button-acceptance",
+          "title": "驗收 Yu5h1Lib.UIToolkit Button 2.0.0",
+          "status": "in_progress",
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "uitk-button"
+          }
         }
       ]
     }
