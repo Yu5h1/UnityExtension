@@ -2,28 +2,28 @@
 
 Current round: `../../../UX/Documentation/ModuleSpec/VisualFoundation.md#目標-1預設色票與狀態外觀在-unity-ui-toolkit-成立進行中2026-10-21`.
 
-本檔放 `Samples~/UxAcceptance` 這一頁（VisualFoundation 頁）的人工檢查：狀態外觀（VP03）與焦點外框。一頁一份，light 與 dark 是同一份裡的兩個工作項目（VisualFoundation 1.3.1）。模組輪見 uitk-visualfoundation.checklist。Yu5h1LibTest 的 `Assets/Samples/Yu5h1Lib.UIToolkit/0.1.0/UxAcceptance` 是指向主線 `Samples~/UxAcceptance` 的 junction。實心按鈕的靜止底色與實心面板的外框，規格沒有寫它們的角色，不在本頁判斷：dark 頁上實心鈕靜止時是 Unity 預設的淺灰底配淺色字，看起來不協調，這是已知的缺口，不算失敗（`Documentation/Requirements.UX.md` UNITYEXTENSION-UX-1）。本檔由原本分開的 light、dark 兩份合併而來，使用者已記下的結果原樣保留。一個檔案只放一輪。
+本檔放 `Samples~/UxAcceptance` 這一頁（VisualFoundation 頁）的人工檢查：狀態外觀（VP03）與焦點外框。一頁一份，light 與 dark 是同一份裡的兩個工作項目（VisualFoundation 1.3.1 起）。本輪對應 VisualFoundation 1.4.0、Button 2.1.0、OptionPicker 3.1.0；實心按鈕靜止與 `solid` 面板外框現在由規格指定角色，納入判斷。模組輪見 uitk-visualfoundation.checklist。需要分支 `feat/uitk-vf-140` 已合併到主線：Yu5h1LibTest 的 `Assets/Samples/Yu5h1Lib.UIToolkit/0.1.0/UxAcceptance` 是指向主線 `Samples~/UxAcceptance` 的 junction。上一輪（1.3.0 的 light、dark 各兩項）使用者已記為通過，由 git 歷史保存。一個檔案只放一輪。
 
-- [x] **1. light 的狀態外觀與焦點外框（VP03）**
-  Outcome: light 下 Button 與 OptionPicker 的各狀態用〈狀態對應的色彩角色〉指定的角色，鍵盤焦點外框完整包圍目標。
+- [ ] **1. light 的狀態外觀與焦點外框（VP03）**
+  Outcome: light 下 Button 與 OptionPicker 的各狀態用 Button 2.1.0 的 BTN-APPEARANCE 與 OptionPicker 3.1.0 的 OPT-APPEARANCE 指定的角色，鍵盤焦點外框完整包圍目標。
   Checks:
-    - [x] **各狀態的顏色** `[manual]`
-      - Action: 開啟 Unity 專案 `W:/UnityProject/Yu5h1LibTest`，載入場景 `Assets/Samples/Yu5h1Lib.UIToolkit/0.1.0/UxAcceptance/UxAcceptanceDemo.unity` 並進入 Play，頂端 Module 下拉選「VisualFoundation (1.3.0) light」。看「實心」「無底」兩列的一般、滑過（已固定顯示滑過外觀）、選取、停用、純圖示五顆；再用滑鼠移到各顆上；再按頁面上 OptionPicker 的觸發鈕，看展開的面板。
-      - Expect: 頁面底色是米色（pageBackground），面板是更亮的奶白（panelBackground），面板標題與下方分隔線可辨；無底鈕靜止沒有底色、有灰色外框（controlBorder），滑過底色變為淡米色（hover）；選取鈕是深綠填色（accent）、白字（onAccent），沒有外框；停用鈕文字較淡、滑鼠移上去沒有滑過底色；OptionPicker 的 solid 面板底色是 panelBackground，選項滑過、選取與停用的外觀和 Button 一致。
+    - [ ] **各狀態的顏色** `[manual]`
+      - Action: 開啟 Unity 專案 `W:/UnityProject/Yu5h1LibTest`，載入場景 `Assets/Samples/Yu5h1Lib.UIToolkit/0.1.0/UxAcceptance/UxAcceptanceDemo.unity` 並進入 Play，頂端 Module 下拉選「VisualFoundation (1.4.0) light」。看「實心」「無底」兩列的一般、滑過（已固定顯示滑過外觀）、選取、選取且滑過（已固定顯示滑過外觀）、停用、純圖示六顆；再用滑鼠移到各顆上、按住不放；再按頁面上 OptionPicker 的觸發鈕，看展開的 solid 與 ghost 兩種面板。
+      - Expect: 頁面底色是米色（pageBackground），面板是更亮的奶白（panelBackground），面板標題與下方分隔線可辨；實心鈕靜止是奶白底（panelBackground）加灰綠色外框（controlBorder）、深色字（itemText）；無底鈕靜止沒有底色也沒有外框；兩種按鈕滑過底色都變為淡米色（hover）；選取鈕是深綠填色（accent）、白字（onAccent），沒有外框，選取且滑過維持同樣的深綠；停用鈕文字較淡、滑鼠移上去沒有滑過底色；按住不放時外觀維持按住前的滑過外觀、不另外變色；OptionPicker 的 solid 面板底色是 panelBackground、邊是淡米灰色細線（border），沒有陰影，ghost 面板沒有底色也沒有邊，選項的外觀和 Button 一致。
       - Reason: 外觀由使用者判（UX 第 65 題）。
-    - [x] **鍵盤焦點外框** `[manual]`
+    - [ ] **鍵盤焦點外框** `[manual]`
       - Action: 同一頁，用 Tab 依序把焦點移到每一顆按鈕（實心列與無底列），包括純圖示鈕。
-      - Expect: 每顆被選到的按鈕都顯示完整包圍它的深綠外框（focus），寬度看得出至少 2px，沒有被切掉或蓋住，按鈕本身大小不變；無底鈕的焦點外框顏色與靜止時的灰色外框看得出差異。
+      - Expect: 每顆被選到的按鈕都顯示完整包圍它的深綠外框（focus），寬度看得出至少 2px，沒有被切掉或蓋住，按鈕本身大小不變；實心鈕的焦點外框顏色與靜止時的灰綠外框看得出差異。
       - Reason: 外觀由使用者判（UX 第 65 題）。
 
-- [x] **2. dark 的狀態外觀與焦點外框（VP03）**
-  Outcome: dark 下 Button 與 OptionPicker 的各狀態用〈狀態對應的色彩角色〉指定的角色，鍵盤焦點外框完整包圍目標。
+- [ ] **2. dark 的狀態外觀與焦點外框（VP03）**
+  Outcome: dark 下 Button 與 OptionPicker 的各狀態用 Button 2.1.0 的 BTN-APPEARANCE 與 OptionPicker 3.1.0 的 OPT-APPEARANCE 指定的角色，鍵盤焦點外框完整包圍目標。
   Checks:
-    - [x] **各狀態的顏色** `[manual]`
-      - Action: 同一頁，頂端 Module 下拉選「VisualFoundation (1.3.0) dark」。看「無底」列的一般、滑過（已固定顯示滑過外觀）、選取、停用、純圖示五顆（實心列的一般鈕不判斷）；再用滑鼠移到各顆上；再按頁面上 OptionPicker 的觸發鈕，看展開的面板。
-      - Expect: 頁面底色是深藍黑（pageBackground），面板是稍亮的深藍灰（panelBackground），面板標題與下方分隔線可辨；無底鈕靜止沒有底色、有灰藍色外框（controlBorder），滑過底色變為較亮的深灰藍（hover）；選取鈕是淡藍填色（accent）、黑字（onAccent），沒有外框；停用鈕文字較暗、滑鼠移上去沒有滑過底色；OptionPicker 的 solid 面板底色是 panelBackground，選項滑過、選取與停用的外觀和 Button 一致。
+    - [ ] **各狀態的顏色** `[manual]`
+      - Action: 同一頁，頂端 Module 下拉選「VisualFoundation (1.4.0) dark」。看「實心」「無底」兩列的一般、滑過（已固定顯示滑過外觀）、選取、選取且滑過（已固定顯示滑過外觀）、停用、純圖示六顆；再用滑鼠移到各顆上、按住不放；再按頁面上 OptionPicker 的觸發鈕，看展開的 solid 與 ghost 兩種面板。
+      - Expect: 頁面底色是深藍黑（pageBackground），面板是稍亮的深藍灰（panelBackground），面板標題與下方分隔線可辨；實心鈕靜止是深藍灰底（panelBackground）加灰藍色外框（controlBorder）、淺色字（itemText），不再是淺灰底；無底鈕靜止沒有底色也沒有外框；兩種按鈕滑過底色都變為較亮的深灰藍（hover）；選取鈕是淡藍填色（accent）、黑字（onAccent），沒有外框，選取且滑過維持同樣的淡藍；停用鈕文字較暗、滑鼠移上去沒有滑過底色；按住不放時外觀維持按住前的滑過外觀、不另外變色；OptionPicker 的 solid 面板底色是 panelBackground、邊是深灰藍細線（border），沒有陰影，ghost 面板沒有底色也沒有邊，選項的外觀和 Button 一致。
       - Reason: 外觀由使用者判（UX 第 65 題）。
-    - [x] **鍵盤焦點外框** `[manual]`
+    - [ ] **鍵盤焦點外框** `[manual]`
       - Action: 同一頁，用 Tab 依序把焦點移到每一顆按鈕（實心列與無底列），包括純圖示鈕。
-      - Expect: 每顆被選到的按鈕都顯示完整包圍它的淡藍外框（focus），寬度看得出至少 2px，沒有被切掉或蓋住，按鈕本身大小不變；無底鈕的焦點外框顏色與靜止時的灰藍外框看得出差異。
+      - Expect: 每顆被選到的按鈕都顯示完整包圍它的淡藍外框（focus），寬度看得出至少 2px，沒有被切掉或蓋住，按鈕本身大小不變；實心鈕的焦點外框顏色與靜止時的灰藍外框看得出差異。
       - Reason: 外觀由使用者判（UX 第 65 題）。
