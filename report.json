@@ -3,8 +3,37 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-20T06:56:05.437060+00:00",
+  "updated_at": "2026-10-20T07:18:09.560455+00:00",
   "tasks": [
+    {
+      "id": "ux-button-adoption",
+      "title": "Button 依 UX 規範的引用與驗收",
+      "status": "done",
+      "summary": "Yu5h1Lib.UI（UGUI）與 Yu5h1Lib.UIToolkit 各自引用 UX Button 2.0.0 並於 2026-10-19 驗收通過：自動檢查在乾淨 worktree 通過，使用者與 Web demo 並排確認外觀；UX-UNITYEXTENSION-6 Implemented。驗收紀錄在各套件 Documentation/Yu5h1Lib.UX/Button.md；VisualFoundation、無障礙名稱與 Icon 的缺口在紀錄列 blocked，等各自引用。",
+      "pending_items": [],
+      "completed_items": [
+        {
+          "id": "uitk-button-acceptance",
+          "title": "驗收 Yu5h1Lib.UIToolkit Button 2.0.0",
+          "status": "done",
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "uitk-button"
+          }
+        },
+        {
+          "id": "ui-button-acceptance",
+          "title": "驗收 Yu5h1Lib.UI（UGUI）Button 2.0.0",
+          "status": "done",
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "ui-button"
+          }
+        }
+      ]
+    },
     {
       "id": "project-system-analysis",
       "title": "專案開發系統分析技能",
@@ -556,9 +585,9 @@
     },
     {
       "id": "cross-platform-ui-parity",
-      "title": "跨平台 UI 一致性（Unity 引用 Web 交付並復刻）",
+      "title": "跨平台 UI 一致性（Unity 引用 Yu5h1Lib.UX 規範並原生實作）",
       "status": "in_progress",
-      "summary": "進行中：Yu5h1Lib.UX 是體驗規範的唯一來源，Unity 以套件內快照釘選版本與雜湊，依共用 skill referenced-module-acceptance 在實作套件記錄驗收（Theme 與設定仍是 Web 交付）。Button 2.0.0 於 2026-10-19 在 Yu5h1Lib.UI 與 Yu5h1Lib.UIToolkit 驗收通過（自動檢查加使用者與 Web demo 並排確認）；VisualFoundation、無障礙名稱與 Icon 的缺口仍 blocked。AppsMenu 暫停（卡片 appsmenu-library-adoption）；Theme 與 WebGL 待排。Canonical entry：Documentation/跨平台UI一致性.md（Task ID cross-platform-ui-parity）。",
+      "summary": "進行中：Yu5h1Lib.UX 是體驗規範的唯一來源，Unity 以套件內快照釘選版本與雜湊，依共用 skill referenced-module-acceptance 在實作套件記錄驗收。已驗收：Button 2.0.0（2026-10-19，Yu5h1Lib.UI 與 Yu5h1Lib.UIToolkit，自動檢查加使用者與 Web demo 並排確認）；Configuration 等級 1 直接存（2026-10-20，Yu5h1Lib.Common 的統一 Preferences 入口，UX-UNITYEXTENSION-7）。待排：Theme 色票改讀 UX VisualFoundation（UX-UNITYEXTENSION-2）、宣告 JSON（WEB-7，等 MOTION-2 與消費端）、Configuration 等級 2（等消費端）、WebGL；AppsMenu 暫停（卡片 appsmenu-library-adoption）；VisualFoundation、無障礙名稱與 Icon 的缺口在 Button 紀錄列 blocked。Canonical entry：Documentation/跨平台UI一致性.md。",
       "completed_items": [
         {
           "id": "item-cross-platform-ui-parity-todo-4",
@@ -624,7 +653,7 @@
       "pending_items": [
         {
           "id": "item-cross-platform-ui-parity-todo-2",
-          "title": "Theme：等 WEB-6（theme 與 config 互動、存檔格式），再做 WebTheme 匯入並驗收 WEB-1",
+          "title": "Theme：WebTheme 匯入改讀 UX VisualFoundation 的設計資料（UX-UNITYEXTENSION-2，取代 Web theme.css／WEB-1）；設定前置已於 2026-10-20 驗收，等 UX 替 VisualFoundation 定目標後點名",
           "priority": 4
         },
         {
@@ -683,34 +712,6 @@
           "title": "Motion 在 Unity 能跑：Windows Editor（6000.6）EditMode 2/2 通過，Throw／Scatter 數值相符、生命週期部分驗證（2026-10-07）；逐項見 Packages/UIToolkit/Documentation/Motion/。Player 與 Android 未執行",
           "priority": 2,
           "status": "done"
-        }
-      ]
-    },
-    {
-      "id": "ux-button-adoption",
-      "title": "Button 依 UX 規範的引用與驗收",
-      "status": "in_progress",
-      "summary": "Yu5h1Lib.UI（UGUI）與 Yu5h1Lib.UIToolkit 各自引用 UX Button 2.0.0，自動檢查已通過，待使用者於 demo 場景確認外觀（UX-UNITYEXTENSION-6）。驗收紀錄在各套件 Documentation/Yu5h1Lib.UX/Button.md。",
-      "pending_items": [
-        {
-          "id": "ui-button-acceptance",
-          "title": "驗收 Yu5h1Lib.UI（UGUI）Button 2.0.0",
-          "status": "in_progress",
-          "document_ref": {
-            "kind": "checklist",
-            "scope_id": "unity-extension",
-            "task": "ui-button"
-          }
-        },
-        {
-          "id": "uitk-button-acceptance",
-          "title": "驗收 Yu5h1Lib.UIToolkit Button 2.0.0",
-          "status": "in_progress",
-          "document_ref": {
-            "kind": "checklist",
-            "scope_id": "unity-extension",
-            "task": "uitk-button"
-          }
         }
       ]
     }
