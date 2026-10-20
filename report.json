@@ -468,6 +468,17 @@
       "summary": "UI 綁定層（Preferences／DataView／adapter）已完整實作並驗證，已知問題 E1–E6、E8、E9 已修復，E7 轉由重複 Core 檔案盤點追蹤，E10 已於 2026-09-30 修復並以 MCP 實測（序列化器改為處理原始值的抽象基底，JSON 版對集合改丟例外）。I1–I3、D1、R1、D3、D4 皆已定案完成。UI Toolkit 支援計畫（步驟 1–5）全部完成並實測。VCP 的 AudioVolumePrefs 已刪除並改用 Preferences 綁定＋AudioMixerProxy，使用者確認可用。PlayerPrefObject／PlayerPrefBoolObject 已於 2026-09-28 刪除。AudioMixerProxy 的「Create Mixer」Editor 產生器已於 2026-09-28 完成。P1（序列化物件成員綁定）於 2026-09-30 結案不實作：沒有 UI 的設定由 ObservablePref<T> 涵蓋。IL2CPP [Preserve] 存活性驗證延後。D6（SO 作為設定來源）已於 2026-10-02 全部實作並以 MCP 驗證：值轉換移入 Core（列舉以名稱存放，E14）、統一入口 Preferences.Get/Set（依 KEY 共用 DataView、IStorage、由入口存檔，VCP UserDataView 經 HostStorage 無需遷移）、_source（host 宣告 SourceType、成員準備、ResetToDefaults、Inspector drawer）、型別不一致標紅（Core TypeRestrictionDrawer.Filter.GetIssue）、ValuePort 值種類與 changed；E11–E14 已修。ObservablePref 待 VCP 遷移後刪除。",
       "completed_items": [
         {
+          "id": "preferences-entry-view-copy",
+          "title": "回歸驗證：入口 view 為載入複本（52ada54）——Yu5h1LibTest 跑過兩項新 EditMode 測試，Yu5h1Lib.Common.Editor.Tests 94/94（2026-10-20）",
+          "status": "done",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "preferences-entry-view-copy"
+          }
+        },
+        {
           "id": "item-preferences-todo-11",
           "title": "D6：SO 作為設定來源——已實作並以 MCP 驗證（2026-10-02）：值轉換（Core，含列舉名稱 E14）、ValuePort.changed 與值種類、統一入口 Preferences.Get/Set、_source（SourceType、成員準備、ResetToDefaults、drawer）、型別不一致標紅（Core GetIssue hook）",
           "status": "done"
@@ -712,25 +723,6 @@
           "title": "Motion 在 Unity 能跑：Windows Editor（6000.6）EditMode 2/2 通過，Throw／Scatter 數值相符、生命週期部分驗證（2026-10-07）；逐項見 Packages/UIToolkit/Documentation/Motion/。Player 與 Android 未執行",
           "priority": 2,
           "status": "done"
-        }
-      ]
-    },
-    {
-      "id": "agent-executable-items",
-      "title": "Agent 可執行項目",
-      "status": "planned",
-      "summary": "使用者交給 agent 的指示：一條指示一個子項目，一個子項目綁一份 checklist 作驗收證據；指示的結果與驗收條件寫在 Documentation/Agent可執行項目.md。屬既有需求卡片的指示放該卡片之下。",
-      "pending_items": [
-        {
-          "id": "preferences-entry-view-copy",
-          "title": "驗證入口 view 為載入複本的回歸修正：Yu5h1LibTest 跑過兩項新 EditMode 測試，Yu5h1Lib.Common.Editor.Tests 整組不退步",
-          "status": "planned",
-          "priority": 1,
-          "document_ref": {
-            "kind": "checklist",
-            "scope_id": "unity-extension",
-            "task": "preferences-entry-view-copy"
-          }
         }
       ]
     }

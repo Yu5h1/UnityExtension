@@ -1,6 +1,6 @@
 # Preferences Entry View Copy Checklist
 
-Current round: `../Documentation/Agent可執行項目.md#驗證入口-view-為載入複本的回歸修正`.
+Current round: `../Documentation/偏好設定.md#入口-view-為載入複本的回歸驗證`.
 
 本輪驗證統一入口 `Preferences` 的 view 是載入結果複本的回歸修正（`master` `52ada54`），只放 agent 在 Yu5h1LibTest 跑的 EditMode 測試；VCP 登入後紀錄是否保住由使用者在 VCP 專案確認，不在本輪。一個檔案只放一輪。
 
