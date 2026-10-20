@@ -14,6 +14,12 @@ namespace Yu5h1Lib
     /// an <see cref="IStorage"/> registered for it; unregistered KEYs use <see cref="DefaultStorage"/>
     /// (one DataView JSON per KEY in PlayerPrefs). Typed reads and writes convert through
     /// <see cref="PlayerPrefsSerializer.Default"/>; the DataView itself only holds strings.
+    /// <para>A save that exists but cannot be read (damaged, unknown <see cref="PreferencesFormat"/> version, read
+    /// failure) puts that KEY in a load error: an Error is logged, the view stays free of the save's data (a host
+    /// fills it with its defaults), nothing is written for the KEY and the original text stays untouched, until
+    /// <see cref="Reload(string)"/> reads a fixed save or an explicit reset (<see cref="ClearLoadError(string)"/>,
+    /// <see cref="Delete(string)"/>, a host's ResetToDefaults) lets the next write replace it. A KEY without a save
+    /// is not an error; it simply uses defaults.</para>
     /// </summary>
     public static class Preferences
     {
@@ -25,18 +31,30 @@ namespace Yu5h1Lib
             void Delete(string key);
         }
 
-        /// <summary>Stores one KEY as the DataView's JSON under that PlayerPrefs key.</summary>
-        public class PlayerPrefsStorage : IStorage
+        /// <summary>A storage that can tell "no save" from "a save that cannot be read". The entry uses it when the
+        /// storage implements it; a plain <see cref="IStorage"/> can only say whether it found data, so a false
+        /// <c>TryLoad</c> counts as no save.</summary>
+        public interface IStatusStorage : IStorage
         {
+            PreferencesLoadResult Load(string key);
+        }
+
+        /// <summary>Stores one KEY as <see cref="PreferencesFormat"/> JSON under that PlayerPrefs key.</summary>
+        public class PlayerPrefsStorage : IStatusStorage
+        {
+            public PreferencesLoadResult Load(string key)
+                => PlayerPrefs.HasKey(key) ? PreferencesFormat.Parse(PlayerPrefs.GetString(key)) : PreferencesLoadResult.Missing;
+
             public bool TryLoad(string key, out DataView data)
             {
-                data = null;
-                return PlayerPrefs.HasKey(key) && DataView.TryParseFromJson(PlayerPrefs.GetString(key), out data);
+                var result = Load(key);
+                data = result.Status == PreferencesLoadStatus.Loaded ? result.Data : null;
+                return data != null;
             }
 
             public void Save(string key, DataView data)
             {
-                PlayerPrefs.SetString(key, data.ToJson());
+                PlayerPrefs.SetString(key, PreferencesFormat.ToJson(data));
                 PlayerPrefs.Save();
             }
 
@@ -47,13 +65,20 @@ namespace Yu5h1Lib
             }
         }
 
-        public static IStorage DefaultStorage { get; } = new PlayerPrefsStorage();
+        public static PlayerPrefsStorage DefaultStorage { get; } = new PlayerPrefsStorage();
 
         private class Entry
         {
             public DataView view;
             public bool loaded;
             public bool saveOnChanged = true;
+            /// <summary>Why the save could not be read; null when the KEY has no load error.</summary>
+            public string loadError;
+            public bool blockedWarned;
+            /// <summary>Changed while saving on change was off and not yet saved: an unsaved draft.</summary>
+            public bool dirty;
+            /// <summary>Internal edits (default merge, reload) that must not save or count as a draft.</summary>
+            public bool suspended;
         }
 
         private static readonly Dictionary<string, IStorage> storages = new Dictionary<string, IStorage>();
@@ -72,6 +97,15 @@ namespace Yu5h1Lib
         /// from <see cref="DefaultStorage"/>.</summary>
         public static void Register(string key, IStorage storage) => storages[key] = storage ?? DefaultStorage;
 
+        /// <summary>Takes back a registration, but only when <paramref name="storage"/> is still the one registered
+        /// for <paramref name="key"/>; the KEY then falls back to <see cref="DefaultStorage"/>. A host calls it when
+        /// it is destroyed so the entry never calls a destroyed object.</summary>
+        public static void Unregister(string key, IStorage storage)
+        {
+            if (storages.TryGetValue(key, out var current) && ReferenceEquals(current, storage))
+                storages.Remove(key);
+        }
+
         public static IStorage GetStorage(string key) => storages.TryGetValue(key, out var storage) ? storage : DefaultStorage;
 
         private static Entry GetEntry(string key)
@@ -79,15 +113,48 @@ namespace Yu5h1Lib
             if (entries.TryGetValue(key, out var entry))
                 return entry;
             entry = new Entry();
-            entry.loaded = GetStorage(key).TryLoad(key, out var data) && data != null;
-            entry.view = entry.loaded ? new DataView(data) : new DataView();
+            var result = ReadStorage(key);
+            entry.loaded = result.Status == PreferencesLoadStatus.Loaded;
+            entry.view = entry.loaded ? result.Data : new DataView();
+            if (result.Status == PreferencesLoadStatus.Error)
+                SetLoadError(key, entry, result);
+            var created = entry;
             entry.view.Changed += () =>
             {
-                if (entry.saveOnChanged)
+                if (created.suspended || !entries.TryGetValue(key, out var live) || live != created)
+                    return;
+                if (created.saveOnChanged)
                     Save(key);
+                else if (created.loadError == null)
+                    created.dirty = true;
             };
             entries[key] = entry;
             return entry;
+        }
+
+        private static PreferencesLoadResult ReadStorage(string key)
+        {
+            try
+            {
+                var storage = GetStorage(key);
+                if (storage is IStatusStorage statusStorage)
+                    return statusStorage.Load(key);
+                return storage.TryLoad(key, out var data) && data != null
+                    ? PreferencesLoadResult.Loaded(data)
+                    : PreferencesLoadResult.Missing;
+            }
+            catch (System.Exception e)
+            {
+                return PreferencesLoadResult.Failed(null, "reading the save failed: " + e.Message);
+            }
+        }
+
+        private static void SetLoadError(string key, Entry entry, PreferencesLoadResult result)
+        {
+            entry.loadError = result.Error;
+            entry.blockedWarned = false;
+            var raw = result.Raw == null ? "" : (result.Raw.Length > 200 ? result.Raw.Substring(0, 200) + "..." : result.Raw);
+            Debug.LogError($"Preferences [{key}]: the save cannot be read ({result.Error}). Using defaults and not writing this KEY until it is reloaded or explicitly reset; the original text is kept. Original: {raw}");
         }
 
         /// <summary>The shared DataView of <paramref name="key"/>, loaded on first access.</summary>
@@ -102,14 +169,115 @@ namespace Yu5h1Lib
             return entry.view;
         }
 
+        /// <summary>Why the save of <paramref name="key"/> could not be read, or null when it was read (or there is
+        /// none). While this is set the KEY is not written.</summary>
+        public static string GetLoadError(string key) => GetEntry(key).loadError;
+
+        /// <summary>
+        /// Reads <paramref name="key"/> from its storage again into the shared view (the same object, so bound
+        /// controls and subscribers keep it). Returns true when the save was read or there is none, which clears a
+        /// load error; returns false and keeps the error when it still cannot be read. A KEY without a save ends up
+        /// empty; a host re-merges its defaults (see its Reload).
+        /// </summary>
+        public static bool Reload(string key)
+        {
+            var entry = GetEntry(key);
+            var result = ReadStorage(key);
+            if (result.Status == PreferencesLoadStatus.Error)
+            {
+                SetLoadError(key, entry, result);
+                return false;
+            }
+            entry.suspended = true;
+            try
+            {
+                entry.view.Clear();
+                if (result.Status == PreferencesLoadStatus.Loaded)
+                    foreach (var pair in result.Data)
+                        entry.view[pair.Key] = pair.Value;
+            }
+            finally
+            {
+                entry.suspended = false;
+            }
+            entry.loadError = null;
+            entry.blockedWarned = false;
+            entry.loaded = result.Status == PreferencesLoadStatus.Loaded;
+            entry.dirty = false;
+            return true;
+        }
+
+        /// <summary>Explicit reset of a load error: the unreadable save is given up, so the next write replaces it.
+        /// Does nothing for a KEY that is not loaded or has no error.</summary>
+        public static void ClearLoadError(string key)
+        {
+            if (!entries.TryGetValue(key, out var entry))
+                return;
+            entry.loadError = null;
+            entry.blockedWarned = false;
+        }
+
+        /// <summary>Deletes the save of <paramref name="key"/> from its storage and clears a load error, so the KEY
+        /// goes back to "no save". The shared view keeps its current values until something changes them.</summary>
+        public static void Delete(string key)
+        {
+            GetStorage(key).Delete(key);
+            ClearLoadError(key);
+            if (entries.TryGetValue(key, out var entry))
+            {
+                entry.loaded = false;
+                entry.dirty = false;
+            }
+        }
+
+        /// <summary>
+        /// Releases <paramref name="key"/>: the next access reads the storage again, as after a restart. Returns
+        /// false and logs a warning, releasing nothing, while the KEY holds an unsaved draft (changed while
+        /// <see cref="SetSaveOnChanged"/> was off); returns true when released or when it was not loaded.
+        /// </summary>
+        public static bool Unload(string key)
+        {
+            if (!entries.TryGetValue(key, out var entry))
+                return true;
+            if (entry.dirty)
+            {
+                Debug.LogWarning($"Preferences [{key}]: not unloaded, it has unsaved changes. Save it first.");
+                return false;
+            }
+            entries.Remove(key);
+            return true;
+        }
+
+        /// <summary>Whether <paramref name="view"/> is still the loaded view of <paramref name="key"/>
+        /// (false after <see cref="Unload"/>).</summary>
+        internal static bool IsLoadedView(string key, DataView view)
+            => entries.TryGetValue(key, out var entry) && ReferenceEquals(entry.view, view);
+
+        /// <summary>Edits made between Begin and End neither save nor count as a draft; for a host merging
+        /// defaults into the shared view.</summary>
+        internal static void BeginBatch(string key) => GetEntry(key).suspended = true;
+        internal static void EndBatch(string key) => GetEntry(key).suspended = false;
+
         public static bool GetSaveOnChanged(string key) => GetEntry(key).saveOnChanged;
         public static void SetSaveOnChanged(string key, bool value) => GetEntry(key).saveOnChanged = value;
 
-        /// <summary>Writes the shared DataView of <paramref name="key"/> through its storage.</summary>
+        /// <summary>Writes the shared DataView of <paramref name="key"/> through its storage; does nothing while the
+        /// KEY has a load error.</summary>
         public static void Save(string key)
         {
-            if (entries.TryGetValue(key, out var entry))
-                GetStorage(key).Save(key, entry.view);
+            if (!entries.TryGetValue(key, out var entry))
+                return;
+            if (entry.loadError != null)
+            {
+                if (!entry.blockedWarned)
+                {
+                    entry.blockedWarned = true;
+                    Debug.LogWarning($"Preferences [{key}]: not saved, the stored save could not be read ({entry.loadError}). Reload it or reset the KEY explicitly.");
+                }
+                return;
+            }
+            GetStorage(key).Save(key, entry.view);
+            entry.dirty = false;
         }
 
         /// <summary>Reads <paramref name="field"/> of <paramref name="key"/> as <typeparamref name="V"/>;
