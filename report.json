@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-20T06:00:43.086205+00:00",
+  "updated_at": "2026-10-20T06:49:14.130099+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -583,6 +583,28 @@
         }
       ],
       "pending_items": [
+        {
+          "id": "common-configuration-p02-ugui",
+          "title": "確認 uGUI 面板在 Play 停止／重開後設定值仍在（Configuration 目標 2 等級 1，UX-UNITYEXTENSION-7）",
+          "status": "planned",
+          "priority": 0,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "common-configuration-p02-ugui"
+          }
+        },
+        {
+          "id": "common-configuration-p02-uitoolkit",
+          "title": "確認 UI Toolkit 面板在 Play 停止／重開後設定值仍在（Configuration 目標 2 等級 1，UX-UNITYEXTENSION-7）",
+          "status": "planned",
+          "priority": 0,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "common-configuration-p02-uitoolkit"
+          }
+        },
         {
           "id": "common-configuration-acceptance",
           "title": "驗收 Yu5h1Lib.Common 的 Configuration 目標 2 等級 1 直接存（UX-UNITYEXTENSION-7）",

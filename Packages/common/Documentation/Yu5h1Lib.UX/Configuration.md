@@ -2,7 +2,7 @@
 
 > Task ID: common-configuration
 >
-> 狀態：模組輪自動檢查通過、人工確認待開（2026-10-20，第一輪：Configuration 1.4.1〈目標 2〉等級 1「直接存」，需求 UX-UNITYEXTENSION-7）。依使用者指示「在 Yu5h1Lib.Common 引用 UX 的 Configuration」，流程見 [referenced-module-acceptance](../../../../../../.agents/skills/referenced-module-acceptance/SKILL.md)。本輪原本釘 1.3.1 的八條服務語意，2026-10-20 依 UX 第 93 題縮為等級 1，改釘 1.4.0，同日再改釘只修正〈保存等級〉表的 1.4.1。驗收方在實作分支 `ef5ac00` 的乾淨 worktree 跑完 checklist 第 1～6 項，全部通過；生命週期（CFG-P02）的人工 checklist 尚未開立，需求尚未完成，實作分支尚未合併。
+> 狀態：模組輪自動檢查通過、人工確認進行中（2026-10-20，第一輪：Configuration 1.4.1〈目標 2〉等級 1「直接存」，需求 UX-UNITYEXTENSION-7）。依使用者指示「在 Yu5h1Lib.Common 引用 UX 的 Configuration」，流程見 [referenced-module-acceptance](../../../../../../.agents/skills/referenced-module-acceptance/SKILL.md)。本輪原本釘 1.3.1 的八條服務語意，2026-10-20 依 UX 第 93 題縮為等級 1，改釘 1.4.0，同日再改釘只修正〈保存等級〉表的 1.4.1。驗收方在實作分支 `ef5ac00` 的乾淨 worktree 跑完 checklist 第 1～6 項，全部通過；使用者授權後，實作分支以 `1c93adf`（`--no-ff`）合併進 `adopt-ux-optionpicker`，本紀錄與決策檔以主線為準；生命週期（CFG-P02）的兩份人工 checklist 已開立，使用者確認前需求尚未完成。
 
 ```text
 UnityExtension
@@ -94,7 +94,7 @@ UnityExtension
 | 通知與隔離（CFG-08） | 改了就存、KEY 隔離、取消訂閱 | checklist 第 4 項 |
 | 卸載與延遲完成（CFG-07）原生等價 | host 銷毀後入口不再呼叫它、`Unload` 後重新讀取 | checklist 第 5 項 |
 | 實際 backend（CFG-P01） | 真實 PlayerPrefs 保存、重啟、重讀、KEY 隔離 | checklist 第 6 項 |
-| 生命週期（CFG-P02） | Play 停止／重開後值仍在（uGUI、UI Toolkit 各一份人工 checklist） | 模組輪通過後開立 |
+| 生命週期（CFG-P02） | Play 停止／重開後值仍在（uGUI、UI Toolkit 各一份人工 checklist） | [uGUI](../../../../checklists/common-configuration-p02-ugui.checklist)、[UI Toolkit](../../../../checklists/common-configuration-p02-uitoolkit.checklist) |
 
 ## 已知偏差
 
@@ -108,13 +108,13 @@ UnityExtension
 
 | 規範版本 | UX commit | UnityExtension commit | checklist commit | 結論 |
 |---|---|---|---|---|
-| Configuration 1.4.1〈目標 2〉等級 1 | `7aa4275` | `ef5ac00`（分支 `feat/ux-unityextension-7-configuration`；實作 `4f0b412`、釘選 `4a43a32`、`.meta` 還原 `3d36156`） | `5e3e72d` | 模組輪 6/6 項通過；生命週期（CFG-P02）的人工確認待開 |
+| Configuration 1.4.1〈目標 2〉等級 1 | `7aa4275` | `ef5ac00`（分支 `feat/ux-unityextension-7-configuration`；實作 `4f0b412`、釘選 `4a43a32`、`.meta` 還原 `3d36156`） | `5e3e72d` | 模組輪 6/6 項通過；合併 `1c93adf`；生命週期（CFG-P02）的人工確認進行中 |
 
 ## 結論
 
 ### 第一輪（Configuration 1.4.1〈目標 2〉等級 1「直接存」）
 
-狀態：模組輪自動檢查通過（2026-10-20）。範圍原為 1.3.1 的八條服務語意（主線 `8df460f`），同日依第 93 題縮為等級 1。四條情境——預設與載入（CFG-01）、載入失敗不覆寫（CFG-02）、通知與隔離（CFG-08）、卸載與延遲完成（CFG-07）的原生等價——以及實際 backend（CFG-P01）、匯入與版本固定（CFG-P05）在 `ef5ac00` 通過，沒有偏差。目標 2 還差使用者在 uGUI 與 UI Toolkit 兩頁確認 Play 停止／重開後值仍在（生命週期 CFG-P02），完成後才合併、結案。
+狀態：模組輪自動檢查通過（2026-10-20）。範圍原為 1.3.1 的八條服務語意（主線 `8df460f`），同日依第 93 題縮為等級 1。四條情境——預設與載入（CFG-01）、載入失敗不覆寫（CFG-02）、通知與隔離（CFG-08）、卸載與延遲完成（CFG-07）的原生等價——以及實際 backend（CFG-P01）、匯入與版本固定（CFG-P05）在 `ef5ac00` 通過，沒有偏差。目標 2 還差使用者在 uGUI 與 UI Toolkit 兩頁確認 Play 停止／重開後值仍在（生命週期 CFG-P02）。使用者決定先合併（`1c93adf`）再做人工確認，因為 Yu5h1LibTest 解析的是主 checkout；合併後的 `Packages/common/Runtime`、`Tests` 與 `ef5ac00` 完全相同，Yu5h1LibTest 重新編譯沒有錯誤，既有的 `PlayerPreferences` 存檔以新格式讀成 Loaded。人工確認通過後結案。
 
 ### 執行結果
 
