@@ -2,13 +2,13 @@
 
 > Task ID: common-configuration
 >
-> 狀態：planned（2026-10-20，第一輪：Configuration 1.4.0〈目標 2〉等級 1「直接存」，需求 UX-UNITYEXTENSION-7）。依使用者指示「在 Yu5h1Lib.Common 引用 UX 的 Configuration」，流程見 [referenced-module-acceptance](../../../../../../.agents/skills/referenced-module-acceptance/SKILL.md)。本輪原本釘 1.3.1 的八條服務語意，2026-10-20 依 UX 第 93 題縮為等級 1，改釘 1.4.0；所有檢查都還沒跑。
+> 狀態：planned（2026-10-20，第一輪：Configuration 1.4.1〈目標 2〉等級 1「直接存」，需求 UX-UNITYEXTENSION-7）。依使用者指示「在 Yu5h1Lib.Common 引用 UX 的 Configuration」，流程見 [referenced-module-acceptance](../../../../../../.agents/skills/referenced-module-acceptance/SKILL.md)。本輪原本釘 1.3.1 的八條服務語意，2026-10-20 依 UX 第 93 題縮為等級 1，改釘 1.4.0，同日再改釘只修正〈保存等級〉表的 1.4.1；所有檢查都還沒跑。
 
 ```text
 UnityExtension
 └─ Yu5h1Lib.Common（實作套件，Packages/common）
    └─ Configuration 等級 1「直接存」（本紀錄）
-      ├─ 體驗規範 ← Yu5h1Lib.UX ModuleSpec/Foundation/Configuration 1.4.0〈目標 2〉（CFG-01、CFG-02、CFG-08、CFG-07 原生等價、CFG-P01、CFG-P05）
+      ├─ 體驗規範 ← Yu5h1Lib.UX ModuleSpec/Foundation/Configuration 1.4.1〈目標 2〉（CFG-01、CFG-02、CFG-08、CFG-07 原生等價、CFG-P01、CFG-P05）
       ├─ 原生層 → 統一入口 Preferences（PreferencesEntry.cs）、host Preferences<T>、DataView、PlayerPrefsStorage
       ├─ 本輪不含 → 等級 2「確認保存」（目標 3）、宣告、Theme、生命週期的人工確認
       └─ 驗證專案 → Yu5h1LibTest（Unity 6000.6），自動檢查在分支的乾淨 worktree 執行
@@ -19,12 +19,12 @@ UnityExtension
 | 項目 | 內容 |
 |---|---|
 | 實作套件 | `com.yu5h1.common`（`Packages/common`，Yu5h1Lib.Common）的 Preferences 層：[`PreferencesEntry.cs`](../../Runtime/Data/PreferencesEntry.cs)（統一入口 `Preferences`、`IStorage`、`PlayerPrefsStorage`）、[`Preferences.cs`](../../Runtime/Component/Preferences.cs)（host `Preferences<T>`）、[`DataView.cs`](../../Runtime/Data/DataView.cs) |
-| UX 規範 | [UX ModuleSpec/Foundation/Configuration.md](../../../../../../UX/Documentation/ModuleSpec/Foundation/Configuration.md) 1.4.0，SHA-256 `4ee43951f43da3bd10a27c02754aebe0a445bdfc74fd4a60a20b8fea971d61d2`（與 UX manifest 相同） |
-| UX commit | `bf62034`（1.4.0 與縮範圍後的 UX-UNITYEXTENSION-7） |
+| UX 規範 | [UX ModuleSpec/Foundation/Configuration.md](../../../../../../UX/Documentation/ModuleSpec/Foundation/Configuration.md) 1.4.1，SHA-256 `4e99803cd70b040b0e5dd89a34865861672325a09641b1e5f44b237b7cd34d48`（與 UX manifest 相同） |
+| UX commit | `7aa4275`（1.4.1：〈保存等級〉表的等級 1 拿掉單一進行中命令 CFG-06，與〈目標 2〉一致）；縮範圍的 1.4.0 與 UX-UNITYEXTENSION-7 在 `bf62034` |
 | 保存等級 | 等級 1「直接存」（[保存等級](../../../../../../UX/Documentation/ModuleSpec/Foundation/Configuration.md#保存等級)）：同步、本地、低代價的設定，改了就存，沒有草稿、確認、重試與套用階段 |
 | UX 決策 | 第 90 題 `adopt`、第 91 題 `entry-wide`（統一入口的全部 KEY 都適用載入失敗不覆寫）、第 92 題 `split`、第 93 題 `two-levels`（保存分兩級，依失敗模型與代價分級，不依平台） |
 | DX 基準 | 不適用：Configuration 是基礎層的保存語意，沒有視覺組裝 |
-| 套件釘選 | 快照 `Packages/common/Tests/Editor/UX~/Configuration/Configuration.md`（位元組與 UX 相同，`.gitattributes` 設 `-text`），EditMode `ConfigurationDesignTests` 核對雜湊。實作分支 `2ee96de` 釘的是 1.3.1，需由實作方改為 1.4.0 |
+| 套件釘選 | 快照 `Packages/common/Tests/Editor/UX~/Configuration/Configuration.md`（位元組與 UX 相同，`.gitattributes` 設 `-text`），EditMode `ConfigurationDesignTests` 核對雜湊。實作分支 `2ee96de` 釘的是 1.3.1，需由實作方改為 1.4.1 |
 | 環境 | Windows 11、Unity 6000.6.0f1 Editor、Yu5h1LibTest |
 
 ## 範圍
@@ -55,13 +55,13 @@ UnityExtension
 
 ## 決策
 
-實作方第一階段在 [cross-platform-ui-parity.decisions](../../../../decisions/cross-platform-ui-parity.decisions) 出了七題，使用者 2026-10-20 都已作答；其中幾題的答案是討論反饋，結論由 UX 流程審查與使用者討論後寫進 UX 1.4.0〈目標 2〉。
+實作方第一階段在 [cross-platform-ui-parity.decisions](../../../../decisions/cross-platform-ui-parity.decisions) 出了七題，使用者 2026-10-20 都已作答；三題有效的已記為選項答案（UnityExtension `e55ec83`），使用者原本的反饋保留在 reason；四題撤回的維持討論反饋。
 
 | 決策 | 結論 | 影響的情境 |
 |---|---|---|
-| `config-storage-format` | 有效：存檔加版本欄位、解析改嚴格、舊存檔當版本 0 | 載入失敗不覆寫（CFG-02） |
-| `config-load-error-recovery` | 有效：印 Error、用預設值繼續、不寫盤直到明確重設；加查詢錯誤與重新讀取的入口 | 載入失敗不覆寫（CFG-02） |
-| `config-service-subject` | 有效：服務＝入口裡的 KEY；host 元件銷毀時自行登出；入口加 `Unload` 釋放單一 KEY | 卸載與延遲完成（CFG-07）原生等價、實際 backend（CFG-P01）的重啟 |
+| `config-storage-format` | 有效（`reserved-version-strict`）：存檔加版本欄位、解析改嚴格、舊存檔當版本 0 | 載入失敗不覆寫（CFG-02） |
+| `config-load-error-recovery` | 有效（`readonly-defaults-view`，加印 Error）：印 Error、用預設值繼續、不寫盤直到明確重設；加查詢錯誤與重新讀取的入口 | 載入失敗不覆寫（CFG-02） |
+| `config-service-subject` | 有效（`entry-is-service`）：服務＝入口裡的 KEY；host 元件銷毀時自行登出；入口加 `Unload` 釋放單一 KEY，遇未存的變更時拒絕並印 Warning | 卸載與延遲完成（CFG-07）原生等價、實際 backend（CFG-P01）的重啟 |
 | `config-accepted-value-split` | 撤回：已接受值與寫入的分離只有等級 2 需要（第 93 題） | — |
 | `config-save-failure-detect` | 撤回：寫入失敗的偵測與重試屬等級 2 | — |
 | `config-apply-shape` | 撤回：套用階段屬等級 2 | — |
@@ -80,7 +80,7 @@ UnityExtension
 | [通知與隔離（CFG-08）](../../../../../../UX/Documentation/ModuleSpec/Foundation/Configuration.md#行為編號與共同案例) | 每 KEY 一個 `Entry` 與 DataView；通知＝`DataView.Changed`、host `changed`（UnityEvent） | 不同 KEY 各自一份 view，存檔只寫該 KEY；入口是 `Changed` 的第一個訂閱者，存檔先於其他觀察者；取消訂閱可行 | 改了就存、不同 KEY 互不覆寫、取消訂閱後不再通知 | planned |
 | [卸載與延遲完成（CFG-07）](../../../../../../UX/Documentation/ModuleSpec/Foundation/Configuration.md#行為編號與共同案例)的原生等價 | host `OnDestroy`；入口的 KEY | 入口靜態、比 host 活得久；host 註冊的 `HostStorage` 在 host 銷毀後仍留在靜態表裡並持有已銷毀的 host，之後 `Preferences.Save(KEY)` 還會呼叫它；沒有釋放單一 KEY 的入口 | 依 `config-service-subject`：host 銷毀時登出，入口不再呼叫它；`Unload(key)` 釋放單一 KEY，下次存取重新讀取 | planned |
 | [實際 backend（CFG-P01）](../../../../../../UX/Documentation/ModuleSpec/Foundation/Configuration.md#平台驗收與已知界線) | `PlayerPrefsStorage`、真實 `PlayerPrefs` | 提交點＝`PlayerPrefs.Save()`；無記錄＝`HasKey` 為 false；EditMode 的「重啟」需要清空入口狀態的入口，`ClearPlayerPrefs` 不重設已載入的 Entry | 以 `Unload` 作為重啟的等價；保存、重啟、重讀、KEY 隔離成立；沒有存檔與載入錯誤可分辨 | planned |
-| [匯入與版本固定（CFG-P05）](../../../../../../UX/Documentation/ModuleSpec/Foundation/Configuration.md#平台驗收與已知界線) | `Tests/Editor/UX~/Configuration/Configuration.md`、`ConfigurationDesignTests` | 分支 `2ee96de` 已建立快照與測試，但釘的是 1.3.1 | 改釘 1.4.0 的位元組與雜湊 | planned |
+| [匯入與版本固定（CFG-P05）](../../../../../../UX/Documentation/ModuleSpec/Foundation/Configuration.md#平台驗收與已知界線) | `Tests/Editor/UX~/Configuration/Configuration.md`、`ConfigurationDesignTests` | 分支 `2ee96de` 已建立快照與測試，但釘的是 1.3.1 | 改釘 1.4.1 的位元組與雜湊 | planned |
 
 ## 驗收對照
 
@@ -104,10 +104,10 @@ UnityExtension
 
 | 規範版本 | UX commit | UnityExtension commit | checklist commit | 結論 |
 |---|---|---|---|---|
-| Configuration 1.4.0〈目標 2〉等級 1 | `bf62034` | 待實作 | 待記錄 | planned |
+| Configuration 1.4.1〈目標 2〉等級 1 | `7aa4275` | 待實作 | 待記錄 | planned |
 
 ## 結論
 
-### 第一輪（Configuration 1.4.0〈目標 2〉等級 1「直接存」）
+### 第一輪（Configuration 1.4.1〈目標 2〉等級 1「直接存」）
 
 狀態：planned（2026-10-20）。紀錄與 checklist 已建立，所有檢查 not run；實作分支 `feat/ux-unityextension-7-configuration`。範圍原為 1.3.1 的八條服務語意（主線 `8df460f`），同日依第 93 題縮為等級 1。

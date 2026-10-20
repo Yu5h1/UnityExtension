@@ -2,14 +2,14 @@
 
 Current round: `../../../UX/Documentation/ModuleSpec/Foundation/Configuration.md#目標-2等級-1直接存在-unity-原生-preferences-上成立進行中2026-10-20-點名`.
 
-本輪對應 UX Configuration 1.4.0〈目標 2〉等級 1「直接存」（UX `bf62034`，需求 UX-UNITYEXTENSION-7），在 `Yu5h1Lib.Common`（`Packages/common`）的統一入口 `Preferences` 與 host `Preferences<T>` 引用。等級 2 的保存提交順序（CFG-03）、保存失敗與重試（CFG-04）、已保存未套用（CFG-05）、單一進行中命令（CFG-06）、草稿及模式（CFG-12）屬目標 3，不在本輪。只放 agent 自動檢查（UX 第 89 題）；生命週期（CFG-P02）的人工 checklist 在本輪通過後另開。adapter 必須呼叫真實統一入口與 host，不能以預期值代替操作。驗收紀錄見 Packages/common/Documentation/Yu5h1Lib.UX/Configuration.md。一個檔案只放一輪。
+本輪對應 UX Configuration 1.4.1〈目標 2〉等級 1「直接存」（UX `7aa4275`，需求 UX-UNITYEXTENSION-7），在 `Yu5h1Lib.Common`（`Packages/common`）的統一入口 `Preferences` 與 host `Preferences<T>` 引用。等級 2 的保存提交順序（CFG-03）、保存失敗與重試（CFG-04）、已保存未套用（CFG-05）、單一進行中命令（CFG-06）、草稿及模式（CFG-12）屬目標 3，不在本輪。只放 agent 自動檢查（UX 第 89 題）；生命週期（CFG-P02）的人工 checklist 在本輪通過後另開。adapter 必須呼叫真實統一入口與 host，不能以預期值代替操作。驗收紀錄見 Packages/common/Documentation/Yu5h1Lib.UX/Configuration.md。一個檔案只放一輪。
 
 - [ ] **1. 匯入與版本固定（CFG-P05）**
-  Outcome: 套件內有 Configuration 1.4.0 規格的快照，雜湊與 UX manifest 一致，快照位元組在任何 checkout 下不變。
+  Outcome: 套件內有 Configuration 1.4.1 規格的快照，雜湊與 UX manifest 一致，快照位元組在任何 checkout 下不變。
   Checks:
     - [ ] **快照與雜湊**
       - Action: 執行 EditMode 測試 `ConfigurationDesignTests`。
-      - Expect: `Packages/common/Tests/Editor/UX~/Configuration/Configuration.md` 的 SHA-256 為 `4ee43951f43da3bd10a27c02754aebe0a445bdfc74fd4a60a20b8fea971d61d2`，與 UX manifest 相同；快照路徑在 `.gitattributes` 有 `-text`；把快照改一個位元組後測試失敗，還原後通過。
+      - Expect: `Packages/common/Tests/Editor/UX~/Configuration/Configuration.md` 的 SHA-256 為 `4e99803cd70b040b0e5dd89a34865861672325a09641b1e5f44b237b7cd34d48`，與 UX manifest 相同；快照路徑在 `.gitattributes` 有 `-text`；把快照改一個位元組後測試失敗，還原後通過。
     - [ ] **乾淨 checkout**
       - Action: 在實作分支的新 git worktree 中，把 Yu5h1LibTest 的 `com.yu5h1.common` 改指向該 worktree，`Client.Resolve()` 後執行 `Yu5h1Lib.Common.Editor.Tests`。
       - Expect: `PackageInfo.FindForAssetPath` 的 `resolvedPath` 是 worktree；沒有編譯錯誤；快照雜湊相符。
