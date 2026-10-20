@@ -7,7 +7,7 @@ using Yu5h1Lib.UIToolkit.Acceptance;
 namespace Yu5h1LibTest
 {
     /// <summary>
-    /// One acceptance page of Yu5h1Lib.UX VisualFoundation 1.3.0 goal 1 on UI Toolkit: the page and panel surfaces, and Button
+    /// One acceptance page of Yu5h1Lib.UX VisualFoundation 1.4.0 goal 1 on UI Toolkit: the page and panel surfaces, and Button
     /// and OptionPicker in every state of the state-to-role table, in one fixed scheme.
     /// </summary>
     public class UxVisualFoundationDemoCase : IUxModuleDemoCase
@@ -25,7 +25,7 @@ namespace Yu5h1LibTest
         }
 
         public string Id => scheme == VisualFoundationScheme.Light ? "visualfoundation-light" : "visualfoundation-dark";
-        public string DisplayName => "VisualFoundation (1.3.0) " + SchemeName;
+        public string DisplayName => "VisualFoundation (1.4.0) " + SchemeName;
         public string ModuleSpec => "Yu5h1Lib.UX/VisualFoundation";
 
         private string SchemeName => scheme == VisualFoundationScheme.Light ? "light" : "dark";
@@ -45,7 +45,7 @@ namespace Yu5h1LibTest
             VisualFoundationTheme.Apply(page, scheme);
             container.Add(page);
 
-            page.Add(Text("Yu5h1Lib.UX VisualFoundation 1.3.0 (" + SchemeName + ")", "vf-page__heading"));
+            page.Add(Text("Yu5h1Lib.UX VisualFoundation 1.4.0 (" + SchemeName + ")", "vf-page__heading"));
             page.Add(Text("頁面上的一般內容：itemText 在 pageBackground 上。", "vf-page__text"));
             page.Add(Text("次要文字：secondaryText。按 Tab 把鍵盤焦點移到各按鈕，看焦點外框。", "vf-page__secondary"));
 
@@ -102,6 +102,7 @@ namespace Yu5h1LibTest
             row.Add(StateButton(buttonStyle, icon, ghost, "一般"));
             row.Add(StateButton(buttonStyle, icon, ghost, "滑過", hover: true));
             row.Add(StateButton(buttonStyle, icon, ghost, "選取", selected: true));
+            row.Add(StateButton(buttonStyle, icon, ghost, "選取且滑過", hover: true, selected: true));
             row.Add(StateButton(buttonStyle, icon, ghost, "停用", disabled: true));
             row.Add(StateButton(buttonStyle, icon, ghost, null));
             return row;

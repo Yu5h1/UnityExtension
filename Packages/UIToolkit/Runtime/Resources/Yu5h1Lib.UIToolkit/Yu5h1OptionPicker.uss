@@ -1,11 +1,11 @@
 /* Yu5h1Lib.UX OptionPicker for UI Toolkit.
-   Adopts Yu5h1Lib.UX OptionPicker 3.0.2 on native VisualElement panel + Button.
+   Adopts Yu5h1Lib.UX OptionPicker 3.1.0 on native VisualElement panel + Button.
    - OPT-DISPLAY: panelPadding (4px), optionGap (4px).
-   - OPT-APPEARANCE: solid (elevated background, border) vs ghost (transparent, no border).
+   - OPT-APPEARANCE: solid (panelBackground fill, border outline; USS has no shadow, so the outline alone, which the specification
+     allows for a platform without shadow) vs ghost (transparent, no outline).
    - Orientation: horizontal (row) vs vertical (column).
-   Colours are the VisualFoundation roles (Yu5h1VisualFoundation.uss); hover, selected, focus and disabled of the
-   buttons inside the panel come from Yu5h1Button.uss. The solid panel outline stays on the Unity theme variable: its
-   role is not named by the specification (Documentation/Requirements.UX.md, UNITYEXTENSION-UX-1). */
+   Colours are the VisualFoundation roles (Yu5h1VisualFoundation.uss); hover, selected, focus and disabled of the buttons
+   inside the panel come from Yu5h1Button.uss. */
 
 .yu5h1-optionpicker__panel {
     position: absolute;
@@ -41,7 +41,7 @@
 .yu5h1-optionpicker__panel--solid {
     background-color: var(--yu5h1-color-panel-background);
     border-width: 1px;
-    border-color: var(--unity-colors-default-border, rgba(0, 0, 0, 0.2));
+    border-color: var(--yu5h1-color-border);
 }
 
 .yu5h1-optionpicker__panel--ghost {

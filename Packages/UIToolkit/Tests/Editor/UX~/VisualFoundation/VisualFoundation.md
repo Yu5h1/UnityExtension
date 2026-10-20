@@ -2,7 +2,7 @@
 
 > 狀態：目標 1「預設色票與狀態外觀在 Unity UI Toolkit 成立」進行中（2026-10-21，第 94、95 題）。Web 已採用（UX-WEB-2），是本規格的來源側證據。
 >
-> Specification version: 1.3.1（2026-10-21：目標 1 完成條件的人工 checklist 改寫為一頁一份、light 與 dark 同一份，原「各一頁」被讀成兩份；行為不變）。前一版：1.3.0（2026-10-21：依第 94、95 題加入〈目標〉與目標 1 的對照表；角色、色值、案例不變，Web 不需重新匯入）；1.2.3（2026-10-19；只改引用：Configuration 搬到 [Foundation/Configuration.md](Foundation/Configuration.md)（1.2.0，第 87 題）。1.2.2 2026-10-16；只改引用：Primitives 改名為「操作」（Input，[Foundation/Input.md](Foundation/Input.md)），行為 ID 前綴改為 INPUT-。1.2.1 2026-10-13；1.2.1 改連到 UX 的 Configuration；1.0.0 自 Web Theme 的 `resolveTheme` 與 `theme.css` 抽出色彩角色與數值，不改配色；1.1.0 加入文字縮放與 `controlBorder`；1.2.0 取消 1.1.0 自訂的間距、圓角、字級級數，改以各模組現有的具名 token 為準）
+> Specification version: 1.4.0（2026-10-21：依 UnityExtension 的 UNITYEXTENSION-UX-1，〈狀態對應的色彩角色〉補「指標按住中」與「選取且滑過」兩列，`controlBorder` 的用途與「需要外框才能辨識的控制項」一列寫明實心按鈕用、只靠圖示或文字辨識的無底按鈕不用；色值、案例不變，相容新增）。前一版：1.3.1（2026-10-21：目標 1 完成條件的人工 checklist 改寫為一頁一份、light 與 dark 同一份，原「各一頁」被讀成兩份；行為不變）。前一版：1.3.0（2026-10-21：依第 94、95 題加入〈目標〉與目標 1 的對照表；角色、色值、案例不變，Web 不需重新匯入）；1.2.3（2026-10-19；只改引用：Configuration 搬到 [Foundation/Configuration.md](Foundation/Configuration.md)（1.2.0，第 87 題）。1.2.2 2026-10-16；只改引用：Primitives 改名為「操作」（Input，[Foundation/Input.md](Foundation/Input.md)），行為 ID 前綴改為 INPUT-。1.2.1 2026-10-13；1.2.1 改連到 UX 的 Configuration；1.0.0 自 Web Theme 的 `resolveTheme` 與 `theme.css` 抽出色彩角色與數值，不改配色；1.1.0 加入文字縮放與 `controlBorder`；1.2.0 取消 1.1.0 自訂的間距、圓角、字級級數，改以各模組現有的具名 token 為準）
 
 ## 系統階層與關係
 
@@ -74,7 +74,7 @@ Yu5h1Lib.UX
 | `disabled` | 推導 | 停用控制項的文字與圖示 |
 | `overlay` | 推導 | 模態介面下方的遮罩，帶 alpha |
 | `danger` | 推導 | 錯誤訊息與無效欄位 |
-| `controlBorder` | 推導 | 需要外框才能辨識的控制項：輸入框、多行輸入、下拉選單、核取方塊，以及沒有填色的按鈕 |
+| `controlBorder` | 推導 | 需要外框才能辨識的控制項：輸入框、多行輸入、下拉選單、核取方塊，以及實心按鈕的外框；只靠圖示或文字辨識的無底按鈕不用外框 |
 
 角色名稱是跨平台的名稱；各平台的變數名稱（例如 Web 的 `--ui-surface`）屬實作端。
 
@@ -117,10 +117,12 @@ Yu5h1Lib.UX
 |---|---|---|
 | 頁面上的一般內容 | `itemText`；頁面標題 `heading` | `pageBackground` |
 | 面板內的一般內容 | `itemText`；標題 `panelHeading`；次要文字 `secondaryText` | `panelBackground`；分隔 `border` |
-| 需要外框才能辨識的控制項 | 不變 | 外框 `controlBorder` |
+| 需要外框才能辨識的控制項（輸入框、下拉選單、核取方塊、實心按鈕；只靠圖示或文字辨識的無底按鈕不算） | 不變 | 外框 `controlBorder` |
 | 指標停在可用的控制項上 | 不變 | `hover` |
 | 鍵盤焦點 | 不變 | `focus` 外框（VIS-FOCUS） |
 | 選取、按下中的切換、開啟，以及主要動作 | `onAccent` | `accent` |
+| 選取且指標停在上面 | `onAccent` | `accent`（選取優先，滑過不改變選取的外觀） |
+| 指標按住中（不是切換、不是選取） | 不變 | 不另定外觀，沿用按住前的狀態（通常是 `hover`）；放開才依結果改變 |
 | 停用 | `disabled`；可再降低不透明度 | 不顯示懸停外觀 |
 | 錯誤或無效 | 錯誤訊息 `danger` | 無效欄位的外框 `danger` |
 | 模態介面開啟 | — | 下層以 `overlay` 遮罩 |
