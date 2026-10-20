@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-20T07:18:09.560455+00:00",
+  "updated_at": "2026-10-20T15:07:27.283562+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -712,6 +712,25 @@
           "title": "Motion 在 Unity 能跑：Windows Editor（6000.6）EditMode 2/2 通過，Throw／Scatter 數值相符、生命週期部分驗證（2026-10-07）；逐項見 Packages/UIToolkit/Documentation/Motion/。Player 與 Android 未執行",
           "priority": 2,
           "status": "done"
+        }
+      ]
+    },
+    {
+      "id": "agent-executable-items",
+      "title": "Agent 可執行項目",
+      "status": "planned",
+      "summary": "使用者交給 agent 的指示：一條指示一個子項目，一個子項目綁一份 checklist 作驗收證據；指示的結果與驗收條件寫在 Documentation/Agent可執行項目.md。屬既有需求卡片的指示放該卡片之下。",
+      "pending_items": [
+        {
+          "id": "preferences-entry-view-copy",
+          "title": "驗證入口 view 為載入複本的回歸修正：Yu5h1LibTest 跑過兩項新 EditMode 測試，Yu5h1Lib.Common.Editor.Tests 整組不退步",
+          "status": "planned",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "preferences-entry-view-copy"
+          }
         }
       ]
     }

@@ -1,0 +1,15 @@
+# Preferences Entry View Copy Checklist
+
+Current round: `../Documentation/Agent可執行項目.md#驗證入口-view-為載入複本的回歸修正`.
+
+本輪驗證統一入口 `Preferences` 的 view 是載入結果複本的回歸修正（`master` `52ada54`），只放 agent 在 Yu5h1LibTest 跑的 EditMode 測試；VCP 登入後紀錄是否保住由使用者在 VCP 專案確認，不在本輪。一個檔案只放一輪。
+
+- [ ] **1. 入口的 view 是載入結果的複本**
+  Outcome: 入口交出的 view 與 storage 保存的物件不是同一個，變更存回 storage 後紀錄仍完整，`KeyValues.CopyFrom` 對自己或自己的 `Entries` 不會清掉內容。
+  Checks:
+    - [ ] **回歸測試**
+      - Action: 在 Yu5h1LibTest 執行 EditMode 測試 `Yu5h1Lib.Common.Editor.Tests` 的 `ViewIsACopyOfTheLoadedObject_SoSavingBackIntoItKeepsTheRecord` 與 `CopyFromItselfOrItsOwnEntriesKeepsTheEntries`。
+      - Expect: 兩項通過。
+    - [ ] **整組不退步**
+      - Action: 執行整個 `Yu5h1Lib.Common.Editor.Tests`。
+      - Expect: 沒有編譯錯誤，全部通過。
