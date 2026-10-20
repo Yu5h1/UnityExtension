@@ -54,6 +54,18 @@ namespace Yu5h1Lib.Tests
             public void Delete(string key) { }
         }
 
+        /// <summary>Hands out the record object it keeps, as a host override holding its own records does (VCP
+        /// UserDataView), and writes a save back into that record.</summary>
+        private class SharedObjectStorage : Preferences.IStatusStorage
+        {
+            public readonly DataView record = new DataView { { "Email", "a@b" }, { "Name", "A" } };
+
+            public PreferencesLoadResult Load(string key) => PreferencesLoadResult.Loaded(record);
+            public bool TryLoad(string key, out DataView data) { data = record; return true; }
+            public void Save(string key, DataView data) => record.CopyFrom(data);
+            public void Delete(string key) { }
+        }
+
         private readonly Dictionary<string, Preferences.IStorage> registered = new Dictionary<string, Preferences.IStorage>();
 
         private (string key, MemoryStorage storage) NewKey(string name, string raw = null)
@@ -363,6 +375,42 @@ namespace Yu5h1Lib.Tests
         public void UnloadingAKeyThatWasNeverLoadedIsFine()
         {
             Assert.IsTrue(Preferences.Unload("Yu5h1Lib.Tests.Entry.NeverLoaded"));
+        }
+
+        // ---- the view is the entry's own object ----
+
+        [Test]
+        public void ViewIsACopyOfTheLoadedObject_SoSavingBackIntoItKeepsTheRecord()
+        {
+            var key = "Yu5h1Lib.Tests.Entry.SharedObject";
+            var storage = new SharedObjectStorage();
+            Preferences.Register(key, storage);
+            registered[key] = storage;
+
+            var view = Preferences.GetView(key);
+            Assert.AreNotSame(storage.record, view);
+            Preferences.SetSaveOnChanged(key, true);
+            Put(key, "Name", "B");
+            Assert.AreEqual("B", storage.record["Name"]);
+            Assert.AreEqual("a@b", storage.record["Email"]);
+            Assert.AreEqual(2, storage.record.Count);
+
+            Assert.IsTrue(Preferences.Reload(key));
+            Assert.AreSame(view, Preferences.GetView(key));
+            Assert.AreEqual("B", view["Name"]);
+            Assert.AreEqual(2, view.Count);
+            Assert.AreEqual(2, storage.record.Count);
+        }
+
+        [Test]
+        public void CopyFromItselfOrItsOwnEntriesKeepsTheEntries()
+        {
+            var data = new DataView { { "Email", "a@b" }, { "Name", "A" } };
+            data.CopyFrom(data);
+            Assert.AreEqual(2, data.Count);
+            data.CopyFrom(data.Entries);
+            Assert.AreEqual(2, data.Count);
+            Assert.AreEqual("A", data["Name"]);
         }
 
         [Test]

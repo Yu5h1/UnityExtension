@@ -115,7 +115,7 @@ namespace Yu5h1Lib
             entry = new Entry();
             var result = ReadStorage(key);
             entry.loaded = result.Status == PreferencesLoadStatus.Loaded;
-            entry.view = entry.loaded ? result.Data : new DataView();
+            entry.view = entry.loaded ? new DataView(result.Data) : new DataView();
             if (result.Status == PreferencesLoadStatus.Error)
                 SetLoadError(key, entry, result);
             var created = entry;
@@ -158,7 +158,8 @@ namespace Yu5h1Lib
             Debug.LogError($"Preferences [{key}]: the save cannot be read ({result.Error}). Using defaults and not writing this KEY until it is reloaded or explicitly reset; the original text is kept. Original: {raw}");
         }
 
-        /// <summary>The shared DataView of <paramref name="key"/>, loaded on first access.</summary>
+        /// <summary>The shared DataView of <paramref name="key"/>, loaded on first access. It is the entry's own
+        /// object, a copy of what the storage returned, so a storage or host override may hand out the object it keeps.</summary>
         public static DataView GetView(string key) => GetEntry(key).view;
 
         /// <summary>As <see cref="GetView(string)"/>; <paramref name="loaded"/> tells whether storage held
@@ -189,12 +190,13 @@ namespace Yu5h1Lib
                 SetLoadError(key, entry, result);
                 return false;
             }
+            var data = result.Status == PreferencesLoadStatus.Loaded ? new DataView(result.Data) : null;
             entry.suspended = true;
             try
             {
                 entry.view.Clear();
-                if (result.Status == PreferencesLoadStatus.Loaded)
-                    foreach (var pair in result.Data)
+                if (data != null)
+                    foreach (var pair in data)
                         entry.view[pair.Key] = pair.Value;
             }
             finally
