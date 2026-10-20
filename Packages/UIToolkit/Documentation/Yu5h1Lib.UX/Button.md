@@ -30,7 +30,7 @@ UnityExtension
 
 | 規範內容 | 依賴 | 本輪處理 |
 |---|---|---|
-| BTN-APPEARANCE「顏色依 VisualFoundation 的角色」 | VisualFoundation | blocked：UIToolkit 沒有 VisualFoundation 色票；本輪顏色取 Unity 預設主題的按鈕變數 |
+| BTN-APPEARANCE「顏色依 VisualFoundation 的角色」 | VisualFoundation | partial（2026-10-21 更新）：色票、無底外框、滑過、選取、停用與焦點外框已依 VisualFoundation 1.3.1 的角色，使用者已在人工 checklist 記為通過，見 [VisualFoundation 紀錄](VisualFoundation.md)；實心靜止底色仍 blocked，等 UX 指定角色（UNITYEXTENSION-UX-1）。第二輪（2026-10-19）當時的記載：UIToolkit 沒有色票，顏色取 Unity 預設主題的按鈕變數 |
 | BTN-DISPLAY「顯示設定不改變無障礙名稱」 | 操作 INPUT-NAME | blocked：UI Toolkit 元素沒有對應到 `UnityEngine.Accessibility` 的無障礙名稱 |
 | 按下與鍵盤 | 操作 INPUT-PRESS-TAP、INPUT-KEY-COMMAND | 沿用 UI Toolkit 原生 Button，本輪不另寫程式 |
 | 圖示的三種來源與著色 | Icon | blocked：原生 Button `iconImage` 支援 Texture2D、Sprite、RenderTexture、VectorImage |

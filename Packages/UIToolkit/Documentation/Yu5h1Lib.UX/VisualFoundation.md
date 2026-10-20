@@ -90,7 +90,7 @@ VisualFoundation 本身不引用其他模組；它被 Button 與 OptionPicker �
 
 ## 結論
 
-狀態：模組輪通過、人工 checklist 已記為通過（2026-10-21）。1.3.1 重新釘選：只換快照與測試常數（雜湊 `2a9d2881…` 與 UX manifest 相同，版本字串 1.3.1），以 shell 核對雜湊；`VisualFoundationDesignTests` 在 Unity 的重跑待使用者離開 Play Mode 後補（目前編輯器在 Play 中，測試無法啟動）。在本輪範圍內（色票交付、Button 與 OptionPicker 的狀態角色、焦點外框），`603ec74` 符合 VisualFoundation 1.3.0 的自動可驗部分；這是自動檢查完成，不是驗收完成。目標 1 要達成，還需要 UX-UNITYEXTENSION-2 的完成條件：兩份人工 checklist 通過，Button 與 OptionPicker 紀錄的 blocked 列改為通過，而實心靜止底色的 blocked 要等 UNITYEXTENSION-UX-1。
+狀態：模組輪通過、人工 checklist 已記為通過（2026-10-21）。1.3.1 重新釘選：只換快照與測試常數（雜湊 `2a9d2881…` 與 UX manifest 相同，版本字串 1.3.1），已在 Unity 重跑 EditMode `Yu5h1Lib.UIToolkit.Editor.Tests` 110/110（含 `VisualFoundationDesignTests` 釘選 1.3.1）；這次宿主解析到主 checkout，不是乾淨 worktree，因為只換了快照與常數。在本輪範圍內（色票交付、Button 與 OptionPicker 的狀態角色、焦點外框），`603ec74` 符合 VisualFoundation 1.3.0 的自動可驗部分；這是自動檢查完成，不是驗收完成。目標 1 要達成，還需要 UX-UNITYEXTENSION-2 的完成條件：兩份人工 checklist 通過，Button 與 OptionPicker 紀錄的 blocked 列改為通過，而實心靜止底色的 blocked 要等 UNITYEXTENSION-UX-1。
 
 驗收環境與做法（2026-10-21，由實作的 session 自己執行，不是未參與實作的 agent）：
 
