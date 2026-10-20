@@ -1,5 +1,5 @@
 {
-  "targetId": "optionpicker",
-  "displayName": "UX OptionPicker (3.0.2)",
-  "moduleSpec": "Yu5h1Lib.UX/OptionPicker"
+  "targetId": "visualfoundation-light",
+  "displayName": "UX VisualFoundation (1.3.0) light",
+  "moduleSpec": "Yu5h1Lib.UX/VisualFoundation"
 }
