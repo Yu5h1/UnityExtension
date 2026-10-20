@@ -2,7 +2,7 @@
 
 > Task ID: uitk-button
 >
-> 狀態：verified（2026-10-17，第一輪：Button 1.1.0，本輪範圍內）。9 項自動檢查在乾淨 worktree 全部通過；使用者以範例 `Samples~/UxButton`（`9b2a2f6`）確認外觀。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 Button」，流程見 referenced-module-acceptance。範圍依決策 `uitk-button-scope`（button-first）：只引用 Button，依賴部分記為缺口。
+> 狀態：verified（2026-10-19，第二輪：Button 2.0.0）。自動檢查在乾淨 worktree 通過，使用者同日與 Web demo 並排確認外觀。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 Button」，流程見 referenced-module-acceptance。實作方式採「原生 Button + USS」（決策 64-66，uitk-button-native），移除自訂封裝元件 UxButton 與 ButtonDesign 常數。自動檢查涵蓋數值與規則邏輯（BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT），外觀（solid/ghost 與狀態差異）交由使用者直接確認。
 
 ```text
 UnityExtension
@@ -10,19 +10,20 @@ UnityExtension
    └─ Button（本紀錄）
       ├─ 體驗規範 ← Yu5h1Lib.UX ModuleSpec/Controls/Button（BTN-DISPLAY、BTN-APPEARANCE、BTN-SIZE、BTN-LAYOUT）
       ├─ 規範引用、本輪未引用 ← 操作（INPUT-PRESS-TAP、INPUT-KEY-COMMAND、INPUT-NAME）、VisualFoundation、Icon
-      └─ 驗證專案 → Yu5h1LibTest（Unity 6000.6），驗收時 manifest 暫時指向乾淨 worktree（決策 `uitk-clean-checkout-host`）
+      └─ 驗證專案 → Yu5h1LibTest（Unity 6000.6），驗收時 manifest 暫時指向乾淨 worktree
 ```
 
 ## 身分
 
 | 項目 | 內容 |
 |---|---|
-| 實作套件 | `com.yu5h1.uitoolkit`（`Packages/UIToolkit`）。盤點時（UnityExtension `6cee41f`）沒有任何按鈕包裝、沒有 USS／UXML |
-| UX 規範 | [UX ModuleSpec/Controls/Button.md](../../../../../../UX/Documentation/ModuleSpec/Controls/Button.md) 1.1.0，SHA-256 `3633818b362a902fbd53de13188b7757bf01c9db52339d332697f304b25e71c3` |
-| 設計資料 | `Button/button-design.json` 2.0.0，SHA-256 `8082bb56a9eb493e9c9d338527659efa389d8b01817a72f4aec8b535e2974075`：`size` 32、`iconRatio` 0.75、`iconWithLabelSize` 18（名稱 14px）、`iconLabelGap` 8 |
-| UX commit | `d9a9790`（Button 檔案自 `1e7152e` 起未變；雜湊與 UX `manifest.json` 一致） |
-| 套件釘選 | 快照 `Tests/Editor/UX~/Button/`（`Button.md`、`button-design.json`，位元組與 UX 相同，`.gitattributes` 設 `-text`）；數值在 `Runtime/WebUI/Button/ButtonDesign.cs`，`ButtonDesignTests` 核對雜湊與數值 |
-| 範圍 | BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT 全部；BTN-APPEARANCE 的結構（實心有底、無底沒有底、狀態看得出差異） |
+| 實作套件 | `com.yu5h1.uitoolkit`（`Packages/UIToolkit`）。採用原生 `UnityEngine.UIElements.Button` 與樣式表 `Yu5h1Button.uss` |
+| UX 規範 | [UX ModuleSpec/Controls/Button.md](../../../../../../UX/Documentation/ModuleSpec/Controls/Button.md) 2.0.0，SHA-256 `9662a105972563ca4b546aac245aa5321761028b7aa96c6de7877f6ed77f2567` |
+| 設計資料 | `Button/button-design.json` 3.0.0，SHA-256 `e2568af28f704603b2a0d696324f2389a81a685c5ad96049a38c4008cde5c0f9`：`size` 32、`iconRatio` 0.75、`iconLabelGap` 8 |
+| UX commit | `8c1f764e22dc54960558c6bc81b364c31d3760b5` |
+| DX 基準 | 未釘選：本輪早於 DX 1.0.0（UX 第 81 題，DX §1） |
+| 套件釘選 | 快照 `Tests/Editor/UX~/Button/`（`Button.md`、`button-design.json`，位元組與 UX 相同，`.gitattributes` 設 `-text`）；`ButtonDesignTests` 核對雜湊與數值 |
+| 範圍 | BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT 全部；BTN-APPEARANCE 依樣式提供 solid/ghost |
 | 環境 | Windows 11、Unity 6000.6.0f1 Editor、PlayMode（runtime 面板只在 Game view 繪製時才解析排版） |
 
 ## 本輪未引用的部分（缺口）
@@ -31,21 +32,19 @@ UnityExtension
 |---|---|---|
 | BTN-APPEARANCE「顏色依 VisualFoundation 的角色」 | VisualFoundation | blocked：UIToolkit 沒有 VisualFoundation 色票；本輪顏色取 Unity 預設主題的按鈕變數 |
 | BTN-DISPLAY「顯示設定不改變無障礙名稱」 | 操作 INPUT-NAME | blocked：UI Toolkit 元素沒有對應到 `UnityEngine.Accessibility` 的無障礙名稱 |
-| 按下與鍵盤 | 操作 INPUT-PRESS-TAP、INPUT-KEY-COMMAND | 沿用 UI Toolkit 原生 Button，本輪不驗 |
-| 圖示的三種來源與著色 | Icon | blocked：本輪只驗按鈕能放入宿主提供的圖示（`Background`：Texture2D、Sprite、VectorImage） |
-| 滑過狀態 | — | 測試無法可靠模擬指標滑過（同 `ChatPresenterScrollTests` 的限制），由使用者直接確認 |
-
-規範側缺口：Button 1.1.0〈目標 1〉把 UnityExtension 列為範圍外，BTN-SIZE、BTN-LAYOUT 沒有目標。依使用者 2026-10-17，屬 UX report `ux-goal-consumer-evidence` 的待討論項，不阻擋本輪。
+| 按下與鍵盤 | 操作 INPUT-PRESS-TAP、INPUT-KEY-COMMAND | 沿用 UI Toolkit 原生 Button，本輪不另寫程式 |
+| 圖示的三種來源與著色 | Icon | blocked：原生 Button `iconImage` 支援 Texture2D、Sprite、RenderTexture、VectorImage |
+| 外觀與滑過狀態確認 | — | 外觀交付使用者在 demo 中直接確認（決策 65），不再使用自動讀取 RenderTexture 像素之檢查 |
 
 ## 實作對照
 
 | UX 行為 | UI Toolkit 實作 | 說明 |
 |---|---|---|
-| 公開入口 | `UxButton`（`Runtime/WebUI/Button/UxButton.cs`），繼承原生 `UnityEngine.UIElements.Button`，`[UxmlElement]` | 型別名稱避開 `UnityEngine.UIElements.Button`；按下與鍵盤沿用原生按鈕 |
-| BTN-DISPLAY | `ShowIcon`、`ShowLabel`、`Icon`（`Background`：Texture2D、Sprite、RenderTexture、VectorImage）、`LabelText`；子元素 `yu5h1-button__icon`、`yu5h1-button__label` | 沒有圖示或兩者都關時仍顯示名稱；只顯示圖示時寬高都是 `Size`，有名稱時高度是 `Size`。原生 `text` 保持空白 |
-| BTN-SIZE | `Size`（UXML `size`，預設 `ButtonDesign.Size` 32）；`IconSide` | 只顯示圖示：`Size × IconRatio`；有名稱：名稱字型大小 × 18／14，上限 `Size × IconRatio`。字型大小在名稱排版變動時重讀 |
-| BTN-LAYOUT | USS `flex-direction: row`、`align-items: center`；圖示 `margin-right` 8 | 圖示在前（UI Toolkit 只有由左至右）；內容水平置中 |
-| BTN-APPEARANCE | `Appearance`（`Solid`／`Ghost`）、`Selected`；`Resources/Yu5h1Lib.UIToolkit/UxButton.uss` | 顏色暫用 Unity 預設主題的按鈕變數（附備用值），不是 VisualFoundation 角色（缺口） |
+| 公開入口 | `UnityEngine.UIElements.Button` + `Resources/Yu5h1Lib.UIToolkit/Yu5h1Button.uss` | 使用原生按鈕搭配樣式類別 `.yu5h1-button`，不再維護自訂 `UxButton` 類別 |
+| BTN-DISPLAY | 原生 `iconImage` 與 `text`；`.yu5h1-button--icon-only` | 只顯示圖示時套用 `.yu5h1-button--icon-only` 設定 32×32 正方形；有名稱時高度為 32；無圖示或兩者關閉時備援顯示名稱 |
+| BTN-SIZE | USS 百分比 `height: 75%`、`width: 75%` | 圖示一律 fit 按鈕：大小為 `size × 0.75`，不隨字型縮放（Button 2.0.0 決策 63） |
+| BTN-LAYOUT | USS `flex-direction: row`、`align-items: center`、`margin-left: 8px` | 圖示在名稱前，水平間距 8px，兩者垂直置中 |
+| BTN-APPEARANCE | `.yu5h1-button`（Solid）、`.yu5h1-button--ghost`（Ghost）、`.yu5h1-button--selected` | 實心預設底色；無底靜止透明，滑過/焦點/選中顯色 |
 
 ## 驗收對照
 
@@ -53,12 +52,11 @@ UnityExtension
 
 | UX 行為 | 檢查 | 結果所在 |
 |---|---|---|
-| 釘選 | 快照雜湊、常數與快照一致、乾淨 checkout 編譯 | checklist 第 1 項 |
+| 釘選 | 快照雜湊、合約版本與數值核對、乾淨 checkout 編譯 | checklist 第 1 項 |
 | BTN-DISPLAY | 四種組合、名稱後備、只顯示圖示的正方形、有名稱時的高度 | checklist 第 2 項 |
-| BTN-SIZE | `size` 32／40／24 下的圖示邊長，名稱旁圖示 | checklist 第 3 項 |
-| BTN-LAYOUT | 圖示在前、間距、垂直置中 | checklist 第 4 項 |
-| BTN-APPEARANCE（結構） | 實心與無底的靜止底色、無底在焦點與選中時的差異（量畫面像素） | checklist 第 5 項 |
-| 回歸 | UIToolkit 既有測試 | checklist 第 6 項 |
+| BTN-SIZE & BTN-LAYOUT | 各 size 下圖示 fit 按鈕（size × 0.75）、圖示在前、間距 8px、垂直置中 | checklist 第 3 項 |
+| BTN-APPEARANCE | 使用者在範例中確認外觀（Solid/Ghost、Hover、Focus、Selected） | checklist 第 4 項 |
+| 回歸 | UIToolkit 既有測試 | checklist 第 5 項 |
 
 ## 已知偏差
 
@@ -68,9 +66,34 @@ UnityExtension
 
 | 規範版本 | UX commit | UnityExtension commit | checklist commit | 結論 |
 |---|---|---|---|---|
-| Button 1.1.0 | `d9a9790` | `9b53f9b`（範例 `9b2a2f6`） | `e70ad14` | 本輪範圍內相容：自動檢查全部通過，使用者確認外觀；缺口見上 |
+| Button 1.1.0 | `d9a9790` | `9b53f9b`（範例 `9b2a2f6`） | `e70ad14` | 本輪範圍內相容：自動檢查全部通過，使用者確認外觀；缺口見第一輪紀錄 |
+| Button 2.0.0 | `8c1f764` | `fb13d38`（原引用 `5db20f7` 已被 amend，只差本格，不在任何分支） | 本紀錄所在提交 | 本輪範圍內相容：釘選核對、乾淨 worktree EditMode 215/215、PlayMode `NativeButtonTests` 11/11（BT01、BT03）通過，使用者 2026-10-19 依第 83 題與 Web demo 並排確認外觀（BT02）；缺口見〈本輪未引用的部分〉 |
 
 ## 結論
+
+### 第二輪（Button 2.0.0，原生 Button + USS，UnityExtension `fb13d38`）
+
+狀態：verified（2026-10-19）。使用者確認：在 Yu5h1LibTest 的 `Samples~/UxAcceptance`（`button`）與 Web OptionPicker demo 的「TaskProgress 外觀」並排，比例、排列、顯示組合與狀態差異一致；顏色未比（VisualFoundation 未引用）。在本輪範圍內（BTN-DISPLAY 除無障礙名稱、BTN-SIZE、BTN-LAYOUT，BTN-APPEARANCE 的 solid／ghost 結構），原生 Button + USS 於 `fb13d38` 符合 Button 2.0.0。
+
+- **釘選與編譯**：快照 SHA-256 與 UX commit `8c1f764` 完全一致，乾淨 worktree 下 `Yu5h1LibTest` 通過 215 項 EditMode 測試無編譯錯誤。
+- **架構轉換**：移除自訂 `UxButton` 與 `ButtonDesign` 常數，改為原生 `UnityEngine.UIElements.Button` 與樣式表 `Yu5h1Button.uss`。
+- **規則對照**：BTN-DISPLAY、BTN-SIZE、BTN-LAYOUT 的規則由 USS 與 PlayMode `NativeButtonTests` 表達；BT01（5 項）與 BT03（6 項，size 24／32／40）於 2026-10-19 在乾淨 worktree 全部通過（checklist 第 2、3 項）。BTN-DISPLAY 的「無障礙名稱不變」（INPUT-NAME）仍 blocked，該行為記 partial。外觀交付使用者在 `Samples~/UxAcceptance`（`CurrentTarget.json` 指向 `button`）依 UX 第 83 題與 Web OptionPicker demo 的「TaskProgress 外觀」並排確認。
+- **DX**：未釘選（本輪早於 DX 1.0.0；UX 第 81 題）。
+
+驗收環境與做法（2026-10-19，由未參與實作的 agent 執行）：
+
+- 乾淨 checkout：`git worktree add --detach ../UnityExtension-accept-button fb13d38`，工作目錄乾淨。
+- 宿主：Yu5h1LibTest（Unity 6000.6.0f1，Windows 11）。備份 `Packages/manifest.json` 與 `packages-lock.json` 後只把 `com.yu5h1.uitoolkit` 改指向 worktree，強制重新整理並要求編譯：Console 沒有錯誤，`PackageInfo.resolvedPath` 是 worktree 路徑。驗收後還原 manifest 並重新整理，`resolvedPath` 回到主 checkout；worktree 已移除。
+- PlayMode `Yu5h1Lib.UIToolkit.Tests.NativeButtonTests`：11／11 通過（BT01 5 項、BT03 6 項），經 MCP 的 Test Runner 執行，未搶焦點。每項測試輸出 Unity 的 “No Theme Style Sheet set to PanelSettings” 警告：量到的是無主題面板的排版結果，與第一輪的審查備註相同。
+- 限制：Yu5h1LibTest 以 junction 掛入主 checkout（分支 `adopt-ux-optionpicker`）的 `Samples~/UxAcceptance`，它引用 `Yu5h1Lib.UIToolkit.Acceptance`，而 `fb13d38` 的 Runtime 沒有這個命名空間；驗收後第二次強制重新整理時 Console 出現該範例 asmdef 的 5 個 CS0234／CS0246 錯誤，重新解析套件回主 checkout 後清除。測試執行前讀到的 Console 沒有錯誤，Test Runner 也回報 11 項結果，但無法從 Console 證明執行當下範例 asmdef 已編譯；它不在 `NativeButtonTests` 的相依鏈內，不影響量測結果。下次把範例 junction 一起指向 worktree，或在 worktree 內另建測試宿主。
+
+審查備註（2026-10-19 流程審查，不影響結果）：
+
+- 本輪的實作提交（`923574c`、`fb13d38`）由實作方同時寫入紀錄與 checklist 的釘選項；BT01／BT03 的執行與記錄改由未參與實作的 agent 在乾淨 worktree 完成（見上）。
+- 紀錄原引用的 `5db20f7` 已被 amend 為 `fb13d38`（只差輪次表這一格），不在任何分支；已改引用。
+- 第一輪審查備註中的狀態疊加（實心鈕 hover 蓋過 selected）仍未在規格定義，原生實作是否相同待使用者看時留意；屬規格缺口，應走 `Documentation/Requirements.UX.md`。
+
+### 第一輪（Button 1.1.0，UxButton，UnityExtension `9b53f9b`）
 
 使用者確認（2026-10-17）：在 Yu5h1LibTest 開啟範例 `Samples~/UxButton`（Gemini `9b2a2f6`，Unity 預設 runtime 主題），實心／無底、四種顯示組合與兩種後備、size 24／32／40、選中狀態，外觀沒有問題。Claude 也在同一場景進入 Play，Console 沒有錯誤。範例不在 checklist 內，是給使用者直接看的工具。
 

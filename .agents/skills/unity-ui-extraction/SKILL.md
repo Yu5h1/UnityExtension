@@ -1,6 +1,6 @@
 ---
 name: unity-ui-extraction
-description: Extract reusable UI capabilities from Unity consumer projects into UnityExtension packages, verify parity, and migrate callers. Use for Unity UI extraction or consolidation; replicating Yu5h1Lib.Web UI uses web-replication, and ordinary use of existing controls and extraction into the Web library follow their own routes.
+description: Extract reusable UI capabilities from Unity consumer projects into UnityExtension packages, verify parity, and migrate callers. Use for Unity UI extraction or consolidation; adopting a Yu5h1Lib.UX specification in a package uses referenced-module-acceptance, and ordinary use of existing controls and extraction into the Web library follow their own routes.
 ---
 
 # Unity UI Extraction
@@ -11,7 +11,7 @@ This skill belongs to UnityExtension; consumers reference it without copying it.
 
 - Extract or consolidate Unity UI into shared packages: continue here, using [Unity knowledge](../../introduction.md) and its applicable conventions.
 - Use an existing control: inspect its public API and owning documentation; do not invent an extraction. For preferences, Editor tooling, event wiring or serialization, load only the matching skill from the Unity knowledge entry.
-- UI whose experience belongs in Yu5h1Lib.UX (a control, collection or module): the UX specification is the behavior source, not Web and not the Unity source. Integrate it with [cross-platform-module-spec](../../../../../.agents/skills/cross-platform-module-spec/SKILL.md), which takes this Unity source as its baseline, then implement it with [referenced-module-acceptance](../../../../../.agents/skills/referenced-module-acceptance/SKILL.md), using [web-replication](../web-replication/SKILL.md) for UI Toolkit. This skill still owns moving the Unity code into the package.
+- UI whose experience belongs in Yu5h1Lib.UX (a control, collection or module): the UX specification is the behavior source, not Web and not the Unity source. Integrate it with [cross-platform-module-spec](../../../../../.agents/skills/cross-platform-module-spec/SKILL.md), whose source baseline is this Unity source (run the behaviors against it and record the result in the source project's `Documentation/Yu5h1Lib.UX/<Module>.md`), then implement it with [referenced-module-acceptance](../../../../../.agents/skills/referenced-module-acceptance/SKILL.md) — the only adoption skill — with the Unity package mechanics in [introduction](../../introduction.md#adopting-a-ux-module-in-a-package). This skill still owns moving the Unity code into the package.
 - Need Web changes: record the gap, with the Unity source as evidence, in the requesting project's `Requirements.Web.md` under the shared artifact rules. Authorized Web extraction uses [web-integration](../../../../../Web/.agents/skills/web-integration/SKILL.md), not a copy of this workflow. A shared specification does not make TS and C# one implementation.
 - Non-UI parts found during extraction: inertia, springs and contact belong to the Motion project's decision ([inventory plan](../../../../../Motion/Documentation/InventoryPlan.md)); until it decides, keep the existing `common`/`animation` implementation in place. Other pure computation follows the owner rule below. Never name a Unity namespace `Yu5h1Lib.Physics` or `Yu5h1Lib.Motion`.
 

@@ -9,17 +9,16 @@ namespace Yu5h1Lib.UIToolkit.Tests
 {
     /// <summary>
     /// Checks the pinned UX Button snapshot in <c>Tests/Editor/UX~/Button</c> against the hashes recorded in
-    /// the acceptance record, and <see cref="ButtonDesign"/> against the snapshot's design data, so a value
-    /// copied into C# cannot drift from the UX delivery it claims to come from.
+    /// the acceptance record, and verifies that the snapshot matches the 2.0.0 contract and design data (3.0.0).
     /// </summary>
     public class ButtonDesignTests
     {
-        private const string SpecHash = "3633818b362a902fbd53de13188b7757bf01c9db52339d332697f304b25e71c3";
-        private const string DesignHash = "8082bb56a9eb493e9c9d338527659efa389d8b01817a72f4aec8b535e2974075";
+        private const string SpecHash = "9662a105972563ca4b546aac245aa5321761028b7aa96c6de7877f6ed77f2567";
+        private const string DesignHash = "e2568af28f704603b2a0d696324f2389a81a685c5ad96049a38c4008cde5c0f9";
 
         private static string SnapshotPath(string file)
         {
-            var package = PackageInfo.FindForAssembly(typeof(ButtonDesign).Assembly);
+            var package = PackageInfo.FindForAssembly(typeof(ButtonDesignTests).Assembly);
             Assert.IsNotNull(package, "Yu5h1Lib.UIToolkit package not found");
             return Path.Combine(package.resolvedPath, "Tests", "Editor", "UX~", "Button", file);
         }
@@ -46,21 +45,19 @@ namespace Yu5h1Lib.UIToolkit.Tests
         }
 
         [Test]
-        public void SnapshotIsButton110WithDesign200()
+        public void SnapshotIsButton200WithDesign300()
         {
-            StringAssert.Contains("Specification version: 1.1.0", File.ReadAllText(SnapshotPath("Button.md")));
-            StringAssert.Contains("\"contractVersion\": \"2.0.0\"", File.ReadAllText(SnapshotPath("button-design.json")));
+            StringAssert.Contains("Specification version: 2.0.0", File.ReadAllText(SnapshotPath("Button.md")));
+            StringAssert.Contains("\"contractVersion\": \"3.0.0\"", File.ReadAllText(SnapshotPath("button-design.json")));
         }
 
         [Test]
-        public void ConstantsMatchTheDesignData()
+        public void DesignDataTokensArePresent()
         {
             var json = File.ReadAllText(SnapshotPath("button-design.json"));
-            Assert.AreEqual(Token(json, "size"), ButtonDesign.Size);
-            Assert.AreEqual(Token(json, "iconRatio"), ButtonDesign.IconRatio);
-            Assert.AreEqual(Token(json, "iconWithLabelSize"), ButtonDesign.IconWithLabelSize);
-            Assert.AreEqual(Token(json, "iconWithLabelSize", "labelFontSize"), ButtonDesign.LabelFontSize);
-            Assert.AreEqual(Token(json, "iconLabelGap"), ButtonDesign.IconLabelGap);
+            Assert.AreEqual(32f, Token(json, "size"));
+            Assert.AreEqual(0.75f, Token(json, "iconRatio"));
+            Assert.AreEqual(8f, Token(json, "iconLabelGap"));
         }
     }
 }

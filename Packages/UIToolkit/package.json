@@ -30,9 +30,9 @@
       "path": "Samples~/ChatModule"
     },
     {
-      "displayName": "UxButton",
-      "description": "A minimal visual sample demonstrating UxButton appearance (solid/ghost), display combinations, size scaling, and selection states under the default runtime theme.",
-      "path": "Samples~/UxButton"
+      "displayName": "UxAcceptance",
+      "description": "Unified acceptance demo entry for Yu5h1Lib.UX modules on UI Toolkit. Supports modular demo case registration, dynamic switching, and durable acceptance target resolution.",
+      "path": "Samples~/UxAcceptance"
     }
   ]
 }

@@ -1,0 +1,43 @@
+# UIToolkit Input (HoldManipulator) Checklist
+
+Current round: `../../../UX/Documentation/ModuleSpec/Foundation/Input.md#跨平台長按與按住滑選操作器契約（holdmanipulator）`.
+
+本輪對應 UX Foundation/Input 3.0.1（UX `c7c5438`）目標 1，在 `Yu5h1Lib.UIToolkit` 實作 `HoldManipulator : PointerManipulator`，並重構 `OptionPicker` 改用 `HoldManipulator`。
+
+- [x] **1. 釘選 Input 3.0.1**
+  Outcome: 套件內有 Input 規範、設計資料與案例快照，雜湊與 UX manifest 一致，預設參數對齊 `input-design.json`。
+  Checks:
+    - [x] **快照與雜湊**
+      - Action: 執行 EditMode 測試 `HoldManipulatorTests.PinnedUxInputSnapshot_MatchesManifestHashesAndDesignTokens`。
+      - Expect: `Input.md`（`99583d7c...`）、`input-design.json`（`b31fb027...`）、`input-cases.json`（`20334464...`）SHA-256 與 UX manifest 完全一致；`DefaultHoldDurationMs == 400`、`DefaultDragThreshold == 6f`。
+
+- [x] **2. 短按、半開區間邊界與長按抑制（INPUT-PRESS-TAP、INPUT-PRESS-HOLD、INPUT-PRESS-SUPPRESS）**
+  Outcome: 短按遵循左/上緣在內、右/下緣在外的半開區間判定；長按滿 400ms 觸發一次並抑制放開後的原生 click。
+  Checks:
+    - [x] **短按與邊界**
+      - Action: 執行 `HoldManipulatorTests.TapAndHalfOpenEdges_MatchUxInputPressTap` 與 `NonPrimaryButton_IsIgnored`。
+      - Expect: 中心、左緣、上緣放開觸發 `tap`；右緣、下緣與範圍外放開不觸發；非主鍵忽略。
+    - [x] **長按與點擊抑制**
+      - Action: 執行 `HoldManipulatorTests.HoldAtDuration_FiresOnceAndSuppressesTap`。
+      - Expect: 399ms 不觸發，400ms 觸發 `hold` 且 `IsHolding == true`，放開時觸發 `end` 且不觸發 `tap`／原生 click。
+
+- [x] **3. 容許量邊界與按住滑選生命週期（INPUT-DRAG-START、INPUT-CHOICE-HOLD）**
+  Outcome: 未滿 400ms 時位移 `<= 6px` 仍觸發長按，`> 6px` 取消長按；長按成立後滑動持續發出 `HoldMoved`，放開時發出 `HoldEnded`。
+  Checks:
+    - [x] **容許量邊界與滑選串流**
+      - Action: 執行 `HoldManipulatorTests.DragThresholdBoundary_EqualStillHolds_GreaterCancelsHold` 與 `HoldAndSlideLifecycle_StreamsMoveAndEnd`。
+      - Expect: 移動 6px 仍於 400ms 觸發 `hold`；移動 7px 立即觸發 `cancel`；長按後滑動依序發出 `hold` → `move` → `end`。
+
+- [x] **4. 中斷、生命週期與 OptionPicker 整合（INPUT-CANCEL、INPUT-LIFECYCLE）**
+  Outcome: 第二指標或卸載時乾淨取消；`OptionPicker` 透過 `TriggerHoldManipulator` 處理長按滑選並在 `Cycle` 模式停用長按。
+  Checks:
+    - [x] **取消與宿主整合**
+      - Action: 執行 `HoldManipulatorTests.SecondPointerAndLifecycle_CancelCleanly` 與 `OptionPicker_UsesHoldManipulatorForPickerAndDisablesHoldInCycleMode`。
+      - Expect: 第二指標按下與 `RemoveManipulator` 均觸發 `cancel` 並清理狀態；`OptionPicker` 在 `Both` 模式長按 400ms 開啟面板，在 `Cycle` 模式不啟動長按且短按循環。
+
+- [ ] **5. 統一驗收入口與手感確認 `[manual]`**
+  Outcome: 使用者在 `UxAcceptanceDemo` 統一入口切換至 `Input / HoldManipulator (3.0.1)` 與 `OptionPicker (3.0.2)` 確認長按與滑選手感。
+  Checks:
+    - [ ] **互動體驗**
+      - Action: 在 `UxAcceptanceDemo` 場景操作 `Input / HoldManipulator (3.0.1)` 的短按、400ms 長按抑制與按住滑選區域，以及 `OptionPicker` 的長按滑選。
+      - Expect: 手感與回饋自然一致。

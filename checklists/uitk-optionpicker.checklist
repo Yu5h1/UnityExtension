@@ -1,0 +1,58 @@
+# UIToolkit OptionPicker Checklist
+
+Current round: `../../../UX/Documentation/ModuleSpec/Controls/OptionPicker.md#行為`.
+
+本輪對應 UX OptionPicker 3.0.2（UX 8c1f764），在 Yu5h1Lib.UIToolkit 首次引用。實作方式採原生 Button + VisualElement 面板搭配 C# 行為控制（決策：原生元件優先）。觸發鈕與選項沿用已引用的 Button 2.0.0，C# 控制邏輯處理 interaction（picker/cycle/both）、400ms 長按手勢、aligned/adjacent 面板定位與方向鍵/Escape 鍵盤導覽。一個檔案只放一輪。
+
+- [x] **1. 釘選 OptionPicker 3.0.2**
+  Outcome: 套件內有 OptionPicker 規範、設計資料與案例快照，雜湊與 UX manifest 一致。
+  Checks:
+    - [x] **快照與雜湊**
+      - Action: 執行 EditMode 測試 OptionPickerDesignTests。
+      - Expect: 快照的 SHA-256 等於 UX manifest 的值（OptionPicker.md 31591500..., option-picker-design.json 551517bc..., option-picker-cases.json 3d4d2a26...）；設計資料合約版本為 2.0.0；快照路徑在 .gitattributes 有 -text 規則。
+    - [x] **乾淨 checkout 編譯**
+      - Action: 從本分支開新 worktree，把 Yu5h1LibTest 的 com.yu5h1.uitoolkit 指向該 worktree，重新整理 Unity。
+      - Expect: Console 沒有編譯錯誤。
+
+- [x] **2. 選擇與選項管理（OPT-VALUE、OPT-OPTIONS、OPT-CYCLE）**
+  Outcome: 選取回報 choose 不自改值；停用選項被跳過；循環在可用選項中頭尾銜接。
+  Checks:
+    - [x] **選值與循環**
+      - Action: 執行 OptionPickerTests 之 OP01 案例。
+      - Expect: 選定或循環後發出 choose 事件帶所選 ID；宿主未更新值時下次開啟仍依原值；停用項目被跳過；單一選項循環回報自身。
+
+- [x] **3. 互動模式與手勢（OPT-OPEN、INPUT-CHOICE-HOLD、KEY、CLOSE）**
+  Outcome: picker/cycle/both 三種互動模式反應正確；400ms 長按開啟；方向鍵與 Escape 導覽；點擊外部關閉。
+  Checks:
+    - [x] **開啟與關閉條件**
+      - Action: 執行 OptionPickerTests 開啟、長按與關閉案例。
+      - Expect: picker 短按開面板；cycle 短按只循環不開面板；both 短按循環、長按 400ms 或方向鍵開面板；Escape 關閉面板焦點回觸發鈕；點擊面板外部關閉。
+
+- [x] **4. 面板定位與視窗邊界（OPT-PLACE）**
+  Outcome: 對齊式目前值中心對準觸發鈕；相鄰式依軸向放置且超出翻轉；四邊距可視範圍 clamp 4px。
+  Checks:
+    - [x] **對齊與相鄰定位計算**
+      - Action: 執行 OptionPickerTests 之 OPT-PLACE 計算案例。
+      - Expect: aligned 目前選項 center 等於觸發鈕 center；adjacent 水平靠右、超出翻轉至左；垂直靠下、超出翻轉至上；clamp 於 pickerViewportMargin（4px）內。
+
+- [x] **5. 顯示屬性與外觀（OPT-DISPLAY、OPT-APPEARANCE、OPT-ICON）**
+  Outcome: 觸發鈕與選項套用 Button 規範；面板內距 4px、選項間距 4px；面板支援 solid/ghost。
+  Checks:
+    - [x] **版面數值與樣式**
+      - Action: 執行 OptionPickerTests 之版面量測案例。
+      - Expect: 觸發鈕與選項繼承 Button 2.0.0 排版；面板 padding 4px、選項間距 gap 4px；solid 與 ghost 面板類別正確套用。
+
+- [ ] **6. 手感與外觀確認 `[manual]`**
+  Outcome: 使用者在範例中確認手感、互動與外觀符合預期。
+  Checks:
+    - [ ] **範例操作體驗**
+      - Action: 使用者在 Yu5h1LibTest 專案開啟 Samples~/UxOptionPicker 範例場景，確認可見性（垂直對齊）與排序（垂直相鄰 both）之點擊、長按、鍵盤與外觀。
+      - Expect: 操作流暢自然、面板定位精確、無文字偏移或破綻。
+
+- [x] **7. 回歸**
+  Depends on: 1.
+  Outcome: UIToolkit 既有功能不受影響。
+  Checks:
+    - [x] **既有測試**
+      - Action: 執行 Yu5h1Lib.UIToolkit.Editor.Tests（EditMode）。
+      - Expect: 全部通過（包含 ButtonDesignTests 3/3 與既有所有測試）。

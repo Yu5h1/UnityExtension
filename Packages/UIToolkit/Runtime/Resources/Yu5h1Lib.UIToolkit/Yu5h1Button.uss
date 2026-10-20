@@ -1,0 +1,89 @@
+/* Yu5h1Lib.UX Button for UI Toolkit.
+   Adopts Yu5h1Lib.UX Button 2.0.0 on native UnityEngine.UIElements.Button + USS.
+   - BTN-DISPLAY: default size (32px), square when icon-only (.yu5h1-button--icon-only), height size when with label.
+   - BTN-SIZE: icon side is size * 0.75 (75% height/width, scale-to-fit, centered).
+   - BTN-LAYOUT: flex-direction: row, align-items: center, justify-content: center; 8px gap between icon and text.
+   - BTN-APPEARANCE: solid (default background) vs ghost (.yu5h1-button--ghost: transparent at rest, hover/focus/selected visible).
+   Colours use Unity default theme button variables with fallbacks until VisualFoundation is adopted. */
+
+.yu5h1-button {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    min-height: 32px;
+    margin: 0;
+    padding: 0 8px;
+    border-width: 0;
+    border-radius: 4px;
+    background-color: var(--unity-colors-button-background, rgb(228, 228, 228));
+}
+
+.yu5h1-button:hover,
+.yu5h1-button--hover {
+    background-color: var(--unity-colors-button-background-hover, rgb(210, 210, 210));
+}
+
+.yu5h1-button:active,
+.yu5h1-button--selected {
+    background-color: var(--unity-colors-button-background-pressed, rgb(150, 150, 150));
+}
+
+.yu5h1-button--selected:hover,
+.yu5h1-button--selected.yu5h1-button--hover {
+    background-color: var(--unity-colors-button-background-pressed, rgb(130, 130, 130));
+}
+
+/* BTN-DISPLAY: icon-only button is size x size square */
+.yu5h1-button--icon-only {
+    width: 32px;
+    min-width: 32px;
+    padding: 0;
+}
+
+.yu5h1-button--icon-only > .unity-text-element {
+    display: none;
+}
+
+/* BTN-SIZE: icon side is 75% of button size (size * 0.75) with or without label */
+.yu5h1-button > .unity-button__image,
+.yu5h1-button > .unity-image {
+    height: 75%;
+    aspect-ratio: 1;
+    max-height: 75%;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* BTN-LAYOUT: 8px gap between icon and label */
+.yu5h1-button.unity-button--with-icon > .unity-text-element {
+    margin-left: 8px;
+}
+
+.yu5h1-button > .unity-text-element {
+    margin: 0;
+    padding: 0;
+    -unity-text-align: middle-left;
+}
+
+/* BTN-APPEARANCE: ghost (transparent at rest, visible on hover/focus/active/selected) */
+.yu5h1-button--ghost {
+    background-color: rgba(0, 0, 0, 0);
+    border-color: rgba(0, 0, 0, 0);
+}
+
+.yu5h1-button--ghost:hover,
+.yu5h1-button--ghost:focus,
+.yu5h1-button--ghost.yu5h1-button--hover {
+    background-color: var(--unity-colors-button-background-hover, rgba(0, 0, 0, 0.15));
+}
+
+.yu5h1-button--ghost.yu5h1-button--selected,
+.yu5h1-button--ghost:active {
+    background-color: var(--unity-colors-button-background-pressed, rgba(0, 0, 0, 0.24));
+}
+
+.yu5h1-button--ghost.yu5h1-button--selected:hover,
+.yu5h1-button--ghost.yu5h1-button--selected.yu5h1-button--hover {
+    background-color: var(--unity-colors-button-background-pressed, rgba(0, 0, 0, 0.32));
+}
