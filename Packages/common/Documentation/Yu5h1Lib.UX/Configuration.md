@@ -2,7 +2,7 @@
 
 > Task ID: common-configuration
 >
-> 狀態：planned（2026-10-20，第一輪：Configuration 1.4.1〈目標 2〉等級 1「直接存」，需求 UX-UNITYEXTENSION-7）。依使用者指示「在 Yu5h1Lib.Common 引用 UX 的 Configuration」，流程見 [referenced-module-acceptance](../../../../../../.agents/skills/referenced-module-acceptance/SKILL.md)。本輪原本釘 1.3.1 的八條服務語意，2026-10-20 依 UX 第 93 題縮為等級 1，改釘 1.4.0，同日再改釘只修正〈保存等級〉表的 1.4.1；所有檢查都還沒跑。
+> 狀態：模組輪自動檢查通過、人工確認待開（2026-10-20，第一輪：Configuration 1.4.1〈目標 2〉等級 1「直接存」，需求 UX-UNITYEXTENSION-7）。依使用者指示「在 Yu5h1Lib.Common 引用 UX 的 Configuration」，流程見 [referenced-module-acceptance](../../../../../../.agents/skills/referenced-module-acceptance/SKILL.md)。本輪原本釘 1.3.1 的八條服務語意，2026-10-20 依 UX 第 93 題縮為等級 1，改釘 1.4.0，同日再改釘只修正〈保存等級〉表的 1.4.1。驗收方在實作分支 `ef5ac00` 的乾淨 worktree 跑完 checklist 第 1～6 項，全部通過；生命週期（CFG-P02）的人工 checklist 尚未開立，需求尚未完成，實作分支尚未合併。
 
 ```text
 UnityExtension
@@ -98,16 +98,42 @@ UnityExtension
 
 ## 已知偏差
 
-無（尚未驗收）。
+無。
+
+## 已知界線
+
+- **覆寫 `TryLoadCurrent` 的 host**：統一入口只能判斷它自己讀到的字串。host 覆寫載入（例如 VCP 的 `UserDataView`）時，入口拿不到原文，所以契約是：覆寫的 `TryLoadCurrent` 讀不懂存檔時要丟例外，回傳 false 只代表沒有存檔。入口把這個例外當成載入錯誤處理（驗收方探測已確認：印 Error、不覆寫原存檔）。回傳 false 的覆寫會被當成沒有存檔，下一次寫入會覆寫原檔；這屬於該 host 的 bug，依「資料對不上是 bug，用修 bug 處理」，不在本輪。這句契約要由實作方補進 `Preferences.cs` 的 XML 註解與 [偏好設定](../../../../Documentation/偏好設定.md)（不擋本輪）。
 
 ## 輪次
 
 | 規範版本 | UX commit | UnityExtension commit | checklist commit | 結論 |
 |---|---|---|---|---|
-| Configuration 1.4.1〈目標 2〉等級 1 | `7aa4275` | 待實作 | 待記錄 | planned |
+| Configuration 1.4.1〈目標 2〉等級 1 | `7aa4275` | `ef5ac00`（分支 `feat/ux-unityextension-7-configuration`；實作 `4f0b412`、釘選 `4a43a32`、`.meta` 還原 `3d36156`） | `5e3e72d` | 模組輪 6/6 項通過；生命週期（CFG-P02）的人工確認待開 |
 
 ## 結論
 
 ### 第一輪（Configuration 1.4.1〈目標 2〉等級 1「直接存」）
 
-狀態：planned（2026-10-20）。紀錄與 checklist 已建立，所有檢查 not run；實作分支 `feat/ux-unityextension-7-configuration`。範圍原為 1.3.1 的八條服務語意（主線 `8df460f`），同日依第 93 題縮為等級 1。
+狀態：模組輪自動檢查通過（2026-10-20）。範圍原為 1.3.1 的八條服務語意（主線 `8df460f`），同日依第 93 題縮為等級 1。四條情境——預設與載入（CFG-01）、載入失敗不覆寫（CFG-02）、通知與隔離（CFG-08）、卸載與延遲完成（CFG-07）的原生等價——以及實際 backend（CFG-P01）、匯入與版本固定（CFG-P05）在 `ef5ac00` 通過，沒有偏差。目標 2 還差使用者在 uGUI 與 UI Toolkit 兩頁確認 Play 停止／重開後值仍在（生命週期 CFG-P02），完成後才合併、結案。
+
+### 執行結果
+
+- 環境：Windows 11、Unity 6000.6.0f1、Yu5h1LibTest（`W:/UnityProject/Yu5h1LibTest`），經 unityMCP 執行。
+- 乾淨 checkout：`git worktree add --detach` 建立 `ef5ac00` 的拋棄式 worktree，執行後已移除。快照 SHA-256 在 worktree 為 `4e99803c…cd34d48`，`.gitattributes` 的 `Packages/common/Tests/Editor/UX~/**` 為 `-text`。
+- 改指與還原：只改 Yu5h1LibTest `Packages/manifest.json` 的 `com.yu5h1.common` 一行。改指前備份 manifest（`efcafda0…`）與 packages-lock（`a2f1d8d6…`）；`Client.Resolve()` 後 `PackageInfo.FindForAssetPath` 的 `resolvedPath` 是 worktree，Console 沒有編譯錯誤。結束時還原兩檔，雜湊與備份相同；再次 Resolve 後 `resolvedPath` 回到 `UnityExtension/Packages/common`。其他套件與 `Assets/Samples` 的 junction 沒有改指。
+- EditMode `Yu5h1Lib.Common.Editor.Tests`：92/92 通過（含 `ConfigurationDesignTests`、`PreferencesFormatTests`、`PreferencesEntryTests`、`PreferencesBackendTests`）。快照尾端加一個位元組後只有 `SnapshotMatchesTheUxManifestHash` 失敗（91/92，量得 `136cb8bb…`），還原後 92/92。
+- PlayMode `Yu5h1Lib.Common.Tests`：實作方的 `PreferencesHostTests` 11/11 通過；同一次執行加上驗收方的三個拋棄式探測（只放在 worktree，未入庫），14/14 通過：
+  - `ClearPlayerPrefs` 是明確重設：損毀存檔先進入載入錯誤、寫入被擋；`ClearPlayerPrefs` 後載入錯誤解除、存檔刪除，下一次修改照常以新格式寫入（`config-load-error-recovery`）。
+  - host 的 `Reload()` 重新綁定已綁的 port：載入錯誤時 port 顯示預設；修好存檔後 `Reload()` 回傳 true、錯誤解除、port 顯示存檔的值，再改存檔再 `Reload()` 也跟著更新。
+  - 覆寫 `TryLoadCurrent` 並在讀不懂時丟例外的 host：入口把例外轉成載入錯誤，原存檔不被覆寫（見〈已知界線〉）。
+- 第一次 PlayMode 執行，`ClearPlayerPrefs` 探測因探測本身的寫法失敗（見審查備註），改寫探測後重跑；實作方的 11 項兩次都通過。
+
+### 審查備註
+
+以下不違反規範，不是偏差，不影響結果。
+
+- 空字串存檔被判為損毀，不是沒有存檔（`PreferencesFormatTests` 的損毀案例），合理。
+- 以 `AddComponent` 建立、沒有序列化 `_bindings` 的 host，`Start` 的 `BindAll` 會拋 NullReferenceException（`Preferences.cs` 的 `_bindings.Count`）。這是本輪前就有的行為，不是這次的實作造成的；場景裡的 host 有序列化清單，不受影響。驗收探測改用覆寫 `Start` 的子類別避開。
+- 改指與還原期間，Unity 把 `Packages/common` 的 `.meta` 改寫成只剩 guid 的格式：共用 checkout 有 160 個，已用 `git checkout` 還原其中格式改變的部分；其餘 87 個 HEAD 本來就是精簡格式，只是被重存，`git diff` 為空，沒有內容變更。實作方的分支也曾誤收這類變更（`4f0b412`），已由 `3d36156` 還原；之後合併時要確認沒有混入。
+- 分支 `5a1b47b` 改過的本紀錄〈原生對照〉表是 1.3.1 版，與主線衝突；合併時以主線為準。
+- PlayMode 測試會讓使用者開著的 Editor 進入 Play Mode（約 5 秒）；兩次都在使用者授權的範圍內執行。
