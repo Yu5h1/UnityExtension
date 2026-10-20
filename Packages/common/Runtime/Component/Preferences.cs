@@ -392,7 +392,11 @@ namespace Yu5h1Lib
         /// Override together with <see cref="TryLoadCurrent"/> for a custom storage format.</summary>
         public virtual void SaveToPlayerPrefs() => Preferences.DefaultStorage.Save(KEY, current);
 
-        /// <summary>How this host's KEY is loaded; the shared entry calls it on first access.</summary>
+        /// <summary>How this host's KEY is loaded; the shared entry calls it on first access.
+        /// Contract for overrides (UX Configuration level 1, 載入失敗不覆寫 CFG-02): return false only when there is
+        /// no save; when a save exists but cannot be read, throw — the entry turns the exception into a load
+        /// error that keeps the original save and blocks writes until an explicit reset. Returning false for an
+        /// unreadable save would let the next write overwrite it.</summary>
         public virtual bool TryLoadCurrent(out DataView output)
         {
             lastLoad = Preferences.DefaultStorage.Load(KEY);
