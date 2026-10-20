@@ -8,15 +8,15 @@ namespace Yu5h1Lib.Tests
 {
     /// <summary>
     /// Pins the UX Configuration specification snapshot in <c>Tests/Editor/UX~/Configuration</c> (UX-UNITYEXTENSION-7,
-    /// goal 2): the file must match the SHA-256 the UX manifest records for it and carry an accepted major version.
+    /// level 1 of goal 2): the file must match the SHA-256 the UX manifest records for it and carry an accepted major version.
     /// Only the specification file is pinned this round; declarations, the Theme schema and the delivery manifest
     /// belong to later goals.
     /// </summary>
     public class ConfigurationDesignTests
     {
         /// <summary>UX <c>Documentation/ModuleSpec/manifest.json</c> entry for
-        /// <c>Documentation/ModuleSpec/Foundation/Configuration.md</c> at UX commit 68a72d8 (specification 1.3.1).</summary>
-        private const string SpecHash = "63ca52aa2637cdcd2e7d737f117804749d1b2495a6f9898cda01b4b0a1219d6e";
+        /// <c>Documentation/ModuleSpec/Foundation/Configuration.md</c> at UX commit 7aa4275 (specification 1.4.1).</summary>
+        private const string SpecHash = "4e99803cd70b040b0e5dd89a34865861672325a09641b1e5f44b237b7cd34d48";
 
         private static string SnapshotPath(string file)
         {
@@ -45,7 +45,7 @@ namespace Yu5h1Lib.Tests
             var match = Regex.Match(text, @"規範版本：(\d+)\.(\d+)\.(\d+)");
             Assert.IsTrue(match.Success, "Configuration.md has no 規範版本 line");
             Assert.AreEqual("1", match.Groups[1].Value, "Unsupported Configuration major version");
-            Assert.AreEqual("1.3.1", $"{match.Groups[1].Value}.{match.Groups[2].Value}.{match.Groups[3].Value}");
+            Assert.AreEqual("1.4.1", $"{match.Groups[1].Value}.{match.Groups[2].Value}.{match.Groups[3].Value}");
         }
     }
 }

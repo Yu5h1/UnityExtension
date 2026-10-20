@@ -2,9 +2,9 @@
 
 設定是各模組宣告可調整的欄位與預設，並以一致語意載入、保存、套用與失敗重試；值是什麼、怎麼套用由宿主決定。它不是設定面板的外觀與操作（[SettingsPanel](../SettingsPanel.md)），也不負責各模組的數值計算。分類為基礎層：不擁有領域狀態，是所有層共用的保存語意與宣告格式（第 87 題）。
 
-> 狀態：目標 1 已達成（2026-10-20，Web）；目標 2（保存能力，Unity 原生 Preferences）進行中（2026-10-20 點名）；目標 3（保存行為，Unity 的設定面板）已定義，等使用者點名。
+> 狀態：目標 1 已達成（2026-10-20，Web）；目標 2（等級 1「直接存」在 Unity 原生 Preferences 成立）進行中（2026-10-20 點名）；目標 3（等級 2「確認保存」在 Unity 的第一個需要它的消費端成立）已定義，等消費端出現。
 >
-> 規範版本：1.3.1（2026-10-20：依第 92 題加入〈能力與行為的分工〉，目標 2 縮為保存能力、新增目標 3 保存行為；行為、案例與格式不變）。前一版：1.3.0（2026-10-20：依第 90、91 題加入〈目標 2〉）；1.2.1（2026-10-20：目標 1 改為已達成）；1.2.0（2026-10-19：加入定義與〈目標〉，依第 87 題歸基礎層並自 `ModuleSpec/` 搬到 `ModuleSpec/Foundation/`；行為、案例、宣告格式與 Theme 存檔格式不變）；1.1.0（2026-10-13 自 Web 移交 UX，依決策檔 `ux-foundation` 第 20、21 題）。擁有者：Yu5h1Lib.UX。設定宣告契約 1.0.0、schemaVersion 1、Theme 偏好 version 1 各自獨立，都不變。
+> 規範版本：1.4.1（2026-10-20：〈保存等級〉表等級 1 拿掉單一進行中命令 CFG-06，與〈目標 2〉一致）。前一版：1.4.0（2026-10-20：依第 93 題加入〈保存等級〉，目標 2 改為等級 1、目標 3 改為等級 2；案例與格式不變）；1.3.1（2026-10-20：依第 92 題加入〈能力與行為的分工〉）；1.3.0（2026-10-20：依第 90、91 題加入〈目標 2〉）；1.2.1（2026-10-20：目標 1 改為已達成）；1.2.0（2026-10-19：加入定義與〈目標〉，依第 87 題歸基礎層並自 `ModuleSpec/` 搬到 `ModuleSpec/Foundation/`；行為、案例、宣告格式與 Theme 存檔格式不變）；1.1.0（2026-10-13 自 Web 移交 UX，依決策檔 `ux-foundation` 第 20、21 題）。擁有者：Yu5h1Lib.UX。設定宣告契約 1.0.0、schemaVersion 1、Theme 偏好 version 1 各自獨立，都不變。
 > 本文件是 Config 的行為與資料規範；Web 的實作驗證狀態見 [Web handoff](../../../../Web/handoff.md#cross-library-validation-tracking)，Web 的 settings-panel 任務仍由 [面板計畫](../../../../Web/Documentation/SettingsPanelPlan.md) 宣告。面板與保存列的操作見 [SettingsPanel](../SettingsPanel.md)。
 
 ## 目標
@@ -22,7 +22,7 @@
   7. 自動／手動保存模式與恢復預設；Theme 偏好的保存，OS 明暗變化不寫入。（CFG-12、CFG-13）
 - 不在目標 1 內（進下一個目標）：Unity 實作與 Preferences 的對應（目標 2 保存能力、目標 3 保存行為）；Motion 宣告改格式（UX-MOTION-2，Web 維持過渡副本，由需求追蹤）；設定面板外觀與操作（SettingsPanel，暫停中）；同 key 多分頁衝突協調、雲端同步；Apps header 的 legacy Theme helper。
 - 完成條件：Web 驗收紀錄的 CFG-01～CFG-14 全部 pass（補跑目前「部分」與 not run 的分支，adapter 走真實 ConfigStore），CFG-P01～CFG-P05 pass 或寫明不適用的理由；使用者在 settings demo 與 Apps 設定分頁確認保存、失敗與重試（CFG-P04）。這份結果同時是本規格的來源基準：規格當初自 Web 抽取時沒有建立基準。
-- 達成紀錄：Web 於 2026-10-20 通過 CFG-01～CFG-14 與 CFG-P01～CFG-P05，使用者確認 CFG-P04；UX-WEB-23 為 Implemented；這份結果就是本規格的來源基準。進度看 UX `report.json`，證據看 [Web 驗收紀錄](../../../../Web/Documentation/Yu5h1Lib.UX/Configuration.md)。
+- 達成紀錄：Web 於 2026-10-20 通過 CFG-01～CFG-14 與 CFG-P01～CFG-P05，使用者確認 CFG-P04；UX-WEB-23 為 Implemented；這份結果就是本規格的來源基準。進度看 UX `report.json`，證據看 [Web 驗收紀錄](../../../../Web/Documentation/Yu5h1Lib.UX/Configuration.md)。依〈保存等級〉，Web 的設定面板屬等級 2，這份結果同時涵蓋等級 1。
 
 ### 能力與行為的分工
 
@@ -32,29 +32,25 @@
 - 行為層：宿主面板接線的草稿、模式與顯示——草稿及模式（CFG-12），加上保存失敗與重試、已保存未套用裡使用者看得到的那一半（草稿還在、可重試、沒有顯示成已保存、「已保存、尚未生效」有顯示）——由各 UI 套件在自己的設定面板驗；保存列的外觀與位置在 [SettingsPanel](../SettingsPanel.md)。
 - 同一條行為橫跨兩層時各驗自己那一半。例如保存失敗與重試（CFG-04）：能力層驗寫入失敗時已接受的值不變、命令回傳失敗、沒有多餘套用；行為層驗草稿還在、重試鈕可按、沒有顯示成已保存。
 
-Web 在目標 1 一次驗完兩層（ConfigStore 與 settings demo 在同一個 repo）；Unity 分成目標 2（能力）與目標 3（行為）。
+Web 在目標 1 一次驗完兩層（ConfigStore 與 settings demo 在同一個 repo）；Unity 依〈保存等級〉分成目標 2（等級 1）與目標 3（等級 2）。
 
-### 目標 2：保存能力在 Unity 原生 Preferences 上成立（進行中，2026-10-20 點名）
+### 目標 2：等級 1「直接存」在 Unity 原生 Preferences 上成立（進行中，2026-10-20 點名）
 
-- 為誰服務：Unity 端以 `PlayerPreferences`（`Preferences<T>` host 與統一入口 `Preferences`）保存並套用設定的介面——VCP 的音量設定（三顆 Slider 經 host 保存、套用到 `AudioMixerProxy`）與使用者資料（`UserDataView`）、BonghuoVR 的設定面板（音量、舒適度）。證據路徑是 UnityExtension `Packages/common`（Yu5h1Lib.Common）的 Preferences 層，在 Yu5h1LibTest `PlayerPreferencesDemo.unity`（同一個 host 綁 uGUI 與 UI Toolkit 兩個面板）執行。
-- 情境（能力層那一半）：
+- 為誰服務：Unity 端以 `PlayerPreferences`（`Preferences<T>` host 與統一入口 `Preferences`）保存並套用設定的介面——VCP 的音量設定（三顆 Slider 經 host 保存、套用到 `AudioMixerProxy`）與使用者資料（`UserDataView`）、BonghuoVR 的設定面板（音量、舒適度）；都是同步、本地、拖了就存的等級 1 設定。證據路徑是 UnityExtension `Packages/common`（Yu5h1Lib.Common）的 Preferences 層，在 Yu5h1LibTest `PlayerPreferencesDemo.unity`（同一個 host 綁 uGUI 與 UI Toolkit 兩個面板）執行。
+- 情境（等級 1）：
   1. 第一次開啟沒有紀錄時用 host 的 `defaultSetting`；有紀錄時還原上次保存的值。（預設與載入 CFG-01；有存檔但缺欄位時補預設並寫一次，是 Unity 宿主明定的新增欄位遷移，在紀錄寫明）
-  2. 存檔損毀或版本未知時不覆寫原資料、該 KEY 不能保存；修好後重新讀取即恢復。統一入口的全部 KEY 都適用；沒有存檔仍用預設，重設只經明確入口。（載入失敗不覆寫 CFG-02；第 91 題 `entry-wide`）
-  3. 寫入成功後才更新已接受的值；寫入失敗時已接受的值不變、命令回傳失敗、沒有多餘套用。（保存提交順序 CFG-03、保存失敗與重試 CFG-04）
-  4. 寫入成功但套用失敗時進入「已保存未套用」，重試只重新套用、不重寫。（已保存未套用 CFG-05）
-  5. 同時只有一個操作；host 銷毀後，舊的回應不會更新；不同 KEY 互不覆寫。（單一進行中命令 CFG-06、卸載與延遲完成 CFG-07、通知與隔離 CFG-08）
-- 不在目標 2 內（進下一個目標）：保存行為——草稿及模式與兩條顯示半邊——是目標 3；模組 JSON 宣告與宣告產生欄位（宣告驗證 CFG-09、值的界線 CFG-10、宣告映射 UI CFG-11、交付一致性 CFG-14、原生欄位 CFG-P03）等 Unity 出現宣告消費端（AppsMenu Unity 的 UX-UNITYEXTENSION-5 或 Motion 宣告的 UX-MOTION-2）再定目標；Theme 偏好保存（Theme 持久化 CFG-13）隨 WebTheme（UX-UNITYEXTENSION-2）；設定面板外觀與操作（SettingsPanel，暫停中）。
-- 完成條件：UnityExtension 依 referenced-module-acceptance 在 `Packages/common/Documentation/Yu5h1Lib.UX/Configuration.md` 建立驗收紀錄並釘選本文雜湊（匯入與版本固定 CFG-P05）；八條服務語意經 adapter 走真實 `Preferences` 入口與 host 逐案 pass，同步 backend 下單一進行中命令與卸載的「進行中」分支以原生等價檢查記錄而不是略過；真實 PlayerPrefs 的保存、重啟、重讀與 KEY 隔離（實際 backend CFG-P01）pass；Play 停止／重開後值仍在（生命週期 CFG-P02）由使用者在 Yu5h1LibTest demo 的 uGUI 與 UI Toolkit 兩頁各一份人工 checklist 確認（第 89 題）；原生與規格不一致處記 deviation，不算 pass。原生缺口（已接受值與寫入的分離、保存失敗偵測、存檔 version 欄位）由實作端依第 80 題在引用步驟提問；本文不預設 Unity backend（〈平台驗收與已知界線〉）。需求：[UX-UNITYEXTENSION-7](../../Requirements.UnityExtension.md#ux-unityextension-7--採用-configuration-目標-2保存語意對應原生-preferences)。
+  2. 存檔讀不懂或版本未知時印 Error、用預設值繼續執行、不覆寫原存檔、該 KEY 不寫盤直到使用者明確重設；修好後重新讀取即恢復。統一入口的全部 KEY 都適用。（載入失敗不覆寫 CFG-02；第 91 題 `entry-wide`；存檔加版本欄位、解析改嚴格、舊存檔當版本 0——UnityExtension 決策 `config-storage-format`、`config-load-error-recovery`）
+  3. 改了就存；不同 KEY 互不覆寫。（通知與隔離 CFG-08）
+  4. 場景裡的 host 元件銷毀後，入口不再呼叫它；入口可釋放單一 KEY，釋放後下次存取重新讀取，等於重開。（卸載與延遲完成 CFG-07 在同步儲存下的原生等價檢查——UnityExtension 決策 `config-service-subject`）
+- 不在目標 2 內（進下一個目標）：等級 2 的行為——保存提交順序（CFG-03）、保存失敗與重試（CFG-04）、已保存未套用（CFG-05）、單一進行中命令（CFG-06）、草稿及模式（CFG-12）——是目標 3；模組 JSON 宣告與宣告產生欄位（宣告驗證 CFG-09、值的界線 CFG-10、宣告映射 UI CFG-11、交付一致性 CFG-14、原生欄位 CFG-P03）等 Unity 出現宣告消費端（AppsMenu Unity 的 UX-UNITYEXTENSION-5 或 Motion 宣告的 UX-MOTION-2）再定目標；Theme 偏好保存（Theme 持久化 CFG-13）隨 WebTheme（UX-UNITYEXTENSION-2）；設定面板外觀與操作（SettingsPanel，暫停中）。
+- 完成條件：UnityExtension 依 referenced-module-acceptance 在 `Packages/common/Documentation/Yu5h1Lib.UX/Configuration.md` 建立驗收紀錄並釘選本文雜湊（匯入與版本固定 CFG-P05）；上述四條情境經 adapter 走真實 `Preferences` 入口與 host 逐案 pass；真實 PlayerPrefs 的保存、重啟、重讀與 KEY 隔離（實際 backend CFG-P01）pass；Play 停止／重開後值仍在（生命週期 CFG-P02）由使用者在 Yu5h1LibTest demo 的 uGUI 與 UI Toolkit 兩頁各一份人工 checklist 確認（第 89 題）；原生與規格不一致處記 deviation，不算 pass。需求：[UX-UNITYEXTENSION-7](../../Requirements.UnityExtension.md#ux-unityextension-7--採用-configuration-目標-2保存語意對應原生-preferences)。
 
-### 目標 3：保存行為在 Unity 的設定面板上成立（已定義，等使用者點名）
+### 目標 3：等級 2「確認保存」在 Unity 的第一個需要它的消費端成立（已定義，等消費端出現）
 
-- 為誰服務：Unity 端有設定面板的介面；點名時先在程式碼找出消費端（候選：AppsMenu Unity 的設定分頁、Yu5h1LibTest 的設定 demo），UI Toolkit 與 uGUI 各自一輪。
-- 情境（行為層那一半）：
-  1. 預設自動儲存，欄位確認修改後保存並生效；關掉自動儲存進手動模式，改動留在草稿，按「套用並保存」才提交；手動模式關閉或 Escape 捨棄未提交的草稿；恢復預設依目前模式。（草稿及模式 CFG-12）
-  2. 保存失敗時草稿還在、可重試、沒有顯示成已保存。（保存失敗與重試 CFG-04）
-  3. 已保存但套用失敗時顯示「已保存、尚未生效」，重試只重新套用。（已保存未套用 CFG-05）
+- 為誰服務：需要草稿、確認保存、失敗重試，或使用非同步／遠端儲存的 Unity 介面；目前沒有，點名時先在程式碼找出消費端（候選：AppsMenu Unity 的設定分頁、Yu5h1LibTest 的設定 demo），UI Toolkit 與 uGUI 各自一輪。
+- 情境（等級 2）：保存提交順序（CFG-03）、保存失敗與重試（CFG-04）、已保存未套用（CFG-05）、單一進行中命令（CFG-06）、卸載與延遲完成（CFG-07）、草稿及模式（CFG-12），含使用者看得到的那一半（草稿還在、可重試、沒有顯示成已保存、「已保存、尚未生效」有顯示）。
 - 不在目標 3 內：保存列的外觀與位置（SettingsPanel，點名目標 3 時一併解凍）；宣告產生欄位要不要併入，點名時依消費端決定。
-- 完成條件：目標 2 先達成；各 UI 套件在自己的驗收紀錄釘選本文雜湊；三條情境在該套件的設定面板逐項 pass；人工 checklist 每頁一份（面板與 Theme CFG-P04 的保存部分）由使用者確認。
+- 完成條件：目標 2 先達成；該消費端所在套件在自己的驗收紀錄釘選本文雜湊；六條行為在該介面逐項 pass；人工 checklist 每頁一份（面板與 Theme CFG-P04 的保存部分）由使用者確認。
 
 ## 系統階層與關係
 
@@ -82,6 +78,17 @@ Web 在目標 1 一次驗完兩層（ConfigStore 與 settings demo 在同一個 
 | Theme | [Theme 核心](../../../../Web/src/theme/index.ts)、[偏好 schema](Configuration/theme-preference.schema.json) | Theme 擁有偏好驗證及顯示；Config 協調保存 | 移植偏好資料，不將 CSS token 當存檔 |
 
 不包含任意 JSON 表單建構、帳號／雲端同步、多 writer 衝突合併、交易回滾、Dandelion Profile 或平台 UI 的完整視覺規範。面板樣式、Tab 方向、焦點、關閉入口與保存列見 [SettingsPanel](../SettingsPanel.md)。設定宣告不負責執行 Motion 數值求解器。
+
+## 保存等級
+
+保存語意分兩級，由擁有設定的模組在自己的規格裡宣告等級；實作端只驗該級的行為，驗收紀錄寫明等級（第 93 題）。分級依據是儲存器的失敗模型（同步本地幾乎不失敗；非同步、遠端、有配額的會失敗或變慢）與值丟失或錯誤的代價（音量下次再調；帳號資料不行），不是平台：VCP 的 `UserDataView` 是本地 PlayerPrefs 但存使用者資料，Web 的 Theme 偏好是本地同步的 localStorage，都要照這兩件事歸級。
+
+| 等級 | 適用 | 行為 |
+|---|---|---|
+| 1 直接存 | 同步、本地、低代價的設定：Unity 以 `PlayerPreferences` 保存的消費端（VCP 音量、BonghuoVR 設定面板）、Web 的 Theme 偏好 | 預設與載入（CFG-01）、載入失敗不覆寫（CFG-02）、通知與隔離（CFG-08）、實際 backend（CFG-P01）；改了就存；沒有草稿、確認、重試與套用階段；卸載與延遲完成（CFG-07）在同步儲存下以原生等價檢查記錄一次（host 銷毀後不再被呼叫、可釋放單一 KEY）；單一進行中命令（CFG-06）屬等級 2 |
+| 2 確認保存 | 非同步或遠端儲存、代價高的值（帳號、使用者資料）、介面本來就有草稿與「套用並保存」：Web 的設定面板（Apps、Motion 分頁） | 等級 1 全部，加保存提交順序（CFG-03）、保存失敗與重試（CFG-04）、已保存未套用（CFG-05）、單一進行中命令（CFG-06）、卸載與延遲完成（CFG-07）、草稿及模式（CFG-12） |
+
+存檔損毀的處理兩級相同：執行期印 Error、用預設值繼續、不覆寫壞檔、該 KEY 不寫盤直到使用者明確重設；「格式修好後資料對不上」是 bug，以修正處理，不做執行期恢復功能。等級目前寫在模組規格與消費端紀錄；要不要寫進宣告 JSON，等有讀取端需要時再加，不改宣告契約 1.0.0。
 
 ## 狀態與操作
 
@@ -237,3 +244,7 @@ Web 實作的交付：`npm run build:ui` 交付 `contracts/configuration/apps.js
 | 1.1.0 | 自 Web `30cc4f7` 移交 UX；AppsMenu 宣告移到 UX AppsMenu，Motion 宣告的唯一來源改為 Motion 的檔案；CFG 編號、宣告欄位、存檔格式與案例不變 |
 | 1.2.0 | 加入定義與〈目標〉；歸基礎層並搬到 `ModuleSpec/Foundation/`（第 87 題）；行為、案例與格式不變 |
 | 1.2.1 | 目標 1 改為已達成（2026-10-20，Web）；行為、案例與格式不變 |
+| 1.3.0 | 依第 90、91 題加入〈目標 2〉（Unity 原生 Preferences）；行為、案例與格式不變 |
+| 1.3.1 | 依第 92 題加入〈能力與行為的分工〉，目標 2 縮為保存能力、新增目標 3；行為、案例與格式不變 |
+| 1.4.0 | 依第 93 題加入〈保存等級〉（直接存／確認保存），目標 2 改為等級 1、目標 3 改為等級 2；案例與格式不變 |
+| 1.4.1 | 〈保存等級〉表等級 1 拿掉單一進行中命令（CFG-06），與〈目標 2〉一致；行為、案例與格式不變 |
