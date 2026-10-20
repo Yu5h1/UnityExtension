@@ -2,7 +2,7 @@
 
 > Task ID: common-configuration
 >
-> 狀態：模組輪自動檢查通過、人工確認進行中（2026-10-20，第一輪：Configuration 1.4.1〈目標 2〉等級 1「直接存」，需求 UX-UNITYEXTENSION-7）。依使用者指示「在 Yu5h1Lib.Common 引用 UX 的 Configuration」，流程見 [referenced-module-acceptance](../../../../../../.agents/skills/referenced-module-acceptance/SKILL.md)。本輪原本釘 1.3.1 的八條服務語意，2026-10-20 依 UX 第 93 題縮為等級 1，改釘 1.4.0，同日再改釘只修正〈保存等級〉表的 1.4.1。驗收方在實作分支 `ef5ac00` 的乾淨 worktree 跑完 checklist 第 1～6 項，全部通過；使用者授權後，實作分支以 `1c93adf`（`--no-ff`）合併進 `adopt-ux-optionpicker`，本紀錄與決策檔以主線為準；生命週期（CFG-P02）的兩份人工 checklist 已開立，使用者確認前需求尚未完成。
+> 狀態：verified（2026-10-20，第一輪：Configuration 1.4.1〈目標 2〉等級 1「直接存」，需求 UX-UNITYEXTENSION-7）。依使用者指示「在 Yu5h1Lib.Common 引用 UX 的 Configuration」，流程見 [referenced-module-acceptance](../../../../../../.agents/skills/referenced-module-acceptance/SKILL.md)。本輪原本釘 1.3.1 的八條服務語意，2026-10-20 依 UX 第 93 題縮為等級 1，改釘 1.4.0，同日再改釘只修正〈保存等級〉表的 1.4.1。驗收方在實作分支 `ef5ac00` 的乾淨 worktree 跑完 checklist 第 1～6 項，全部通過；使用者授權後，實作分支以 `1c93adf`（`--no-ff`）合併進 `adopt-ux-optionpicker`，本紀錄與決策檔以主線為準；使用者在 uGUI 與 UI Toolkit 兩頁確認生命週期（CFG-P02）通過，本輪結案。
 
 ```text
 UnityExtension
@@ -108,13 +108,13 @@ UnityExtension
 
 | 規範版本 | UX commit | UnityExtension commit | checklist commit | 結論 |
 |---|---|---|---|---|
-| Configuration 1.4.1〈目標 2〉等級 1 | `7aa4275` | `ef5ac00`（分支 `feat/ux-unityextension-7-configuration`；實作 `4f0b412`、釘選 `4a43a32`、`.meta` 還原 `3d36156`） | `5e3e72d` | 模組輪 6/6 項通過；合併 `1c93adf`；生命週期（CFG-P02）的人工確認進行中 |
+| Configuration 1.4.1〈目標 2〉等級 1 | `7aa4275` | `ef5ac00`（分支 `feat/ux-unityextension-7-configuration`；實作 `4f0b412`、釘選 `4a43a32`、`.meta` 還原 `3d36156`） | `5e3e72d` | 模組輪 6/6 項通過（`5e3e72d`）；合併 `1c93adf`；生命週期（CFG-P02）兩份人工 checklist 由使用者勾選通過（`57c3bcc`）；本輪範圍內相容 |
 
 ## 結論
 
 ### 第一輪（Configuration 1.4.1〈目標 2〉等級 1「直接存」）
 
-狀態：模組輪自動檢查通過（2026-10-20）。範圍原為 1.3.1 的八條服務語意（主線 `8df460f`），同日依第 93 題縮為等級 1。四條情境——預設與載入（CFG-01）、載入失敗不覆寫（CFG-02）、通知與隔離（CFG-08）、卸載與延遲完成（CFG-07）的原生等價——以及實際 backend（CFG-P01）、匯入與版本固定（CFG-P05）在 `ef5ac00` 通過，沒有偏差。目標 2 還差使用者在 uGUI 與 UI Toolkit 兩頁確認 Play 停止／重開後值仍在（生命週期 CFG-P02）。使用者決定先合併（`1c93adf`）再做人工確認，因為 Yu5h1LibTest 解析的是主 checkout；合併後的 `Packages/common/Runtime`、`Tests` 與 `ef5ac00` 完全相同，Yu5h1LibTest 重新編譯沒有錯誤，既有的 `PlayerPreferences` 存檔以新格式讀成 Loaded。人工確認通過後結案。
+狀態：verified（2026-10-20）。範圍原為 1.3.1 的八條服務語意（主線 `8df460f`），同日依第 93 題縮為等級 1。四條情境——預設與載入（CFG-01）、載入失敗不覆寫（CFG-02）、通知與隔離（CFG-08）、卸載與延遲完成（CFG-07）的原生等價——以及實際 backend（CFG-P01）、匯入與版本固定（CFG-P05）在 `ef5ac00` 通過，沒有偏差。目標 2 還差使用者在 uGUI 與 UI Toolkit 兩頁確認 Play 停止／重開後值仍在（生命週期 CFG-P02）。使用者決定先合併（`1c93adf`）再做人工確認，因為 Yu5h1LibTest 解析的是主 checkout；合併後的 `Packages/common/Runtime`、`Tests` 與 `ef5ac00` 完全相同，Yu5h1LibTest 重新編譯沒有錯誤，既有的 `PlayerPreferences` 存檔以新格式讀成 Loaded。使用者在 [uGUI](../../../../checklists/common-configuration-p02-ugui.checklist) 與 [UI Toolkit](../../../../checklists/common-configuration-p02-uitoolkit.checklist) 兩頁確認停止 Play 再進入後值仍在、沒有載入錯誤（`57c3bcc`）。在本輪範圍內（等級 1 的四條情境與 CFG-P01、CFG-P02、CFG-P05），Yu5h1Lib.Common 的統一入口 `Preferences` 與 host `Preferences<T>` 符合 Configuration 1.4.1〈目標 2〉。
 
 ### 執行結果
 

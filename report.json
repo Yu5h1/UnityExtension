@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-20T06:49:14.130099+00:00",
+  "updated_at": "2026-10-20T06:56:05.437060+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -561,6 +561,45 @@
       "summary": "進行中：Yu5h1Lib.UX 是體驗規範的唯一來源，Unity 以套件內快照釘選版本與雜湊，依共用 skill referenced-module-acceptance 在實作套件記錄驗收（Theme 與設定仍是 Web 交付）。Button 2.0.0 於 2026-10-19 在 Yu5h1Lib.UI 與 Yu5h1Lib.UIToolkit 驗收通過（自動檢查加使用者與 Web demo 並排確認）；VisualFoundation、無障礙名稱與 Icon 的缺口仍 blocked。AppsMenu 暫停（卡片 appsmenu-library-adoption）；Theme 與 WebGL 待排。Canonical entry：Documentation/跨平台UI一致性.md（Task ID cross-platform-ui-parity）。",
       "completed_items": [
         {
+          "id": "item-cross-platform-ui-parity-todo-4",
+          "title": "設定：UX Configuration 目標 2 等級 1 直接存在 Unity Preferences 驗收通過（2026-10-20，UX-UNITYEXTENSION-7，合併 1c93adf）；等級 2 與宣告等各自的消費端",
+          "priority": 4,
+          "status": "done"
+        },
+        {
+          "id": "common-configuration-p02-uitoolkit",
+          "title": "確認 UI Toolkit 面板在 Play 停止／重開後設定值仍在（Configuration 目標 2 等級 1，UX-UNITYEXTENSION-7）",
+          "status": "done",
+          "priority": 0,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "common-configuration-p02-uitoolkit"
+          }
+        },
+        {
+          "id": "common-configuration-p02-ugui",
+          "title": "確認 uGUI 面板在 Play 停止／重開後設定值仍在（Configuration 目標 2 等級 1，UX-UNITYEXTENSION-7）",
+          "status": "done",
+          "priority": 0,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "common-configuration-p02-ugui"
+          }
+        },
+        {
+          "id": "common-configuration-acceptance",
+          "title": "驗收 Yu5h1Lib.Common 的 Configuration 目標 2 等級 1 直接存（UX-UNITYEXTENSION-7）：模組輪在乾淨 checkout 通過（5e3e72d）",
+          "status": "done",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "common-configuration"
+          }
+        },
+        {
           "status": "done",
           "title": "Button 2.0.0 在 Yu5h1Lib.UI（b42c369）與 Yu5h1Lib.UIToolkit（fb13d38）引用並驗收通過：BT01／BT03 自動檢查在乾淨 worktree 通過，使用者 2026-10-19 與 Web demo 並排確認外觀；紀錄 verified，UX-UNITYEXTENSION-6 Implemented",
           "id": "button-adopted-both-packages"
@@ -584,48 +623,9 @@
       ],
       "pending_items": [
         {
-          "id": "common-configuration-p02-ugui",
-          "title": "確認 uGUI 面板在 Play 停止／重開後設定值仍在（Configuration 目標 2 等級 1，UX-UNITYEXTENSION-7）",
-          "status": "planned",
-          "priority": 0,
-          "document_ref": {
-            "kind": "checklist",
-            "scope_id": "unity-extension",
-            "task": "common-configuration-p02-ugui"
-          }
-        },
-        {
-          "id": "common-configuration-p02-uitoolkit",
-          "title": "確認 UI Toolkit 面板在 Play 停止／重開後設定值仍在（Configuration 目標 2 等級 1，UX-UNITYEXTENSION-7）",
-          "status": "planned",
-          "priority": 0,
-          "document_ref": {
-            "kind": "checklist",
-            "scope_id": "unity-extension",
-            "task": "common-configuration-p02-uitoolkit"
-          }
-        },
-        {
-          "id": "common-configuration-acceptance",
-          "title": "驗收 Yu5h1Lib.Common 的 Configuration 目標 2 等級 1 直接存（UX-UNITYEXTENSION-7）",
-          "status": "planned",
-          "priority": 1,
-          "document_ref": {
-            "kind": "checklist",
-            "scope_id": "unity-extension",
-            "task": "common-configuration"
-          }
-        },
-        {
           "id": "item-cross-platform-ui-parity-todo-2",
           "title": "Theme：等 WEB-6（theme 與 config 互動、存檔格式），再做 WebTheme 匯入並驗收 WEB-1",
           "priority": 4
-        },
-        {
-          "id": "item-cross-platform-ui-parity-todo-4",
-          "title": "設定：Unity Preferences 對應 UX Configuration 目標 2 等級 1 直接存（UX-UNITYEXTENSION-7）；等級 2 確認保存（目標 3）等消費端出現",
-          "priority": 4,
-          "status": "in_progress"
         },
         {
           "id": "item-cross-platform-ui-parity-todo-7",
