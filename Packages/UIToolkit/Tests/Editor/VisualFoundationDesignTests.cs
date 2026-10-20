@@ -60,7 +60,7 @@ namespace Yu5h1Lib.UIToolkit.Tests
         {
             var generated = VisualFoundationThemeGenerator.GenerateFromPinnedDesign();
             Assert.AreEqual(generated, VisualFoundationThemeGenerator.GenerateFromPinnedDesign(), "The same input must give the same output");
-            Assert.AreEqual(generated, File.ReadAllText(Resource("Yu5h1VisualFoundation.uss"), Encoding.UTF8),
+            Assert.AreEqual(generated, File.ReadAllText(Resource("Yu5h1VisualFoundation.uss"), Encoding.UTF8).Replace("\r\n", "\n"),
                 "Yu5h1VisualFoundation.uss is stale: run Tools > Yu5h1Lib > UIToolkit > Regenerate VisualFoundation Theme");
         }
 
