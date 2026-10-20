@@ -16,7 +16,7 @@ namespace Yu5h1Lib.UIToolkit.Tests
     /// </summary>
     public class VisualFoundationDesignTests
     {
-        private const string SpecHash = "7a95b79e920684ea06b963dbcae9414b9c99aa10583741de6e9ebea6cf8c46d8";
+        private const string SpecHash = "2a9d2881889686cf8adff3ff0b77e9e3e5b9648badeeb6f4a11a6fa826b5a0ec";
         private const string DesignHash = "7d41c8287ef9aafe068280459f10cf906f616c803c530e16bb469843940b42c9";
         private const string CasesHash = "06a9edb4e1d450c45718408d897e434cee093cfab248f97aba67eb4a3aaba807";
 
@@ -38,9 +38,9 @@ namespace Yu5h1Lib.UIToolkit.Tests
         }
 
         [Test]
-        public void SnapshotIsVisualFoundation130WithDesign120()
+        public void SnapshotIsVisualFoundation131WithDesign120()
         {
-            StringAssert.Contains("Specification version: 1.3.0", File.ReadAllText(SnapshotPath("VisualFoundation.md")));
+            StringAssert.Contains("Specification version: 1.3.1", File.ReadAllText(SnapshotPath("VisualFoundation.md")));
             StringAssert.Contains("\"contractVersion\": \"1.2.0\"", File.ReadAllText(SnapshotPath("visual-design.json")));
             StringAssert.Contains("\"schemaVersion\": 1", File.ReadAllText(SnapshotPath("visual-design.json")));
         }

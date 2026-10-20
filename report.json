@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-20T18:24:58.734068+00:00",
+  "updated_at": "2026-10-20T18:43:49.722651+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -685,25 +685,14 @@
           "priority": 4
         },
         {
-          "id": "uitk-visualfoundation-vp03-light",
-          "title": "確認 light 頁的 Button 與 OptionPicker 狀態外觀與焦點外框（VisualFoundation 目標 1，VP03）",
           "status": "planned",
+          "title": "確認 VisualFoundation 頁的 Button 與 OptionPicker 狀態外觀與焦點外框，light 與 dark 同一份（VisualFoundation 目標 1，VP03；實心鈕靜止不判斷）",
           "priority": 1,
+          "id": "uitk-visualfoundation-vp03",
           "document_ref": {
-            "kind": "checklist",
             "scope_id": "unity-extension",
-            "task": "uitk-visualfoundation-vp03-light"
-          }
-        },
-        {
-          "id": "uitk-visualfoundation-vp03-dark",
-          "title": "確認 dark 頁的 Button 與 OptionPicker 狀態外觀與焦點外框（VisualFoundation 目標 1，VP03；實心鈕靜止不判斷）",
-          "status": "planned",
-          "priority": 1,
-          "document_ref": {
-            "kind": "checklist",
-            "scope_id": "unity-extension",
-            "task": "uitk-visualfoundation-vp03-dark"
+            "task": "uitk-visualfoundation-vp03",
+            "kind": "checklist"
           }
         }
       ]

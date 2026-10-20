@@ -2,7 +2,7 @@
 
 > 狀態：目標 1「預設色票與狀態外觀在 Unity UI Toolkit 成立」進行中（2026-10-21，第 94、95 題）。Web 已採用（UX-WEB-2），是本規格的來源側證據。
 >
-> Specification version: 1.3.0（2026-10-21：依第 94、95 題加入〈目標〉與目標 1 的對照表；角色、色值、案例不變，Web 不需重新匯入）。前一版：1.2.3（2026-10-19；只改引用：Configuration 搬到 [Foundation/Configuration.md](Foundation/Configuration.md)（1.2.0，第 87 題）。1.2.2 2026-10-16；只改引用：Primitives 改名為「操作」（Input，[Foundation/Input.md](Foundation/Input.md)），行為 ID 前綴改為 INPUT-。1.2.1 2026-10-13；1.2.1 改連到 UX 的 Configuration；1.0.0 自 Web Theme 的 `resolveTheme` 與 `theme.css` 抽出色彩角色與數值，不改配色；1.1.0 加入文字縮放與 `controlBorder`；1.2.0 取消 1.1.0 自訂的間距、圓角、字級級數，改以各模組現有的具名 token 為準）
+> Specification version: 1.3.1（2026-10-21：目標 1 完成條件的人工 checklist 改寫為一頁一份、light 與 dark 同一份，原「各一頁」被讀成兩份；行為不變）。前一版：1.3.0（2026-10-21：依第 94、95 題加入〈目標〉與目標 1 的對照表；角色、色值、案例不變，Web 不需重新匯入）；1.2.3（2026-10-19；只改引用：Configuration 搬到 [Foundation/Configuration.md](Foundation/Configuration.md)（1.2.0，第 87 題）。1.2.2 2026-10-16；只改引用：Primitives 改名為「操作」（Input，[Foundation/Input.md](Foundation/Input.md)），行為 ID 前綴改為 INPUT-。1.2.1 2026-10-13；1.2.1 改連到 UX 的 Configuration；1.0.0 自 Web Theme 的 `resolveTheme` 與 `theme.css` 抽出色彩角色與數值，不改配色；1.1.0 加入文字縮放與 `controlBorder`；1.2.0 取消 1.1.0 自訂的間距、圓角、字級級數，改以各模組現有的具名 token 為準）
 
 ## 系統階層與關係
 
@@ -51,7 +51,7 @@ Yu5h1Lib.UX
   | 單位與量測（VIS-UNIT） | 已在量測 | Button 的 BT03 以邏輯 px 量測 | 沿用，不另驗 |
 
 - 不在目標 1 內（進下一個目標）：uGUI（Yu5h1Lib.UI 的 Button 同樣 blocked，依 plan 等 uGUI 產品）；自訂配色（VIS-CUSTOM）；system 跟隨與執行中切換（VIS-SCHEME、VIS-SWITCH）；文字縮放（VIS-TEXT-SCALE）；Theme 偏好保存（Configuration 的 Theme 持久化 CFG-13）。
-- 完成條件：UnityExtension 依 referenced-module-acceptance 在 `Packages/UIToolkit/Documentation/Yu5h1Lib.UX/VisualFoundation.md` 建立驗收紀錄並釘選本文雜湊；色票交付（VP01）自動通過；狀態外觀（VP03）與焦點外框由使用者在 UxAcceptance 範例的 light、dark 各一頁人工 checklist 確認（第 89 題）；Button 與 OptionPicker 紀錄的 blocked 列改為通過。達成時本節改為「已達成」並記日期。需求：[UX-UNITYEXTENSION-2](../Requirements.UnityExtension.md#ux-unityextension-2--webtheme-改讀-ux-的色票交付)。
+- 完成條件：UnityExtension 依 referenced-module-acceptance 在 `Packages/UIToolkit/Documentation/Yu5h1Lib.UX/VisualFoundation.md` 建立驗收紀錄並釘選本文雜湊；色票交付（VP01）自動通過；狀態外觀（VP03）與焦點外框由使用者在 UxAcceptance 範例那一頁的一份人工 checklist 確認，light 與 dark 是同一份裡的兩組檢查（第 89 題：一頁一份，不是一種明暗一份）；Button 與 OptionPicker 紀錄的 blocked 列改為通過。達成時本節改為「已達成」並記日期。需求：[UX-UNITYEXTENSION-2](../Requirements.UnityExtension.md#ux-unityextension-2--webtheme-改讀-ux-的色票交付)。
 - 進度看 UX `report.json`，證據看各平台的驗收紀錄。
 
 ## 色彩角色

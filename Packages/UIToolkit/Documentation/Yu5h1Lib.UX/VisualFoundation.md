@@ -2,13 +2,13 @@
 
 > Task ID: uitk-visualfoundation
 >
-> 狀態：模組輪通過、人工待驗（2026-10-21）。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 VisualFoundation」（UX-UNITYEXTENSION-2），流程見 referenced-module-acceptance。實作 `603ec74` 已合併到 `master`（`a6cfd29`，分支已刪除）；自動檢查在乾淨 worktree 通過，light、dark 各一頁的人工 checklist 已可在 Yu5h1LibTest 開啟。實心按鈕靜止底色與實心面板外框的角色規格沒有寫（UNITYEXTENSION-UX-1），兩列 blocked。
+> 狀態：模組輪通過，人工 checklist 使用者已記為通過（2026-10-21，light、dark 共 4 項，結果以 `uitk-visualfoundation-vp03.checklist` 為準）；實心鈕靜止底色等兩列仍 blocked，目標 1 的「達成」由 UX 依需求標記。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 VisualFoundation」（UX-UNITYEXTENSION-2），流程見 referenced-module-acceptance。實作 `603ec74` 已合併到 `master`（`a6cfd29`，分支已刪除）；自動檢查在乾淨 worktree 通過，light、dark 各一頁的人工 checklist 已可在 Yu5h1LibTest 開啟。實心按鈕靜止底色與實心面板外框的角色規格沒有寫（UNITYEXTENSION-UX-1），兩列 blocked。
 
 ```text
 UnityExtension
 └─ Yu5h1Lib.UIToolkit（實作套件）
    └─ VisualFoundation（本紀錄）
-      ├─ 體驗規範 ← Yu5h1Lib.UX ModuleSpec/VisualFoundation 1.3.0 目標 1
+      ├─ 體驗規範 ← Yu5h1Lib.UX ModuleSpec/VisualFoundation 1.3.1 目標 1
       ├─ 被引用的消費端 → Button 2.0.0、OptionPicker 3.0.2（本套件各自的紀錄）
       └─ 驗證專案 → Yu5h1LibTest（Unity 6000.6），驗收時 manifest 暫時指向乾淨 worktree
 ```
@@ -18,10 +18,10 @@ UnityExtension
 | 項目 | 內容 |
 |---|---|
 | 實作套件 | `com.yu5h1.uitoolkit`（`Packages/UIToolkit`）：`Yu5h1VisualFoundation.uss`（產生）、`VisualFoundationTheme`（範圍）、`Yu5h1Button.uss`、`Yu5h1OptionPicker.uss`、`Yu5h1FocusRing.png` |
-| UX 規範 | [UX ModuleSpec/VisualFoundation.md](../../../../../../UX/Documentation/ModuleSpec/VisualFoundation.md) 1.3.0，SHA-256 `7a95b79e920684ea06b963dbcae9414b9c99aa10583741de6e9ebea6cf8c46d8` |
+| UX 規範 | [UX ModuleSpec/VisualFoundation.md](../../../../../../UX/Documentation/ModuleSpec/VisualFoundation.md) 1.3.1，SHA-256 `2a9d2881889686cf8adff3ff0b77e9e3e5b9648badeeb6f4a11a6fa826b5a0ec`（1.3.0 是 `7a95b79e…`，只差完成條件的人工 checklist 寫法） |
 | 設計資料 | `VisualFoundation/visual-design.json` 合約 1.2.0（schemaVersion 1），SHA-256 `7d41c8287ef9aafe068280459f10cf906f616c803c530e16bb469843940b42c9`：light、dark 各 15 個角色，`focusMinWidth` 2 |
 | 案例 | `VisualFoundation/visual-cases.json` 1.1.0，SHA-256 `06a9edb4e1d450c45718408d897e434cee093cfab248f97aba67eb4a3aaba807`（隨快照釘選；本輪色票由面板讀回，不經 adapter 執行中性案例，見〈未引用的部分〉） |
-| UX commit | `855479ea2299953feaf82015819e6fc6878450a6`，三個雜湊與 UX `manifest.json` 相同 |
+| UX commit | `879ca0f7e861b33674eef61e8ca28304f08260f4`（1.3.1；模組輪跑在 `855479e` 的 1.3.0），三個雜湊與 UX `manifest.json` 相同 |
 | DX 基準 | 未釘選：本輪早於 DX 1.0.0 的首次驗證範圍（UX 第 81 題，DX §1） |
 | 套件釘選 | 快照 `Tests/Editor/UX~/VisualFoundation/`（位元組與 UX 相同，`.gitattributes` 已有 `-text` 規則）；`VisualFoundationDesignTests` 核對雜湊與版本 |
 | 範圍 | 目標 1 的三條情境：色票交付（VIS-PALETTE 與預設配色的 VIS-DERIVE）、Button 與 OptionPicker 的狀態外觀（VIS-STATE）、鍵盤焦點外框（VIS-FOCUS） |
@@ -65,7 +65,7 @@ VisualFoundation 本身不引用其他模組；它被 Button 與 OptionPicker �
 
 ## 驗收對照
 
-每項檢查的結果記在 [checklist](../../../../checklists/uitk-visualfoundation.checklist)，本文不重複；人工檢查在 [light 頁](../../../../checklists/uitk-visualfoundation-vp03-light.checklist)與 [dark 頁](../../../../checklists/uitk-visualfoundation-vp03-dark.checklist)。
+每項檢查的結果記在 [checklist](../../../../checklists/uitk-visualfoundation.checklist)，本文不重複；人工檢查在[一份 checklist](../../../../checklists/uitk-visualfoundation-vp03.checklist)，light、dark 是裡面的兩個工作項目（1.3.1：一頁一份）。
 
 | UX 行為 | 檢查 | 結果所在 |
 |---|---|---|
@@ -73,7 +73,7 @@ VisualFoundation 本身不引用其他模組；它被 Button 與 OptionPicker �
 | VIS-PALETTE（VP01） | PlayMode 讀面板解析出的 15 個角色，light、dark 各一次 | checklist 第 2 項 |
 | VIS-STATE、VIS-FOCUS（自動部分） | PlayMode 讀各狀態到達的角色與焦點外框 | checklist 第 3 項 |
 | 回歸 | UIToolkit 既有 EditMode 與 PlayMode | checklist 第 4 項 |
-| VIS-STATE、VIS-FOCUS（VP03，外觀） | 使用者在 `Samples~/UxAcceptance` 的 light、dark 頁確認 | 兩份人工 checklist |
+| VIS-STATE、VIS-FOCUS（VP03，外觀） | 使用者在 `Samples~/UxAcceptance` 的 VisualFoundation 頁確認 light、dark | 一份人工 checklist |
 
 驗收入口：Yu5h1LibTest 的 `Samples~/UxAcceptance`，模組下拉選「VisualFoundation (1.3.0) light」或「dark」（案例 `visualfoundation-light`、`visualfoundation-dark`，在 `Samples~/UxAcceptance/Cases/UxVisualFoundationDemoCase.cs` 註冊，沒有改動 coordinator 的分支）。
 
@@ -85,11 +85,12 @@ VisualFoundation 本身不引用其他模組；它被 Button 與 OptionPicker �
 
 | 規範版本 | UX commit | UnityExtension commit | checklist commit | 結論 |
 |---|---|---|---|---|
-| VisualFoundation 1.3.0 目標 1 | `855479e` | `603ec74`（已合併 `a6cfd29`） | 本紀錄所在提交 | 模組輪通過、人工待驗：乾淨 worktree EditMode 110/110、PlayMode 30/30；light、dark 人工頁待驗；兩列 blocked |
+| VisualFoundation 1.3.0 目標 1 | `855479e` | `603ec74`（已合併 `a6cfd29`） | 本紀錄所在提交 | 模組輪通過：乾淨 worktree EditMode 110/110、PlayMode 30/30；兩列 blocked |
+| VisualFoundation 1.3.1 目標 1 | `879ca0f` | 重新釘選的提交（見 handoff） | 同上 | 只改完成條件的人工 checklist 寫法，行為與設計資料不變，不重跑模組輪；釘選測試 `VisualFoundationDesignTests` 在 Unity 重跑的結果見下 |
 
 ## 結論
 
-狀態：模組輪通過、人工待驗（2026-10-21）。在本輪範圍內（色票交付、Button 與 OptionPicker 的狀態角色、焦點外框），`603ec74` 符合 VisualFoundation 1.3.0 的自動可驗部分；這是自動檢查完成，不是驗收完成。目標 1 要達成，還需要 UX-UNITYEXTENSION-2 的完成條件：兩份人工 checklist 通過，Button 與 OptionPicker 紀錄的 blocked 列改為通過，而實心靜止底色的 blocked 要等 UNITYEXTENSION-UX-1。
+狀態：模組輪通過、人工 checklist 已記為通過（2026-10-21）。1.3.1 重新釘選：只換快照與測試常數（雜湊 `2a9d2881…` 與 UX manifest 相同，版本字串 1.3.1），以 shell 核對雜湊；`VisualFoundationDesignTests` 在 Unity 的重跑待使用者離開 Play Mode 後補（目前編輯器在 Play 中，測試無法啟動）。在本輪範圍內（色票交付、Button 與 OptionPicker 的狀態角色、焦點外框），`603ec74` 符合 VisualFoundation 1.3.0 的自動可驗部分；這是自動檢查完成，不是驗收完成。目標 1 要達成，還需要 UX-UNITYEXTENSION-2 的完成條件：兩份人工 checklist 通過，Button 與 OptionPicker 紀錄的 blocked 列改為通過，而實心靜止底色的 blocked 要等 UNITYEXTENSION-UX-1。
 
 驗收環境與做法（2026-10-21，由實作的 session 自己執行，不是未參與實作的 agent）：
 
