@@ -1,0 +1,40 @@
+/* Generated from the pinned Yu5h1Lib.UX VisualFoundation design data (visual-design.json, SHA-256 7d41c8287ef9aafe068280459f10cf906f616c803c530e16bb469843940b42c9).
+   Do not edit: run Tools > Yu5h1Lib > UIToolkit > Regenerate VisualFoundation Theme. */
+
+.yu5h1-theme--light {
+    --yu5h1-color-page-background: #f5f3ec;
+    --yu5h1-color-panel-background: #fffdf8;
+    --yu5h1-color-heading: #17211d;
+    --yu5h1-color-panel-heading: #17211d;
+    --yu5h1-color-item-text: #27342e;
+    --yu5h1-color-secondary-text: #4f5e57;
+    --yu5h1-color-border: #dcd9cf;
+    --yu5h1-color-accent: #1f684f;
+    --yu5h1-color-hover: #efeee8;
+    --yu5h1-color-focus: #1f684f;
+    --yu5h1-color-on-accent: #ffffff;
+    --yu5h1-color-disabled: #4f5e57;
+    --yu5h1-color-overlay: #17233266;
+    --yu5h1-color-danger: #a33c38;
+    --yu5h1-color-control-border: #808981;
+    --yu5h1-focus-min-width: 2px;
+}
+
+.yu5h1-theme--dark {
+    --yu5h1-color-page-background: #171a21;
+    --yu5h1-color-panel-background: #202530;
+    --yu5h1-color-heading: #eef2f7;
+    --yu5h1-color-panel-heading: #dfe6ef;
+    --yu5h1-color-item-text: #cbd4df;
+    --yu5h1-color-secondary-text: #9da9b8;
+    --yu5h1-color-border: #343c49;
+    --yu5h1-color-accent: #7f9fd1;
+    --yu5h1-color-hover: #2a313c;
+    --yu5h1-color-focus: #7f9fd1;
+    --yu5h1-color-on-accent: #000000;
+    --yu5h1-color-disabled: #9da9b8;
+    --yu5h1-color-overlay: #00000099;
+    --yu5h1-color-danger: #f1aaa6;
+    --yu5h1-color-control-border: #737d8c;
+    --yu5h1-focus-min-width: 2px;
+}

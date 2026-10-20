@@ -1,0 +1,65 @@
+/* Acceptance page for Yu5h1Lib.UX VisualFoundation goal 1: page and panel surfaces drawn only from palette roles. */
+
+.vf-page {
+    flex-grow: 1;
+    padding: 24px 32px;
+    background-color: var(--yu5h1-color-page-background);
+}
+
+.vf-page__heading {
+    font-size: 20px;
+    -unity-font-style: bold;
+    color: var(--yu5h1-color-heading);
+    margin-bottom: 4px;
+}
+
+.vf-page__text {
+    font-size: 13px;
+    color: var(--yu5h1-color-item-text);
+    white-space: normal;
+}
+
+.vf-page__secondary {
+    font-size: 12px;
+    color: var(--yu5h1-color-secondary-text);
+    white-space: normal;
+    margin-top: 2px;
+}
+
+.vf-panel {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: var(--yu5h1-color-border);
+    background-color: var(--yu5h1-color-panel-background);
+}
+
+.vf-panel__heading {
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: var(--yu5h1-color-panel-heading);
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--yu5h1-color-border);
+}
+
+.vf-panel__row {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.vf-panel__row > .yu5h1-button {
+    margin-right: 12px;
+    margin-bottom: 4px;
+}
+
+.vf-panel__caption {
+    font-size: 12px;
+    color: var(--yu5h1-color-secondary-text);
+    width: 96px;
+    min-width: 96px;
+}
