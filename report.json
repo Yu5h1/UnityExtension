@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-19T15:09:32.606060+00:00",
+  "updated_at": "2026-10-20T03:26:08.909893+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -584,14 +584,26 @@
       ],
       "pending_items": [
         {
+          "id": "common-configuration-acceptance",
+          "title": "驗收 Yu5h1Lib.Common 的 Configuration 目標 2 保存能力（UX-UNITYEXTENSION-7）",
+          "status": "planned",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "common-configuration"
+          }
+        },
+        {
           "id": "item-cross-platform-ui-parity-todo-2",
           "title": "Theme：等 WEB-6（theme 與 config 互動、存檔格式），再做 WebTheme 匯入並驗收 WEB-1",
           "priority": 4
         },
         {
           "id": "item-cross-platform-ui-parity-todo-4",
-          "title": "設定：等 WEB-7（json 宣告的設定模式），再對應 Unity Preferences",
-          "priority": 4
+          "title": "設定：Unity Preferences 對應 UX Configuration 目標 2 保存能力（UX-UNITYEXTENSION-7）；目標 3 保存行為（設定面板）另案",
+          "priority": 4,
+          "status": "in_progress"
         },
         {
           "id": "item-cross-platform-ui-parity-todo-7",
