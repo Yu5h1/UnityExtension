@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-20T03:26:08.909893+00:00",
+  "updated_at": "2026-10-20T06:00:43.086205+00:00",
   "tasks": [
     {
       "id": "project-system-analysis",
@@ -585,7 +585,7 @@
       "pending_items": [
         {
           "id": "common-configuration-acceptance",
-          "title": "驗收 Yu5h1Lib.Common 的 Configuration 目標 2 保存能力（UX-UNITYEXTENSION-7）",
+          "title": "驗收 Yu5h1Lib.Common 的 Configuration 目標 2 等級 1 直接存（UX-UNITYEXTENSION-7）",
           "status": "planned",
           "priority": 1,
           "document_ref": {
@@ -601,7 +601,7 @@
         },
         {
           "id": "item-cross-platform-ui-parity-todo-4",
-          "title": "設定：Unity Preferences 對應 UX Configuration 目標 2 保存能力（UX-UNITYEXTENSION-7）；目標 3 保存行為（設定面板）另案",
+          "title": "設定：Unity Preferences 對應 UX Configuration 目標 2 等級 1 直接存（UX-UNITYEXTENSION-7）；等級 2 確認保存（目標 3）等消費端出現",
           "priority": 4,
           "status": "in_progress"
         },
