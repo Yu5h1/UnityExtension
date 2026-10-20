@@ -1,0 +1,70 @@
+# Common Configuration Checklist
+
+Current round: `../../../UX/Documentation/ModuleSpec/Foundation/Configuration.md#目標-2等級-1直接存在-unity-原生-preferences-上成立進行中2026-10-20-點名`.
+
+本輪對應 UX Configuration 1.4.1〈目標 2〉等級 1「直接存」（UX `7aa4275`，需求 UX-UNITYEXTENSION-7），在 `Yu5h1Lib.Common`（`Packages/common`）的統一入口 `Preferences` 與 host `Preferences<T>` 引用。等級 2 的保存提交順序（CFG-03）、保存失敗與重試（CFG-04）、已保存未套用（CFG-05）、單一進行中命令（CFG-06）、草稿及模式（CFG-12）屬目標 3，不在本輪。只放 agent 自動檢查（UX 第 89 題）；生命週期（CFG-P02）的人工 checklist 在本輪通過後另開。adapter 必須呼叫真實統一入口與 host，不能以預期值代替操作。驗收紀錄見 Packages/common/Documentation/Yu5h1Lib.UX/Configuration.md。一個檔案只放一輪。
+
+- [x] **1. 匯入與版本固定（CFG-P05）**
+  Outcome: 套件內有 Configuration 1.4.1 規格的快照，雜湊與 UX manifest 一致，快照位元組在任何 checkout 下不變。
+  Checks:
+    - [x] **快照與雜湊**
+      - Action: 執行 EditMode 測試 `ConfigurationDesignTests`。
+      - Expect: `Packages/common/Tests/Editor/UX~/Configuration/Configuration.md` 的 SHA-256 為 `4e99803cd70b040b0e5dd89a34865861672325a09641b1e5f44b237b7cd34d48`，與 UX manifest 相同；快照路徑在 `.gitattributes` 有 `-text`；把快照改一個位元組後測試失敗，還原後通過。
+    - [x] **乾淨 checkout**
+      - Action: 在實作分支的新 git worktree 中，把 Yu5h1LibTest 的 `com.yu5h1.common` 改指向該 worktree，`Client.Resolve()` 後執行 `Yu5h1Lib.Common.Editor.Tests`。
+      - Expect: `PackageInfo.FindForAssetPath` 的 `resolvedPath` 是 worktree；沒有編譯錯誤；快照雜湊相符。
+
+- [x] **2. 預設與載入（CFG-01）**
+  Depends on: 1.
+  Outcome: 沒有存檔時用 host 的 `defaultSetting`，有存檔時還原上次保存的值。
+  Checks:
+    - [x] **共同案例 CFG-C01**
+      - Action: 經 adapter 以不含綁定的 host 執行 CFG-C01：以 D 建立 host 並訂閱，load 無記錄；另以 N 記錄再測一次。
+      - Expect: 建立與訂閱沒有 I/O；各一次 read、零 write；host 的值分別為 D、N。
+    - [x] **缺欄位補預設**
+      - Action: 存檔有 KEY 但缺 `defaultSetting` 的一個欄位，存取 host 的 `current`。
+      - Expect: 缺的欄位補成預設、恰好寫一次，其餘欄位不變；這是宿主明定的新增欄位遷移，結果寫進驗收紀錄。
+
+- [x] **3. 載入失敗不覆寫（CFG-02）**
+  Depends on: 1.
+  Outcome: 讀不懂或版本未知的存檔不被覆寫；執行期印 Error、用預設值繼續，該 KEY 不寫盤直到明確重設；修好後重新讀取即恢復；統一入口的全部 KEY 都適用（UX 第 91 題）。
+  Checks:
+    - [x] **損毀與未知版本**
+      - Action: 經 adapter 逐一提供破損 JSON、`null`、未知版本、讀取失敗，各自 load 後修改一個欄位，再修復記錄並重新讀取。
+      - Expect: 每種情況都印一次 Error、可查到該 KEY 的載入錯誤；讀到的值是預設；修改後原始字串不變、零 write；重新讀取修好的記錄後恢復，之後的修改照常寫入。
+    - [x] **舊存檔當版本 0**
+      - Action: 提供沒有版本欄位、格式有效的舊存檔並 load。
+      - Expect: 視為版本 0 正常讀出，不是載入錯誤；值與舊存檔相同。
+    - [x] **沒有 host 的 KEY 與明確重設**
+      - Action: 不建立 host，直接以 `Preferences.GetView`、`Preferences.Set` 操作一個存檔損毀的 KEY；再對它執行明確重設（`ResetToDefaults` 或 `ClearPlayerPrefs`）。
+      - Expect: 重設前同樣是載入錯誤、不寫盤、原始字串不變；只有明確重設會覆寫；沒有存檔的 KEY 照常用預設，不是載入錯誤。
+
+- [x] **4. 通知與隔離（CFG-08）**
+  Depends on: 2.
+  Outcome: 改了就存；不同 KEY 互不覆寫；取消訂閱後不再收到通知。
+  Checks:
+    - [x] **改了就存與 KEY 隔離**
+      - Action: 經 adapter 讓 A、B 兩個 KEY 各自 load；A 有兩個觀察者，修改 A 的一個欄位；取消其中一個觀察者後再修改一次。
+      - Expect: 每次修改後 A 恰好寫一次、B 的存檔不變；兩個觀察者都收到第一次修改的通知；取消後只有留下的觀察者收到第二次通知。
+
+- [x] **5. 卸載與延遲完成（CFG-07）的原生等價**
+  Depends on: 2.
+  Outcome: host 元件銷毀後入口不再呼叫它；入口可釋放單一 KEY，釋放後下次存取重新讀取。
+  Checks:
+    - [x] **host 銷毀後登出**
+      - Action: 建立 host 並 load，銷毀 host 後以 `Preferences.Set` 修改該 KEY。
+      - Expect: 入口不再呼叫已銷毀 host 的讀寫方法，修改經預設儲存照常寫入；沒有 MissingReferenceException 或對已銷毀物件的存取。
+    - [x] **釋放單一 KEY**
+      - Action: A、B 兩個 KEY 都已載入，對 A 呼叫 `Unload`，在儲存器直接改寫 A 的存檔，再存取 A 與 B。
+      - Expect: A 重新讀取並得到改寫後的值；B 不受影響、沒有重新讀取。
+    - [x] **有未保存的變更時拒絕釋放**
+      - Action: 載入一個 KEY，關掉它的 SaveOnChanged，改一個值後呼叫 `Unload`。
+      - Expect: `Unload` 回傳 false；記憶體中的值、存檔與入口狀態都不變（該 KEY 仍在入口中，改過的值仍在）；印一次 Warning。
+
+- [x] **6. 實際 backend（CFG-P01）**
+  Depends on: 3, 5.
+  Outcome: 真實 PlayerPrefs 上的保存、重啟、重讀與 KEY 隔離成立。
+  Checks:
+    - [x] **PlayerPrefs 保存、重啟、重讀**
+      - Action: 備份測試 KEY 的 PlayerPrefs；以 `PlayerPrefsStorage` 經統一入口保存 N，`Unload` 該 KEY（重啟的等價），重新讀取；再寫入一筆損毀字串後重新讀取；兩個 KEY 交錯保存；最後還原備份。
+      - Expect: 重讀得到 N；損毀字串依第 3 項進入載入錯誤且原始字串不變；兩個 KEY 互不覆寫；沒有存檔與載入錯誤可以分辨；測試結束後 PlayerPrefs 回到備份。

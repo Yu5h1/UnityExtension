@@ -349,12 +349,10 @@ namespace Yu5h1Lib.Serialization
             return false;
         }
 
-        /// <summary>
-        /// �q�t�@�� KeyValues �ƻs�ƾ�
-        /// </summary>
+        /// <summary>Replaces the entries with a copy of <paramref name="other"/>'s. Copying from itself keeps them.</summary>
         public void CopyFrom(KeyValues<TKey, TValue> other)
         {
-            if (other == null) return;
+            if (other == null || ReferenceEquals(other, this)) return;
 
             Clear();
             foreach (var entry in other._entries)
@@ -363,11 +361,14 @@ namespace Yu5h1Lib.Serialization
             }
         }
 
+        /// <summary>Replaces the entries with <paramref name="other"/>'s, read in full before anything is cleared,
+        /// so an enumeration over this object (such as <see cref="Entries"/>) is a valid source.</summary>
         public void CopyFrom(IEnumerable<KeyValue<TKey, TValue>> other)
         {
             if (other == null) return;
+            var items = other.ToList();
             Clear();
-            foreach (var kvp in other)
+            foreach (var kvp in items)
                 this[kvp.Key] = kvp.Value;
         }
 

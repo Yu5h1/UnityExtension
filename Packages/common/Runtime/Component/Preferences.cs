@@ -117,27 +117,24 @@ namespace Yu5h1Lib
 
         /// <summary>The shared entry's DataView for <see cref="KEY"/> (<see cref="Preferences.GetView(string)"/>),
         /// with <see cref="defaultSetting"/> merged into fields the save lacks. The merge saves once when a save
-        /// already existed, and not at all when there was none.</summary>
+        /// already existed, and not at all when there was none or the save could not be read
+        /// (see <see cref="LoadError"/>). After <see cref="Preferences.Unload"/> the next access loads again.</summary>
         public DataView current
         {
             get
             {
-                if (isCurrentLoaded)
+                if (isCurrentLoaded && Preferences.IsLoadedView(KEY, _current))
                     return _current;
+                if (_current != null)
+                    _current.Changed -= Current_Changed;
                 isCurrentLoaded = true;
                 if (!sourcePrepared)
                     PrepareSourceMembers();
-                Preferences.Register(KEY, new HostStorage(this));
+                if (hostStorage == null)
+                    hostStorage = new HostStorage(this);
+                Preferences.Register(KEY, hostStorage);
                 var view = Preferences.GetView(KEY, out bool loaded);
-                Preferences.SetSaveOnChanged(KEY, false);
-                bool merged = false;
-                if (defaultSetting != null)
-                    foreach (var pair in defaultSetting)
-                        if (!view.ContainsKey(pair.Key))
-                        {
-                            view[pair.Key] = pair.Value;
-                            merged = true;
-                        }
+                bool merged = MergeDefaults(view);
                 _current = view;
                 Preferences.SetSaveOnChanged(KEY, _saveOnChanged);
                 if (loaded && merged && _saveOnChanged)
@@ -145,6 +142,59 @@ namespace Yu5h1Lib
                 _current.Changed += Current_Changed;
                 return _current;
             }
+        }
+
+        private HostStorage hostStorage;
+
+        /// <summary>Puts <see cref="defaultSetting"/> into the fields <paramref name="view"/> lacks, without saving
+        /// or counting as a draft. Returns whether anything was added.</summary>
+        private bool MergeDefaults(DataView view)
+        {
+            bool merged = false;
+            if (defaultSetting == null)
+                return merged;
+            Preferences.BeginBatch(KEY);
+            try
+            {
+                foreach (var pair in defaultSetting)
+                    if (!view.ContainsKey(pair.Key))
+                    {
+                        view[pair.Key] = pair.Value;
+                        merged = true;
+                    }
+            }
+            finally
+            {
+                Preferences.EndBatch(KEY);
+            }
+            return merged;
+        }
+
+        /// <summary>Why this KEY's save could not be read (damaged, unknown version, read failure), or null.
+        /// While set, <see cref="current"/> holds only the defaults and nothing is written for the KEY until
+        /// <see cref="Reload"/> reads a fixed save or <see cref="ResetToDefaults"/> / ClearPlayerPrefs resets it.</summary>
+        public string LoadError
+        {
+            get
+            {
+                var unused = current;
+                return Preferences.GetLoadError(KEY);
+            }
+        }
+
+        /// <summary>Reads this KEY's save again after it was fixed (see <see cref="Preferences.Reload"/>), puts the
+        /// defaults back into fields it lacks and rebinds the bound controls. Returns false while the save still
+        /// cannot be read.</summary>
+        public bool Reload()
+        {
+            var view = current;
+            if (!Preferences.Reload(KEY))
+                return false;
+            MergeDefaults(view);
+            foreach (var ports in _boundPorts.Values)
+                foreach (var port in ports.ToArray())
+                    port.BindTo(view);
+            return true;
         }
         IDataView IPreferences.current => current;
 
@@ -213,6 +263,8 @@ namespace Yu5h1Lib
             UnbindAll();
             if (_current != null)
                 _current.Changed -= Current_Changed;
+            if (hostStorage != null)
+                Preferences.Unregister(KEY, hostStorage);
         }
 
         private void Current_Changed() => _changed?.Invoke();
@@ -304,19 +356,27 @@ namespace Yu5h1Lib
 
         /// <summary>
         /// Puts every key that has a default (<see cref="defaultSetting"/>, source members included) back to it
-        /// and saves once; keys without a default are left alone. Bound ports are rebound so the UI shows the
+        /// and saves once; keys without a default are left alone. This is an explicit reset: it also lifts a
+        /// load error (the unreadable save is replaced). Bound ports are rebound so the UI shows the
         /// restored values. Also how an Editor change to the source becomes visible over an existing local save.
         /// </summary>
         [ContextMenu(nameof(ResetToDefaults))]
         public void ResetToDefaults()
         {
             var view = current;
+            Preferences.ClearLoadError(KEY);
             if (defaultSetting == null)
                 return;
-            Preferences.SetSaveOnChanged(KEY, false);
-            foreach (var pair in defaultSetting)
-                view[pair.Key] = pair.Value;
-            Preferences.SetSaveOnChanged(KEY, _saveOnChanged);
+            Preferences.BeginBatch(KEY);
+            try
+            {
+                foreach (var pair in defaultSetting)
+                    view[pair.Key] = pair.Value;
+            }
+            finally
+            {
+                Preferences.EndBatch(KEY);
+            }
             if (_saveOnChanged)
                 Preferences.Save(KEY);
             foreach (var ports in _boundPorts.Values)
@@ -332,15 +392,40 @@ namespace Yu5h1Lib
         /// Override together with <see cref="TryLoadCurrent"/> for a custom storage format.</summary>
         public virtual void SaveToPlayerPrefs() => Preferences.DefaultStorage.Save(KEY, current);
 
-        /// <summary>How this host's KEY is loaded; the shared entry calls it on first access.</summary>
-        public virtual bool TryLoadCurrent(out DataView output) => Preferences.DefaultStorage.TryLoad(KEY, out output);
+        /// <summary>How this host's KEY is loaded; the shared entry calls it on first access.
+        /// Contract for overrides (UX Configuration level 1, 載入失敗不覆寫 CFG-02): return false only when there is
+        /// no save; when a save exists but cannot be read, throw — the entry turns the exception into a load
+        /// error that keeps the original save and blocks writes until an explicit reset. Returning false for an
+        /// unreadable save would let the next write overwrite it.</summary>
+        public virtual bool TryLoadCurrent(out DataView output)
+        {
+            lastLoad = Preferences.DefaultStorage.Load(KEY);
+            hasLastLoad = true;
+            output = lastLoad.Status == PreferencesLoadStatus.Loaded ? lastLoad.Data : null;
+            return output != null;
+        }
+
+        private PreferencesLoadResult lastLoad;
+        private bool hasLastLoad;
+
+        /// <summary>What the entry reads for this KEY: the full result when <see cref="TryLoadCurrent"/> is not
+        /// overridden, otherwise only found or not found (an override signals an unreadable save by throwing).</summary>
+        internal PreferencesLoadResult LoadCurrent()
+        {
+            hasLastLoad = false;
+            bool found = TryLoadCurrent(out var data);
+            if (hasLastLoad)
+                return lastLoad;
+            return found && data != null ? PreferencesLoadResult.Loaded(data) : PreferencesLoadResult.Missing;
+        }
 
         /// <summary>Routes the shared entry's load/save of this KEY through the host's virtual methods, so
         /// a host that overrides them (e.g. VCP UserDataView) keeps its format without registering storage itself.</summary>
-        private class HostStorage : Preferences.IStorage
+        private class HostStorage : Preferences.IStatusStorage
         {
             private readonly Preferences<T> host;
             public HostStorage(Preferences<T> host) => this.host = host;
+            public PreferencesLoadResult Load(string key) => host.LoadCurrent();
             public bool TryLoad(string key, out DataView data) => host.TryLoadCurrent(out data);
             public void Save(string key, DataView data) => host.SaveToPlayerPrefs();
             public void Delete(string key) => Preferences.DefaultStorage.Delete(key);
