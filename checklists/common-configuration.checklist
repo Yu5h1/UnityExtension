@@ -57,6 +57,9 @@ Current round: `../../../UX/Documentation/ModuleSpec/Foundation/Configuration.md
     - [ ] **釋放單一 KEY**
       - Action: A、B 兩個 KEY 都已載入，對 A 呼叫 `Unload`，在儲存器直接改寫 A 的存檔，再存取 A 與 B。
       - Expect: A 重新讀取並得到改寫後的值；B 不受影響、沒有重新讀取。
+    - [ ] **有未保存的變更時拒絕釋放**
+      - Action: 載入一個 KEY，關掉它的 SaveOnChanged，改一個值後呼叫 `Unload`。
+      - Expect: `Unload` 回傳 false；記憶體中的值、存檔與入口狀態都不變（該 KEY 仍在入口中，改過的值仍在）；印一次 Warning。
 
 - [ ] **6. 實際 backend（CFG-P01）**
   Depends on: 3, 5.
