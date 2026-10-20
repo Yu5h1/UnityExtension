@@ -26,6 +26,7 @@ namespace Yu5h1Lib.EditorExtension
             public string title;
             public Func<Node, string> display;
             public Func<Node, string> full;
+            public bool clipStart;
         }
 
         private static readonly Color BrokenColor = new(0.95f, 0.4f, 0.4f);
@@ -84,9 +85,9 @@ namespace Yu5h1Lib.EditorExtension
 
             tree = new MultiColumnTreeView { fixedItemHeight = 18, selectionType = SelectionType.Multiple, style = { flexGrow = 1 } };
             AddColumn("Status", 130, n => n.record == null ? n.label : n.record.status.ToString(), colorByStatus: true);
-            AddColumn("Owner", 220, n => Abbreviate(n.record?.ownerPath), n => n.record?.ownerPath);
+            AddColumn("Owner", 220, n => n.record?.ownerPath, clipStart: true);
             AddColumn("Event", 160, n => n.record == null ? string.Empty : $"{n.record.eventPath}[{n.record.index}]");
-            AddColumn("Target", 200, n => Abbreviate(n.record?.targetPath), n => n.record?.targetPath);
+            AddColumn("Target", 200, n => n.record?.targetPath, clipStart: true);
             AddColumn("Method", 200, n => n.record == null ? string.Empty : $"{ShortTypeName(n.record.targetType)}.{n.record.methodName}",
                 n => n.record == null ? string.Empty : $"{n.record.targetType}.{n.record.methodName}");
             AddColumn("Argument", 120, n => n.record?.argument);
@@ -119,9 +120,10 @@ namespace Yu5h1Lib.EditorExtension
             return menu;
         }
 
-        private void AddColumn(string title, float width, Func<Node, string> display, Func<Node, string> full = null, bool colorByStatus = false)
+        /// <param name="clipStart">Hierarchy paths keep their end (object and type) visible and lose the root first when the column is too narrow.</param>
+        private void AddColumn(string title, float width, Func<Node, string> display, Func<Node, string> full = null, bool colorByStatus = false, bool clipStart = false)
         {
-            var info = new ColumnInfo { title = title, display = display, full = full ?? display };
+            var info = new ColumnInfo { title = title, display = display, full = full ?? display, clipStart = clipStart };
             columnInfos.Add(info);
             tree.columns.Add(new Column
             {
@@ -152,6 +154,8 @@ namespace Yu5h1Lib.EditorExtension
                     unityTextAlign = TextAnchor.MiddleLeft,
                     overflow = Overflow.Hidden,
                     textOverflow = TextOverflow.Ellipsis,
+                    unityTextOverflowPosition = info.clipStart ? TextOverflowPosition.Start : TextOverflowPosition.End,
+                    whiteSpace = WhiteSpace.NoWrap,
                     flexGrow = 1,
                     height = Length.Percent(100),
                     paddingLeft = 4,
@@ -192,20 +196,6 @@ namespace Yu5h1Lib.EditorExtension
                 return;
             EditorGUIUtility.systemCopyBuffer = text;
             ShowNotification(new GUIContent($"Copied {what}"), 0.6);
-        }
-
-        /// <summary>
-        /// Keeps only the last hierarchy level of "Root/.../Leaf (Type) > Inline" so long paths fit a column;
-        /// the tooltip and copies keep the full path.
-        /// </summary>
-        private static string Abbreviate(string path)
-        {
-            if (path.IsEmpty())
-                return string.Empty;
-            var cut = new[] { path.IndexOf(" (", StringComparison.Ordinal), path.IndexOf(" > ", StringComparison.Ordinal) }
-                .Where(i => i >= 0).DefaultIfEmpty(path.Length).Min();
-            var slash = path.LastIndexOf('/', Math.Max(0, cut - 1));
-            return slash < 0 ? path : $".../{path.Substring(slash + 1)}";
         }
 
         private static StyleColor StatusColor(PersistentCallStatus status) =>
