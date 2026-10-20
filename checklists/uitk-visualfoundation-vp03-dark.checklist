@@ -1,0 +1,17 @@
+# UIToolkit VisualFoundation VP03 Dark Checklist
+
+Current round: `../../../UX/Documentation/ModuleSpec/VisualFoundation.md#目標-1預設色票與狀態外觀在-unity-ui-toolkit-成立進行中2026-10-21`.
+
+本檔只放 dark 頁的人工檢查（狀態外觀 VP03 與焦點外框）；light 頁另有 uitk-visualfoundation-vp03-light.checklist。模組輪見 uitk-visualfoundation.checklist。本頁需要分支 `feat/uitk-visualfoundation` 已合併到主線：Yu5h1LibTest 的 `Assets/Samples/Yu5h1Lib.UIToolkit/0.1.0/UxAcceptance` 是指向主線 `Samples~/UxAcceptance` 的 junction。實心按鈕的靜止底色與實心面板的外框，規格沒有寫它們的角色，不在本頁判斷：dark 頁上實心鈕靜止時是 Unity 預設的淺灰底配淺色字，看起來不協調，這是已知的缺口，不算本頁失敗（`Documentation/Requirements.UX.md` UNITYEXTENSION-UX-1）。一個檔案只放一輪。
+
+- [ ] **1. dark 頁的狀態外觀與焦點外框（VP03）**
+  Outcome: dark 頁上 Button 與 OptionPicker 的各狀態用〈狀態對應的色彩角色〉指定的角色，鍵盤焦點外框完整包圍目標。
+  Checks:
+    - [ ] **各狀態的顏色** `[manual]`
+      - Action: 開啟 Unity 專案 `W:/UnityProject/Yu5h1LibTest`，載入場景 `Assets/Samples/Yu5h1Lib.UIToolkit/0.1.0/UxAcceptance/UxAcceptanceDemo.unity` 並進入 Play，頂端 Module 下拉選「VisualFoundation (1.3.0) dark」。看「無底」列的一般、滑過（已固定顯示滑過外觀）、選取、停用、純圖示五顆（實心列的一般鈕不判斷）；再用滑鼠移到各顆上；再按頁面上 OptionPicker 的觸發鈕，看展開的面板。
+      - Expect: 頁面底色是深藍黑（pageBackground），面板是稍亮的深藍灰（panelBackground），面板標題與下方分隔線可辨；無底鈕靜止沒有底色、有灰藍色外框（controlBorder），滑過底色變為較亮的深灰藍（hover）；選取鈕是淡藍填色（accent）、黑字（onAccent），沒有外框；停用鈕文字較暗、滑鼠移上去沒有滑過底色；OptionPicker 的 solid 面板底色是 panelBackground，選項滑過、選取與停用的外觀和 Button 一致。
+      - Reason: 外觀由使用者判（UX 第 65 題）。
+    - [ ] **鍵盤焦點外框** `[manual]`
+      - Action: 同一頁，用 Tab 依序把焦點移到每一顆按鈕（實心列與無底列），包括純圖示鈕。
+      - Expect: 每顆被選到的按鈕都顯示完整包圍它的淡藍外框（focus），寬度看得出至少 2px，沒有被切掉或蓋住，按鈕本身大小不變；無底鈕的焦點外框顏色與靜止時的灰藍外框看得出差異。
+      - Reason: 外觀由使用者判（UX 第 65 題）。

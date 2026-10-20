@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-20T15:07:27.283562+00:00",
+  "updated_at": "2026-10-20T18:15:34.444313+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -601,6 +601,17 @@
       "summary": "進行中：Yu5h1Lib.UX 是體驗規範的唯一來源，Unity 以套件內快照釘選版本與雜湊，依共用 skill referenced-module-acceptance 在實作套件記錄驗收。已驗收：Button 2.0.0（2026-10-19，Yu5h1Lib.UI 與 Yu5h1Lib.UIToolkit，自動檢查加使用者與 Web demo 並排確認）；Configuration 等級 1 直接存（2026-10-20，Yu5h1Lib.Common 的統一 Preferences 入口，UX-UNITYEXTENSION-7）。待排：Theme 色票改讀 UX VisualFoundation（UX-UNITYEXTENSION-2）、宣告 JSON（WEB-7，等 MOTION-2 與消費端）、Configuration 等級 2（等消費端）、WebGL；AppsMenu 暫停（卡片 appsmenu-library-adoption）；VisualFoundation、無障礙名稱與 Icon 的缺口在 Button 紀錄列 blocked。Canonical entry：Documentation/跨平台UI一致性.md。",
       "completed_items": [
         {
+          "id": "uitk-visualfoundation-acceptance",
+          "title": "驗收 Yu5h1Lib.UIToolkit 的 VisualFoundation 目標 1（UX-UNITYEXTENSION-2）：模組輪在乾淨 worktree 通過（603ec74）",
+          "status": "done",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "uitk-visualfoundation"
+          }
+        },
+        {
           "id": "item-cross-platform-ui-parity-todo-4",
           "title": "設定：UX Configuration 目標 2 等級 1 直接存在 Unity Preferences 驗收通過（2026-10-20，UX-UNITYEXTENSION-7，合併 1c93adf）；等級 2 與宣告等各自的消費端",
           "priority": 4,
@@ -664,13 +675,36 @@
       "pending_items": [
         {
           "id": "item-cross-platform-ui-parity-todo-2",
-          "title": "Theme：WebTheme 匯入改讀 UX VisualFoundation 的設計資料（UX-UNITYEXTENSION-2，取代 Web theme.css／WEB-1）；設定前置已於 2026-10-20 驗收，等 UX 替 VisualFoundation 定目標後點名",
-          "priority": 4
+          "title": "Theme：在 Yu5h1Lib.UIToolkit 引用 UX VisualFoundation 目標 1（UX-UNITYEXTENSION-2，2026-10-21 點名）：模組輪在乾淨 worktree 通過（603ec74，分支 feat/uitk-visualfoundation 未合併）；等使用者批准合併，再驗 light、dark 兩頁人工 checklist；實心鈕靜止底色等 UX（UNITYEXTENSION-UX-1）",
+          "priority": 4,
+          "status": "in_progress"
         },
         {
           "id": "item-cross-platform-ui-parity-todo-7",
           "title": "WebGL 路線（依需求）：VCP 確定使用 Web UI 時，建 Packages/Web 的 jslib 橋接與模板工具",
           "priority": 4
+        },
+        {
+          "id": "uitk-visualfoundation-vp03-light",
+          "title": "確認 light 頁的 Button 與 OptionPicker 狀態外觀與焦點外框（VisualFoundation 目標 1，VP03；需先合併分支）",
+          "status": "planned",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "uitk-visualfoundation-vp03-light"
+          }
+        },
+        {
+          "id": "uitk-visualfoundation-vp03-dark",
+          "title": "確認 dark 頁的 Button 與 OptionPicker 狀態外觀與焦點外框（VisualFoundation 目標 1，VP03；實心鈕靜止不判斷；需先合併分支）",
+          "status": "planned",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "uitk-visualfoundation-vp03-dark"
+          }
         }
       ]
     },
