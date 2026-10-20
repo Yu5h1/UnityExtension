@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-20T18:15:34.444313+00:00",
+  "updated_at": "2026-10-20T18:24:58.734068+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -675,7 +675,7 @@
       "pending_items": [
         {
           "id": "item-cross-platform-ui-parity-todo-2",
-          "title": "Theme：在 Yu5h1Lib.UIToolkit 引用 UX VisualFoundation 目標 1（UX-UNITYEXTENSION-2，2026-10-21 點名）：模組輪在乾淨 worktree 通過（603ec74，分支 feat/uitk-visualfoundation 未合併）；等使用者批准合併，再驗 light、dark 兩頁人工 checklist；實心鈕靜止底色等 UX（UNITYEXTENSION-UX-1）",
+          "title": "Theme：在 Yu5h1Lib.UIToolkit 引用 UX VisualFoundation 目標 1（UX-UNITYEXTENSION-2）：模組輪通過（603ec74）並已合併到 master（a6cfd29）；待使用者確認 light、dark 兩頁；實心鈕靜止底色等 UX（UNITYEXTENSION-UX-1）",
           "priority": 4,
           "status": "in_progress"
         },
@@ -686,7 +686,7 @@
         },
         {
           "id": "uitk-visualfoundation-vp03-light",
-          "title": "確認 light 頁的 Button 與 OptionPicker 狀態外觀與焦點外框（VisualFoundation 目標 1，VP03；需先合併分支）",
+          "title": "確認 light 頁的 Button 與 OptionPicker 狀態外觀與焦點外框（VisualFoundation 目標 1，VP03）",
           "status": "planned",
           "priority": 1,
           "document_ref": {
@@ -697,7 +697,7 @@
         },
         {
           "id": "uitk-visualfoundation-vp03-dark",
-          "title": "確認 dark 頁的 Button 與 OptionPicker 狀態外觀與焦點外框（VisualFoundation 目標 1，VP03；實心鈕靜止不判斷；需先合併分支）",
+          "title": "確認 dark 頁的 Button 與 OptionPicker 狀態外觀與焦點外框（VisualFoundation 目標 1，VP03；實心鈕靜止不判斷）",
           "status": "planned",
           "priority": 1,
           "document_ref": {

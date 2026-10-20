@@ -2,7 +2,7 @@
 
 > Task ID: uitk-visualfoundation
 >
-> 狀態：模組輪通過、人工待驗（2026-10-21）。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 VisualFoundation」（UX-UNITYEXTENSION-2），流程見 referenced-module-acceptance。實作在分支 `feat/uitk-visualfoundation`（`603ec74`），尚未合併；自動檢查在乾淨 worktree 通過，light、dark 各一頁的人工 checklist 要等合併後才能在 Yu5h1LibTest 開啟。實心按鈕靜止底色與實心面板外框的角色規格沒有寫（UNITYEXTENSION-UX-1），兩列 blocked。
+> 狀態：模組輪通過、人工待驗（2026-10-21）。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 VisualFoundation」（UX-UNITYEXTENSION-2），流程見 referenced-module-acceptance。實作 `603ec74` 已合併到 `master`（`a6cfd29`，分支已刪除）；自動檢查在乾淨 worktree 通過，light、dark 各一頁的人工 checklist 已可在 Yu5h1LibTest 開啟。實心按鈕靜止底色與實心面板外框的角色規格沒有寫（UNITYEXTENSION-UX-1），兩列 blocked。
 
 ```text
 UnityExtension
@@ -85,7 +85,7 @@ VisualFoundation 本身不引用其他模組；它被 Button 與 OptionPicker �
 
 | 規範版本 | UX commit | UnityExtension commit | checklist commit | 結論 |
 |---|---|---|---|---|
-| VisualFoundation 1.3.0 目標 1 | `855479e` | `603ec74`（分支 `feat/uitk-visualfoundation`，未合併） | 本紀錄所在提交 | 模組輪通過、人工待驗：乾淨 worktree EditMode 110/110、PlayMode 30/30；light、dark 人工頁待合併後驗；兩列 blocked |
+| VisualFoundation 1.3.0 目標 1 | `855479e` | `603ec74`（已合併 `a6cfd29`） | 本紀錄所在提交 | 模組輪通過、人工待驗：乾淨 worktree EditMode 110/110、PlayMode 30/30；light、dark 人工頁待驗；兩列 blocked |
 
 ## 結論
 
