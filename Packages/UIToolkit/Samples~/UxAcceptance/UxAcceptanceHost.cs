@@ -97,6 +97,14 @@ namespace Yu5h1LibTest
             {
                 UxModuleRegistry.Register(new UxInputHoldDemoCase());
             }
+            if (!UxModuleRegistry.Contains("visualfoundation-light"))
+            {
+                UxModuleRegistry.Register(new UxVisualFoundationDemoCase(VisualFoundationScheme.Light));
+            }
+            if (!UxModuleRegistry.Contains("visualfoundation-dark"))
+            {
+                UxModuleRegistry.Register(new UxVisualFoundationDemoCase(VisualFoundationScheme.Dark));
+            }
         }
 
         private void BuildHostUI(VisualElement root)

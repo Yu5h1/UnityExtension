@@ -3,6 +3,7 @@
     "rootNamespace": "Yu5h1Lib.UIToolkit.Tests",
     "references": [
         "Yu5h1Lib.UIToolkit",
+        "Yu5h1Lib.UIToolkit.Editor",
         "Yu5h1Lib.Common",
         "Yu5h1Lib.Animation",
         "UnityEngine.TestRunner",

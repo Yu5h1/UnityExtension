@@ -75,6 +75,7 @@ namespace Yu5h1Lib.UIToolkit
 
         private void OnAttachToPanel(AttachToPanelEvent evt)
         {
+            if (VisualFoundationTheme.Find(this) == null) VisualFoundationTheme.Apply(this, VisualFoundationScheme.Light);
             panel?.visualTree.RegisterCallback<PointerDownEvent>(OnRootPointerDown, TrickleDown.TrickleDown);
         }
 
@@ -323,6 +324,7 @@ namespace Yu5h1Lib.UIToolkit
                 panelElement.styleSheets.Add(optionPickerStyle);
             }
             panelElement.AddToClassList("yu5h1-optionpicker__panel");
+            VisualFoundationTheme.Apply(panelElement, VisualFoundationTheme.Find(this) ?? VisualFoundationScheme.Light);
 
             if (Model.orientation == OptionPickerOrientation.Horizontal)
             {

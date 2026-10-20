@@ -3,7 +3,9 @@
    - OPT-DISPLAY: panelPadding (4px), optionGap (4px).
    - OPT-APPEARANCE: solid (elevated background, border) vs ghost (transparent, no border).
    - Orientation: horizontal (row) vs vertical (column).
-   Colours use Unity default theme variables with fallbacks until VisualFoundation is adopted. */
+   Colours are the VisualFoundation roles (Yu5h1VisualFoundation.uss); hover, selected, focus and disabled of the
+   buttons inside the panel come from Yu5h1Button.uss. The solid panel outline stays on the Unity theme variable: its
+   role is not named by the specification (Documentation/Requirements.UX.md, UNITYEXTENSION-UX-1). */
 
 .yu5h1-optionpicker__panel {
     position: absolute;
@@ -37,7 +39,7 @@
 }
 
 .yu5h1-optionpicker__panel--solid {
-    background-color: var(--unity-colors-window-background, rgb(245, 245, 247));
+    background-color: var(--yu5h1-color-panel-background);
     border-width: 1px;
     border-color: var(--unity-colors-default-border, rgba(0, 0, 0, 0.2));
 }
@@ -45,31 +47,4 @@
 .yu5h1-optionpicker__panel--ghost {
     background-color: rgba(0, 0, 0, 0);
     border-width: 0;
-}
-
-.yu5h1-optionpicker__panel .yu5h1-button:hover,
-.yu5h1-optionpicker__panel .yu5h1-button--hover,
-.yu5h1-optionpicker__panel .yu5h1-optionpicker__option:hover,
-.yu5h1-optionpicker__panel .yu5h1-optionpicker__option--hover {
-    background-color: var(--unity-colors-button-background-hover, rgb(210, 210, 210));
-}
-
-.yu5h1-optionpicker__panel .yu5h1-button--selected:hover,
-.yu5h1-optionpicker__panel .yu5h1-button--selected.yu5h1-button--hover {
-    background-color: var(--unity-colors-button-background-pressed, rgb(130, 130, 130));
-}
-
-.yu5h1-optionpicker__panel .yu5h1-button--ghost:hover,
-.yu5h1-optionpicker__panel .yu5h1-button--ghost.yu5h1-button--hover,
-.yu5h1-optionpicker__panel--ghost .yu5h1-optionpicker__option:hover,
-.yu5h1-optionpicker__panel--ghost .yu5h1-optionpicker__option--hover,
-.yu5h1-optionpicker__panel--ghost .yu5h1-button--hover {
-    background-color: var(--unity-colors-button-background-hover, rgba(0, 0, 0, 0.15));
-}
-
-.yu5h1-optionpicker__panel .yu5h1-button--ghost.yu5h1-button--selected:hover,
-.yu5h1-optionpicker__panel .yu5h1-button--ghost.yu5h1-button--selected.yu5h1-button--hover,
-.yu5h1-optionpicker__panel--ghost .yu5h1-button--selected:hover,
-.yu5h1-optionpicker__panel--ghost .yu5h1-button--selected.yu5h1-button--hover {
-    background-color: var(--unity-colors-button-background-pressed, rgba(0, 0, 0, 0.32));
 }

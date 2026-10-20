@@ -4,7 +4,12 @@
    - BTN-SIZE: icon side is size * 0.75 (75% height/width, scale-to-fit, centered).
    - BTN-LAYOUT: flex-direction: row, align-items: center, justify-content: center; 8px gap between icon and text.
    - BTN-APPEARANCE: solid (default background) vs ghost (.yu5h1-button--ghost: transparent at rest, hover/focus/selected visible).
-   Colours use Unity default theme button variables with fallbacks until VisualFoundation is adopted. */
+   Colours are the VisualFoundation roles (Yu5h1VisualFoundation.uss, scoped by VisualFoundationTheme); the state
+   to role mapping is the table "狀態對應的色彩角色" of VisualFoundation 1.3.0. The only declarations still on
+   Unity theme variables are the solid resting fill, whose role the specification does not name (raised in
+   Documentation/Requirements.UX.md, UNITYEXTENSION-UX-1).
+   The outline of the focus state and of a ghost button is the 9-slice Yu5h1FocusRing.png tinted by the role:
+   a USS border would shrink the content box and break BTN-SIZE, and USS has no outline property. */
 
 .yu5h1-button {
     flex-direction: row;
@@ -16,22 +21,13 @@
     padding: 0 8px;
     border-width: 0;
     border-radius: 4px;
+    color: var(--yu5h1-color-item-text);
     background-color: var(--unity-colors-button-background, rgb(228, 228, 228));
-}
-
-.yu5h1-button:hover,
-.yu5h1-button--hover {
-    background-color: var(--unity-colors-button-background-hover, rgb(210, 210, 210));
-}
-
-.yu5h1-button:active,
-.yu5h1-button--selected {
-    background-color: var(--unity-colors-button-background-pressed, rgb(150, 150, 150));
-}
-
-.yu5h1-button--selected:hover,
-.yu5h1-button--selected.yu5h1-button--hover {
-    background-color: var(--unity-colors-button-background-pressed, rgb(130, 130, 130));
+    -unity-slice-left: 6;
+    -unity-slice-top: 6;
+    -unity-slice-right: 6;
+    -unity-slice-bottom: 6;
+    -unity-slice-scale: 1px;
 }
 
 /* BTN-DISPLAY: icon-only button is size x size square */
@@ -66,24 +62,41 @@
     -unity-text-align: middle-left;
 }
 
-/* BTN-APPEARANCE: ghost (transparent at rest, visible on hover/focus/active/selected) */
+/* BTN-APPEARANCE: ghost has no fill at rest; a button without fill needs the controlBorder outline */
 .yu5h1-button--ghost {
     background-color: rgba(0, 0, 0, 0);
     border-color: rgba(0, 0, 0, 0);
+    background-image: url("Yu5h1FocusRing.png");
+    -unity-background-image-tint-color: var(--yu5h1-color-control-border);
 }
 
-.yu5h1-button--ghost:hover,
-.yu5h1-button--ghost:focus,
-.yu5h1-button--ghost.yu5h1-button--hover {
-    background-color: var(--unity-colors-button-background-hover, rgba(0, 0, 0, 0.15));
+/* Pointer over an enabled control: hover */
+.yu5h1-button:hover,
+.yu5h1-button.yu5h1-button--hover {
+    background-color: var(--yu5h1-color-hover);
+}
+
+/* Selected, and a toggle that is pressed: accent fill, onAccent foreground; a filled button needs no outline */
+.yu5h1-button.yu5h1-button--selected,
+.yu5h1-button.yu5h1-button--selected:hover,
+.yu5h1-button.yu5h1-button--selected.yu5h1-button--hover,
+.yu5h1-button:active {
+    background-color: var(--yu5h1-color-accent);
+    color: var(--yu5h1-color-on-accent);
 }
 
 .yu5h1-button--ghost.yu5h1-button--selected,
 .yu5h1-button--ghost:active {
-    background-color: var(--unity-colors-button-background-pressed, rgba(0, 0, 0, 0.24));
+    -unity-background-image-tint-color: rgba(0, 0, 0, 0);
 }
 
-.yu5h1-button--ghost.yu5h1-button--selected:hover,
-.yu5h1-button--ghost.yu5h1-button--selected.yu5h1-button--hover {
-    background-color: var(--unity-colors-button-background-pressed, rgba(0, 0, 0, 0.32));
+/* Disabled: disabled foreground; no hover look */
+.yu5h1-button:disabled {
+    color: var(--yu5h1-color-disabled);
+}
+
+/* VIS-FOCUS: outline in the focus role around the whole target; declared last so it wins over every state above */
+.yu5h1-button:focus {
+    background-image: url("Yu5h1FocusRing.png");
+    -unity-background-image-tint-color: var(--yu5h1-color-focus);
 }
