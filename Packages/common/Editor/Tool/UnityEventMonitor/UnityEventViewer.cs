@@ -21,6 +21,13 @@ namespace Yu5h1Lib.EditorExtension
             public UnityEventRecord record;
         }
 
+        private class ColumnInfo
+        {
+            public string title;
+            public Func<Node, string> display;
+            public Func<Node, string> full;
+        }
+
         private static readonly Color BrokenColor = new(0.95f, 0.4f, 0.4f);
         private static readonly Color WarningColor = new(0.95f, 0.75f, 0.3f);
 
@@ -30,6 +37,7 @@ namespace Yu5h1Lib.EditorExtension
         [SerializeField] private string search = string.Empty;
 
         private readonly List<UnityEventRecord> records = new();
+        private readonly List<ColumnInfo> columnInfos = new();
         private MultiColumnTreeView tree;
         private Label summary;
 
@@ -74,15 +82,19 @@ namespace Yu5h1Lib.EditorExtension
             summary = new Label { style = { paddingLeft = 4, paddingTop = 2, paddingBottom = 2, whiteSpace = WhiteSpace.Normal } };
             rootVisualElement.Add(summary);
 
-            tree = new MultiColumnTreeView { fixedItemHeight = 18, style = { flexGrow = 1 } };
-            AddColumn("Status", 130, n => n.record == null ? n.label : n.record.status.ToString(), true);
-            AddColumn("Owner", 260, n => n.record?.ownerPath);
+            tree = new MultiColumnTreeView { fixedItemHeight = 18, selectionType = SelectionType.Multiple, style = { flexGrow = 1 } };
+            AddColumn("Status", 130, n => n.record == null ? n.label : n.record.status.ToString(), colorByStatus: true);
+            AddColumn("Owner", 220, n => Abbreviate(n.record?.ownerPath), n => n.record?.ownerPath);
             AddColumn("Event", 160, n => n.record == null ? string.Empty : $"{n.record.eventPath}[{n.record.index}]");
-            AddColumn("Target", 220, n => n.record?.targetPath);
-            AddColumn("Method", 200, n => n.record == null ? string.Empty : $"{ShortTypeName(n.record.targetType)}.{n.record.methodName}");
+            AddColumn("Target", 200, n => Abbreviate(n.record?.targetPath), n => n.record?.targetPath);
+            AddColumn("Method", 200, n => n.record == null ? string.Empty : $"{ShortTypeName(n.record.targetType)}.{n.record.methodName}",
+                n => n.record == null ? string.Empty : $"{n.record.targetType}.{n.record.methodName}");
             AddColumn("Argument", 120, n => n.record?.argument);
             AddColumn("Detail", 260, n => n.record?.detail);
             tree.selectedIndicesChanged += _ => PingSelected();
+            tree.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
+            tree.RegisterCallback<ValidateCommandEvent>(e => { if (e.commandName == "Copy") e.StopPropagation(); });
+            tree.RegisterCallback<ExecuteCommandEvent>(e => { if (e.commandName == "Copy") { CopySelectedRows(); e.StopPropagation(); } });
             rootVisualElement.Add(tree);
             Refresh();
         }
@@ -107,24 +119,93 @@ namespace Yu5h1Lib.EditorExtension
             return menu;
         }
 
-        private void AddColumn(string title, float width, Func<Node, string> text, bool colorByStatus = false)
+        private void AddColumn(string title, float width, Func<Node, string> display, Func<Node, string> full = null, bool colorByStatus = false)
         {
+            var info = new ColumnInfo { title = title, display = display, full = full ?? display };
+            columnInfos.Add(info);
             tree.columns.Add(new Column
             {
                 name = title,
                 title = title,
                 width = width,
-                makeCell = () => new Label { style = { unityTextAlign = TextAnchor.MiddleLeft, overflow = Overflow.Hidden } },
+                makeCell = () => MakeCell(info),
                 bindCell = (element, index) =>
                 {
                     var node = tree.GetItemDataForIndex<Node>(index);
                     var label = (Label)element;
-                    label.text = text(node) ?? string.Empty;
-                    label.tooltip = label.text;
+                    label.userData = index;
+                    label.text = display(node) ?? string.Empty;
+                    label.tooltip = info.full(node) ?? string.Empty;
                     label.style.unityFontStyleAndWeight = node.record == null ? FontStyle.Bold : FontStyle.Normal;
                     label.style.color = colorByStatus && node.record != null ? StatusColor(node.record.status) : StyleKeyword.Null;
                 },
             });
+        }
+
+        private Label MakeCell(ColumnInfo info)
+        {
+            var gridColor = EditorGUIUtility.isProSkin ? new Color(1, 1, 1, 0.1f) : new Color(0, 0, 0, 0.15f);
+            var label = new Label
+            {
+                style =
+                {
+                    unityTextAlign = TextAnchor.MiddleLeft,
+                    overflow = Overflow.Hidden,
+                    textOverflow = TextOverflow.Ellipsis,
+                    flexGrow = 1,
+                    height = Length.Percent(100),
+                    paddingLeft = 4,
+                    borderRightWidth = 1,
+                    borderBottomWidth = 1,
+                    borderRightColor = gridColor,
+                    borderBottomColor = gridColor,
+                },
+            };
+            label.RegisterCallback<ClickEvent>(_ =>
+            {
+                if (label.userData is int index)
+                    Copy(info.full(tree.GetItemDataForIndex<Node>(index)), info.title);
+            });
+            return label;
+        }
+
+        private void OnKeyDown(KeyDownEvent e)
+        {
+            if (e.keyCode != KeyCode.C || !(e.ctrlKey || e.commandKey))
+                return;
+            CopySelectedRows();
+            e.StopPropagation();
+        }
+
+        private void CopySelectedRows()
+        {
+            var rows = tree.selectedIndices
+                .Select(i => string.Join("\t", columnInfos.Select(c => c.full(tree.GetItemDataForIndex<Node>(i)) ?? string.Empty)))
+                .ToList();
+            if (rows.Count > 0)
+                Copy(string.Join("\n", rows), rows.Count == 1 ? "row" : $"{rows.Count} rows");
+        }
+
+        private void Copy(string text, string what)
+        {
+            if (text.IsEmpty())
+                return;
+            EditorGUIUtility.systemCopyBuffer = text;
+            ShowNotification(new GUIContent($"Copied {what}"), 0.6);
+        }
+
+        /// <summary>
+        /// Keeps only the last hierarchy level of "Root/.../Leaf (Type) > Inline" so long paths fit a column;
+        /// the tooltip and copies keep the full path.
+        /// </summary>
+        private static string Abbreviate(string path)
+        {
+            if (path.IsEmpty())
+                return string.Empty;
+            var cut = new[] { path.IndexOf(" (", StringComparison.Ordinal), path.IndexOf(" > ", StringComparison.Ordinal) }
+                .Where(i => i >= 0).DefaultIfEmpty(path.Length).Min();
+            var slash = path.LastIndexOf('/', Math.Max(0, cut - 1));
+            return slash < 0 ? path : $".../{path.Substring(slash + 1)}";
         }
 
         private static StyleColor StatusColor(PersistentCallStatus status) =>
