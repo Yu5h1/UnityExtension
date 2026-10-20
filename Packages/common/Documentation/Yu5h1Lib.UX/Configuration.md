@@ -102,7 +102,7 @@ UnityExtension
 
 ## 已知界線
 
-- **覆寫 `TryLoadCurrent` 的 host**：統一入口只能判斷它自己讀到的字串。host 覆寫載入（例如 VCP 的 `UserDataView`）時，入口拿不到原文，所以契約是：覆寫的 `TryLoadCurrent` 讀不懂存檔時要丟例外，回傳 false 只代表沒有存檔。入口把這個例外當成載入錯誤處理（驗收方探測已確認：印 Error、不覆寫原存檔）。回傳 false 的覆寫會被當成沒有存檔，下一次寫入會覆寫原檔；這屬於該 host 的 bug，依「資料對不上是 bug，用修 bug 處理」，不在本輪。這句契約要由實作方補進 `Preferences.cs` 的 XML 註解與 [偏好設定](../../../../Documentation/偏好設定.md)（不擋本輪）。
+- **覆寫 `TryLoadCurrent` 的 host**：統一入口只能判斷它自己讀到的字串。host 覆寫載入（例如 VCP 的 `UserDataView`）時，入口拿不到原文，所以契約是：覆寫的 `TryLoadCurrent` 讀不懂存檔時要丟例外，回傳 false 只代表沒有存檔。入口把這個例外當成載入錯誤處理（驗收方探測已確認：印 Error、不覆寫原存檔；原文退回印 PlayerPrefs 裡該 KEY 的字串，2026-10-20 補）。覆寫只能為「讀不懂」拋例外；讀得懂但缺欄位的紀錄要跳過或用預設，否則會把可讀的存檔誤判成不可讀（VCP `UserDataView` 的 `Users` 缺 `Email` 一例，2026-10-20 在 VCP 修正）。回傳 false 的覆寫會被當成沒有存檔，下一次寫入會覆寫原檔；這屬於該 host 的 bug，依「資料對不上是 bug，用修 bug 處理」，不在本輪。這句契約要由實作方補進 `Preferences.cs` 的 XML 註解與 [偏好設定](../../../../Documentation/偏好設定.md)（不擋本輪）。
 
 ## 輪次
 

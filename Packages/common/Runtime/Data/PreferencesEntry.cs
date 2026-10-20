@@ -145,7 +145,10 @@ namespace Yu5h1Lib
             }
             catch (System.Exception e)
             {
-                return PreferencesLoadResult.Failed(null, "reading the save failed: " + e.Message);
+                // A host override or custom storage threw, so it could not hand back the text it read; the best
+                // original we can show is whatever PlayerPrefs holds under this KEY.
+                var raw = PlayerPrefs.HasKey(key) ? PlayerPrefs.GetString(key) : null;
+                return PreferencesLoadResult.Failed(raw, "reading the save failed: " + e.Message);
             }
         }
 
