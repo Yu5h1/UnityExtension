@@ -725,6 +725,42 @@
           "status": "done"
         }
       ]
+    },
+    {
+      "id": "unityevent-monitor",
+      "title": "UnityEvent 監控工具",
+      "status": "in_progress",
+      "priority": 2,
+      "summary": "只做靜態檢查（2026-10-20 決定）。com.yu5h1.common Editor 的 UnityEvent Viewer（Tools 選單）與 batchmode 報告。設計：Documentation/UnityEvent監控.md。VCP ChatScene batchmode 驗證：226 筆、24 筆失效。",
+      "completed_items": [
+        {
+          "id": "item-unityevent-monitor-done-1",
+          "title": "依證據擬定設計並驗證原型（VCP ChatScene）",
+          "priority": 2
+        },
+        {
+          "id": "item-unityevent-monitor-done-2",
+          "title": "決策：只做靜態檢查",
+          "priority": 1
+        },
+        {
+          "id": "item-unityevent-monitor-done-3",
+          "title": "實作掃描、驗證、Viewer 與 batchmode 報告；VCP ChatScene batchmode 驗證通過",
+          "priority": 2
+        }
+      ],
+      "pending_items": [
+        {
+          "id": "viewer-acceptance",
+          "title": "使用者在編輯器中驗收 UnityEvent Viewer 視窗（掃描、篩選、分組、反查、點選 Ping、匯出）",
+          "priority": 1
+        },
+        {
+          "id": "compile-6000-3",
+          "title": "6000.3 編譯檢查",
+          "priority": 2
+        }
+      ]
     }
   ]
 }

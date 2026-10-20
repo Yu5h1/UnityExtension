@@ -24,6 +24,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 ## Next Steps
 
+- UnityEvent monitor ([UnityEvent監控](Documentation/UnityEvent監控.md), Task ID `unityevent-monitor`): static-only decided 2026-10-20 (`runtime-trace`). Implemented in `Packages/common/Editor/Tool/UnityEventMonitor/` (scanner, record, `UnityEventViewer` window under Tools, batchmode `UnityEventReport.Run`). Verified only in batchmode on VCP `ChatScene` (6000.6): compiles warning-free, 226 calls / 24 broken, matching the prototype's 23 plus one inside a prefab. Not verified: the Viewer window UI, the 6000.3 compile, `Scan Selected Assets`. `objectReferenceInstanceIDValue` is a compile error in 6000.6 and `objectReferenceEntityIdValue` is absent in 6000.3, so the scanner reads whichever exists by reflection. Next: user opens Tools/UnityEvent Viewer in Yu5h1LibTest; then the repair-operations question.
+
 - Recycler: follow [Core correctness](Documentation/Recycler_Refactor.md#a--core-正確性), then [allocation and performance](Documentation/Recycler_Refactor.md#b--配置保留量與效能), before Unity integration and migration. On 2026-10-14 the user authorized synchronizing the plan, handoff and reports only; implementation remains pending. The root plan routes to the detailed design, and report.json/report.dev.json project its A–D sequence without claiming new implementation completion. Core's four files exist and the prior plan records a 2026-05-21 successful build; no new build, benchmark, unit test, or Unity acceptance was run. Source inspection found per-Get LinkedListNode allocation and value-equality-based active tracking. These remain findings to address, not completed fixes. The minimum-injection discussion does not block Core validation.
 
 - Until Core is built against the oldest supported editor (6000.3.9f1, BonghuoVR), rerun the 6000.3 compile check after Core changes (command in Recent Work 2026-10-06).
@@ -225,6 +227,8 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 - Decision: use `unified-solver` for large-scale collision, stacking, and container interactions. The retrospective is recorded in [DevelopmentLog.md](Documentation/DevelopmentLog.md).
 
 ## Open decisions
+
+- [UnityEvent 監控 — 尚未決定](Documentation/UnityEvent監控.md#尚未決定): repair operations, to be asked after the first version passes acceptance in VCP.
 
 - [Recycler — 後續決策](Documentation/Recycler_Refactor.md#後續決策): failure/reentrancy and retention semantics before the corresponding Core implementation; Unity convenience and migration choices before their slices.
 

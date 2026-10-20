@@ -118,6 +118,23 @@ elsewhere in the data.
   configured looks broken, and hides every other fault behind the same blank
   screen.
 
+## Toolbars: one kind of control per row
+
+A Unity toolbar does not wrap and does not shrink its buttons: once a row is full, controls clip
+from the edge and their labels become unreadable (UnityEvent Viewer, 2026-10-21 — scan buttons,
+toggles, an enum field and a search field on one row were cut off at normal window width).
+
+- Split by purpose: actions that produce data (Scan, Export) on one row, view controls that
+  filter the same data (toggles, grouping, search) on the next.
+- Give the search field the leftover width (`flexGrow = 1`, `flexShrink = 1`, a `minWidth`)
+  instead of a fixed width.
+- Put a choice in a `ToolbarMenu` whose text names the current value (`Group: Asset`), with the
+  current option checked. An `EnumField` in a toolbar is drawn as a narrow, unlabeled field.
+- Set the window's `minSize` so the widest row still fits.
+- Status or summary text goes on its own line below the toolbars with wrapping on, not inside a toolbar.
+
+Reference: `Packages/common/Editor/Tool/UnityEventMonitor/UnityEventViewer.cs`.
+
 ## Read-only Log panel
 
 For an embedded IMGUI log, use `ReadOnlyLogSection`: an external foldout title above a framed
