@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-21T13:25:28.691791+00:00",
+  "updated_at": "2026-10-21T13:31:38.941969+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -476,7 +476,15 @@
             "kind": "checklist",
             "scope_id": "unity-extension",
             "task": "preferences-entry-view-copy"
-          }
+          },
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "session": "12d6407d-b4d7-444b-be2e-d9b16a7f3b37",
+              "at": "2026-10-20T15:07:58+00:00"
+            }
+          ]
         },
         {
           "id": "item-preferences-todo-11",
@@ -659,7 +667,14 @@
         {
           "status": "done",
           "title": "Button 2.0.0 在 Yu5h1Lib.UI（b42c369）與 Yu5h1Lib.UIToolkit（fb13d38）引用並驗收通過：BT01／BT03 自動檢查在乾淨 worktree 通過，使用者 2026-10-19 與 Web demo 並排確認外觀；紀錄 verified，UX-UNITYEXTENSION-6 Implemented",
-          "id": "button-adopted-both-packages"
+          "id": "button-adopted-both-packages",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-19T15:09:51+00:00"
+            }
+          ]
         },
         {
           "id": "item-cross-platform-ui-parity-todo-5",
