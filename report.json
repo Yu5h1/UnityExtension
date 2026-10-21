@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-21T13:31:38.941969+00:00",
+  "updated_at": "2026-10-21T22:00:00+08:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -822,11 +822,39 @@
       "completed_items": [
         {
           "id": "decide-package",
-          "title": "決定套件：com.yu5h1.addressables、namespace Yu5h1Lib.AddressableAssets、直接相依 Addressables 2.8.1 以上（2026-10-21）"
+          "title": "決定套件：com.yu5h1.addressables、namespace Yu5h1Lib.AddressableAssets、直接相依 Addressables 2.8.1 以上（2026-10-21）",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
+              "at": "2026-10-21T11:22:49+00:00"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
+              "at": "2026-10-21T11:22:49+00:00"
+            }
+          ]
         },
         {
           "id": "skeleton",
-          "title": "建立套件骨架：package.json、README、Runtime asmdef、固定 GUID 的 .meta（未匯入 Unity）"
+          "title": "建立套件骨架：package.json、README、Runtime asmdef、固定 GUID 的 .meta（未匯入 Unity）",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
+              "at": "2026-10-21T11:22:49+00:00"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
+              "at": "2026-10-21T11:22:49+00:00"
+            }
+          ]
         }
       ],
       "pending_items": [
@@ -838,32 +866,80 @@
             "kind": "decision",
             "scope_id": "unity-extension",
             "task": "addressables-package"
-          }
+          },
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
+              "at": "2026-10-21T12:41:16+00:00"
+            }
+          ]
         },
         {
           "id": "first-round-discussion",
           "title": "討論首輪待決：表演掛接（AsyncTaskObject 改 Awaitable）、讀取時機與 UX 對齊、角色專屬資料來處、VCP 交貨前的驗證場",
-          "priority": 1
+          "priority": 1,
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
+              "at": "2026-10-21T11:22:49+00:00"
+            }
+          ]
         },
         {
           "id": "handler",
           "title": "Handler：以 key 非同步載入並回報進度與狀態，local group（StreamingAssets）驗證",
-          "priority": 2
+          "priority": 2,
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
+              "at": "2026-10-21T11:22:49+00:00"
+            }
+          ]
         },
         {
           "id": "character-init",
           "title": "角色載入：prefab＋override controller 載入後由消費端初始化流程添加元件；UnityEvent 定義非同步表演",
-          "priority": 2
+          "priority": 2,
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
+              "at": "2026-10-21T11:22:49+00:00"
+            }
+          ]
         },
         {
           "id": "remote-test",
           "title": "遠端內容測試：同站遠端，之後 R2",
-          "priority": 3
+          "priority": 3,
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
+              "at": "2026-10-21T11:22:49+00:00"
+            }
+          ]
         },
         {
           "id": "lfs-avatar",
           "title": "Git LFS 素材分離與 Windows 頭像原型（學習與實作順序）",
-          "priority": 3
+          "priority": 3,
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
+              "at": "2026-10-21T11:22:49+00:00"
+            }
+          ]
         }
       ]
     }
