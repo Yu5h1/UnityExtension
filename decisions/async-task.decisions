@@ -1,0 +1,158 @@
+{
+  "schema_version": "1.1",
+  "task_id": "async-task",
+  "updated_at": "2026-10-21T13:08:46.2740587+00:00",
+  "decisions": [
+    {
+      "id": "completed-event",
+      "version": 2,
+      "question": "非同步工作的 Completed（bool）怎麼處理？",
+      "context": "設計原意（使用者 2026-10-21 說明）：有些請求在傳輸結束後還要跑第二階段驗證，才產生成功／失敗，最後才是完成。所以順序是 Begin → End（第一階段結束）→ 第二階段 → 成功／失敗 → Completed。程式裡的痕跡：common 的 WebRequestEvent（已註解）在 Processing 之後有 Finish<T>(result) 這個第二階段協程；VCP 的 ChatRequest 與 RequestData 還留著 vcpFinishRoutine（Func<vcpMessage, string, IEnumerator>）別名，目前沒有使用。現在 RequestData.Complete 的驗證是同步的：HTTP 成功但 vcpMessage 是例外時判為失敗，錯誤碼 103 觸發重新登入。\n套到資源載入：End＝下載與載入結束，第二階段＝消費端的初始化與表演（添加元件、過場），然後成功／失敗，最後 Completed。\nChatScene 的用法（2026-10-21 查）：Completed 上有 6 個監聽器，全部是 Inspector 寫死的 bool（mental_health、quotes 關 Loading，letter 關 WaitingWithoutBg，sequential 重新開放送出按鈕、輸入送出與換頁），沒有用到事件傳進來的成敗；lifeCycle 的 End 沒有任何監聽器。其他事件都帶 string，只有 Completed 帶 bool；成敗旗標可以直接接 SetActive(bool)、interactable 這類 bool 方法。",
+      "source_ref": "../Documentation/非同步工作.md#已決定2026-10-21",
+      "options": [
+        {
+          "id": "keep-bool-completed",
+          "label": "保留 Completed（bool），作為最後一段",
+          "description": "Begin → End（第一階段結束）→ 第二階段 → 成功／失敗 → Completed(成敗)。Completed 能直接接 bool 方法；寫死參數的監聽器照舊可用。"
+        },
+        {
+          "id": "keep-plain-completed",
+          "label": "保留 Completed，但不帶參數",
+          "description": "順序同上；Completed 只表示全部結束，成敗由成功／失敗兩個分支處理。"
+        },
+        {
+          "id": "end-after-outcome",
+          "label": "拿掉 Completed，End 移到結果之後當收尾",
+          "description": "事件少一個，但失去「第一階段結束、第二階段開始前」這個時間點。"
+        }
+      ],
+      "recommendation": {
+        "option_id": "keep-bool-completed",
+        "reason": "第二階段驗證是真實需求，End 與 Completed 是兩個不同的時間點，不能合併；資源載入的「載入完 → 初始化與表演 → 完成」也是同一個形狀。Completed 帶成敗旗標可以省掉成功／失敗各掛一次，ChatScene 現有寫死參數的監聽器也不受影響。"
+      },
+      "allow_other": true,
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "keep-bool-completed",
+        "confirmed_at": "2026-10-21T13:07:58.7058629+00:00"
+      },
+      "last_request": {
+        "request_id": "3987c6f5-57bc-4224-987a-2bcb86222970",
+        "fingerprint": "c2897ea211b62fc3f725ffa0666c972e9e23cff7cc48b3fc9e788ba089c6e661"
+      }
+    },
+    {
+      "id": "cancel-outcome",
+      "version": 1,
+      "question": "工作被取消時要不要觸發成功／失敗？",
+      "context": "現況：改用 Awaitable 後，工作可以用 CancellationToken 取消，例如使用者離開頁面、被新的請求取代、物件被銷毀。取消時 await 會丟出 OperationCanceledException。ChatRequest 目前沒有取消，同一個請求物件重送會直接停掉前一個協程，不觸發任何結果事件。",
+      "source_ref": "../Documentation/非同步工作.md#遷移",
+      "options": [
+        {
+          "id": "no-outcome",
+          "label": "不觸發結果，只觸發收尾",
+          "description": "取消不算失敗，不會跳錯誤提示；收尾照常觸發，Loading 會關。"
+        },
+        {
+          "id": "outcome-false",
+          "label": "當作失敗",
+          "description": "失敗分支會收到取消，需要自己分辨是不是取消。"
+        },
+        {
+          "id": "canceled-event",
+          "label": "另外加一個取消事件",
+          "description": "事件多一個；需要對取消做特別處理時才有用。"
+        }
+      ],
+      "recommendation": {
+        "option_id": "no-outcome",
+        "reason": "取消多半是使用者主動離開，不該跳失敗提示；收尾照常觸發就能把畫面還原。真的需要處理取消的消費端，等有案例再加事件。"
+      },
+      "allow_other": true,
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "no-outcome",
+        "confirmed_at": "2026-10-21T13:08:15.1641609+00:00"
+      },
+      "last_request": {
+        "request_id": "8f2f9572-a4a9-4354-8a57-afa2f8a5afd1",
+        "fingerprint": "af4e689ba0c1a7eb8c1f28f3b95c08154b735397029e0790ebd029e2ea675669"
+      }
+    },
+    {
+      "id": "event-params",
+      "version": 1,
+      "question": "非同步工作的事件帶什麼參數？",
+      "context": "現況：ChatRequest 用 TaskEvent<string>，Begin／End／成功／失敗都帶同一個型別 string。BinaryEvent<T> 的成功與失敗只能是同一個 T。載入資源時，成功拿到的是物件（GameObject 等），失敗拿到的是錯誤訊息，型別不同。進度一律帶 float（0–1），這點已同意。",
+      "source_ref": "../Documentation/非同步工作.md#待分析結果判斷改成可組裝的邏輯事件物件",
+      "options": [
+        {
+          "id": "parameterless",
+          "label": "基底不帶參數，結果放屬性",
+          "description": "AsyncTaskObject 的 Begin／End／成功／失敗不帶參數；載入到的物件與錯誤訊息從屬性讀取。需要帶型別的事件由子類別自己加。"
+        },
+        {
+          "id": "string-like-chatrequest",
+          "label": "沿用 ChatRequest，全部帶 string",
+          "description": "和 ChatRequest 一致；載入到的物件無法從事件拿到。"
+        },
+        {
+          "id": "typed-branches",
+          "label": "成功與失敗分別帶不同型別",
+          "description": "例如成功帶 T、失敗帶 string；基底要多一個泛型參數。"
+        }
+      ],
+      "recommendation": {
+        "option_id": "parameterless",
+        "reason": "基底給所有非同步工作用（不只網路、不只載入），不帶參數最通用；型別需求由子類別決定，避免把 BinaryEvent<T> 同型別的限制帶進新設計。"
+      },
+      "allow_other": true,
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "parameterless",
+        "confirmed_at": "2026-10-21T13:08:27.5949457+00:00"
+      },
+      "last_request": {
+        "request_id": "deee2d12-8bda-4f64-ac26-042c82cb45e2",
+        "fingerprint": "f731583616c43700ccb55163c3a105fdd501aed71bae047264d6ad4a0942e099"
+      }
+    },
+    {
+      "id": "taskevent-migration",
+      "version": 1,
+      "question": "common 的 TaskEvent 什麼時候改成新設計？",
+      "context": "現況：TaskEvent／TaskEvent<T> 在 common，VCP 的 RequestData 與 UI 套件的 PopupPanel 都在用。如果直接拿掉 Completed、移動 End，VCP 場景裡那 6 個 Completed 監聽器會遺失：它們要搬到 End，序列化路徑與型別都不同，FormerlySerializedAs 接不起來，要另寫 Editor 腳本搬移。",
+      "source_ref": "../Documentation/非同步工作.md#遷移",
+      "options": [
+        {
+          "id": "later-with-network",
+          "label": "先不動 TaskEvent，等 ChatRequest 抽成 Network 套件時一起遷移",
+          "description": "新設計只用在 AsyncTaskObject；在那之前 common 會同時有兩套相似的事件組合。"
+        },
+        {
+          "id": "now",
+          "label": "現在就改 TaskEvent，並寫 Editor 腳本搬移 VCP 的監聽器",
+          "description": "只有一套事件；要改到 VCP 場景與 PopupPanel，VCP 還在等交貨。"
+        }
+      ],
+      "recommendation": {
+        "option_id": "later-with-network",
+        "reason": "VCP 正在等美術交貨，現在動它的場景資料風險高；ChatRequest 遷移時本來就要重整請求物件，順便搬監聽器一次做完。"
+      },
+      "allow_other": true,
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "later-with-network",
+        "confirmed_at": "2026-10-21T13:08:46.2740587+00:00"
+      },
+      "last_request": {
+        "request_id": "464f2f1f-3e4c-4285-b089-c73b4dbe5976",
+        "fingerprint": "12b173207b09e64fb40b1e354b7bb8ab3f39506c280352293fb0025d265b3b70"
+      }
+    }
+  ]
+}

@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-21T22:00:00+08:00",
+  "updated_at": "2026-10-21T15:25:47.262414+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -818,7 +818,7 @@
       "title": "Addressables 套件（內容按需下載與載入）",
       "status": "planned",
       "priority": 2,
-      "summary": "com.yu5h1.addressables：依需求下載與載入建置好的內容並回報進度，載入時的非同步表演與初始化由消費端定義。首輪做 Handler 與角色載入（角色只交 prefab 與 Animator Override Controller），以 StreamingAssets 驗證；之後才做遠端內容測試，LFS 與 Windows 頭像原型再之後。第一個消費端：VCP streaming-assets。設計：Documentation/Addressables/plan.md。",
+      "summary": "com.yu5h1.addressables：把角色等大型資源和本體分開、執行期非同步讀取。首輪：讀取處理器（singleton，可替換讀取器）與場景代理先用 Resources 讀取器驗證，再接 Addressables 讀取器以 local group 驗證；角色只交 prefab 與 Animator Override Controller，其餘由消費端初始化。依賴 async-task。之後才做遠端內容測試，LFS 與 Windows 頭像原型再之後。第一個消費端：VCP streaming-assets。設計：Documentation/Addressables/plan.md。",
       "completed_items": [
         {
           "id": "decide-package",
@@ -859,26 +859,8 @@
       ],
       "pending_items": [
         {
-          "id": "decide-async-events",
-          "title": "決策：非同步工作的事件設計（Completed 的去留、取消時的結果、事件參數、TaskEvent 何時遷移）",
-          "priority": 1,
-          "document_ref": {
-            "kind": "decision",
-            "scope_id": "unity-extension",
-            "task": "addressables-package"
-          },
-          "activity": [
-            {
-              "event": "created",
-              "actor": "claude",
-              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
-              "at": "2026-10-21T12:41:16+00:00"
-            }
-          ]
-        },
-        {
           "id": "first-round-discussion",
-          "title": "討論首輪待決：表演掛接（AsyncTaskObject 改 Awaitable）、讀取時機與 UX 對齊、角色專屬資料來處、VCP 交貨前的驗證場",
+          "title": "討論首輪剩下的待決：角色專屬資料來處、VCP 交貨前的驗證場",
           "priority": 1,
           "activity": [
             {
@@ -886,12 +868,18 @@
               "actor": "claude",
               "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
               "at": "2026-10-21T11:22:49+00:00"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-21T15:25:47.262414+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
         },
         {
           "id": "handler",
-          "title": "Handler：以 key 非同步載入並回報進度與狀態，local group（StreamingAssets）驗證",
+          "title": "讀取處理器（singleton，可替換讀取器）與場景代理（Prepare、requests、釋放由代理定義），用 Resources 讀取器驗證；讀取器基底與 Resources 讀取器放 common",
           "priority": 2,
           "activity": [
             {
@@ -899,12 +887,32 @@
               "actor": "claude",
               "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
               "at": "2026-10-21T11:22:49+00:00"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-21T15:25:47.262414+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "addressables-loader",
+          "title": "Addressables 讀取器：local group（StreamingAssets）驗證",
+          "priority": 2,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-21T15:25:47.262414+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
         },
         {
           "id": "character-init",
-          "title": "角色載入：prefab＋override controller 載入後由消費端初始化流程添加元件；UnityEvent 定義非同步表演",
+          "title": "角色載入：prefab＋override controller 載入後由消費端初始化流程添加元件；非同步表演用 async-task 的事件物件掛接",
           "priority": 2,
           "activity": [
             {
@@ -912,6 +920,12 @@
               "actor": "claude",
               "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
               "at": "2026-10-21T11:22:49+00:00"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-21T15:25:47.262414+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
         },
@@ -938,6 +952,83 @@
               "actor": "claude",
               "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
               "at": "2026-10-21T11:22:49+00:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "async-task",
+      "title": "非同步工作（事件設計與工作物件）",
+      "status": "planned",
+      "priority": 1,
+      "summary": "common：AsyncTaskObject 以 RequestData 為藍本，把 IEnumerator 換成 Awaitable；新增 AsyncProgressObject（加 Progress<float>，不限網路）；TaskEvent 最終改成同一套事件設計，時機在 ChatRequest 抽成 Network 時。先不做可替換的非同步處理器。第一個消費端是 Addressables 套件的讀取處理器。設計：Documentation/非同步工作.md。",
+      "completed_items": [
+        {
+          "id": "decide-async-events",
+          "title": "決策：Completed 保留並帶 bool、取消時不觸發結果、事件參數、TaskEvent 遷移時機（四題已答）",
+          "status": "done",
+          "document_ref": {
+            "kind": "decision",
+            "scope_id": "unity-extension",
+            "task": "async-task"
+          },
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-21T15:25:47.262414+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-10-21T15:25:47.262414+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        }
+      ],
+      "pending_items": [
+        {
+          "id": "resolve-param-conflict",
+          "title": "確認事件參數：決策頁選「基底不帶參數」，之後的對話說 Begin／End 帶 string，兩者不一致",
+          "priority": 0,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-21T15:25:47.262414+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "analyze-chatrequest",
+          "title": "分析 ChatRequest 的處理設計理由與 TaskEvent 的引用情境（VCP RequestData、UI PopupPanel），判斷結果判斷能否改成可組裝的邏輯事件物件",
+          "priority": 1,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-21T15:25:47.262414+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "implement-task-objects",
+          "title": "實作 AsyncTaskObject（Awaitable）與 AsyncProgressObject",
+          "priority": 2,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-21T15:25:47.262414+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
         }

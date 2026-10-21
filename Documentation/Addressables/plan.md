@@ -2,7 +2,7 @@
 
 > Task ID: addressables-package
 
-首輪先在套件裡做出 Handler 與角色載入，以 VCP 的角色用 StreamingAssets 驗證（[首輪範圍](#首輪範圍handler-與角色載入)）；之後才做遠端內容測試，Git LFS 素材分離與 Windows 頭像原型排在遠端測試之後（2026-10-21 定案）。本文是討論稿；單一遠端流程與初始角色優先是使用者指定方向，套件位置已定（[套件位置與依賴](#套件位置與依賴)），元件名稱及下方標示的建議仍待收斂。進度由同目錄的 [handoff.md](handoff.md) 記錄。
+首輪先做讀取處理器與代理，用 Resources 讀取器驗證，再接 Addressables 讀取器、以 VCP 的角色用 local group（StreamingAssets）驗證（[首輪範圍](#首輪範圍讀取處理器代理與角色載入)）；之後才做遠端內容測試，Git LFS 素材分離與 Windows 頭像原型排在遠端測試之後（2026-10-21 定案）。本文是討論稿；單一遠端流程與初始角色優先是使用者指定方向，套件位置已定（[套件位置與依賴](#套件位置與依賴)），元件名稱及下方標示的建議仍待收斂。進度由同目錄的 [handoff.md](handoff.md) 記錄。
 
 ## 系統階層與關係
 
@@ -203,9 +203,17 @@ App 開啟
   要抽 ChatRequest 時才建立，不先建空套件。本套件不依賴它：下載與改寫網址由 Addressables 自己處理。
 - 套件不叫 Cloudflare 或 CDN：執行期只透過 HTTP 取得內容，不綁定主機。
 
-第一輪不抽象多個下載後端，也不定義讀取器介面；Addressables 就是唯一實作，換來源只改 profile。
-要等出現不用 Addressables 卻要共用同一流程的消費端，才加介面。UGUI 呈現可放同一套件的獨立 assembly，
-避免下載 Runtime 反過來依賴 UI；assembly 名稱在建立套件時訂定。
+讀取器（2026-10-21 定案）：
+
+- 讀取器是基底類別，讀取處理器可以替換讀取器。
+- **基底與 Resources 讀取器在 common**：它們不需要 Addressables。Resources 讀取器用來先驗證讀取處理器與代理，
+  之後也負責載入內建在本體的備援內容（例如角色讀取失敗時的測試角色）。Resources 的內容會打包進本體，
+  所以它不能用來把角色從本體分出去。
+- **Addressables 讀取器在本套件**。不另寫 StreamingAssets 讀取器：StreamingAssets 只能放原始檔，角色要先打包成
+  AssetBundle，這正是 Addressables local group 做的事。本機或遠端由 Addressables 的 profile（load path）決定，
+  執行期可用 `InternalIdTransformFunc` 改寫網址，讀取器的程式不分 local 或 url。
+
+UGUI 呈現可放同一套件的獨立 assembly，避免下載 Runtime 反過來依賴 UI；assembly 名稱在建立套件時訂定。
 
 「程式 package」與「下載 bundle」分開：前者隨 App 編譯，後者由 Addressables 建置後放 R2，再交 Unity 快取管理。第一輪不另設玩家下載資料夾或自行搬動快取檔案。大型原始素材仍在獨立 LFS repo，不放進這個工具套件。
 
@@ -217,27 +225,39 @@ Task ID `streaming-assets`），在本套件內開發、以消費端身分引用
 - **WebGL 的 StreamingAssets 不在 `.data` 內**：它放在 `Build/` 旁，執行期由瀏覽器以 HTTP 另外抓取。
   local group 建到 StreamingAssets，在 WebGL 上就已經是本體之外的執行期下載；頁面與內容放在同一站台時沒有跨網域與 CORS 問題。
 - **場景序列化的邊界**：場景（inline SO、UnityEvent）引用不到執行期才出現的物件。場景事件一律指向常駐場景的代理，
-  由代理在程式中轉發給載入的實例；需求元件就是這個代理。
-- **非同步 API**：核心 API 用 `Awaitable`＋`IProgress<float>`＋`CancellationToken`，不依賴 UniTask。
+  由代理在程式中轉發給載入的實例；讀取處理器代理就是這個代理。
+- **非同步 API**：核心 API 用 `Awaitable`＋`IProgress<float>`＋`CancellationToken`，不依賴 UniTask；
+  先不做可替換的非同步處理器，留的路見 [非同步工作](../非同步工作.md#已決定2026-10-21)。
   本機 Unity 專案都是 6000.x（2026-10-21 檢查）。WebGL 沒有執行緒，不用 `Awaitable.BackgroundThreadAsync`；
   `Awaitable` 實例會回收重用，同一個實例不能 await 兩次。場景一側仍是事件，UnityEvent 不能 await。
-- **進度接畫面**：common 的 `TaskEvent` 在 Begin／End／成功失敗之外加一個進度通道，呈現元件訂閱它；
-  同一套事件之後也能用在網路請求。
+- **進度與事件**：讀取請求是 common 的 `AsyncProgressObject`（`AsyncTaskObject` 加 `Progress<float>`），事件設計由
+  [非同步工作](../非同步工作.md) 擁有。
 - **UX 的邊界**：載入體驗（進度呈現、失敗與重試、能否取消、未就緒的佔位）屬於 Yu5h1Lib.UX，平台中立；
-  本套件是它的 Unity 實作。非同步讀取要和 UX 對齊，怎麼對齊在 [首輪待討論](#首輪vcp) 討論。
+  本套件是它的 Unity 實作。使用者 2026-10-21 對載入體驗的要求（擋住與不擋住操作兩種呈現、預設不擋、失敗處理）
+  交給 UX 定目標，見 UX 決策第 98 題。
 
-## 首輪範圍：Handler 與角色載入
+## 首輪範圍：讀取處理器、代理與角色載入
 
-2026-10-21 定案的順序與範圍：
+目標：把角色當作執行期讀取的資源，和遊戲本體資源分開；用非同步處理解決大型檔案讀取太久造成的等待與流量負擔。
+2026-10-21 定案的元件、順序與範圍：
 
-1. **Handler**：以 key 透過 Addressables 非同步載入，回報進度與狀態；用 local group（建到 StreamingAssets）驗證。
-2. **角色只準備 prefab 與 Animator Override Controller**。其餘元件（VCP 的 AudioSource、vcpAnimationController、
-   Character、uLipSync 等）不放進 prefab，由消費端的初始化流程在載入後自動添加。套件只提供掛接點，不認識消費端的元件。
-3. **Handler 以 UnityEvent 讓消費端定義非同步表演**（載入前後的過場、等待時的演出）與初始化流程。
+- **讀取處理器**：singleton，可替換讀取器（[讀取器](#套件位置與依賴)）。
+- **讀取處理器代理**：場景裡的一般 GameObject，不是 singleton。它提供通知讀取的方法（例如 `Prepare(path)`），
+  持有讀取請求（`AsyncProgressObject[]`）；通知讀取本身就是一個請求。載入的內容要不要釋放，由代理定義。
+- **分批執行**：不需要特別的技術。初始化、按鈕、捲動、圖片進入畫面等任何事件都能呼叫代理，所以讀取時機可以自由設定。
+  例如啟動時一定讀取第一號角色：在代理同一個 GameObject 上加 MonoBehaviourEvent，在 Start 事件呼叫代理，代理再通知處理器讀取。
+
+順序：
+
+1. **讀取處理器與代理**，用 Resources 讀取器驗證。
+2. **Addressables 讀取器**，用 local group（建到 StreamingAssets）驗證。
+3. **角色只準備 prefab 與 Animator Override Controller**。其餘元件（VCP 的 AudioSource、vcpAnimationController、
+   Character、uLipSync 等）不放進 prefab，由消費端的初始化流程在載入後自動添加。套件只提供掛接點，不認識消費端的元件；
+   非同步表演用 [非同步工作](../非同步工作.md) 的事件物件掛接。
 4. 以上完成後，才開始遠端內容測試（同站遠端，之後 R2、[學習與實作順序](#學習與實作順序) 的 LFS 與 Windows 頭像原型）。
 
-讀取時機要很彈性（進場時、選到時、背景預載都可能），並與 UX 對齊；這部分與表演的掛接方式仍在討論，見
-[首輪待討論](#首輪vcp)。
+非必要內容（例如角色）讀取失敗時，用內建的測試角色代替並提示「此角色異常」，流程繼續；測試角色由 Resources 讀取器載入。
+畫面怎麼呈現由 UX 的載入體驗決定。
 
 ## 頭像暗幕與進度通知
 
@@ -282,7 +302,7 @@ R2 使用自訂網域及適合 bundle 的快取規則。以平台、相容版本
 
 ## 學習與實作順序
 
-本表排在 [首輪範圍](#首輪範圍handler-與角色載入) 與 VCP 的同站遠端測試之後。
+本表排在 [首輪範圍](#首輪範圍讀取處理器代理與角色載入) 與 VCP 的同站遠端測試之後。
 
 | 階段 | 實際工作 | 必須留下的證據 |
 |---|---|---|
@@ -326,8 +346,6 @@ R2 使用自訂網域及適合 bundle 的快取規則。以平台、相容版本
 
 | 決策 | 建議 | 影響 |
 |---|---|---|
-| 非同步表演怎麼掛（事件設計的細項在 [addressables-package.decisions](../../decisions/addressables-package.decisions)） | Handler 依序 await 消費端掛上的表演物件；`AsyncTaskObject`（common，目前用 `IEnumerator`，沒有任何子類別）改成 `Awaitable` 當表演物件的基底。單純通知用 UnityEvent，要等表演結束才繼續的用表演物件 | UnityEvent 只能觸發、不能等待，所以「等過場演完再顯示角色」需要可 await 的物件；會改到 common 的 `AsyncTaskObject` |
-| 讀取時機 | Handler 提供「下載備妥」與「載入可用」兩個入口，場景事件在任何時機呼叫（進場、選到、背景預載）；時機的預設行為與 UX 的載入體驗規範一起定 | 決定 Handler 的公開入口與 UX 規範的範圍 |
 | 角色專屬資料 | prefab＋override controller 以外的資料（口型 blendshape 對照、表情覆寫、鏡頭偏移、選單用 `DataView`）放在主程式內一份以 key 對應的角色資料，由消費端初始化時套用 | 角色只交 prefab 與 override controller 時，這些資料要有來處；選單資料在下載前就要能顯示 |
 | VCP 交貨前在哪驗證 | VCP 還在等美術交貨，先在 Yu5h1LibTest 用一個測試角色驗證 Handler 與初始化流程，VCP 交貨後再接 Cat | 交貨前在 VCP 安裝 Addressables、把 Cat 移進群組，會改變交貨建置的內容 |
 
