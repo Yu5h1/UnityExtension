@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-21T15:25:47.262414+00:00",
+  "updated_at": "2026-10-21T16:07:28.326099+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -965,8 +965,28 @@
       "summary": "common：AsyncTaskObject 以 RequestData 為藍本，把 IEnumerator 換成 Awaitable；新增 AsyncProgressObject（加 Progress<float>，不限網路）；TaskEvent 最終改成同一套事件設計，時機在 ChatRequest 抽成 Network 時。先不做可替換的非同步處理器。第一個消費端是 Addressables 套件的讀取處理器。設計：Documentation/非同步工作.md。",
       "completed_items": [
         {
+          "id": "resolve-param-conflict",
+          "title": "確認事件參數：以對話為準，Begin／End 帶 string（2026-10-22）",
+          "priority": 0,
+          "status": "done",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-21T15:25:47.262414+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-10-21T16:07:28.326099+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
           "id": "decide-async-events",
-          "title": "決策：Completed 保留並帶 bool、取消時不觸發結果、事件參數、TaskEvent 遷移時機（四題已答）",
+          "title": "決策：Completed 保留並帶 bool、取消時不觸發結果、Begin／End 帶 string、TaskEvent 遷移時機（四題已答）",
           "status": "done",
           "document_ref": {
             "kind": "decision",
@@ -985,25 +1005,17 @@
               "actor": "claude",
               "at": "2026-10-21T15:25:47.262414+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-21T16:07:28.326099+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
         }
       ],
       "pending_items": [
-        {
-          "id": "resolve-param-conflict",
-          "title": "確認事件參數：決策頁選「基底不帶參數」，之後的對話說 Begin／End 帶 string，兩者不一致",
-          "priority": 0,
-          "status": "planned",
-          "activity": [
-            {
-              "event": "created",
-              "actor": "claude",
-              "at": "2026-10-21T15:25:47.262414+00:00",
-              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
-            }
-          ]
-        },
         {
           "id": "analyze-chatrequest",
           "title": "分析 ChatRequest 的處理設計理由與 TaskEvent 的引用情境（VCP RequestData、UI PopupPanel），判斷結果判斷能否改成可組裝的邏輯事件物件",
