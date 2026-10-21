@@ -31,7 +31,7 @@ UnityExtension
 
 | 規範內容 | 依賴 | 本輪處理 |
 |---|---|---|
-| OPT-APPEARANCE「顏色依 VisualFoundation 的角色」 | VisualFoundation | 2026-10-21 第二輪（OptionPicker 3.1.0、Button 2.1.0、VisualFoundation 1.4.0，`7abbe0f` 分支 `feat/uitk-vf-140`，未合併）：選項與觸發鈕的狀態外觀、`solid` 面板底色（`panelBackground`）與外框（`border`）都已依規格指定的角色實作（沒有陰影，規格允許），自動檢查通過，人工待驗，見 [VisualFoundation 紀錄](VisualFoundation.md)。原記載：UIToolkit 沒有色票，取 Unity 預設主題變數或對應底色 |
+| OPT-APPEARANCE「顏色依 VisualFoundation 的角色」 | VisualFoundation | 2026-10-21 第二輪（OptionPicker 3.1.0、Button 2.1.0、VisualFoundation 1.4.0，`7abbe0f`，已合併 `98688b2`）：選項與觸發鈕的狀態外觀、`solid` 面板底色（`panelBackground`）與外框（`border`）都已依規格指定的角色實作（沒有陰影，規格允許），自動檢查通過，人工待驗，見 [VisualFoundation 紀錄](VisualFoundation.md)。原記載：UIToolkit 沒有色票，取 Unity 預設主題變數或對應底色 |
 | 觸發鈕與選項「顯示設定不改變無障礙名稱」 | 操作 INPUT-NAME | blocked：UI Toolkit 元素無對應 `UnityEngine.Accessibility` 之完整無障礙名稱 |
 | 手感與外觀確認 | — | 手感與外觀交付使用者在 demo 中直接確認（OP02、OP05） |
 

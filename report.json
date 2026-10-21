@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-20T19:00:58.835050+00:00",
+  "updated_at": "2026-10-21T02:55:00.620005+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -675,7 +675,7 @@
       "pending_items": [
         {
           "id": "item-cross-platform-ui-parity-todo-2",
-          "title": "Theme：在 Yu5h1Lib.UIToolkit 引用 UX VisualFoundation 目標 1（UX-UNITYEXTENSION-2）：第二輪（VisualFoundation 1.4.0、Button 2.1.0、OptionPicker 3.1.0，UX 補齊 UNITYEXTENSION-UX-1 後）模組輪通過（7abbe0f，分支 feat/uitk-vf-140 未合併）；等使用者批准合併，再確認 light、dark 頁",
+          "title": "Theme：在 Yu5h1Lib.UIToolkit 引用 UX VisualFoundation 目標 1（UX-UNITYEXTENSION-2）：第二輪（VisualFoundation 1.4.0、Button 2.1.0、OptionPicker 3.1.0）模組輪通過（7abbe0f）並已合併到 master（98688b2）；待使用者確認 light、dark 頁",
           "priority": 4,
           "status": "in_progress"
         },
@@ -686,7 +686,7 @@
         },
         {
           "status": "planned",
-          "title": "確認 VisualFoundation 頁的 Button 與 OptionPicker 狀態外觀與焦點外框，light 與 dark 同一份（VisualFoundation 目標 1 第二輪，VP03；需先合併分支）",
+          "title": "確認 VisualFoundation 頁的 Button 與 OptionPicker 狀態外觀與焦點外框，light 與 dark 同一份（VisualFoundation 目標 1 第二輪，VP03）",
           "priority": 1,
           "id": "uitk-visualfoundation-vp03",
           "document_ref": {

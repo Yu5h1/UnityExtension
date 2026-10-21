@@ -2,7 +2,7 @@
 
 Current round: `../../../UX/Documentation/ModuleSpec/VisualFoundation.md#目標-1預設色票與狀態外觀在-unity-ui-toolkit-成立進行中2026-10-21`.
 
-本輪對應 UX VisualFoundation 1.4.0、Button 2.1.0、OptionPicker 3.1.0（UX `5205838`，UNITYEXTENSION-UX-1 補齊角色後的第二輪），在 Yu5h1Lib.UIToolkit 引用。實作提交 `7abbe0f`，在分支 `feat/uitk-vf-140`，合併前由使用者批准。自動檢查涵蓋色票交付（VP01）、各狀態與焦點外框到達的角色；外觀（VP03）由使用者在 `Samples~/UxAcceptance` 的 VisualFoundation 頁確認（`uitk-visualfoundation-vp03.checklist`，一頁一份，light 與 dark 同一份）。上一輪（VisualFoundation 1.3.0／1.3.1，實作 `603ec74`，乾淨 worktree EditMode 110/110、PlayMode 30/30）的內容由 git 歷史保存。2026-10-21 的全部自動檢查由實作本檔的同一個 session 在乾淨 worktree（`7abbe0f`，detached）執行並記錄，不是未參與實作的 agent；結果以此為準，審查者可自行重跑。一個檔案只放一輪。
+本輪對應 UX VisualFoundation 1.4.0、Button 2.1.0、OptionPicker 3.1.0（UX `5205838`，UNITYEXTENSION-UX-1 補齊角色後的第二輪），在 Yu5h1Lib.UIToolkit 引用。實作提交 `7abbe0f`，已合併到 `master`（`98688b2`，分支已刪除）。自動檢查涵蓋色票交付（VP01）、各狀態與焦點外框到達的角色；外觀（VP03）由使用者在 `Samples~/UxAcceptance` 的 VisualFoundation 頁確認（`uitk-visualfoundation-vp03.checklist`，一頁一份，light 與 dark 同一份）。上一輪（VisualFoundation 1.3.0／1.3.1，實作 `603ec74`，乾淨 worktree EditMode 110/110、PlayMode 30/30）的內容由 git 歷史保存。2026-10-21 的全部自動檢查由實作本檔的同一個 session 在乾淨 worktree（`7abbe0f`，detached）執行並記錄，不是未參與實作的 agent；結果以此為準，審查者可自行重跑。一個檔案只放一輪。
 
 - [x] **1. 釘選與色票產生**
   Outcome: 套件內有 VisualFoundation、Button、OptionPicker 規範的快照，雜湊與 UX manifest 一致；主題樣式表就是產生器從設計資料快照產生的結果。
