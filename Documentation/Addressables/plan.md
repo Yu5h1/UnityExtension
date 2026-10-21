@@ -227,7 +227,7 @@ Task ID `streaming-assets`），在本套件內開發、以消費端身分引用
 - **場景序列化的邊界**：場景（inline SO、UnityEvent）引用不到執行期才出現的物件。場景事件一律指向常駐場景的代理，
   由代理在程式中轉發給載入的實例；讀取處理器代理就是這個代理。
 - **非同步 API**：核心 API 用 `Awaitable`＋`IProgress<float>`＋`CancellationToken`，不依賴 UniTask；
-  先不做可替換的非同步處理器，留的路見 [非同步工作](../非同步工作.md#已決定2026-10-21)。
+  先不做可替換的非同步處理器，留的路見 [非同步工作](../非同步工作.md#已決定)。
   本機 Unity 專案都是 6000.x（2026-10-21 檢查）。WebGL 沒有執行緒，不用 `Awaitable.BackgroundThreadAsync`；
   `Awaitable` 實例會回收重用，同一個實例不能 await 兩次。場景一側仍是事件，UnityEvent 不能 await。
 - **進度與事件**：讀取請求是 common 的 `AsyncProgressObject`（`AsyncTaskObject` 加 `Progress<float>`），事件設計由
