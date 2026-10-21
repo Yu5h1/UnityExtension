@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-21T19:00:00+08:00",
+  "updated_at": "2026-10-21T13:25:28.691791+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -786,7 +786,15 @@
             "kind": "checklist",
             "scope_id": "unity-extension",
             "task": "unityevent-monitor-viewer-chatscene"
-          }
+          },
+          "activity": [
+            {
+              "event": "updated",
+              "actor": "claude",
+              "session": "12d6407d-b4d7-444b-be2e-d9b16a7f3b37",
+              "at": "2026-10-21T13:25:28.691791+00:00"
+            }
+          ]
         }
       ]
     },
