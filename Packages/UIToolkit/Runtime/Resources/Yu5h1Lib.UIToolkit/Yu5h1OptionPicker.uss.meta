@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 6f91c84918e7724458b299a12c8b0561
-StyleSheetImporter:
-  externalTimestamps: []
-  defaultPivot: {x: 0.5, y: 0.5}
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 12385, guid: 0000000000000000e000000000000000, type: 0}
+  disableValidation: 0
+  unsupportedSelectorAction: 0
