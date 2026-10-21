@@ -149,18 +149,26 @@ namespace Yu5h1Lib.UIToolkit.Tests
             selected.AddToClassList("yu5h1-button--selected");
             var selectedGhost = CreateButton(scheme, ghost: true);
             selectedGhost.AddToClassList("yu5h1-button--selected");
+            var selectedHovered = CreateButton(scheme);
+            selectedHovered.AddToClassList("yu5h1-button--selected");
+            selectedHovered.AddToClassList("yu5h1-button--hover");
             var disabled = CreateButton(scheme);
             disabled.SetEnabled(false);
             yield return Settle();
 
-            AreSame(roles["itemText"], solid.resolvedStyle.color, "Resting text uses itemText");
+            AreSame(roles["itemText"], solid.resolvedStyle.color, "Solid resting text uses itemText");
+            AreSame(roles["panelBackground"], solid.resolvedStyle.backgroundColor, "Solid resting fill uses panelBackground");
+            Assert.IsNotNull(solid.resolvedStyle.backgroundImage.texture, "A solid button is outlined at rest");
+            AreSame(roles["controlBorder"], solid.resolvedStyle.unityBackgroundImageTintColor, "Solid resting outline uses controlBorder");
             Assert.AreEqual(0f, ghost.resolvedStyle.backgroundColor.a, "A ghost button has no fill at rest");
+            Assert.IsNull(ghost.resolvedStyle.backgroundImage.texture, "A ghost button has no outline at rest");
             AreSame(roles["itemText"], ghost.resolvedStyle.color, "Ghost text uses itemText");
-            AreSame(roles["controlBorder"], ghost.resolvedStyle.unityBackgroundImageTintColor, "A button without a fill is outlined in controlBorder");
             AreSame(roles["hover"], hovered.resolvedStyle.backgroundColor, "Hover fill uses hover");
             AreSame(roles["accent"], selected.resolvedStyle.backgroundColor, "Selected fill uses accent");
             AreSame(roles["onAccent"], selected.resolvedStyle.color, "Selected text uses onAccent");
             AreSame(roles["accent"], selectedGhost.resolvedStyle.backgroundColor, "Selected ghost fill uses accent");
+            AreSame(roles["accent"], selectedHovered.resolvedStyle.backgroundColor, "Selected wins over hover");
+            AreSame(roles["onAccent"], selectedHovered.resolvedStyle.color, "Selected text stays onAccent under hover");
             Assert.AreEqual(0f, selectedGhost.resolvedStyle.unityBackgroundImageTintColor.a, "A selected button is filled and needs no outline");
             AreSame(roles["disabled"], disabled.resolvedStyle.color, "Disabled text uses disabled");
         }
@@ -172,7 +180,8 @@ namespace Yu5h1Lib.UIToolkit.Tests
             var solid = CreateButton(scheme);
             var ghost = CreateButton(scheme, ghost: true);
             yield return Settle();
-            Assert.IsNull(solid.resolvedStyle.backgroundImage.texture, "A solid button has no outline at rest");
+            AreSame(roles["controlBorder"], solid.resolvedStyle.unityBackgroundImageTintColor, "A solid button is outlined in controlBorder at rest");
+            Assert.IsNull(ghost.resolvedStyle.backgroundImage.texture, "A ghost button has no outline at rest");
 
             solid.Focus();
             yield return Settle();

@@ -13,7 +13,7 @@ namespace Yu5h1Lib.UIToolkit.Tests
     /// </summary>
     public class OptionPickerDesignTests
     {
-        private const string SpecHash = "31591500f70d9738be80ca87fd75b130a17ee6136b1e81fc830c1d3c2e9a14f2";
+        private const string SpecHash = "2adff90e313ce7c09041dc98d6696e9f9f278f4c9329ca9a4626a13ac44400b9";
         private const string DesignHash = "551517bc380470057011e41ca7e8366af7dade1f432e3a1cd60134a629417e5a";
         private const string CasesHash = "3d4d2a26a63e603267ac360f0f2a3ee6c8893a7bfb5e924b87b96dac0b58ccd4";
 
@@ -47,9 +47,9 @@ namespace Yu5h1Lib.UIToolkit.Tests
         }
 
         [Test]
-        public void SnapshotIsOptionPicker302WithDesign200()
+        public void SnapshotIsOptionPicker310WithDesign200()
         {
-            StringAssert.Contains("Specification version: 3.0.2", File.ReadAllText(SnapshotPath("OptionPicker.md")));
+            StringAssert.Contains("Specification version: 3.1.0", File.ReadAllText(SnapshotPath("OptionPicker.md")));
             StringAssert.Contains("\"contractVersion\": \"2.0.0\"", File.ReadAllText(SnapshotPath("option-picker-design.json")));
         }
 
