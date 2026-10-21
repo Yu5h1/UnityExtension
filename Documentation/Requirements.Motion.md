@@ -34,7 +34,7 @@
 
 | 欄位 | 內容 |
 |---|---|
-| **Status** | Outstanding（2026-10-07 提出） |
+| **Status** | Outstanding（2026-10-07 提出）。Motion 已交付規格（[Tween 1.0.0](../../../Motion/Documentation/ModuleSpec/Tween.md)，Motion `3b666e4`：容器名 `Tween`、六動詞、TWEEN-01～15、14 個操作案例與 `tests/replay_tween.mjs`），Unity 尚未驗收；驗收要等 DOTNET-1 的 Core 框架與 DOTween runner 重播案例 |
 | **Requirement** | Motion 擁有補間殼（有起點、終點、時長的補間，可替換 DOTween、PrimeTween 或自製引擎）的唯一設計規範，以 cross-platform-module-spec 寫成 `Documentation/ModuleSpec/` 下的模組規格。 |
 | **Evidence** | 決策 `layering-doc-owner`：補間殼、插值公式、物理互動三者都以 Motion 為唯一設計規範來源，DotNet Core 依規格以 C# 建立框架與介面（使用端不只 Unity，還有 WPF、WinForms、Web）；`Motion_System_Refactor` 應優先收斂進 Motion 成為一項服務。現有設計只在 UnityExtension 的 [Motion_System_Refactor](../.agents/plans/Motion_System_Refactor.md)（§1–§7 殼與 provider 差異、§11 待確認），尚未實作，且仍用已作廢的 `Yu5h1Lib.Animation.Motion` 命名。 |
 | **Acceptance** | 一、模組規格含行為 ID 與案例：控制動詞、設定、引擎注入、回收語意，以及 DOTween 與 PrimeTween 兩種模型都能滿足的條件。二、名稱由 Motion 決定；使用者指出 `Transition` 可能不對或已過時。三、Motion 收錄後，UnityExtension 刪除 `Motion_System_Refactor` 裡被取代的規範內容，只留 Unity 端的引擎適配與既有組件遷移（§8–§9）。 |
