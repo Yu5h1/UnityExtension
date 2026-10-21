@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-21T17:51:41.490783+00:00",
+  "updated_at": "2026-10-21T17:57:17.034416+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -78,7 +78,7 @@
       "id": "agent-scene-workflow",
       "title": "Agent 文字與 Unity 物件工作流",
       "status": "planned",
-      "summary": "已完成獨立的文字結構同步設計：Edit Mode 優先、Component 綁定、版本完成標記及衝突處理；Runtime 分階段加入。既有方案與格式仍待評估，同步實作尚未開始。",
+      "summary": "已完成獨立的文字結構同步設計：Edit Mode 優先、Component 綁定、版本完成標記及衝突處理；Runtime 分階段加入。既有方案與格式仍待評估，同步實作尚未開始。2026-10-22 定先讀後寫：寫入方向等 agent-data-translator（讀取）驗證後再開始，翻譯器輸出設計成將來能寫回。",
       "completed_items": [
         {
           "id": "item-agent-scene-workflow-done-1",
@@ -1155,6 +1155,20 @@
               "event": "created",
               "actor": "claude",
               "at": "2026-10-21T17:37:43.521618+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "write-back-test",
+          "title": "之後：測試 agent 直接改翻譯器輸出；可行就成為 Agent friendly workflow 的格式候選（先讀後寫）",
+          "priority": 3,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-21T17:57:17.034416+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]

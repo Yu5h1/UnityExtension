@@ -46,6 +46,8 @@ Unity 專案的場景、Prefab、ScriptableObject（YAML：fileID、GUID）
 - 能在 batchmode 跑，不必開編輯器畫面；也能在編輯器裡用。
 - 和 UnityEvent 監控共用掃描核心，不另寫一套收集程式。
 - 輸出要穩定排序，同一份場景重跑結果相同，改動前後的輸出可以直接 diff。
+- 輸出設計成將來能寫回（2026-10-22）：宣告式、內容完整到足以重建、身分穩定（名稱路徑，同名時加穩定 ID）、
+  資產引用用可讀別名而不是 GUID。寫回方向由 [Agent friendly workflow〈先讀後寫〉](Agent%20friendly%20workflow%20Yu5h1Lib.UnityExtension.md#先讀後寫2026-10-22) 擁有。
 
 ## 第一批：inline SO 設定匯出
 
@@ -66,6 +68,7 @@ Unity 專案的場景、Prefab、ScriptableObject（YAML：fileID、GUID）
 ## 之後
 
 - 擴充到一般物件：階層、元件與欄位（給 agent 理解 prefab 組裝，例如角色 prefab 的元件組成）。
+- 測試 agent 能不能直接改輸出；可行就成為 Agent friendly workflow 的格式候選，寫回由文字結構同步負責。
 - 在建置流程中跑報告並和上次 diff，讓接線斷掉在建置時就被看到。
 
 ## 決策理由與替代方案
