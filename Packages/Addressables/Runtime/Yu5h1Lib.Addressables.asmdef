@@ -1,0 +1,18 @@
+{
+    "name": "Yu5h1Lib.Addressables",
+    "rootNamespace": "Yu5h1Lib.AddressableAssets",
+    "references": [
+        "Yu5h1Lib.Common",
+        "Unity.Addressables",
+        "Unity.ResourceManager"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

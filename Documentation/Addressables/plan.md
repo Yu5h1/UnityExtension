@@ -1,6 +1,8 @@
 # Addressables 套件：內容按需下載與載入
 
-先從 Git LFS 素材分離開始，以角色選擇與頭像驗證下載流程，再整理為 Yu5h1Lib 可重用的方法。本文是討論稿；單一遠端流程與初始角色優先是使用者指定方向，套件位置已定（[套件位置與依賴](#套件位置與依賴)），元件名稱及下方標示的建議仍待收斂。第一個消費端是 VCP，見 [第一個消費端：VCP](#第一個消費端vcpwebgl)。進度由同目錄的 [handoff.md](handoff.md) 記錄。
+> Task ID: addressables-package
+
+首輪先在套件裡做出 Handler 與角色載入，以 VCP 的角色用 StreamingAssets 驗證（[首輪範圍](#首輪範圍handler-與角色載入)）；之後才做遠端內容測試，Git LFS 素材分離與 Windows 頭像原型排在遠端測試之後（2026-10-21 定案）。本文是討論稿；單一遠端流程與初始角色優先是使用者指定方向，套件位置已定（[套件位置與依賴](#套件位置與依賴)），元件名稱及下方標示的建議仍待收斂。進度由同目錄的 [handoff.md](handoff.md) 記錄。
 
 ## 系統階層與關係
 
@@ -28,7 +30,7 @@ Yu5h1Lib / UnityExtension
 
 這裡的「流式」指按需下載、提早準備、逐項開放使用。一般 Addressables 以內容包為下載單位，不能承諾同一張貼圖下載 30% 就能顯示 30%；需要的 bundle 與相依資源備妥後才能載入使用。
 
-第一輪以 Windows Player 驗證。手機與 WebGL 是後續平台驗證；WebGL 的網路、快取與非同步限制需要另行測量，不能直接沿用 Windows 的結果。
+第一輪以 VCP 的 WebGL Player 驗證（2026-10-21 定案）。Windows Player 與手機是後續平台驗證；各平台的網路、快取與非同步限制不同，結果不能互相沿用。
 
 ## 術語對照
 
@@ -175,9 +177,9 @@ App 開啟
 
 | 項目 | 設定 |
 |---|---|
-| 位置 | `Packages/Addressables` |
+| 位置 | `Packages/Addressables`（骨架 2026-10-21 建立：package.json、README、Runtime asmdef `Yu5h1Lib.Addressables`、固定 GUID 的 `.meta`） |
 | 套件 | `com.yu5h1.addressables`，顯示名稱 `Yu5h1Lib.Addressables` |
-| 相依 | `com.yu5h1.common`、`com.unity.addressables`（直接相依，不用 versionDefines） |
+| 相依 | `com.yu5h1.common`、`com.unity.addressables` 2.8.1 以上（直接相依，不用 versionDefines）。2.8.1 是最舊支援的 Unity 6000.3.9f1 隨附的版本；6000.6.0f1 隨附 2.11.2 |
 | Namespace | `Yu5h1Lib.AddressableAssets`。不用 `Yu5h1Lib.Addressables`：它會在套件內遮蔽 `UnityEngine.AddressableAssets.Addressables` 這個型別（[UnityExtension 命名規則](../../.agents/introduction.md)） |
 
 ```text
@@ -222,7 +224,20 @@ Task ID `streaming-assets`），在本套件內開發、以消費端身分引用
 - **進度接畫面**：common 的 `TaskEvent` 在 Begin／End／成功失敗之外加一個進度通道，呈現元件訂閱它；
   同一套事件之後也能用在網路請求。
 - **UX 的邊界**：載入體驗（進度呈現、失敗與重試、能否取消、未就緒的佔位）屬於 Yu5h1Lib.UX，平台中立；
-  本套件是它的 Unity 實作。UX 規範在 VCP 的本機驗證（L1c）有實際進度行為後再寫。
+  本套件是它的 Unity 實作。非同步讀取要和 UX 對齊，怎麼對齊在 [首輪待討論](#首輪vcp) 討論。
+
+## 首輪範圍：Handler 與角色載入
+
+2026-10-21 定案的順序與範圍：
+
+1. **Handler**：以 key 透過 Addressables 非同步載入，回報進度與狀態；用 local group（建到 StreamingAssets）驗證。
+2. **角色只準備 prefab 與 Animator Override Controller**。其餘元件（VCP 的 AudioSource、vcpAnimationController、
+   Character、uLipSync 等）不放進 prefab，由消費端的初始化流程在載入後自動添加。套件只提供掛接點，不認識消費端的元件。
+3. **Handler 以 UnityEvent 讓消費端定義非同步表演**（載入前後的過場、等待時的演出）與初始化流程。
+4. 以上完成後，才開始遠端內容測試（同站遠端，之後 R2、[學習與實作順序](#學習與實作順序) 的 LFS 與 Windows 頭像原型）。
+
+讀取時機要很彈性（進場時、選到時、背景預載都可能），並與 UX 對齊；這部分與表演的掛接方式仍在討論，見
+[首輪待討論](#首輪vcp)。
 
 ## 頭像暗幕與進度通知
 
@@ -267,13 +282,15 @@ R2 使用自訂網域及適合 bundle 的快取規則。以平台、相容版本
 
 ## 學習與實作順序
 
+本表排在 [首輪範圍](#首輪範圍handler-與角色載入) 與 VCP 的同站遠端測試之後。
+
 | 階段 | 實際工作 | 必須留下的證據 |
 |---|---|---|
 | 1. Git LFS 素材分離 | 建立測試素材 repo，以三個角色頭像練習 LFS；保留 .meta，主專案固定素材 commit | 乾淨 checkout 能取回素材本體與原 GUID；主 repo 不含大型素材本體。此階段尚未驗證遠端下載 |
 | 2. 角色選單遠端閉環 | 建置上傳 R2；首頁先載 A，首頁結束動作請求 B；占位暗幕、Sprite 載入、選取開放 | Editor 與 Player 皆走 HTTP；C 沒有下載；暖快取不重下、重複觸發不重複工作 |
 | 3. 場景流程 | 下一場景先下載依賴，切換才載入；關閉舊場景 | 未下載內容不會假稱 Ready；反覆切換後引用與記憶體能穩定 |
 | 4. 更新與復原 | 改一個角色貼圖、發布新內容；測試斷網、失敗、暖快取與舊版 App | 只下載變更及必要依賴；舊版仍可取得自身相容內容 |
-| 5. 收斂到 Yu5h1Lib | 從角色與場景兩例抽出穩定的排程、狀態通知與生命週期；整理操作指南 | 第二例共用核心，僅修改內容清單與呈現；新專案可按指南重做 |
+| 5. 收斂 | 以角色、頭像與場景驗證套件的排程、狀態通知與生命週期；整理操作指南 | 第二例共用核心，僅修改內容清單與呈現；新專案可按指南重做 |
 
 實作規模：整體為大型、跨素材建置與 Runtime 的新能力；本次交付僅為文件。程式修改數量待第一階段盤點後估算，不預先承諾工期。驗證需要真實 HTTP 與 Windows Player；純單元測試不足以證明下載和快取。
 
@@ -305,11 +322,21 @@ R2 使用自訂網域及適合 bundle 的快取規則。以平台、相容版本
 
 以下是本討論稿的建議，不是已核定的公開 API；回答回填本節相應設計，再開始實作。
 
+### 首輪（VCP）
+
+| 決策 | 建議 | 影響 |
+|---|---|---|
+| 非同步表演怎麼掛 | Handler 依序 await 消費端掛上的表演物件；`AsyncTaskObject`（common，目前用 `IEnumerator`，沒有任何子類別）改成 `Awaitable` 當表演物件的基底。單純通知用 UnityEvent，要等表演結束才繼續的用表演物件 | UnityEvent 只能觸發、不能等待，所以「等過場演完再顯示角色」需要可 await 的物件；會改到 common 的 `AsyncTaskObject` |
+| 讀取時機 | Handler 提供「下載備妥」與「載入可用」兩個入口，場景事件在任何時機呼叫（進場、選到、背景預載）；時機的預設行為與 UX 的載入體驗規範一起定 | 決定 Handler 的公開入口與 UX 規範的範圍 |
+| 角色專屬資料 | prefab＋override controller 以外的資料（口型 blendshape 對照、表情覆寫、鏡頭偏移、選單用 `DataView`）放在主程式內一份以 key 對應的角色資料，由消費端初始化時套用 | 角色只交 prefab 與 override controller 時，這些資料要有來處；選單資料在下載前就要能顯示 |
+| VCP 交貨前在哪驗證 | VCP 還在等美術交貨，先在 Yu5h1LibTest 用一個測試角色驗證 Handler 與初始化流程，VCP 交貨後再接 Cat | 交貨前在 VCP 安裝 Addressables、把 Cat 移進群組，會改變交貨建置的內容 |
+
+### 頭像原型（遠端測試之後）
+
 | 決策 | 建議 | 影響 |
 |---|---|---|
 | 首輪暗幕代表什麼 | 先用 B 頭像本身；下載時顯示占位圖。之後再加入小圖先到、大圖後到 | 決定首輪素材數量；若要求真頭像漸揭露，須先備妥另一張預覽圖 |
 | 首頁結束後是否等所有角色 | 先開選單，A 可用、B 背景載入 | 可以直接驗證畫面不中斷及遊戲內進度；必需素材仍須等待 |
-| 首輪驗證場與 LFS 階段 | VCP（WebGL、角色模型）作為首輪驗證場，在 [VCP 流式資源下載 § 階段](file:///W:/UnityProject/Virtual-Chat-Partner/Documentation/流式資源下載.md#階段) 走完本機與同站驗證；本文的 Git LFS 素材分離與 Windows 頭像原型改為後續情境 | 本文「第一輪以 Windows Player 驗證」與 [學習與實作順序](#學習與實作順序) 第 1 階段 LFS，和 VCP 計畫「VCP 作為第一個驗證場」衝突，兩者都是使用者在不同時間定的方向 |
 
 實作環境資訊另外於開始時取得：測試專案位置、素材 repo 的公開／私有性與實際初始角色。這些尚未建立，本次不操作帳號、建立 repo 或上傳素材。
 

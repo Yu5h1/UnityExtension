@@ -1,0 +1,21 @@
+{
+  "name": "com.yu5h1.addressables",
+  "displayName": "Yu5h1Lib.Addressables",
+  "version": "0.1.0",
+  "unity": "6000.0",
+  "description": "Addressables extension from Yu5h1: on-demand download and loading of built content with progress, consumer-defined loading performance and initialization",
+  "dependencies": {
+    "com.yu5h1.common": "1.0.0",
+    "com.unity.addressables": "2.8.1"
+  },
+  "keywords": [
+    "Addressables",
+    "Content",
+    "Loading"
+  ],
+  "author": {
+    "name": "Yu5h1",
+    "url": "https://github.com/Yu5h1",
+    "email": "jenyu5h10415@gmail.com"
+  }
+}

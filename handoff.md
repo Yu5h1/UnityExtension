@@ -32,7 +32,7 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 - Use [unity-ui-extraction](.agents/skills/unity-ui-extraction/SKILL.md) for the next actual Unity UI extraction or replication, within the source project's existing plan.
 
-- Addressables package ([Addressables](Documentation/Addressables/plan.md), own [handoff](Documentation/Addressables/handoff.md)): package decided 2026-10-21 (`com.yu5h1.addressables`, `Packages/Addressables`, not created yet). First consumer is VCP's streaming-assets task, which develops inside the package after VCP's Cat delivery.
+- Addressables package ([Addressables](Documentation/Addressables/plan.md), Task ID `addressables-package`, own [handoff](Documentation/Addressables/handoff.md)): skeleton created 2026-10-21 (`com.yu5h1.addressables`, `Packages/Addressables`, no code). First round is the Handler plus character loading validated with StreamingAssets; settle its [首輪待討論](Documentation/Addressables/plan.md#首輪vcp) before implementing. First consumer is VCP's streaming-assets task.
 
 - Web package migration ([Web套件遷移](Documentation/Web套件遷移.md), Task ID `web-package-migration`): skeleton done; next is its 步驟 2 (add `com.yu5h1.web` to VCP's manifest), then step 3 (one `git mv` commit). Settle its [尚未決定](Documentation/Web套件遷移.md#尚未決定) first; separate from the UI parity work.
 
@@ -240,7 +240,7 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 - [Web 套件遷移 — 尚未決定](Documentation/Web套件遷移.md#尚未決定): `WebRequestEvent.cs` delete vs move, `IndexHtmlEditor.cs` encoding, common version number.
 
-- [Addressables 套件 — 待討論決策](Documentation/Addressables/plan.md#待討論決策): first verification field (VCP) vs the plan's Windows/LFS-first order, avatar overlay meaning, nonblocking menu entry.
+- [Addressables 套件 — 待討論決策](Documentation/Addressables/plan.md#待討論決策): first round (performance hook, loading timing, character-specific data, pre-delivery validation host); avatar prototype (overlay meaning, nonblocking menu entry).
 
 - [專案開發系統分析技能計畫 — 待討論決策](Documentation/專案開發系統分析技能計畫.md#待討論決策).
 

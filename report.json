@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-21T02:57:17.115000+00:00",
+  "updated_at": "2026-10-21T18:00:00+08:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -782,6 +782,50 @@
           "id": "viewer-acceptance",
           "title": "使用者在編輯器中驗收 UnityEvent Viewer 視窗（掃描、篩選、分組、反查、點選 Ping、匯出）",
           "priority": 1
+        }
+      ]
+    },
+    {
+      "id": "addressables-package",
+      "title": "Addressables 套件（內容按需下載與載入）",
+      "status": "planned",
+      "priority": 2,
+      "summary": "com.yu5h1.addressables：依需求下載與載入建置好的內容並回報進度，載入時的非同步表演與初始化由消費端定義。首輪做 Handler 與角色載入（角色只交 prefab 與 Animator Override Controller），以 StreamingAssets 驗證；之後才做遠端內容測試，LFS 與 Windows 頭像原型再之後。第一個消費端：VCP streaming-assets。設計：Documentation/Addressables/plan.md。",
+      "completed_items": [
+        {
+          "id": "decide-package",
+          "title": "決定套件：com.yu5h1.addressables、namespace Yu5h1Lib.AddressableAssets、直接相依 Addressables 2.8.1 以上（2026-10-21）"
+        },
+        {
+          "id": "skeleton",
+          "title": "建立套件骨架：package.json、README、Runtime asmdef、固定 GUID 的 .meta（未匯入 Unity）"
+        }
+      ],
+      "pending_items": [
+        {
+          "id": "first-round-discussion",
+          "title": "討論首輪待決：表演掛接（AsyncTaskObject 改 Awaitable）、讀取時機與 UX 對齊、角色專屬資料來處、VCP 交貨前的驗證場",
+          "priority": 1
+        },
+        {
+          "id": "handler",
+          "title": "Handler：以 key 非同步載入並回報進度與狀態，local group（StreamingAssets）驗證",
+          "priority": 2
+        },
+        {
+          "id": "character-init",
+          "title": "角色載入：prefab＋override controller 載入後由消費端初始化流程添加元件；UnityEvent 定義非同步表演",
+          "priority": 2
+        },
+        {
+          "id": "remote-test",
+          "title": "遠端內容測試：同站遠端，之後 R2",
+          "priority": 3
+        },
+        {
+          "id": "lfs-avatar",
+          "title": "Git LFS 素材分離與 Windows 頭像原型（學習與實作順序）",
+          "priority": 3
         }
       ]
     }

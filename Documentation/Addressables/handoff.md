@@ -1,21 +1,25 @@
 # Addressables package handoff
 
+Task ID `addressables-package` (declared in [plan.md](plan.md); card in the root `report.json`).
+
 ## Scope and state
 
-- Canonical design: [plan.md](plan.md). Authored 2026-09-09 as a learning plan under `Documentation/RemoteContent/`; renamed to `Documentation/Addressables/` on 2026-10-21 when the package was decided. No runtime code, asset repository, R2 bucket, workflow or package exists yet. Runtime outcomes in the acceptance list remain unverified.
-- Package decided 2026-10-21: `Packages/Addressables`, `com.yu5h1.addressables`, namespace `Yu5h1Lib.AddressableAssets`, depends on common and `com.unity.addressables`. Rationale: [套件位置與依賴](plan.md#套件位置與依賴).
-- First consumer: VCP (`W:\UnityProject\Virtual-Chat-Partner`, Task ID `streaming-assets`), WebGL, character models. VCP develops inside this package and references it; VCP-specific stages and acceptance stay in VCP's `Documentation/流式資源下載.md`. Design brought in from VCP: [第一個消費端：VCP](plan.md#第一個消費端vcpwebgl). VCP starts after its goal 1 (Cat delivery).
-- Still proposals, not contracts: component/service/presentation responsibilities, the A/B/C avatar flow, Git LFS first.
+- Canonical design: [plan.md](plan.md). Authored 2026-09-09 as a learning plan under `Documentation/RemoteContent/`; renamed to `Documentation/Addressables/` on 2026-10-21 when the package was decided.
+- Package decided and skeleton created 2026-10-21: `Packages/Addressables`, `com.yu5h1.addressables` 0.1.0, namespace `Yu5h1Lib.AddressableAssets`, depends on common and `com.unity.addressables` 2.8.1+; Runtime asmdef `Yu5h1Lib.Addressables` (references Yu5h1Lib.Common, Unity.Addressables, Unity.ResourceManager); `.meta` GUIDs fixed. No Editor asmdef yet (added when the publishing workflow needs it). No code; the skeleton has not been imported into any Unity project.
+- Order decided 2026-10-21 ([首輪範圍](plan.md#首輪範圍handler-與角色載入)): Handler validated with StreamingAssets, characters delivered as prefab + Animator Override Controller with the consumer's initialization adding the rest, Handler UnityEvents for consumer-defined loading performance; only then remote content tests; Git LFS separation and the Windows A/B/C avatar prototype after those.
+- First consumer: VCP (`W:\UnityProject\Virtual-Chat-Partner`, Task ID `streaming-assets`), WebGL, character models. VCP is still waiting for art before its Cat delivery. VCP-specific stages stay in VCP's `Documentation/流式資源下載.md`; that document still describes L1 as "prefab unchanged, components stay on the prefab" and needs updating once the first-round discussion settles.
+- Still proposals, not contracts: component/service/presentation responsibilities, the A/B/C avatar flow.
 
 ## Next steps
 
-- Settle [待討論決策](plan.md#待討論決策), first the conflict between this plan's Windows/LFS-first order and VCP as the first verification field; it decides whether work starts at VCP's L1a or at [學習與實作順序](plan.md#學習與實作順序) stage 1.
-- When work starts, create the package skeleton (package.json, Runtime/Editor asmdefs, `.meta` files with fixed GUIDs), then add `com.yu5h1.addressables` to the consumer's manifest.
+- Discuss [首輪待討論](plan.md#首輪vcp) with the user: performance hook (`AsyncTaskObject` on `Awaitable`), loading timing and UX alignment, where character-specific data lives, where to validate before VCP's delivery.
+- Then implement the Handler in `Packages/Addressables/Runtime` and validate with a local group.
 - Use [驗收清單](plan.md#驗收清單) to capture network/build-layout evidence as each prototype stage runs.
 
 ## Open decisions
 
-- [待討論決策](plan.md#待討論決策): first verification field vs the LFS stage, avatar overlay meaning, nonblocking menu entry.
+- [首輪（VCP）](plan.md#首輪vcp): performance hook, loading timing, character-specific data, pre-delivery validation host.
+- [頭像原型（遠端測試之後）](plan.md#頭像原型遠端測試之後): avatar overlay meaning, nonblocking menu entry.
 
 ## Ruled-out directions
 
