@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-21T17:14:54.542080+00:00",
+  "updated_at": "2026-10-21T17:15:58.790695+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -965,6 +965,26 @@
       "summary": "common：AsyncTaskObject 以 RequestData 為藍本換成 Awaitable，只固定 Begin<string>／End<string>（End 帶完整內容）；AsyncProgressObject 加 Progress<float>；結果交給選用欄位裡的判斷物件（從 PopupPanel LogicObject 抽出，消費端繼承，自帶 True／False<string> 與 Completed<bool>）。TaskEvent 在 ChatRequest 抽成 Network 時遷移。設計：Documentation/非同步工作.md。",
       "completed_items": [
         {
+          "id": "decide-load-result",
+          "title": "讀取結果：End 維持 string，AsyncLoadObject<T> 以 Loaded<T> 事件與 Result 屬性交出物件（2026-10-22 定）",
+          "priority": 0,
+          "status": "done",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-21T17:14:54.542080+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-10-21T17:15:58.790695+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
           "id": "analyze-chatrequest",
           "title": "分析 ChatRequest 與 TaskEvent 的引用情境：判斷物件的形式已存在（PopupPanel LogicObject），假說成立；End 有 7 筆監聽器（更正）",
           "priority": 1,
@@ -1043,22 +1063,8 @@
       ],
       "pending_items": [
         {
-          "id": "decide-load-result",
-          "title": "定讀取結果怎麼交給消費端：End 維持 string，子類別以 Loaded<T> 交出物件（建議），不做複合型別的 End",
-          "priority": 0,
-          "status": "planned",
-          "activity": [
-            {
-              "event": "created",
-              "actor": "claude",
-              "at": "2026-10-21T17:14:54.542080+00:00",
-              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
-            }
-          ]
-        },
-        {
           "id": "implement-task-objects",
-          "title": "首輪：實作 AsyncTaskObject（Awaitable、選用的判斷欄位）、AsyncProgressObject 與判斷物件基底（預設判斷：讀到物件就算成功）",
+          "title": "首輪：實作 AsyncTaskObject（Awaitable、選用的判斷欄位）、AsyncProgressObject、AsyncLoadObject<T>（Loaded<T>、Result）與判斷物件基底（預設判斷：讀到物件就算成功）",
           "priority": 2,
           "status": "planned",
           "activity": [
@@ -1078,6 +1084,12 @@
               "event": "updated",
               "actor": "claude",
               "at": "2026-10-21T17:14:54.542080+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-21T17:15:58.790695+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
