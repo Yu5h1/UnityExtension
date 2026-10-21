@@ -28,6 +28,11 @@ UnityExtension 的目標不是建立單一大型框架，而是整理一套能�
 - 持續檢查 Inspector 接線：類別或欄位改名、遷移之後，用 UnityEvent 監控工具（Tools／UnityEvent Viewer、batchmode
   `UnityEventReport.Run`，見 [UnityEvent監控](Documentation/UnityEvent監控.md)）找出失效接線。邏輯散在接線裡是資料驅動的代價，
   這個工具是它的補救；VCP ChatScene 曾掃出 226 筆接線中 24 筆失效（2026-10-20）。
+- 直覺優先於教學（2026-10-22）：工具要讓人一看就知道怎麼用，教學藏在設計裡——名稱說明用途、預設值就能用、
+  在出錯的地方（Inspector）直接提示、範例是打開就能跑的最小場景（同時當驗收場景，例如 UIToolkit 的 `Samples~/UxAcceptance`）。
+  給人看的新手教學文件排次要。
+- 給 agent 看的文件最優先（2026-10-22）：agent 沒辦法靠直覺用工具，只能讀文字，所以 `.agents` 的 introduction 與 skill
+  要跟著能力一起寫、一起更新。
 
 ## 3. 文件分層
 
