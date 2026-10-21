@@ -1,12 +1,12 @@
-# 遠端資源按需載入：角色選單流程與元件討論計畫
+# Addressables 套件：內容按需下載與載入
 
-先從 Git LFS 素材分離開始，以角色選擇與頭像驗證下載流程，再整理為 Yu5h1Lib 可重用的方法。本文是討論稿；單一遠端流程與初始角色優先是使用者指定方向，元件名稱、套件位置及下方標示的建議仍待收斂。進度由同目錄的 [handoff.md](handoff.md) 記錄。
+先從 Git LFS 素材分離開始，以角色選擇與頭像驗證下載流程，再整理為 Yu5h1Lib 可重用的方法。本文是討論稿；單一遠端流程與初始角色優先是使用者指定方向，套件位置已定（[套件位置與依賴](#套件位置與依賴)），元件名稱及下方標示的建議仍待收斂。第一個消費端是 VCP，見 [第一個消費端：VCP](#第一個消費端vcpwebgl)。進度由同目錄的 [handoff.md](handoff.md) 記錄。
 
 ## 系統階層與關係
 
 ```text
 Yu5h1Lib / UnityExtension
-└─ 遠端資源按需載入方法
+└─ com.yu5h1.addressables：內容按需下載與載入
    ├─ 應用流程：決定現在與下一頁需要什麼
    ├─ 使用許可：由應用提供可使用的角色／場景清單
    ├─ 載入協調：排程、共用請求、進度、重試與釋放
@@ -169,24 +169,60 @@ App 開啟
 
 若卡片和另一頁同時使用 B，服務共用 B 的工作；各自解除需求，最後一個使用者離開才釋放載入結果。當請求仍在下載、使用者已離開時，完成回呼不可再操作被銷毀的 UI，也不能留下沒有擁有者的 handle。
 
-## 套件位置與依賴提案
+## 套件位置與依賴
 
-建議新能力暫名 **Yu5h1Lib.RemoteContent（遠端資源管理）**，原始碼候選位置為 `Packages/RemoteContent`。這是可選安裝的 UnityExtension 套件，直接依賴 `com.unity.addressables`，而不是把 Addressables 加入所有專案都會用到的 Core／common。
+已定（2026-10-21）：
+
+| 項目 | 設定 |
+|---|---|
+| 位置 | `Packages/Addressables` |
+| 套件 | `com.yu5h1.addressables`，顯示名稱 `Yu5h1Lib.Addressables` |
+| 相依 | `com.yu5h1.common`、`com.unity.addressables`（直接相依，不用 versionDefines） |
+| Namespace | `Yu5h1Lib.AddressableAssets`。不用 `Yu5h1Lib.Addressables`：它會在套件內遮蔽 `UnityEngine.AddressableAssets.Addressables` 這個型別（[UnityExtension 命名規則](../../.agents/introduction.md)） |
 
 ```text
 應用頁面與角色資料
-  → Yu5h1Lib.RemoteContent
-      → Unity Addressables → HTTP / R2
+  → com.yu5h1.addressables
+      → Unity Addressables → HTTP（R2、GitHub Pages 等，由消費端決定）
 
-RemoteContent 內部
+套件內部
   Runtime：需求元件、共用工作、狀態通知與資源持有
-  Editor：必要的內容設定檢查（實例證明需要後才加入）
+  Editor：必要的內容設定檢查、建置後發佈（實例證明需要後才加入）
   UI 呈現：接收 Runtime 通知，依賴單向流向 Runtime
 ```
 
-套件不叫 Cloudflare，因為執行期透過 HTTP 取得內容，不需要 Cloudflare 專用 SDK。第一輪也不抽象多個下載後端；Addressables 就是唯一實作。UGUI 呈現可放同一套件的獨立 assembly，避免下載 Runtime 反過來依賴 UI；詳細 assembly 名稱與套件 ID 在確認位置後訂定。
+分類理由：
+
+- UnityExtension 是 Unity 的擴充，套件以它擴充的 Unity 功能命名（InputSystem、Timeline、URP、UI、UIToolkit）。
+  套件是大分類，不是一個功能一個套件。
+- 以程式處理的對象分類，不以傳輸方式分類。Addressables 的內容可以在本機也可以在遠端，所以不放進網路類套件；
+  `AsyncTaskObject`、`TaskEvent` 這類非同步工作的通用模式也不只用在網路上，留在 common。
+- 網路通訊（從 VCP `ChatRequest` 抽出的 API 請求、WebSocket）是另一個大分類，暫名 Network，
+  要抽 ChatRequest 時才建立，不先建空套件。本套件不依賴它：下載與改寫網址由 Addressables 自己處理。
+- 套件不叫 Cloudflare 或 CDN：執行期只透過 HTTP 取得內容，不綁定主機。
+
+第一輪不抽象多個下載後端，也不定義讀取器介面；Addressables 就是唯一實作，換來源只改 profile。
+要等出現不用 Addressables 卻要共用同一流程的消費端，才加介面。UGUI 呈現可放同一套件的獨立 assembly，
+避免下載 Runtime 反過來依賴 UI；assembly 名稱在建立套件時訂定。
 
 「程式 package」與「下載 bundle」分開：前者隨 App 編譯，後者由 Addressables 建置後放 R2，再交 Unity 快取管理。第一輪不另設玩家下載資料夾或自行搬動快取檔案。大型原始素材仍在獨立 LFS repo，不放進這個工具套件。
+
+## 第一個消費端：VCP（WebGL）
+
+VCP 把角色改為執行期下載（[VCP 流式資源下載](file:///W:/UnityProject/Virtual-Chat-Partner/Documentation/流式資源下載.md)，
+Task ID `streaming-assets`），在本套件內開發、以消費端身分引用。VCP 的需求帶來以下對所有消費端都成立的事實與設計：
+
+- **WebGL 的 StreamingAssets 不在 `.data` 內**：它放在 `Build/` 旁，執行期由瀏覽器以 HTTP 另外抓取。
+  local group 建到 StreamingAssets，在 WebGL 上就已經是本體之外的執行期下載；頁面與內容放在同一站台時沒有跨網域與 CORS 問題。
+- **場景序列化的邊界**：場景（inline SO、UnityEvent）引用不到執行期才出現的物件。場景事件一律指向常駐場景的代理，
+  由代理在程式中轉發給載入的實例；需求元件就是這個代理。
+- **非同步 API**：核心 API 用 `Awaitable`＋`IProgress<float>`＋`CancellationToken`，不依賴 UniTask。
+  本機 Unity 專案都是 6000.x（2026-10-21 檢查）。WebGL 沒有執行緒，不用 `Awaitable.BackgroundThreadAsync`；
+  `Awaitable` 實例會回收重用，同一個實例不能 await 兩次。場景一側仍是事件，UnityEvent 不能 await。
+- **進度接畫面**：common 的 `TaskEvent` 在 Begin／End／成功失敗之外加一個進度通道，呈現元件訂閱它；
+  同一套事件之後也能用在網路請求。
+- **UX 的邊界**：載入體驗（進度呈現、失敗與重試、能否取消、未就緒的佔位）屬於 Yu5h1Lib.UX，平台中立；
+  本套件是它的 Unity 實作。UX 規範在 VCP 的本機驗證（L1c）有實際進度行為後再寫。
 
 ## 頭像暗幕與進度通知
 
@@ -273,8 +309,7 @@ R2 使用自訂網域及適合 bundle 的快取規則。以平台、相容版本
 |---|---|---|
 | 首輪暗幕代表什麼 | 先用 B 頭像本身；下載時顯示占位圖。之後再加入小圖先到、大圖後到 | 決定首輪素材數量；若要求真頭像漸揭露，須先備妥另一張預覽圖 |
 | 首頁結束後是否等所有角色 | 先開選單，A 可用、B 背景載入 | 可以直接驗證畫面不中斷及遊戲內進度；必需素材仍須等待 |
-| 共用能力放哪裡 | 新增可選套件 `Packages/RemoteContent`，命名空間 `Yu5h1Lib.RemoteContent` | 讓 Addressables 依賴保持在選用套件，避免所有 common 使用者被迫安裝 |
-| 進度如何接畫面 | 狀態與進度通知接呈現元件，優先重用既有事件／綁定 | 實作前確認可攜帶狀態資料及解除訂閱的既有接法 |
+| 首輪驗證場與 LFS 階段 | VCP（WebGL、角色模型）作為首輪驗證場，在 [VCP 流式資源下載 § 階段](file:///W:/UnityProject/Virtual-Chat-Partner/Documentation/流式資源下載.md#階段) 走完本機與同站驗證；本文的 Git LFS 素材分離與 Windows 頭像原型改為後續情境 | 本文「第一輪以 Windows Player 驗證」與 [學習與實作順序](#學習與實作順序) 第 1 階段 LFS，和 VCP 計畫「VCP 作為第一個驗證場」衝突，兩者都是使用者在不同時間定的方向 |
 
 實作環境資訊另外於開始時取得：測試專案位置、素材 repo 的公開／私有性與實際初始角色。這些尚未建立，本次不操作帳號、建立 repo 或上傳素材。
 
