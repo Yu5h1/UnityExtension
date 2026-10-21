@@ -326,7 +326,7 @@ R2 使用自訂網域及適合 bundle 的快取規則。以平台、相容版本
 
 | 決策 | 建議 | 影響 |
 |---|---|---|
-| 非同步表演怎麼掛 | Handler 依序 await 消費端掛上的表演物件；`AsyncTaskObject`（common，目前用 `IEnumerator`，沒有任何子類別）改成 `Awaitable` 當表演物件的基底。單純通知用 UnityEvent，要等表演結束才繼續的用表演物件 | UnityEvent 只能觸發、不能等待，所以「等過場演完再顯示角色」需要可 await 的物件；會改到 common 的 `AsyncTaskObject` |
+| 非同步表演怎麼掛（事件設計的細項在 [addressables-package.decisions](../../decisions/addressables-package.decisions)） | Handler 依序 await 消費端掛上的表演物件；`AsyncTaskObject`（common，目前用 `IEnumerator`，沒有任何子類別）改成 `Awaitable` 當表演物件的基底。單純通知用 UnityEvent，要等表演結束才繼續的用表演物件 | UnityEvent 只能觸發、不能等待，所以「等過場演完再顯示角色」需要可 await 的物件；會改到 common 的 `AsyncTaskObject` |
 | 讀取時機 | Handler 提供「下載備妥」與「載入可用」兩個入口，場景事件在任何時機呼叫（進場、選到、背景預載）；時機的預設行為與 UX 的載入體驗規範一起定 | 決定 Handler 的公開入口與 UX 規範的範圍 |
 | 角色專屬資料 | prefab＋override controller 以外的資料（口型 blendshape 對照、表情覆寫、鏡頭偏移、選單用 `DataView`）放在主程式內一份以 key 對應的角色資料，由消費端初始化時套用 | 角色只交 prefab 與 override controller 時，這些資料要有來處；選單資料在下載前就要能顯示 |
 | VCP 交貨前在哪驗證 | VCP 還在等美術交貨，先在 Yu5h1LibTest 用一個測試角色驗證 Handler 與初始化流程，VCP 交貨後再接 Cat | 交貨前在 VCP 安裝 Addressables、把 Cat 移進群組，會改變交貨建置的內容 |

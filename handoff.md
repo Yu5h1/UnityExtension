@@ -240,7 +240,7 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 - [Web 套件遷移 — 尚未決定](Documentation/Web套件遷移.md#尚未決定): `WebRequestEvent.cs` delete vs move, `IndexHtmlEditor.cs` encoding, common version number.
 
-- [Addressables 套件 — 待討論決策](Documentation/Addressables/plan.md#待討論決策): first round (performance hook, loading timing, character-specific data, pre-delivery validation host); avatar prototype (overlay meaning, nonblocking menu entry).
+- [Addressables 套件 — 待討論決策](Documentation/Addressables/plan.md#待討論決策): first round (performance hook, loading timing, character-specific data, pre-delivery validation host; async event design in `decisions/addressables-package.decisions`); avatar prototype (overlay meaning, nonblocking menu entry).
 
 - [專案開發系統分析技能計畫 — 待討論決策](Documentation/專案開發系統分析技能計畫.md#待討論決策).
 

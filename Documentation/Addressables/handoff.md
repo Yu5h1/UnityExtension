@@ -19,6 +19,7 @@ Task ID `addressables-package` (declared in [plan.md](plan.md); card in the root
 ## Open decisions
 
 - [首輪（VCP）](plan.md#首輪vcp): performance hook, loading timing, character-specific data, pre-delivery validation host.
+- [addressables-package.decisions](../../decisions/addressables-package.decisions) (decision page `http://127.0.0.1:8001/decisions/?scope=unity-extension&task=addressables-package`): async event design — Completed's fate, outcome on cancel, event parameters, when to migrate TaskEvent. Pending.
 - [頭像原型（遠端測試之後）](plan.md#頭像原型遠端測試之後): avatar overlay meaning, nonblocking menu entry.
 
 ## Ruled-out directions

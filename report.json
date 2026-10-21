@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-21T18:00:00+08:00",
+  "updated_at": "2026-10-21T19:00:00+08:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -802,6 +802,16 @@
         }
       ],
       "pending_items": [
+        {
+          "id": "decide-async-events",
+          "title": "決策：非同步工作的事件設計（Completed 的去留、取消時的結果、事件參數、TaskEvent 何時遷移）",
+          "priority": 1,
+          "document_ref": {
+            "kind": "decision",
+            "scope_id": "unity-extension",
+            "task": "addressables-package"
+          }
+        },
         {
           "id": "first-round-discussion",
           "title": "討論首輪待決：表演掛接（AsyncTaskObject 改 Awaitable）、讀取時機與 UX 對齊、角色專屬資料來處、VCP 交貨前的驗證場",
