@@ -7,6 +7,8 @@
 > Core 介面由 DotNet 依 Motion 規格建立，見 [UNITYEXTENSION-DOTNET-1](../../Documentation/Requirements.DotNet.md#unityextension-dotnet-1--依-motion-規格在-core-建立動態合約)。
 > 本文 §0–§7、§10–§11 是交給 Motion 的素材，Motion 收錄後刪除；Unity 端只保留 §8–§9 的 DOTween／PrimeTween 適配與既有組件遷移。
 > 下面的 Phase A「在 Core 定契約」改為等 Motion 規格後由 DotNet 實作。
+>
+> **2026-10-21 路線定案（Motion 決策 `motion-tween-shell`）**：容器名由 `Transition` 改為 `Tween`（根據 in-betweening），取代下方「`Motion.*` 一律讀作 `Transition.*`」與「自家命名不使用 `Tween` 一字」的敘述；§8–§9 的 DOTween／PrimeTween 適配檔對 `DG.Tweening.Tween`、`PrimeTween.Tween` 用全名引用。動詞加 `Complete`（跳到 To）；反播沿同一時間軸；Core 參考 runner 進第一輪（Phase D 提前）；Core 交付的是框架（契約、registry、參考 runner、easing 實作），見 DOTNET-1。
 
 > Audience: Claude（跨 session 持續記憶）。使用者是驗證者。本檔是單一真相。
 > 取代並合併 `Tween_Refactor.md` + 舊 `Motion System Refactor Plan.md`（作廢）。

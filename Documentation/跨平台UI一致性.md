@@ -98,4 +98,4 @@ VCP 的 WebGL 版確定要用某個 Web UI 時才實作。
 - **聊天的方向**：Unity 已有聊天模組，是否同樣走「Unity 設計搬到 Web，再復刻回 Unity」。
 - **uGUI 的主題**：common `Theme` 的切換、保存與色票來源是否跟 WebTheme 共用擁有者；Theme 恢復時一起決定。
 - **執行期自訂配色**：本輪只考慮預先產生的 light／dark。
-- **補間殼的名稱**：`Transition` 可能不對或已過時，由 Motion 在 MOTION-3 決定。
+- **補間殼的名稱**：已定（2026-10-21，Motion 決策 `motion-tween-shell` 第 3 題）：容器名 `Tween`，根據動畫術語 in-betweening；適配器內對 `DG.Tweening.Tween`、`PrimeTween.Tween` 用全名引用。
