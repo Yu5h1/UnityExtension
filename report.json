@@ -781,7 +781,12 @@
         {
           "id": "viewer-acceptance",
           "title": "使用者在編輯器中驗收 UnityEvent Viewer 視窗（掃描、篩選、分組、反查、點選 Ping、匯出）",
-          "priority": 1
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "unityevent-monitor-viewer-chatscene"
+          }
         }
       ]
     },
