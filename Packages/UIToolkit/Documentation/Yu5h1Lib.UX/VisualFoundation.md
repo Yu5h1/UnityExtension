@@ -2,7 +2,7 @@
 
 > Task ID: uitk-visualfoundation
 >
-> 狀態：第二輪（VisualFoundation 1.4.0、Button 2.1.0、OptionPicker 3.1.0）模組輪通過、人工待驗（2026-10-21）。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 VisualFoundation」（UX-UNITYEXTENSION-2），流程見 referenced-module-acceptance。實作 `7abbe0f` 已合併到 `master`（`98688b2`，分支已刪除）；人工 checklist 已可在 Yu5h1LibTest 開啟。第一輪（1.3.0／1.3.1）的人工 checklist 使用者已記為通過，但當時實心靜止底色與 `solid` 面板外框規格沒寫角色而 blocked；UX 在 1.4.0、2.1.0、3.1.0 補齊後，這兩列與其他暫行解讀在第二輪改依規格實作。目標 1 的「達成」由 UX 依需求標記。
+> 狀態：第二輪（VisualFoundation 1.4.0、Button 2.1.0、OptionPicker 3.1.0）模組輪通過，人工 checklist 使用者已記為通過（2026-10-21，light、dark 共 4 項，結果以 `uitk-visualfoundation-vp03.checklist` 為準）。依使用者指示「在 Yu5h1Lib.UIToolkit 引用 UX 的 VisualFoundation」（UX-UNITYEXTENSION-2），流程見 referenced-module-acceptance。實作 `7abbe0f` 已合併到 `master`（`98688b2`，分支已刪除）；人工 checklist 在 Yu5h1LibTest 由使用者確認。第一輪（1.3.0／1.3.1）的人工 checklist 使用者已記為通過，但當時實心靜止底色與 `solid` 面板外框規格沒寫角色而 blocked；UX 在 1.4.0、2.1.0、3.1.0 補齊後，這兩列與其他暫行解讀在第二輪改依規格實作。目標 1 的「達成」與 UX-UNITYEXTENSION-2 的狀態由 UX 依回報標記。
 
 ```text
 UnityExtension
@@ -85,13 +85,13 @@ VisualFoundation 本身不引用其他模組；它被 Button 與 OptionPicker �
 |---|---|---|---|---|
 | VisualFoundation 1.3.0 目標 1 | `855479e` | `603ec74`（已合併 `a6cfd29`） | `a9cc836` | 第一輪：模組輪通過（乾淨 worktree EditMode 110/110、PlayMode 30/30），人工 checklist 使用者記為通過；實心靜止底色與 `solid` 面板外框 blocked |
 | VisualFoundation 1.3.1 | `879ca0f` | 重新釘選 `cbfedb8` | `cbfedb8` | 只改完成條件的人工 checklist 寫法，行為與設計資料不變，不重跑模組輪；`VisualFoundationDesignTests` 在 Unity 重跑 110/110（宿主解析到主 checkout） |
-| VisualFoundation 1.4.0、Button 2.1.0、OptionPicker 3.1.0 | `5205838` | `7abbe0f`（已合併 `98688b2`） | 本紀錄所在提交 | 第二輪：模組輪通過（乾淨 worktree EditMode 111/111、PlayMode 30/30）、人工待驗 |
+| VisualFoundation 1.4.0、Button 2.1.0、OptionPicker 3.1.0 | `5205838` | `7abbe0f`（已合併 `98688b2`） | 本紀錄所在提交 | 第二輪：模組輪通過（乾淨 worktree EditMode 111/111、PlayMode 30/30），人工 checklist 使用者記為通過（light、dark 共 4 項） |
 
 ## 結論
 
 ### 第二輪（1.4.0／2.1.0／3.1.0，UnityExtension `7abbe0f`）
 
-狀態：模組輪通過、人工待驗（2026-10-21）。在本輪範圍內（色票交付、Button 的靜止、滑過、選取、選取且滑過、停用與焦點外框、OptionPicker 面板的底色與外框），`7abbe0f` 符合三份規格的自動可驗部分；這是自動檢查完成，不是驗收完成。目標 1 要達成，還需要使用者在 light、dark 兩個工作項目確認外觀，並由 UX 標記。
+狀態：模組輪通過、人工 checklist 使用者已記為通過（2026-10-21）。在本輪範圍內（色票交付、Button 的靜止、滑過、選取、選取且滑過、停用與焦點外框、OptionPicker 面板的底色與外框），`7abbe0f` 符合三份規格的自動可驗部分；使用者在 `uitk-visualfoundation-vp03.checklist` 記下 light、dark 的狀態外觀與焦點外框共 4 項通過，含這一輪新指定的實心靜止與 `solid` 面板外框。在本輪範圍內符合三份規格；目標 1 的「達成」由 UX 標記。
 
 驗收環境與做法（2026-10-21，由實作的 session 自己執行，不是未參與實作的 agent）：
 

@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-21T02:55:00.620005+00:00",
+  "updated_at": "2026-10-21T02:57:17.115000+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -601,6 +601,12 @@
       "summary": "進行中：Yu5h1Lib.UX 是體驗規範的唯一來源，Unity 以套件內快照釘選版本與雜湊，依共用 skill referenced-module-acceptance 在實作套件記錄驗收。已驗收：Button 2.0.0（2026-10-19，Yu5h1Lib.UI 與 Yu5h1Lib.UIToolkit，自動檢查加使用者與 Web demo 並排確認）；Configuration 等級 1 直接存（2026-10-20，Yu5h1Lib.Common 的統一 Preferences 入口，UX-UNITYEXTENSION-7）。待排：Theme 色票改讀 UX VisualFoundation（UX-UNITYEXTENSION-2）、宣告 JSON（WEB-7，等 MOTION-2 與消費端）、Configuration 等級 2（等消費端）、WebGL；AppsMenu 暫停（卡片 appsmenu-library-adoption）；VisualFoundation、無障礙名稱與 Icon 的缺口在 Button 紀錄列 blocked。Canonical entry：Documentation/跨平台UI一致性.md。",
       "completed_items": [
         {
+          "id": "item-cross-platform-ui-parity-todo-2",
+          "title": "Theme：Yu5h1Lib.UIToolkit 引用 UX VisualFoundation 目標 1 完成（UX-UNITYEXTENSION-2，2026-10-21）：1.4.0／Button 2.1.0／OptionPicker 3.1.0 模組輪在乾淨 worktree 通過（7abbe0f，合併 98688b2），light、dark 人工 checklist 使用者確認；已回報 UX，目標 1 的達成由 UX 標記",
+          "priority": 4,
+          "status": "done"
+        },
+        {
           "id": "uitk-visualfoundation-acceptance",
           "title": "驗收 Yu5h1Lib.UIToolkit 的 VisualFoundation 目標 1（UX-UNITYEXTENSION-2）第二輪（1.4.0／2.1.0／3.1.0）：模組輪在乾淨 worktree 通過（7abbe0f）",
           "status": "done",
@@ -673,12 +679,6 @@
         }
       ],
       "pending_items": [
-        {
-          "id": "item-cross-platform-ui-parity-todo-2",
-          "title": "Theme：在 Yu5h1Lib.UIToolkit 引用 UX VisualFoundation 目標 1（UX-UNITYEXTENSION-2）：第二輪（VisualFoundation 1.4.0、Button 2.1.0、OptionPicker 3.1.0）模組輪通過（7abbe0f）並已合併到 master（98688b2）；待使用者確認 light、dark 頁",
-          "priority": 4,
-          "status": "in_progress"
-        },
         {
           "id": "item-cross-platform-ui-parity-todo-7",
           "title": "WebGL 路線（依需求）：VCP 確定使用 Web UI 時，建 Packages/Web 的 jslib 橋接與模板工具",
