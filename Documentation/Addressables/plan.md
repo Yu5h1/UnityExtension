@@ -249,7 +249,7 @@ Task ID `streaming-assets`），在本套件內開發、以消費端身分引用
 
 順序：
 
-1. **讀取處理器與代理**，用 Resources 讀取器驗證。
+1. **讀取處理器與代理**，用 Resources 讀取器驗證。只依賴 [非同步工作 § 首輪](../非同步工作.md#首輪讀取角色)（工作物件與預設判斷），不等 ChatRequest 優化。
 2. **Addressables 讀取器**，用 local group（建到 StreamingAssets）驗證。
 3. **角色只準備 prefab 與 Animator Override Controller**。其餘元件（VCP 的 AudioSource、vcpAnimationController、
    Character、uLipSync 等）不放進 prefab，由消費端的初始化流程在載入後自動添加。套件只提供掛接點，不認識消費端的元件；

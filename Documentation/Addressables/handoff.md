@@ -13,7 +13,7 @@ Task ID `addressables-package` (declared in [plan.md](plan.md); card in the root
 
 ## Next steps
 
-- After [非同步工作](../非同步工作.md) settles `AsyncTaskObject`／`AsyncProgressObject`, implement the loader handler and agent with the Resources loader (loader base and Resources loader in common), then the Addressables loader in `Packages/Addressables/Runtime`.
+- After [非同步工作 § 首輪](../非同步工作.md#首輪讀取角色) (task objects with a default judge) is implemented, implement the loader handler and agent with the Resources loader (loader base and Resources loader in common), then the Addressables loader in `Packages/Addressables/Runtime`.
 - Settle the remaining [首輪（VCP）](plan.md#首輪vcp) questions: character-specific data, where to validate before VCP's delivery.
 - Use [驗收清單](plan.md#驗收清單) to capture network/build-layout evidence as each prototype stage runs.
 

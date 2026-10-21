@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-21T16:55:38.135098+00:00",
+  "updated_at": "2026-10-21T17:14:54.542080+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1043,8 +1043,22 @@
       ],
       "pending_items": [
         {
+          "id": "decide-load-result",
+          "title": "定讀取結果怎麼交給消費端：End 維持 string，子類別以 Loaded<T> 交出物件（建議），不做複合型別的 End",
+          "priority": 0,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-21T17:14:54.542080+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
           "id": "implement-task-objects",
-          "title": "實作 AsyncTaskObject（Awaitable、選用的判斷欄位）、AsyncProgressObject 與判斷物件基底（從 PopupPanel LogicObject 抽出）",
+          "title": "首輪：實作 AsyncTaskObject（Awaitable、選用的判斷欄位）、AsyncProgressObject 與判斷物件基底（預設判斷：讀到物件就算成功）",
           "priority": 2,
           "status": "planned",
           "activity": [
@@ -1058,6 +1072,26 @@
               "event": "updated",
               "actor": "claude",
               "at": "2026-10-21T16:55:38.135098+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-21T17:14:54.542080+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "chatrequest-optimization",
+          "title": "之後：ChatRequest 優化（抽成 Network 時）——RequestData 換 Awaitable、vcpMessage 判斷物件、與 PopupPanel 共用判斷、TaskEvent 遷移",
+          "priority": 3,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-21T17:14:54.542080+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
