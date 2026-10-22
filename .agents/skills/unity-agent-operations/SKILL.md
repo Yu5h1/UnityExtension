@@ -95,8 +95,8 @@ extending one instead of trusting an ad-hoc parse.
 |---|---|---|
 | UnityEvent report (`Yu5h1Lib.EditorExtension.UnityEventReport.Run`, common Editor) | available | batchmode `-executeMethod Yu5h1Lib.EditorExtension.UnityEventReport.Run -ueScenes "Assets/A.unity;Assets/B.unity" -ueAssets "<paths>" -ueOut "<json>" [-ueBrokenOnly]`; exit code 1 means broken calls. In the editor: Tools/UnityEvent Viewer. Design: [UnityEvent監控](../../../Documentation/UnityEvent監控.md) |
 | inline SO settings export (translator) | planned, item `translator-inline-so-export` | — |
-| GUID／asset index and reverse lookup | planned, waits on decision `cli-tool-home` | — |
-| batchmode runner | planned, waits on decision `cli-tool-home` | — |
-| compile check without Unity | planned, waits on decision `cli-tool-home` | — |
+| GUID／asset index and reverse lookup | planned, item `agent-cli-tools`, `Tools/agent/` (Python) | — |
+| batchmode runner | planned, item `agent-cli-tools`, `Tools/agent/` (Python) | — |
+| compile check without Unity | planned, item `agent-cli-tools`, `Tools/agent/` (Python) | — |
 
 The official Unity CLI is not adopted here; see [unity-cli](../unity-cli/SKILL.md).

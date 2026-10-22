@@ -3,7 +3,7 @@
 > Task ID: agent-data-translator
 
 狀態：計畫（2026-10-22），尚未實作。這是優化 agent 在 Unity 工作流程的唯一任務卡，依 CP 值分三層推進
-（[發展步驟](#發展步驟依-cp-值)）。第一層工具的位置待決，見 [尚未決定](#尚未決定)。
+（[發展步驟](#發展步驟依-cp-值)）。
 
 ## 目標
 
@@ -58,7 +58,8 @@ agent 在這個工作區操作 Unity 時實際付出的成本，以及對應的�
 4. **不開 Unity 的編譯檢查**：對一個套件的 asmdef 原始碼，用 6000.3.9f1 與 6000.6.0f1 的 Managed DLL 和 Core DLL 編譯，
    回報錯誤與警告。先支援 `com.yu5h1.common`。
 
-2～4 的位置與語言待決（[尚未決定](#尚未決定)）。
+2～4 放在 UnityExtension 根目錄 `Tools/agent/`，用 Python 寫、只用標準函式庫（決策 `cli-tool-home`，2026-10-22）。
+它們要在不開 Unity 的情況下執行，所以不能是 Unity 套件裡的 Editor 程式；需要 .NET 的編譯檢查由腳本呼叫 dotnet。
 
 ### 第二層：成本中等
 
@@ -128,9 +129,7 @@ agent 在這個工作區操作 Unity 時實際付出的成本，以及對應的�
   沒有必要的額外依賴；依 [plan〈設計原則〉](../plan.md#2-設計原則)，只有必要而且無法改成可選的依賴才另開套件，
   套件也以它擴充的 Unity 功能命名，「AgentTool」不是 Unity 的功能。和 UnityEvent 監控同處，才能共用掃描核心。
 
-## 尚未決定
-
-題目以決策檔為準：[agent-data-translator.decisions](../decisions/agent-data-translator.decisions)。
-
-1. `cli-tool-home`：第一層工具 2～4（GUID 索引、batchmode 執行器、編譯檢查）的位置與語言。它們要在不開 Unity 的情況下執行，
-   所以不能是 Unity 套件裡的 Editor 程式。
+- **第一層命令列工具放在 `Tools/agent/`，用 Python（只用標準函式庫）**（決策 `cli-tool-home`，2026-10-22）：不用編譯、沒有新依賴，
+  agent 已經在用；UnityExtension 根目錄不是 Unity 專案，專案只透過 `file:` 引用 `Packages/` 底下的套件，所以 `Tools/` 不會被匯入。
+  其他選項（C# 主控台、PowerShell、全部做成 batchmode 的 Editor 方法）的取捨記在決策檔
+  [agent-data-translator.decisions](../decisions/agent-data-translator.decisions)。

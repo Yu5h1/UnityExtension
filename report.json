@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-22T05:11:47.836927+00:00",
+  "updated_at": "2026-10-22T05:13:02.330921+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1274,62 +1274,61 @@
           ]
         },
         {
-          "id": "decide-cli-home",
-          "title": "決策：第一層命令列工具（GUID 索引、batchmode 執行器、編譯檢查）的位置與語言",
-          "priority": 0,
-          "document_ref": {
-            "kind": "decision",
-            "scope_id": "unity-extension",
-            "task": "agent-data-translator"
-          },
-          "status": "planned",
+          "id": "step-guid-index",
+          "title": "（併入 agent-cli-tools）GUID／資產索引與反查",
+          "priority": 1,
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-22T05:05:46.349585+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
-            }
-          ]
-        },
-        {
-          "id": "step-guid-index",
-          "title": "第一層 2：GUID／資產索引與反查（等 cli-tool-home 決定後建立可執行項目）",
-          "priority": 1,
-          "status": "planned",
-          "activity": [
+            },
             {
-              "event": "created",
+              "event": "updated",
               "actor": "claude",
-              "at": "2026-10-22T05:05:46.349585+00:00",
+              "at": "2026-10-22T05:13:02.330921+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
         },
         {
           "id": "step-batchmode-runner",
-          "title": "第一層 3：batchmode 執行器（等 cli-tool-home 決定後建立可執行項目）",
+          "title": "（併入 agent-cli-tools）batchmode 執行器",
           "priority": 1,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-22T05:05:46.349585+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T05:13:02.330921+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
         },
         {
           "id": "step-compile-check",
-          "title": "第一層 4：不開 Unity 的編譯檢查，先支援 com.yu5h1.common（等 cli-tool-home 決定後建立可執行項目）",
+          "title": "（併入 agent-cli-tools）不開 Unity 的編譯檢查",
           "priority": 1,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-22T05:05:46.349585+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T05:13:02.330921+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
@@ -1352,9 +1351,53 @@
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
+        },
+        {
+          "id": "agent-cli-tools",
+          "title": "第一層 2～4：Tools/agent/ 的 Python 命令列工具——GUID／資產索引與反查、batchmode 執行器、不開 Unity 的編譯檢查（先支援 common），登記到 unity-agent-operations skill",
+          "priority": 0,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "agent-cli-tools"
+          },
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T05:13:02.330921+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
         }
       ],
       "completed_items": [
+        {
+          "id": "decide-cli-home",
+          "title": "決策：第一層命令列工具放 Tools/agent/，用 Python（只用標準函式庫）（2026-10-22 答）",
+          "priority": 0,
+          "document_ref": {
+            "kind": "decision",
+            "scope_id": "unity-extension",
+            "task": "agent-data-translator"
+          },
+          "status": "done",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T05:05:46.349585+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-10-22T05:13:02.330921+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
         {
           "id": "agent-unity-skill",
           "title": "第一層 1：寫 agent 操作 Unity 的 skill（專案版本、編輯器佔用、batchmode、DryRun／Apply 腳本、MCP 已知問題、兩版本編譯檢查）並從 introduction 連過去",

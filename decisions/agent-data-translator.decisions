@@ -1,43 +1,51 @@
 {
   "schema_version": "1.1",
   "task_id": "agent-data-translator",
-  "updated_at": "2026-10-22T12:00:00+08:00",
+  "updated_at": "2026-10-22T05:09:38.9880736\u002B00:00",
   "decisions": [
     {
       "id": "cli-tool-home",
       "version": 1,
-      "question": "第一層的命令列工具（GUID 索引、batchmode 執行器、不開 Unity 的編譯檢查）放在哪裡、用什麼語言寫？",
-      "context": "現況：這三個工具要在不開 Unity 的情況下執行（重點就是省下 batchmode 的 1–2 分鐘，並避開「專案已被編輯器開著」的限制），所以不能是 Unity 套件裡的 Editor 程式。UnityExtension 根目錄不是 Unity 專案，各專案只透過 manifest 的 file: 引用 Packages 底下的套件，所以根目錄的資料夾不會被任何專案匯入。本機已有 Python 3.10 與 dotnet SDK。2026-10-22 分析 ChatScene 時，agent 臨時用的就是 Python；Core 的 6000.3 編譯檢查與 UnityEvent 監控的編譯驗證用的是 dotnet。",
-      "source_ref": "../Documentation/資料驅動的Agent翻譯器.md#尚未決定",
+      "question": "\u7B2C\u4E00\u5C64\u7684\u547D\u4EE4\u5217\u5DE5\u5177\uFF08GUID \u7D22\u5F15\u3001batchmode \u57F7\u884C\u5668\u3001\u4E0D\u958B Unity \u7684\u7DE8\u8B6F\u6AA2\u67E5\uFF09\u653E\u5728\u54EA\u88E1\u3001\u7528\u4EC0\u9EBC\u8A9E\u8A00\u5BEB\uFF1F",
+      "context": "\u73FE\u6CC1\uFF1A\u9019\u4E09\u500B\u5DE5\u5177\u8981\u5728\u4E0D\u958B Unity \u7684\u60C5\u6CC1\u4E0B\u57F7\u884C\uFF08\u91CD\u9EDE\u5C31\u662F\u7701\u4E0B batchmode \u7684 1\u20132 \u5206\u9418\uFF0C\u4E26\u907F\u958B\u300C\u5C08\u6848\u5DF2\u88AB\u7DE8\u8F2F\u5668\u958B\u8457\u300D\u7684\u9650\u5236\uFF09\uFF0C\u6240\u4EE5\u4E0D\u80FD\u662F Unity \u5957\u4EF6\u88E1\u7684 Editor \u7A0B\u5F0F\u3002UnityExtension \u6839\u76EE\u9304\u4E0D\u662F Unity \u5C08\u6848\uFF0C\u5404\u5C08\u6848\u53EA\u900F\u904E manifest \u7684 file: \u5F15\u7528 Packages \u5E95\u4E0B\u7684\u5957\u4EF6\uFF0C\u6240\u4EE5\u6839\u76EE\u9304\u7684\u8CC7\u6599\u593E\u4E0D\u6703\u88AB\u4EFB\u4F55\u5C08\u6848\u532F\u5165\u3002\u672C\u6A5F\u5DF2\u6709 Python 3.10 \u8207 dotnet SDK\u30022026-10-22 \u5206\u6790 ChatScene \u6642\uFF0Cagent \u81E8\u6642\u7528\u7684\u5C31\u662F Python\uFF1BCore \u7684 6000.3 \u7DE8\u8B6F\u6AA2\u67E5\u8207 UnityEvent \u76E3\u63A7\u7684\u7DE8\u8B6F\u9A57\u8B49\u7528\u7684\u662F dotnet\u3002",
+      "source_ref": "../Documentation/\u8CC7\u6599\u9A45\u52D5\u7684Agent\u7FFB\u8B6F\u5668.md#\u5C1A\u672A\u6C7A\u5B9A",
       "options": [
         {
           "id": "python-tools",
-          "label": "UnityExtension 根目錄 Tools/agent/ 的 Python 腳本（只用標準函式庫）",
-          "description": "不用編譯、agent 改得動、沒有新依賴；編譯檢查內部再呼叫 dotnet。缺點：要有 Python。"
+          "label": "UnityExtension \u6839\u76EE\u9304 Tools/agent/ \u7684 Python \u8173\u672C\uFF08\u53EA\u7528\u6A19\u6E96\u51FD\u5F0F\u5EAB\uFF09",
+          "description": "\u4E0D\u7528\u7DE8\u8B6F\u3001agent \u6539\u5F97\u52D5\u3001\u6C92\u6709\u65B0\u4F9D\u8CF4\uFF1B\u7DE8\u8B6F\u6AA2\u67E5\u5167\u90E8\u518D\u547C\u53EB dotnet\u3002\u7F3A\u9EDE\uFF1A\u8981\u6709 Python\u3002"
         },
         {
           "id": "dotnet-tool",
-          "label": "Tools/agent/ 的 C# 主控台程式（dotnet）",
-          "description": "和 Unity 同語言、能用 System.Reflection.Metadata 這類 .NET 函式庫；每次修改要重新編譯，啟動較慢。"
+          "label": "Tools/agent/ \u7684 C# \u4E3B\u63A7\u53F0\u7A0B\u5F0F\uFF08dotnet\uFF09",
+          "description": "\u548C Unity \u540C\u8A9E\u8A00\u3001\u80FD\u7528 System.Reflection.Metadata \u9019\u985E .NET \u51FD\u5F0F\u5EAB\uFF1B\u6BCF\u6B21\u4FEE\u6539\u8981\u91CD\u65B0\u7DE8\u8B6F\uFF0C\u555F\u52D5\u8F03\u6162\u3002"
         },
         {
           "id": "powershell",
-          "label": "Tools/agent/ 的 PowerShell 腳本",
-          "description": "Windows 內建；複雜的解析與資料結構難寫，只能在 Windows 用。"
+          "label": "Tools/agent/ \u7684 PowerShell \u8173\u672C",
+          "description": "Windows \u5167\u5EFA\uFF1B\u8907\u96DC\u7684\u89E3\u6790\u8207\u8CC7\u6599\u7D50\u69CB\u96E3\u5BEB\uFF0C\u53EA\u80FD\u5728 Windows \u7528\u3002"
         },
         {
           "id": "unity-batchmode-only",
-          "label": "全部做成 Editor 方法，在 batchmode 跑",
-          "description": "不用另一種語言；但每次 1–2 分鐘、專案開著時不能跑，第一層的意義就沒了。"
+          "label": "\u5168\u90E8\u505A\u6210 Editor \u65B9\u6CD5\uFF0C\u5728 batchmode \u8DD1",
+          "description": "\u4E0D\u7528\u53E6\u4E00\u7A2E\u8A9E\u8A00\uFF1B\u4F46\u6BCF\u6B21 1\u20132 \u5206\u9418\u3001\u5C08\u6848\u958B\u8457\u6642\u4E0D\u80FD\u8DD1\uFF0C\u7B2C\u4E00\u5C64\u7684\u610F\u7FA9\u5C31\u6C92\u4E86\u3002"
         }
       ],
       "recommendation": {
         "option_id": "python-tools",
-        "reason": "第一層的重點是快與低成本：Python 不用編譯、沒有新依賴，agent 已經在用；需要 .NET 的部分（編譯檢查）由腳本去呼叫 dotnet 即可。"
+        "reason": "\u7B2C\u4E00\u5C64\u7684\u91CD\u9EDE\u662F\u5FEB\u8207\u4F4E\u6210\u672C\uFF1APython \u4E0D\u7528\u7DE8\u8B6F\u3001\u6C92\u6709\u65B0\u4F9D\u8CF4\uFF0Cagent \u5DF2\u7D93\u5728\u7528\uFF1B\u9700\u8981 .NET \u7684\u90E8\u5206\uFF08\u7DE8\u8B6F\u6AA2\u67E5\uFF09\u7531\u8173\u672C\u53BB\u547C\u53EB dotnet \u5373\u53EF\u3002"
       },
       "allow_other": true,
-      "status": "pending",
-      "answer": null
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "python-tools",
+        "confirmed_at": "2026-10-22T05:09:38.9880736\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "8df3104c-fc6d-45e2-a582-fe6159da2351",
+        "fingerprint": "b78f9c8c35d7d1b215c7c8378a3feb4c824a4054a72f98817883f0d15f200d7d"
+      }
     }
   ]
 }
