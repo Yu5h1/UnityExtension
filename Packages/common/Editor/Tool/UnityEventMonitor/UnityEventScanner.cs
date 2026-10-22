@@ -80,12 +80,23 @@ namespace Yu5h1Lib.EditorExtension
                 }
                 else
                 {
-                    foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(path).OfType<ScriptableObject>())
+                    foreach (var asset in InWalkOrder(AssetDatabase.LoadAllAssetsAtPath(path).OfType<ScriptableObject>()))
                         ScanObject(asset, DescribePath(asset), path, records, visited, embeddedOut);
                 }
             }
             return records;
         }
+
+        /// <summary>
+        /// The main asset first, then sub-assets by local file id. LoadAllAssetsAtPath returns a freshly created asset's
+        /// sub-assets before the main asset and a loaded one's after it; a fixed order makes both walks reach a sub-asset
+        /// through the same holder, so the output does not depend on how the file was loaded.
+        /// </summary>
+        private static IEnumerable<ScriptableObject> InWalkOrder(IEnumerable<ScriptableObject> assets) =>
+            assets.OrderBy(a => AssetDatabase.IsMainAsset(a) ? 0 : 1).ThenBy(LocalFileId);
+
+        private static long LocalFileId(Object obj) =>
+            AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out _, out long id) ? id : 0;
 
         private static IEnumerable<string> ResolveAssetPaths(string[] pathsOrFolders)
         {

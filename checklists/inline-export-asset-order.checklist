@@ -4,29 +4,29 @@ Current round: `../Documentation/資料驅動的Agent翻譯器.md#原則`.
 
 驗證方式：他驗。來源：第二個 agent 驗收 `inline-export-subassets`（UnityExtension `1fad8df`）的觀察 2，與第一次驗收（`77b4fdb`）的觀察 4。現況：`InlineObjectExport` 的 `-ioAssets` 模式裡，只被另一個子資產引用的子資產在任何載入順序下都會列出，但它的 `holder` 字串會隨 `LoadAllAssetsAtPath` 的順序改變（主資產先載入時是 `<主資產> > RequestData`，否則是 `check_request`），`objects` 的排列也隨載入順序改變；同一份資產「剛建立」與「從磁碟讀取」的輸出無法直接 diff，違反計畫〈原則〉的「輸出要穩定排序」。另外 `totals` 是一次執行裡所有場景與資產的加總，skill 沒寫。要達成：同一份資產不論載入順序，匯出完全相同；skill 寫明 `totals` 的範圍。不在範圍內：場景模式的輸出、UnityEvent 報告、一般物件匯出。測試資產只能放在消費專案的暫存資料夾、用完刪除。
 
-- [ ] **1. 資產模式的輸出與載入順序無關**
+- [x] **1. 資產模式的輸出與載入順序無關**
   Outcome: 對同一份含巢狀子資產的資產，不論 `LoadAllAssetsAtPath` 先回傳哪一個，`objects` 的順序與每一筆的 `holder`、`field` 都相同。
   Checks:
-    - [ ] **建立測試資產並比較兩種順序**
+    - [x] **建立測試資產並比較兩種順序**
       - Action: 在一個沒被編輯器開著的消費專案（例如 VCP）的暫存資料夾，以 batchmode Editor 腳本建立主資產、被主資產欄位引用的子資產 A、只被 A 的監聽器參數引用的子資產 B；剛建立後匯出一次，再用另一次 batchmode 從磁碟讀取後匯出一次。
       - Expect: 兩份匯出逐位元組相同；B 的 `holder` 是 A 在主資產下的路徑。
-    - [ ] **場景模式不變**
+    - [x] **場景模式不變**
       - Action: 對 VCP `Assets/Scene/ChatScene.unity` 跑 `InlineObjectExport.Run`，和 `W:/UnityProject/Virtual-Chat-Partner-Build/inline-chatscene-1.json` 比較。
       - Expect: 逐位元組相同。
-    - [ ] **UnityEvent 報告不變**
+    - [x] **UnityEvent 報告不變**
       - Action: 對 VCP ChatScene 跑 `UnityEventReport.Run`。
       - Expect: 226 筆、24 筆失效，逐列與 `unityevent-chatscene.json` 相同（`generatedAt` 除外）。
-    - [ ] **兩個 Unity 版本都能編譯**
+    - [x] **兩個 Unity 版本都能編譯**
       - Action: `python Tools/agent/unity_compile.py Packages/common/Editor/Yu5h1Lib.Common.Editor.asmdef`。
       - Expect: 6000.3.9f1 與 6000.6.0f1 都 0 錯誤，警告數仍為 4。
-    - [ ] **測試資產已清除**
+    - [x] **測試資產已清除**
       - Action: 刪除暫存資料夾後看消費專案的 `git status`。
       - Expect: 沒有留下任何測試檔或 `.meta`。
 
-- [ ] **2. skill 寫明 totals 的範圍**
+- [x] **2. skill 寫明 totals 的範圍**
   Outcome: agent 知道 `totals` 是整次執行的加總，要看單一場景就一次跑一個場景。
   Checks:
-    - [ ] **Tools 表**
+    - [x] **Tools 表**
       - Action: 讀 `.agents/skills/unity-agent-operations/SKILL.md` 的 inline SO 匯出列。
       - Expect: 寫明 `totals` 是一次執行中所有場景與資產的加總。
 
