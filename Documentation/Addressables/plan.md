@@ -247,8 +247,7 @@ Task ID `streaming-assets`），在本套件內開發、以消費端身分引用
 - **讀取處理器代理**：場景裡的一般 GameObject，不是 singleton。它提供通知讀取的方法（例如 `Prepare(path)`），
   持有讀取請求（`AsyncProgressObject[]`）；通知讀取本身就是一個請求。載入的內容要不要釋放，由代理定義。
 - **分批執行**：不需要特別的技術。初始化、按鈕、捲動、圖片進入畫面等任何事件都能呼叫代理，所以讀取時機可以自由設定。
-  例如啟動時一定讀取第一號角色：在代理同一個 GameObject 上加 MonoBehaviourEvent，在 Start 事件呼叫代理，代理再通知處理器讀取。
-  （Yu5h1Lib 目前沒有 MonoBehaviourEvent；第 1 步的測試場景用 common 的 `MonoEventHandler` 在 Enabled 時呼叫代理，是否另加 Start 事件待使用者決定。）
+  例如啟動時一定讀取第一號角色：在代理同一個 GameObject 上加 `MonoEventHandler`，在它的 Start 事件呼叫代理，代理再通知處理器讀取。
 - **替換讀取器是讀取處理器上的 MonoBehaviour 欄位**（2026-10-23 使用者定）：讀取器基底是 MonoBehaviour，處理器以序列化欄位引用一個讀取器；
   換讀取器就是換欄位裡的元件。欄位是空的時候用 Resources 讀取器。依據：處理器沿用 `SingletonBehaviour<T>`，它先找場景裡的實例，
   再從 Resources 裡同名的 prefab 產生，最後才新建；所以處理器與讀取器可以放在場景或 Resources 的 prefab 上設定，新建出來的處理器沒有欄位值，要有預設。
@@ -265,7 +264,7 @@ Task ID `streaming-assets`），在本套件內開發、以消費端身分引用
 順序：
 
 1. **讀取處理器與代理**，用 Resources 讀取器驗證。只依賴 [非同步工作 § 首輪](../非同步工作.md#首輪讀取角色)（工作物件與預設判斷），不等 ChatRequest 優化。
-   **已實作**（2026-10-23，`586ea84`，待他驗 `loader-handler`）：common 的 `AssetLoader`／`ResourcesLoader`，本套件的 `LoaderHandler`、`LoaderAgent`、`InstanceLoad`、`InstanceInitializer`；
+   **已實作**（2026-10-23，`586ea84`，待他驗 `loader-handler`）：common 的 `AssetLoader`／`ResourcesLoader` 與 `MonoEventHandler` 的 Start 事件，本套件的 `LoaderHandler`、`LoaderAgent`、`InstanceLoad`、`InstanceInitializer`；
    Yu5h1LibTest 測試資料夾 `Assets/AddressablesTest`、場景 `Assets/AddressablesTest/AddressablesTest.unity`。用法見 [loader-handler](../../.agents/skills/loader-handler.md)。
 2. **Addressables 讀取器**，用 local group（建到 StreamingAssets）驗證。
 3. **角色只準備 prefab 與 Animator Override Controller**。其餘元件（VCP 的 AudioSource、vcpAnimationController、

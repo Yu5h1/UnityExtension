@@ -9,6 +9,9 @@ namespace Yu5h1Lib
     {
         [SerializeField] private UnityEvent _Enabled;
         [SerializeField] private UnityEvent _Disabled;
+        [SerializeField] private UnityEvent _Start = new UnityEvent();
+
+        private void Start() => _Start?.Invoke();
 
         private void OnEnable()
         {

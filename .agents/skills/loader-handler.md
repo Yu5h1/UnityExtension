@@ -67,12 +67,12 @@ CharacterAgent (GameObject)
                           End → LoadEventLog.End, Loaded → LoadEventLog.Loaded (dynamic)
   TestCharacterInitializer
   LoadEventLog
-  MonoEventHandler        Enabled → LoaderAgent.Prepare("AddressablesTestCharacter")
+  MonoEventHandler        Start → LoaderAgent.Prepare("AddressablesTestCharacter")
 ```
 
-Common has no Start event component; `MonoEventHandler`'s Enabled (OnEnable) is the scene-start trigger. Wire the
-request's events persistently in the Inspector: a component subscribing from code in Awake or OnEnable may run after
-the Enabled call that already started the load.
+`MonoEventHandler` (common) raises Start, Enabled and Disabled; call the agent from Start, which runs after every
+Awake and OnEnable of the scene, so the handler and the listeners already exist. Wire the request's events
+persistently in the Inspector, or subscribe from code in Awake.
 
 ## Release rules
 
