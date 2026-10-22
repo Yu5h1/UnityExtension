@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-22T08:08:55.291686+00:00",
+  "updated_at": "2026-10-22T12:52:04.721683+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1330,6 +1330,63 @@
               "actor": "claude",
               "at": "2026-10-22T05:13:02.330921+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "guid-refs-unknown",
+          "title": "unity_guid.py refs 對不屬於任何資產的 GUID 回報查不到、結束碼 1（第二次驗收觀察 1）",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "guid-refs-unknown"
+          },
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T12:52:04.721683+00:00",
+              "session_id": "f0409115-d767-43b3-b7a1-4683af36d9be"
+            }
+          ]
+        },
+        {
+          "id": "inline-export-asset-order",
+          "title": "inline SO 匯出的 -ioAssets 輸出與載入順序無關，skill 寫明 totals 是整次執行的加總（驗收觀察）",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "inline-export-asset-order"
+          },
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T12:52:04.721683+00:00",
+              "session_id": "f0409115-d767-43b3-b7a1-4683af36d9be"
+            }
+          ]
+        },
+        {
+          "id": "compile-check-staleness",
+          "title": "unity_compile.py 對過期的 csproj 發出警告，並能找到 Unity/Core 底下的 asmdef（第一次驗收觀察 3）",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "compile-check-staleness"
+          },
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T12:52:04.721683+00:00",
+              "session_id": "f0409115-d767-43b3-b7a1-4683af36d9be"
             }
           ]
         }

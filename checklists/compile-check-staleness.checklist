@@ -1,0 +1,35 @@
+# Compile Check Staleness Checklist
+
+Current round: `../Documentation/資料驅動的Agent翻譯器.md#第一層成本低立即見效`.
+
+驗證方式：他驗。來源：第一次第二個 agent 驗收（UnityExtension `77b4fdb`）的觀察 3。現況：`Tools/agent/unity_compile.py` 的參考與 define 取自消費專案最後一次同步產生的 `<Assembly>.csproj`；那份 csproj 過期時（例如套件後來新增、刪除了檔案，或改了 asmdef 的 references），工具照用舊的參考卻不提醒。另外 csproj 的 `ProjectReference` 若指向 `UnityExtension/Packages` 以外的 asmdef（例如 VCP 引用的 `Unity/Core/com.yu5h1.Internal`），工具只記一則提示、不編譯也不參考，依賴它的 asmdef 會出現假錯誤。要達成：工具發現 csproj 可能過期時明確警告；`Unity/Core` 底下套件的 asmdef 也能被找到並先編譯。不在範圍內：改用其他方式產生參考、`unity_guid.py` 與 `unity_batch.py`。
+
+- [ ] **1. 過期的 csproj 會被警告**
+  Outcome: 消費專案的 csproj 和套件目前的原始碼或 asmdef 對不上時，輸出裡有清楚的警告，說明差在哪、怎麼更新。
+  Checks:
+    - [ ] **原始碼清單不同**
+      - Action: 在暫存複本中替 `Packages/common/Editor` 多加一個 `.cs` 檔，用 `--reference-project W:/UnityProject/Virtual-Chat-Partner` 編譯，之後刪除暫存複本。
+      - Expect: 輸出警告 csproj 的檔案清單和目前原始碼不同（列出多出或少掉的檔案數），並說明要在 Unity 重新同步 IDE 專案；編譯照樣進行。
+    - [ ] **清單相同時沒有警告**
+      - Action: 對目前的 `Packages/common/Editor/Yu5h1Lib.Common.Editor.asmdef` 編譯。
+      - Expect: 沒有過期警告；兩個編輯器都 0 錯誤、4 個警告，和改動前相同。
+
+- [ ] **2. 找得到 Unity/Core 的 asmdef**
+  Outcome: csproj 的 `ProjectReference` 指向 `C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Unity/Core` 底下的 asmdef 時，工具會先編譯它並加入參考。
+  Checks:
+    - [ ] **索引包含 Unity/Core**
+      - Action: 讀工具搜尋 asmdef 的根目錄。
+      - Expect: 除了 `UnityExtension/Packages`，還包含 `Unity/Core` 底下的套件；仍找不到的參考照舊記成提示。
+    - [ ] **實際編譯一個依賴 Unity/Core asmdef 的組件**
+      - Action: 在 VCP 的 csproj 中找一個 `ProjectReference` 指向 `Yu5h1Lib.Internal`（或 `Unity/Core` 其他 asmdef）的 UnityExtension 組件，對它跑編譯；沒有這樣的組件時，記錄搜尋結果。
+      - Expect: 依賴被先編譯並參考，不再出現「not under UnityExtension/Packages」的提示；或記錄沒有這樣的組件。
+
+- [ ] **3. 他驗**
+  Outcome: 執行者以外的 session 依計畫第一層第 4 步確認結果。
+  Checks:
+    - [ ] **驗收條件未被改動** `[acceptance]`
+      - Action: 以 git log -p 檢查本檔第 3 項自寫入它的提交後的變更。
+      - Expect: 只有標記與 Recorded 變動。
+    - [ ] **過期警告與依賴解析** `[acceptance]`
+      - Action: 對照 `../Documentation/資料驅動的Agent翻譯器.md#第一層成本低立即見效` 第 4 步（對套件的 asmdef 原始碼，用兩個版本的 Managed DLL 與 Core DLL 編譯，回報錯誤與警告），審查 `git log --grep compile-check-staleness` 的變更，並自行做一次「多一個原始碼檔」的暫存複本編譯，用完刪除。
+      - Expect: 過期時有警告且編譯照常完成；清單相同時沒有警告，common Runtime 與 Editor 在兩個編輯器的錯誤與警告數和改動前相同；`Unity/Core` 的 asmdef 能被找到；套件原始碼沒有被修改。
