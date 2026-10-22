@@ -4,58 +4,58 @@ Current round: `../Documentation/資料驅動的Agent翻譯器.md#第一層成�
 
 指示（使用者 2026-10-22，決策 `cli-tool-home` 選 `python-tools`）：agent 操作 Unity 的成本太高，要先做 CP 值最高的工具。現況：查一個 GUID 對應的資產要臨時掃目錄（2026-10-22 找 PopupPanel prefab 的 GUID 時掃描逾時超過 120 秒）、script GUID 要同時掃 `Assets` 與 `file:` 套件才能對回類別；每次跑 batchmode 都要重組編輯器路徑、log 與逾時，還要自己確認專案沒被編輯器開著；驗證套件程式在 6000.3.9f1 與 6000.6.0f1 都能編譯，要開 Unity 或臨時拼 dotnet 專案。要達成：在 UnityExtension 根目錄 `Tools/agent/` 用 Python（只用標準函式庫）做三個不開 Unity 的命令列工具——GUID／資產索引與反查、batchmode 執行器、編譯檢查（先支援 `com.yu5h1.common`）——並把它們登記到 `unity-agent-operations` skill 的 Tools 表。不在範圍內：解析場景或資產的 YAML 結構（那是翻譯器，用 Unity 讀）、改任何套件或專案的程式、引入第三方套件。本輪只放 agent 的檢查，沒有人工檢查。
 
-- [ ] **1. GUID／資產索引與反查**
+- [x] **1. GUID／資產索引與反查**
   Outcome: 一個指令就能從 GUID 查到資產路徑與類別，或反查誰引用了某個資產，涵蓋 `Assets` 與 manifest 的 `file:` 套件。
   Checks:
-    - [ ] **GUID 查資產**
+    - [x] **GUID 查資產**
       - Action: 對 VCP 查 GUID `8e4dde05b46a5004ea369eca527d1481`。
       - Expect: 回報 `C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Unity/UnityExtension/Packages/Plugins/TMP/Runtime/Prefab/PopupPanel.prefab`，並標明它來自 `com.yu5h1.tmpextension` 套件。
-    - [ ] **script GUID 對回類別**
+    - [x] **script GUID 對回類別**
       - Action: 對 VCP 查 `Assets/Scripts/Request/RequestData.cs` 的 GUID，以及 common 套件中 `UnityEventReport.cs` 的 GUID。
       - Expect: 兩個都回報 `.cs` 路徑與類別名稱（`RequestData`、`UnityEventReport`）。
-    - [ ] **反查引用**
+    - [x] **反查引用**
       - Action: 對 VCP 反查引用 PopupPanel prefab 的檔案。
       - Expect: 列出 `Assets/Scene/ChatScene.unity`；整次執行在 VCP 上 30 秒內完成。
-    - [ ] **只用標準函式庫且不解析 YAML 結構**
+    - [x] **只用標準函式庫且不解析 YAML 結構**
       - Action: 看工具的 import 與讀檔方式。
       - Expect: 只 import Python 標準函式庫；只讀 `.meta` 的 guid 行與資產檔裡的 GUID 字串。
 
-- [ ] **2. batchmode 執行器**
+- [x] **2. batchmode 執行器**
   Outcome: 一個指令就能對指定專案跑 Editor 方法，版本、log、逾時與專案佔用都由工具處理。
   Checks:
-    - [ ] **專案被開著時拒絕**
+    - [x] **專案被開著時拒絕**
       - Action: 對 Yu5h1LibTest 執行（它目前被使用者的編輯器開著）。
       - Expect: 不啟動 Unity，回報專案已被編輯器開著，結束碼非 0。
-    - [ ] **用專案自己的編輯器跑並寫 log**
+    - [x] **用專案自己的編輯器跑並寫 log**
       - Action: 對 VCP 跑一次只 `-quit` 的執行。
       - Expect: 使用 6000.6.0f1（來自 ProjectVersion.txt）；log 寫在 `W:/UnityProject/Virtual-Chat-Partner-Build/` 或 skill 規定的 `-Build` 資料夾；結束碼 0；摘要列出 0 個 `error CS`。
-    - [ ] **呼叫 Editor 方法並傳參數**
+    - [x] **呼叫 Editor 方法並傳參數**
       - Action: 對 VCP 跑 `Yu5h1Lib.EditorExtension.UnityEventReport.Run`，參數 `-ueScenes Assets/Scene/ChatScene.unity -ueOut <-Build 資料夾>/unityevent-chatscene.json`。
       - Expect: JSON 檔產生；結束碼與報告中的失效筆數一致（有失效時為 1）。
-    - [ ] **逾時**
+    - [x] **逾時**
       - Action: 讀工具的逾時處理。
       - Expect: 有預設逾時與參數，逾時時結束 Unity 程序並回報逾時，不無限等待。
 
-- [ ] **3. 不開 Unity 的編譯檢查**
+- [x] **3. 不開 Unity 的編譯檢查**
   Outcome: 一個指令就能用 6000.3.9f1 與 6000.6.0f1 的 Managed DLL 編譯一個套件的 asmdef，回報錯誤與警告。
   Checks:
-    - [ ] **common Runtime 兩個版本都編譯**
+    - [x] **common Runtime 兩個版本都編譯**
       - Action: 對 `Packages/common/Runtime/Yu5h1Lib.Common.asmdef` 用兩個編輯器各跑一次。
       - Expect: 兩個版本各自回報錯誤數與警告數；錯誤數為 0。
-    - [ ] **common Editor 兩個版本都編譯**
+    - [x] **common Editor 兩個版本都編譯**
       - Action: 對 `Packages/common/Editor/Yu5h1Lib.Common.Editor.asmdef` 用兩個編輯器各跑一次。
       - Expect: 兩個版本各自回報錯誤數與警告數；錯誤數為 0。
-    - [ ] **能抓到版本差異**
+    - [x] **能抓到版本差異**
       - Action: 在暫存複本中加一行只有 6000.6 才有的 API（例如 `AssetCreationEndAction`），對兩個版本編譯，之後刪除暫存複本。
       - Expect: 6000.3.9f1 回報錯誤、6000.6.0f1 通過；套件原始碼沒有被修改（`git status` 乾淨）。
-    - [ ] **版本 define 一致**
+    - [x] **版本 define 一致**
       - Action: 讀工具為每個版本設定的 define。
       - Expect: 會設定 `UNITY_6000_6_OR_NEWER` 這類 Unity 版本 define 與 `UNITY_EDITOR`（Editor 組件），和 Unity 編譯時一致。
 
-- [ ] **4. agent 找得到並會用**
+- [x] **4. agent 找得到並會用**
   Depends on: 1, 2, 3.
   Outcome: 三個工具都從 `unity-agent-operations` skill 的 Tools 表連得到，寫明怎麼跑。
   Checks:
-    - [ ] **Tools 表**
+    - [x] **Tools 表**
       - Action: 讀 `.agents/skills/unity-agent-operations/SKILL.md` 的 Tools 表。
       - Expect: 三個工具都標為 available，各有路徑與一行執行範例；batchmode 段落指向執行器。

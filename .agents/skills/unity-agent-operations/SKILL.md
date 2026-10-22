@@ -37,12 +37,15 @@ that is open, batchmode for one that is not.
 
 ## Batchmode
 
+Use the runner `Tools/agent/unity_batch.py` (see [Tools](#tools)): it picks the project's editor, refuses an
+open project, writes the log, enforces a timeout and summarises compile errors. The raw command it runs:
+
 ```text
 "<editor>\Editor\Unity.exe" -batchmode -quit -projectPath "<project>" -logFile "<log>" [-executeMethod Namespace.Class.Method]
 ```
 
-- Write logs and reports outside the repository, next to the project:
-  `W:\UnityProject\<project>-Build\` (VCP uses `W:\UnityProject\VCP-Build\`).
+- Write logs and reports outside the repository, next to the project: the runner uses
+  `W:\UnityProject\<project>-Build\logs\`; older VCP outputs are in `W:\UnityProject\VCP-Build\`.
 - A run takes about 20 seconds with a warm Library and 1–2 minutes when it has to import
   (VCP 2026-10-22: 23 s). Run it once; do not loop.
 - Success is exit code 0 plus no `error CS` in the log; the log ends with
@@ -77,10 +80,11 @@ Write them re-runnable, with a report-only pass first, following
 - **Why both editors**: Core once compiled on 6000.6 but broke on 6000.3 (`AssetCreationEndAction`
   missing; `FindObjectsByType` overloads differ). `#if` cannot help a DLL compiled once outside
   Unity.
-- **Package code**: there is no reusable command yet; the planned tool is tier 1 step 4. Until
-  then, compile the changed files in a scratch project that references both editors'
-  `Data\Managed\UnityEngine\*.dll` and the Core DLLs, or run batchmode on a 6000.3.9f1 and a
-  6000.6.0f1 project that consume the package.
+- **Package code**: `python Tools/agent/unity_compile.py <X.asmdef>` compiles the asmdef's current sources
+  on 6000.3.9f1 and 6000.6.0f1 without opening Unity. It takes references and defines from a consumer
+  project's generated `<Assembly>.csproj` on each editor (today BonghuoVR for 6000.3 and VCP for 6000.6),
+  so it matches Unity; without one it falls back to a generic set and says so in a note. A consumer gets
+  generated csproj files only after Unity has synced IDE projects there.
 
 ## Reading scene and asset data
 
@@ -95,8 +99,9 @@ extending one instead of trusting an ad-hoc parse.
 |---|---|---|
 | UnityEvent report (`Yu5h1Lib.EditorExtension.UnityEventReport.Run`, common Editor) | available | batchmode `-executeMethod Yu5h1Lib.EditorExtension.UnityEventReport.Run -ueScenes "Assets/A.unity;Assets/B.unity" -ueAssets "<paths>" -ueOut "<json>" [-ueBrokenOnly]`; exit code 1 means broken calls. In the editor: Tools/UnityEvent Viewer. Design: [UnityEvent監控](../../../Documentation/UnityEvent監控.md) |
 | inline SO settings export (translator) | planned, item `translator-inline-so-export` | — |
-| GUID／asset index and reverse lookup | planned, item `agent-cli-tools`, `Tools/agent/` (Python) | — |
-| batchmode runner | planned, item `agent-cli-tools`, `Tools/agent/` (Python) | — |
-| compile check without Unity | planned, item `agent-cli-tools`, `Tools/agent/` (Python) | — |
+| GUID／asset index and reverse lookup (`Tools/agent/unity_guid.py`) | available | `python Tools/agent/unity_guid.py <project> find <guid>`, `guid <asset-path>` or `refs <guid-or-path>` (`--cache` adds Library/PackageCache, `--json` for JSON). Covers Assets, embedded and `file:` packages; reads only `.meta` guid lines and GUID strings |
+| batchmode runner (`Tools/agent/unity_batch.py`) | available | `python Tools/agent/unity_batch.py <project> [--method Ns.Class.Method] [--timeout 600] [-- <Unity args>]`; exit 2 = refused (project open or editor missing), 124 = timed out, otherwise Unity's exit code |
+| compile check without Unity (`Tools/agent/unity_compile.py`) | available | `python Tools/agent/unity_compile.py <X.asmdef> [--editors 6000.3.9f1,6000.6.0f1] [--reference-project <project>] [--define S]`; exit 1 = an editor failed |
 
-The official Unity CLI is not adopted here; see [unity-cli](../unity-cli/SKILL.md).
+Tools under `Tools/agent/` are standard-library Python (decision `cli-tool-home`, 2026-10-22); run them
+from the UnityExtension root. The official Unity CLI is not adopted here; see [unity-cli](../unity-cli/SKILL.md).

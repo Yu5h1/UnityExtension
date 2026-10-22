@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-22T05:13:02.330921+00:00",
+  "updated_at": "2026-10-22T05:19:47.338004+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1351,7 +1351,9 @@
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
-        },
+        }
+      ],
+      "completed_items": [
         {
           "id": "agent-cli-tools",
           "title": "第一層 2～4：Tools/agent/ 的 Python 命令列工具——GUID／資產索引與反查、batchmode 執行器、不開 Unity 的編譯檢查（先支援 common），登記到 unity-agent-operations skill",
@@ -1361,18 +1363,28 @@
             "scope_id": "unity-extension",
             "task": "agent-cli-tools"
           },
-          "status": "planned",
+          "status": "done",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-22T05:13:02.330921+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "started",
+              "actor": "claude",
+              "at": "2026-10-22T05:13:51.236629+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-10-22T05:19:47.338004+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
-        }
-      ],
-      "completed_items": [
+        },
         {
           "id": "decide-cli-home",
           "title": "決策：第一層命令列工具放 Tools/agent/，用 Python（只用標準函式庫）（2026-10-22 答）",
