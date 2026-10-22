@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.1",
+  "task_id": "agent-data-translator",
+  "updated_at": "2026-10-22T12:00:00+08:00",
+  "decisions": [
+    {
+      "id": "cli-tool-home",
+      "version": 1,
+      "question": "第一層的命令列工具（GUID 索引、batchmode 執行器、不開 Unity 的編譯檢查）放在哪裡、用什麼語言寫？",
+      "context": "現況：這三個工具要在不開 Unity 的情況下執行（重點就是省下 batchmode 的 1–2 分鐘，並避開「專案已被編輯器開著」的限制），所以不能是 Unity 套件裡的 Editor 程式。UnityExtension 根目錄不是 Unity 專案，各專案只透過 manifest 的 file: 引用 Packages 底下的套件，所以根目錄的資料夾不會被任何專案匯入。本機已有 Python 3.10 與 dotnet SDK。2026-10-22 分析 ChatScene 時，agent 臨時用的就是 Python；Core 的 6000.3 編譯檢查與 UnityEvent 監控的編譯驗證用的是 dotnet。",
+      "source_ref": "../Documentation/資料驅動的Agent翻譯器.md#尚未決定",
+      "options": [
+        {
+          "id": "python-tools",
+          "label": "UnityExtension 根目錄 Tools/agent/ 的 Python 腳本（只用標準函式庫）",
+          "description": "不用編譯、agent 改得動、沒有新依賴；編譯檢查內部再呼叫 dotnet。缺點：要有 Python。"
+        },
+        {
+          "id": "dotnet-tool",
+          "label": "Tools/agent/ 的 C# 主控台程式（dotnet）",
+          "description": "和 Unity 同語言、能用 System.Reflection.Metadata 這類 .NET 函式庫；每次修改要重新編譯，啟動較慢。"
+        },
+        {
+          "id": "powershell",
+          "label": "Tools/agent/ 的 PowerShell 腳本",
+          "description": "Windows 內建；複雜的解析與資料結構難寫，只能在 Windows 用。"
+        },
+        {
+          "id": "unity-batchmode-only",
+          "label": "全部做成 Editor 方法，在 batchmode 跑",
+          "description": "不用另一種語言；但每次 1–2 分鐘、專案開著時不能跑，第一層的意義就沒了。"
+        }
+      ],
+      "recommendation": {
+        "option_id": "python-tools",
+        "reason": "第一層的重點是快與低成本：Python 不用編譯、沒有新依賴，agent 已經在用；需要 .NET 的部分（編譯檢查）由腳本去呼叫 dotnet 即可。"
+      },
+      "allow_other": true,
+      "status": "pending",
+      "answer": null
+    }
+  ]
+}

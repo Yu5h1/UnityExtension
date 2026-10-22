@@ -1,0 +1,38 @@
+# Agent Unity Operations Skill Checklist
+
+Current round: `../Documentation/資料驅動的Agent翻譯器.md#第一層成本低立即見效`.
+
+指示（使用者 2026-10-22）：agent 操作 Unity 的成本太高，要先做 CP 值最高的工具。現況：這個工作區怎麼操作 Unity 的知識散在各處——VCP 的 handoff 寫「不開編輯器，用 batchmode，每次約 1–2 分鐘，使用者同時在用 Yu5h1LibTest 的編輯器」；MCP `refresh_unity` 第一次沒觸發編譯、要 force 才編譯；Core 在 6000.3 的編譯檢查指令只在 UnityExtension handoff 2026-10-06 的歷史紀錄裡；VCP 的 `Assets/Editor/CatSetup.cs` 是可重跑的 DryRun／Apply Editor 腳本範例。新的 agent 每次都要重新摸索。要達成：在 UnityExtension 的 `.agents/skills/` 寫一份 agent 操作 Unity 的 skill，並從 introduction 的 skill 清單連過去。不在範圍內：寫任何新工具（GUID 索引、batchmode 執行器、編譯檢查是第一層的其他步驟，等決策 `cli-tool-home`）、改 unity-cli skill 的內容、改任何專案的程式。本輪只放 agent 的檢查，沒有人工檢查。
+
+- [ ] **1. skill 涵蓋這個工作區操作 Unity 的方式**
+  Outcome: 一份 skill 讓新的 agent 不必翻 handoff 就知道怎麼開、跑、驗證 Unity 專案，每一項都對得上目前的實際狀態。
+  Checks:
+    - [ ] **專案與 Unity 版本**
+      - Action: 讀 skill 的專案版本表，逐一比對 `W:/UnityProject/*/ProjectSettings/ProjectVersion.txt` 與 `C:/Program Files/Unity/Hub/Editor/` 底下的編輯器。
+      - Expect: 表中每個專案的版本和 ProjectVersion.txt 一致；列出的兩個編輯器（6000.3.9f1、6000.6.0f1）的安裝路徑存在；寫明最舊支援版本是 6000.3.9f1（BonghuoVR）。
+    - [ ] **一個專案只能被一個編輯器開**
+      - Action: 讀 skill 中開專案與 batchmode 的規則。
+      - Expect: 寫明專案已被編輯器開著時（`Temp/UnityLockfile` 存在）不能再用 batchmode 開；寫明使用者常開著哪個專案、遇到時要先問使用者，不能關掉使用者的編輯器。
+    - [ ] **batchmode 指令實際可跑**
+      - Action: 確認 VCP 沒有被編輯器開著後，照 skill 寫的指令範本對 VCP 跑一次 `-batchmode -quit`，log 寫到 skill 指定的位置。
+      - Expect: 結束碼 0，log 檔存在且沒有編譯錯誤；skill 寫的 log 位置在 repo 之外。
+    - [ ] **可重跑的 Editor 腳本寫法**
+      - Action: 讀 skill 的 Editor 腳本段落，對照 VCP `Assets/Editor/CatSetup.cs`。
+      - Expect: 寫明 DryRun 先列出變更、Apply 才寫入、可重跑不重複套用，並以 CatSetup.cs 為範例路徑。
+    - [ ] **MCP 的已知問題**
+      - Action: 讀 skill 的 MCP 段落。
+      - Expect: 寫明 `refresh_unity` 可能不觸發編譯、要用 force 模式，並以 `read_console` 確認編譯結果；寫明多個 Unity 實例連線時要先 `set_active_instance`。
+    - [ ] **兩個版本的編譯檢查**
+      - Action: 讀 skill 的編譯檢查段落，對照 UnityExtension handoff 2026-10-06（Core on 6000.3 + 6000.6）的指令。
+      - Expect: 寫出在 6000.3.9f1 與 6000.6.0f1 各驗證一次的指令，以及為什麼兩個版本都要驗（Core 曾在 6000.3 缺 `AssetCreationEndAction`、`FindObjectsByType` 多載不同）。
+
+- [ ] **2. agent 找得到這份 skill**
+  Depends on: 1.
+  Outcome: 從 UnityExtension 的入口能一步連到這份 skill，內容只有一份。
+  Checks:
+    - [ ] **introduction 有連結**
+      - Action: 讀 `.agents/introduction.md` 的 skill 清單。
+      - Expect: 有一行連到新 skill，說明何時要讀它（在任何 Yu5h1Lib 的 Unity 專案開、跑、驗證 Unity 之前）。
+    - [ ] **不重複既有內容**
+      - Action: 比對新 skill 與 `skills/unity-cli/SKILL.md`、`skills/editor-tooling.md`。
+      - Expect: 官方 Unity CLI 的內容只以連結指向 unity-cli skill，不複製；兩份沒有互相矛盾的指令。

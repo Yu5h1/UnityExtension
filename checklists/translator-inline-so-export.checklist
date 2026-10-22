@@ -1,0 +1,43 @@
+# Translator Inline SO Export Checklist
+
+Current round: `../Documentation/資料驅動的Agent翻譯器.md#inline-so-設定匯出`.
+
+指示（使用者 2026-10-22）：agent 讀不懂場景與資產裡的資料驅動組裝。2026-10-22 分析 VCP ChatScene 的 `TaskEvent` 監聽器時，agent 手寫 Python 解析 YAML，第一次漏掉 End 的 7 筆監聽器，第二次掃進相鄰事件，都沒有警告。要達成：在 `com.yu5h1.common` 的 Editor（`Yu5h1Lib.Common.Editor`）做 inline SO 設定匯出，用 `SerializedObject` 讀取、能在 batchmode 跑、只讀，和 UnityEvent 監控共用掃描核心；不寫任何臨時腳本，只讀它的輸出就能重現那次 ChatScene 分析。不在範圍內：一般物件的階層匯出、寫回 Unity、建置流程比對（第三層），以及任何 VCP 程式或場景的修改。本輪只放 agent 的檢查，沒有人工檢查。
+
+- [ ] **1. inline SO 設定匯出可用**
+  Outcome: 對一個場景或資產跑一次，得到每個 inline SO 的設定，引用都解析成名稱路徑與型別，輸出穩定可 diff。
+  Checks:
+    - [ ] **位置與共用核心**
+      - Action: 看新檔案的路徑與它引用的型別。
+      - Expect: 程式在 `Packages/common/Editor` 底下，屬於 `Yu5h1Lib.Common.Editor`；收集 persistent call 的部分沿用 UnityEvent 監控的掃描核心，沒有另寫一套。
+    - [ ] **輸出內容**
+      - Action: 對 VCP `Assets/Scene/ChatScene.unity` 在 batchmode 跑匯出，讀輸出中任一個 `RequestData`。
+      - Expect: 有所在物件的名稱路徑、欄位名稱、型別、名稱（command）；一般欄位有值；物件引用是名稱路徑與型別；每個 UnityEvent 通道（例如 `_callbacks.lifeCycle.end`）列出目標、方法、模式（動態或寫死）與寫死的參數值；輸出裡沒有裸的 fileID 或 GUID。
+    - [ ] **輸出穩定**
+      - Action: 對同一個場景連跑兩次，比對兩份輸出。
+      - Expect: 兩份完全相同。
+    - [ ] **兩個 Unity 版本都能編譯**
+      - Action: 用 6000.3.9f1 與 6000.6.0f1 的 Managed DLL 各編譯一次新檔案（UnityEvent 監控 2026-10-21 用過的 dotnet 做法）。
+      - Expect: 兩個版本都 0 錯誤，沒有新增警告。
+
+- [ ] **2. 只讀輸出就能重現 ChatScene 分析**
+  Depends on: 1.
+  Outcome: 不寫任何臨時腳本，只讀匯出結果，得到和 2026-10-22 分析相同的數字。
+  Checks:
+    - [ ] **請求物件與全域回呼**
+      - Action: 從輸出數出 ChatScene 的 `RequestData` 與 `ChatRequest` 的全域回呼。
+      - Expect: 14 個請求物件加 1 組全域回呼。
+    - [ ] **各事件的監聽器筆數**
+      - Action: 從輸出數出每個通道的監聽器。
+      - Expect: Begin 13＋2、End 5＋2、True 18、False 6＋1、Completed 6（請求＋全域）。
+    - [ ] **讀動態 string 的監聽器**
+      - Action: 從輸出篩出模式為動態的 True、False 監聽器。
+      - Expect: True 5 筆、False 4 筆（含全域 1 筆）。
+
+- [ ] **3. agent 知道怎麼用**
+  Depends on: 1.
+  Outcome: agent 不必讀程式就知道怎麼跑匯出、輸出在哪、怎麼讀。
+  Checks:
+    - [ ] **用法寫進 agent 文件**
+      - Action: 讀 UnityExtension `.agents` 裡操作 Unity 的 skill（或 introduction）的匯出段落。
+      - Expect: 寫有 batchmode 的執行方式、輸出位置與欄位說明，並說明分析場景資料時先用它、不要手寫 YAML 解析。

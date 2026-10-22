@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-22T04:53:04.908742+00:00",
+  "updated_at": "2026-10-22T05:05:46.349585+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1188,42 +1188,54 @@
     },
     {
       "id": "agent-data-translator",
-      "title": "資料驅動的 Agent 翻譯器",
+      "title": "Agent 在 Unity 的工作效率（翻譯器與工具）",
       "status": "planned",
       "priority": 0,
-      "summary": "把場景、Prefab、SO 裡的組裝（inline SO 設定、UnityEvent 接線）翻譯成 agent 可直接讀的文字，引用解析成名稱路徑與型別，用 Unity 的 SerializedObject 讀取、batchmode 可跑、只讀。起因：2026-10-22 agent 手寫 Python 解析 ChatScene，漏掉 End 的 7 筆監聽器。第一步 UnityEvent 監控已有；下一步 inline SO 設定匯出。設計：Documentation/資料驅動的Agent翻譯器.md。",
+      "summary": "降低 agent 操作 Unity 的成本，依 CP 值分三層：第一層（成本低、立即見效）agent 作業說明 skill、GUID／資產索引與反查、batchmode 執行器、不開 Unity 的編譯檢查；第二層 inline SO 設定匯出（翻譯器，也是 ChatRequest 遷移的安全網）；第三層長期：一般物件匯出、建置時比對、寫回 Unity。起因：2026-10-22 agent 手寫 Python 解析 ChatScene，漏掉 End 的 7 筆監聽器。設計：Documentation/資料驅動的Agent翻譯器.md。",
       "pending_items": [
         {
           "id": "inline-so-export",
-          "title": "inline SO 設定匯出：每個 inline SO 的所在路徑、型別、名稱與欄位，引用解析成名稱路徑，UnityEvent 逐通道列出目標、方法、模式與參數",
+          "title": "（併入 translator-inline-so-export）inline SO 設定匯出",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-21T17:37:43.521618+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T05:05:46.349585+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
         },
         {
           "id": "acceptance-chatscene",
-          "title": "驗收：不寫臨時腳本，只讀工具輸出，重現 ChatScene 的 TaskEvent 分析（Begin 13＋2、End 5＋2、True 18、False 6＋1、Completed 6）",
+          "title": "（併入 translator-inline-so-export）驗收：重現 ChatScene 的 TaskEvent 分析",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-21T17:37:43.521618+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T05:05:46.349585+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
         },
         {
           "id": "general-objects",
-          "title": "之後：擴充到一般物件的階層、元件與欄位；建置流程中跑報告並 diff",
+          "title": "第三層：擴充到一般物件的階層、元件與欄位；建置流程中跑報告並 diff",
           "priority": 3,
           "status": "planned",
           "activity": [
@@ -1232,12 +1244,18 @@
               "actor": "claude",
               "at": "2026-10-21T17:37:43.521618+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T05:05:46.349585+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
         },
         {
           "id": "write-back-test",
-          "title": "之後：測試 agent 直接改翻譯器輸出；可行就成為 Agent friendly workflow 的格式候選（先讀後寫）",
+          "title": "第三層：測試 agent 直接改翻譯器輸出；可行就成為 Agent friendly workflow 的格式候選（先讀後寫）",
           "priority": 3,
           "status": "planned",
           "activity": [
@@ -1245,6 +1263,111 @@
               "event": "created",
               "actor": "claude",
               "at": "2026-10-21T17:57:17.034416+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T05:05:46.349585+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "decide-cli-home",
+          "title": "決策：第一層命令列工具（GUID 索引、batchmode 執行器、編譯檢查）的位置與語言",
+          "priority": 0,
+          "document_ref": {
+            "kind": "decision",
+            "scope_id": "unity-extension",
+            "task": "agent-data-translator"
+          },
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T05:05:46.349585+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "agent-unity-skill",
+          "title": "第一層 1：寫 agent 操作 Unity 的 skill（專案版本、編輯器佔用、batchmode、DryRun／Apply 腳本、MCP 已知問題、兩版本編譯檢查）並從 introduction 連過去",
+          "priority": 0,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "agent-unity-skill"
+          },
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T05:05:46.349585+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "step-guid-index",
+          "title": "第一層 2：GUID／資產索引與反查（等 cli-tool-home 決定後建立可執行項目）",
+          "priority": 1,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T05:05:46.349585+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "step-batchmode-runner",
+          "title": "第一層 3：batchmode 執行器（等 cli-tool-home 決定後建立可執行項目）",
+          "priority": 1,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T05:05:46.349585+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "step-compile-check",
+          "title": "第一層 4：不開 Unity 的編譯檢查，先支援 com.yu5h1.common（等 cli-tool-home 決定後建立可執行項目）",
+          "priority": 1,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T05:05:46.349585+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "translator-inline-so-export",
+          "title": "第二層：inline SO 設定匯出（common Editor），只讀輸出就能重現 ChatScene 的 TaskEvent 分析",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "translator-inline-so-export"
+          },
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T05:05:46.349585+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
