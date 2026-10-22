@@ -10,14 +10,16 @@ For each editor the tool compiles the asmdef's *current* source files in a throw
 1. A consumer project on that editor version that has Unity's generated `<AssemblyName>.csproj` in its root
    (written when Unity syncs IDE projects). Its HintPaths and DefineConstants are exactly what Unity uses
    for that assembly in that project, so the check matches Unity. Found automatically under W:/UnityProject,
-   or named with --reference-project.
+   or named with --reference-project. The csproj is only as fresh as Unity's last IDE sync: when its source
+   files or project references differ from the asmdef's current ones, the tool prints a warning and compiles
+   anyway.
 2. Otherwise a generic set: every DLL in the editor's Data/Managed/UnityEngine (Unity references UnityEditor
    for runtime assemblies too when compiling in the editor), the Core DLLs, Unity's version symbols,
    UNITY_EDITOR and standalone Windows symbols. Precompiled DLLs a consumer project adds (NUnit,
    Newtonsoft.Json ...) are missing in this mode, so its errors can be false.
 
-Referenced asmdefs found under UnityExtension/Packages are compiled first from their current sources.
-Package sources are never modified; everything is built in a temp folder.
+Referenced asmdefs found under UnityExtension/Packages or Unity/Core are compiled first from their current
+sources. Package sources are never modified; everything is built in a temp folder.
 Exit code: 0 when every editor compiled without errors, 1 otherwise, 2 for a setup problem.
 """
 import argparse
@@ -34,6 +36,8 @@ HUB_EDITORS = r"C:\Program Files\Unity\Hub\Editor"
 PROJECTS_ROOT = r"W:\UnityProject"
 EXTENSION_ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 PACKAGES = os.path.join(EXTENSION_ROOT, "Packages")
+# Where referenced asmdefs are looked up, in order; the first asmdef with a given name wins.
+ASMDEF_ROOTS = [PACKAGES, os.path.normpath(os.path.join(EXTENSION_ROOT, "..", "Core"))]
 CORE_RUNTIME = os.path.join(PACKAGES, "Core", "Runtime", "Yu5h1Lib.Runtime.dll")
 CORE_EDITOR = os.path.join(PACKAGES, "Core", "Editor", "Yu5h1Lib.Editor.dll")
 LEGACY_OR_NEWER = ["5_3", "5_4", "5_5", "5_6"] + [f"{y}_{m}" for y in range(2017, 2023) for m in range(1, 5)
@@ -69,13 +73,14 @@ def load_asmdef(path):
 
 def asmdef_index():
     by_key = {}
-    for path in glob.glob(os.path.join(PACKAGES, "**", "*.asmdef"), recursive=True):
-        if "~" in path:
-            continue
-        a = load_asmdef(path)
-        by_key[a["name"]] = a
-        if a["_guid"]:
-            by_key["GUID:" + a["_guid"]] = a
+    for root in ASMDEF_ROOTS:
+        for path in glob.glob(os.path.join(root, "**", "*.asmdef"), recursive=True):
+            if "~" in path:
+                continue
+            a = load_asmdef(path)
+            by_key.setdefault(a["name"], a)
+            if a["_guid"]:
+                by_key.setdefault("GUID:" + a["_guid"], a)
     return by_key
 
 
@@ -121,7 +126,48 @@ def read_generated(project, csproj):
     defines = [d for d in (m.group(1).split(";") if m else []) if d and d != "$(DefineConstants)"]
     project_refs = [os.path.splitext(os.path.basename(p))[0]
                     for p in re.findall(r'<ProjectReference Include="([^"]+)"', text)]
-    return refs, defines, project_refs
+    absolute = lambda p: os.path.normpath(p if os.path.isabs(p) else os.path.join(project, p))
+    compiled = [absolute(p) for p in re.findall(r'<Compile Include="([^"]+)"', text)]
+    asmdef_item = next((absolute(p) for p in re.findall(r'<None Include="([^"]+\.asmdef)"', text)), None)
+    return refs, defines, project_refs, compiled, asmdef_item
+
+
+def stale_warnings(asmdef, project, csproj, refs, project_refs, compiled, asmdef_item, index):
+    """Differences between a generated csproj and the asmdef's current sources and references."""
+    name, problems = asmdef["name"], []
+    # Compare paths relative to the asmdef folder, so a copy of the package elsewhere compares too.
+    csproj_root = os.path.dirname(asmdef_item) if asmdef_item else asmdef["_dir"]
+    def rel(path, root):
+        try:
+            return os.path.relpath(path, root)
+        except ValueError:  # another drive
+            return path
+    current = {os.path.normcase(rel(p, asmdef["_dir"])): rel(p, asmdef["_dir"]) for p in sources(asmdef)}
+    listed = {os.path.normcase(rel(p, csproj_root)): rel(p, csproj_root) for p in compiled}
+    added = sorted(current[k] for k in current.keys() - listed.keys())
+    removed = sorted(listed[k] for k in listed.keys() - current.keys())
+    if added or removed:
+        sample = added[:5] + removed[:5]
+        problems.append(f"source files differ ({len(added)} not in the csproj, {len(removed)} listed but no longer "
+                        f"in the sources: {', '.join(sample)}{' ...' if len(added) > 5 or len(removed) > 5 else ''})")
+    declared = set()
+    for ref in asmdef.get("references", []):
+        dep = index.get(ref)
+        if dep is not None:
+            declared.add(dep["name"])
+        elif not ref.startswith("GUID:"):
+            declared.add(ref)
+    in_csproj = set(project_refs) | {os.path.splitext(os.path.basename(r))[0] for r in refs}
+    # A reference the project does not build (no csproj for it there) is dropped by Unity too, so it is not stale.
+    missing = sorted(n for n in declared - in_csproj if os.path.isfile(os.path.join(project, n + ".csproj")))
+    extra = sorted(n for n in set(project_refs) - declared if n in index)
+    if missing or extra:
+        problems.append("asmdef references differ (" + "; ".join(
+            part for part in (f"not in the csproj: {', '.join(missing)}" if missing else "",
+                              f"no longer in the asmdef: {', '.join(extra)}" if extra else "") if part) + ")")
+    return [f"{name}: {csproj} looks stale: {p}; its references and defines may be out of date. Regenerate it in "
+            f"Unity ({project}: Preferences > External Tools > Regenerate project files); compiling anyway"
+            for p in problems]
 
 
 def write_project(folder, asmdef, refs, defines, own_framework):
@@ -169,13 +215,16 @@ def build(asmdef, ctx, built):
     version, editor_dir = ctx["version"], ctx["editor_dir"]
     project, csproj = find_generated(name, version, ctx["candidates"])
     if csproj:
-        refs, defines, dep_names = read_generated(project, csproj)
+        refs, defines, dep_names, compiled, asmdef_item = read_generated(project, csproj)
         ctx["notes"].add(f"{name}: references and defines from {csproj}")
+        ctx["warnings"].extend(stale_warnings(asmdef, project, csproj, refs, dep_names, compiled, asmdef_item,
+                                              ctx["index"]))
         deps = []
         for dep_name in dep_names:
             dep = ctx["index"].get(dep_name)
             if dep is None:
-                ctx["notes"].add(f"{name}: project reference {dep_name} is not under UnityExtension/Packages; not compiled")
+                ctx["notes"].add(f"{name}: project reference {dep_name} not found under UnityExtension/Packages "
+                                 f"or Unity/Core; not compiled")
             else:
                 deps.append(dep)
     else:
@@ -187,7 +236,8 @@ def build(asmdef, ctx, built):
         for key in asmdef.get("references", []):
             dep = ctx["index"].get(key)
             if dep is None:
-                ctx["notes"].add(f"{name}: reference {key} is not under UnityExtension/Packages; not compiled")
+                ctx["notes"].add(f"{name}: reference {key} not found under UnityExtension/Packages or Unity/Core; "
+                                 f"not compiled")
             else:
                 deps.append(dep)
         for vd in asmdef.get("versionDefines", []):
@@ -242,12 +292,14 @@ def main(argv=None):
                 failed = True
                 continue
             ctx = {"version": version, "editor_dir": editor_dir, "candidates": candidates, "index": index,
-                   "work": work, "extra_defines": list(args.define), "notes": set()}
+                   "work": work, "extra_defines": list(args.define), "notes": set(), "warnings": []}
             dll, errors, warnings = build(target, ctx, {})
             status = "ok" if dll else "FAILED"
             print(f"[{version}] {target['name']}: {status}, {len(errors)} error(s), {len(warnings)} warning(s)")
             for line in errors[:30]:
                 print(f"  {line}")
+            for line in ctx["warnings"]:
+                print(f"  WARNING: {line}")
             for note in sorted(ctx["notes"]):
                 print(f"  note: {note}")
             failed = failed or dll is None
