@@ -8,6 +8,8 @@ Options:
   --cache   also index Library/PackageCache (registry packages); slower
   --json    print JSON instead of text
 
+Exit code: 0 found, 1 not found, 2 not a Unity project or bad arguments.
+
 Covers Assets, embedded packages under Packages/, and file: packages from Packages/manifest.json.
 Reads only the guid line of .meta files and GUID strings inside asset files; it never parses YAML structure.
 """
@@ -156,7 +158,8 @@ def main(argv=None):
     else:
         for key, value in result.items():
             print(f"{key}: {value}")
-    return 0 if result is not None else 1
+    found = result is not None and not (args.command == "guid" and result["guid"] is None)
+    return 0 if found else 1
 
 
 if __name__ == "__main__":
