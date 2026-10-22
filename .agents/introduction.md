@@ -52,6 +52,8 @@ The workflow (inspect, implement the gaps, accept) is the shared [referenced-mod
 
 Read only what matches the current task:
 
+- [Unity agent operations](skills/unity-agent-operations/SKILL.md) — read before opening, running, scanning or compile-checking any Yu5h1Lib Unity project: which editor each project uses, the one-editor-per-project rule, batchmode commands and log locations, re-runnable DryRun/Apply editor scripts, unityMCP pitfalls, compile checks on 6000.3.9f1 and 6000.6.0f1, and the route to every agent tool.
+
 - [Unity UI extraction](skills/unity-ui-extraction/SKILL.md) — extract reusable Unity UI from consumer projects into shared packages, preserve assets/lifecycle, verify a second use, and migrate callers. Existing-control adoption routes to the relevant domain skill; Web extraction remains owned by Web.
 - Adopting a Yu5h1Lib.UX module in a package has no skill of its own here: the shared referenced-module-acceptance skill plus [the section above](#adopting-a-ux-module-in-a-package).
 

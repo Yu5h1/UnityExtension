@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-22T05:05:46.349585+00:00",
+  "updated_at": "2026-10-22T05:11:47.836927+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1293,25 +1293,6 @@
           ]
         },
         {
-          "id": "agent-unity-skill",
-          "title": "第一層 1：寫 agent 操作 Unity 的 skill（專案版本、編輯器佔用、batchmode、DryRun／Apply 腳本、MCP 已知問題、兩版本編譯檢查）並從 introduction 連過去",
-          "priority": 0,
-          "document_ref": {
-            "kind": "checklist",
-            "scope_id": "unity-extension",
-            "task": "agent-unity-skill"
-          },
-          "status": "planned",
-          "activity": [
-            {
-              "event": "created",
-              "actor": "claude",
-              "at": "2026-10-22T05:05:46.349585+00:00",
-              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
-            }
-          ]
-        },
-        {
           "id": "step-guid-index",
           "title": "第一層 2：GUID／資產索引與反查（等 cli-tool-home 決定後建立可執行項目）",
           "priority": 1,
@@ -1374,6 +1355,37 @@
         }
       ],
       "completed_items": [
+        {
+          "id": "agent-unity-skill",
+          "title": "第一層 1：寫 agent 操作 Unity 的 skill（專案版本、編輯器佔用、batchmode、DryRun／Apply 腳本、MCP 已知問題、兩版本編譯檢查）並從 introduction 連過去",
+          "priority": 0,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "agent-unity-skill"
+          },
+          "status": "done",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T05:05:46.349585+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "started",
+              "actor": "claude",
+              "at": "2026-10-22T05:09:47.247454+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-10-22T05:11:47.836927+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
         {
           "id": "decide-location",
           "title": "位置：com.yu5h1.common Editor，和 UnityEvent 監控同處（2026-10-22 定）",
