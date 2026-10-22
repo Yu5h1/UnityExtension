@@ -1,0 +1,32 @@
+# Inline Export Sub-assets Checklist
+
+Current round: `../Documentation/資料驅動的Agent翻譯器.md#inline-so-設定匯出`.
+
+指示（使用者 2026-10-22，第二個 agent 驗收 `translator-inline-so-export` 的觀察 5，當時只讀程式碼推斷、沒有實跑）：`InlineObjectExport` 的 `-ioAssets` 模式裡，`UnityEventScanner.ScanAssets` 對 `.asset` 檔逐一掃 `LoadAllAssetsAtPath` 回傳的每個 ScriptableObject；若某個子資產比持有它的主資產先被掃到，它會被當成頂層物件、記進 visited，之後主資產引用到它時就不再列入 `EmbeddedObject`，因此不會出現在匯出的 `objects` 裡。要達成：先實際重現這個情況，再修正，使同一份資產裡被主資產引用的子資產一律出現在 `objects`，持有者與欄位路徑正確，與載入順序無關；UnityEvent 報告的結果不變。不在範圍內：場景模式、Prefab 的行為、其他工具。測試資產只能放在暫存資料夾、用完刪除，不留在任何專案。本輪只放 agent 的檢查，沒有人工檢查。
+
+- [ ] **1. 重現**
+  Outcome: 確認觀察 5 是否真的發生，以及在哪種載入順序下發生。
+  Checks:
+    - [ ] **建立含子資產的測試資產並匯出**
+      - Action: 在一個沒被編輯器開著的消費專案（例如 VCP）的暫存資料夾，以 batchmode Editor 腳本建立一個 ScriptableObject 主資產，用 `AssetDatabase.AddObjectToAsset` 加入它以欄位引用的子資產 SO（子資產上有一個接了監聽器的 UnityEvent），再對該資產跑 `InlineObjectExport.Run -ioAssets <路徑>`。
+      - Expect: 記錄 `LoadAllAssetsAtPath` 的回傳順序，以及子資產是否出現在 `objects`；若沒有出現，問題成立。
+
+- [ ] **2. 修正**
+  Depends on: 1.
+  Outcome: 被主資產引用的子資產一律出現在 `objects`，與載入順序無關。
+  Checks:
+    - [ ] **子資產出現在 objects**
+      - Action: 修正後對同一個測試資產再跑匯出。
+      - Expect: 子資產出現在 `objects`，`holder` 是主資產，`field` 是引用它的欄位路徑；它的 UnityEvent 列在 `events`。
+    - [ ] **UnityEvent 報告不變**
+      - Action: 對 VCP `Assets/Scene/ChatScene.unity` 與測試資產各跑一次 `UnityEventReport.Run`，和修正前比較。
+      - Expect: ChatScene 仍是 226 筆、24 筆失效，逐列相同（`generatedAt` 除外）；測試資產的監聽器筆數與修正前相同。
+    - [ ] **場景模式不變**
+      - Action: 對 VCP ChatScene 跑 `InlineObjectExport.Run`，和修正前的輸出比較。
+      - Expect: 逐位元組相同。
+    - [ ] **兩個 Unity 版本都能編譯**
+      - Action: `python Tools/agent/unity_compile.py Packages/common/Editor/Yu5h1Lib.Common.Editor.asmdef`。
+      - Expect: 6000.3.9f1 與 6000.6.0f1 都 0 錯誤，警告數仍為 4。
+    - [ ] **測試資產已清除**
+      - Action: 刪除暫存資料夾後看消費專案的 `git status`。
+      - Expect: 沒有留下任何測試檔或 `.meta`。

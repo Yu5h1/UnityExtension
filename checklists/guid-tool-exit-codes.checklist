@@ -1,0 +1,26 @@
+# GUID Tool Exit Codes Checklist
+
+Current round: `../Documentation/資料驅動的Agent翻譯器.md#第一層成本低立即見效`.
+
+指示（使用者 2026-10-22，第二個 agent 驗收 `agent-cli-tools` 的觀察 1）：`Tools/agent/unity_guid.py` 的 `guid <path>` 查不到時印出「not found」卻以結束碼 0 結束，而 `find` 查不到時結束碼是 1；agent 依結束碼判斷成敗時會把查不到當成成功。要達成：三個子指令的結束碼一致——查到為 0、查不到為 1、參數或專案錯誤為 2——並寫進 `unity-agent-operations` skill 的 Tools 表。不在範圍內：改輸出格式、改類別名稱的取法（觀察 2）、其他工具。本輪只放 agent 的檢查，沒有人工檢查。
+
+- [ ] **1. 結束碼一致**
+  Outcome: `find`、`guid`、`refs` 查到時結束碼 0，查不到時 1，專案或參數錯誤時 2。
+  Checks:
+    - [ ] **查不到**
+      - Action: 對 VCP 執行 `find 00000000000000000000000000000000`、`guid Assets/NoSuchFile.asset`、`refs Assets/NoSuchFile.asset`。
+      - Expect: 三個都印出查不到的訊息，結束碼都是 1。
+    - [ ] **查到**
+      - Action: 對 VCP 執行 `find 8e4dde05b46a5004ea369eca527d1481`、`guid Assets/Scripts/Request/RequestData.cs`、`refs 8e4dde05b46a5004ea369eca527d1481`。
+      - Expect: 三個都有結果，結束碼都是 0；輸出內容和改動前相同。
+    - [ ] **不是 Unity 專案**
+      - Action: 對 `C:/Users/Yu5h1/Dev/VSProjects/Yu5h1Lib/Unity/UnityExtension` 執行 `find` 任一 GUID。
+      - Expect: 回報不是 Unity 專案，結束碼 2。
+
+- [ ] **2. skill 寫明結束碼**
+  Depends on: 1.
+  Outcome: agent 從 skill 就知道怎麼判斷 `unity_guid.py` 的結果。
+  Checks:
+    - [ ] **Tools 表**
+      - Action: 讀 `.agents/skills/unity-agent-operations/SKILL.md` 的 `unity_guid.py` 列。
+      - Expect: 寫明 0 查到、1 查不到、2 專案或參數錯誤。

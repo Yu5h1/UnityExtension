@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-22T05:25:45.018021+00:00",
+  "updated_at": "2026-10-22T07:00:48.597490+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1329,6 +1329,44 @@
               "event": "updated",
               "actor": "claude",
               "at": "2026-10-22T05:13:02.330921+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "guid-tool-exit-codes",
+          "title": "unity_guid.py 三個子指令的結束碼一致（查到 0、查不到 1、錯誤 2），並寫進 skill（驗收觀察 1）",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "guid-tool-exit-codes"
+          },
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T07:00:48.597490+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "inline-export-subassets",
+          "title": "inline SO 匯出的 -ioAssets 模式：先重現子資產漏列，再修正成與載入順序無關（驗收觀察 5）",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "inline-export-subassets"
+          },
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T07:00:48.597490+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
