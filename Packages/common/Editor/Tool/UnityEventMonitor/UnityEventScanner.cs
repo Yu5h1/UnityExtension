@@ -122,7 +122,9 @@ namespace Yu5h1Lib.EditorExtension
                 CollectCalls(so, obj, ownerPath, assetPath, records, embedded);
             foreach (var (inner, field) in embedded)
             {
-                if (embeddedOut != null && !visited.Contains(inner))
+                // Judged by what is already recorded, not by visited: LoadAllAssetsAtPath may return a sub-asset before
+                // the main asset that holds it, and that sub-asset is then visited as a top-level object first.
+                if (embeddedOut != null && !AssetDatabase.IsMainAsset(inner) && !embeddedOut.Exists(e => e.obj == inner))
                     embeddedOut.Add(new EmbeddedObject { obj = inner, holder = obj, holderPath = ownerPath, fieldPath = field, assetPath = assetPath });
                 ScanObject(inner, $"{ownerPath} > {inner.GetType().Name}", assetPath, records, visited, embeddedOut);
             }
