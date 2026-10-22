@@ -69,18 +69,22 @@ Current round: `../Documentation/Addressables/plan.md#首輪範圍讀取處理�
       - Action: 讀 `Documentation/Addressables/plan.md` 的〈首輪範圍〉與 `Documentation/Addressables/handoff.md`。
       - Expect: 標明第 1 步已實作與對應的 commit，以及 Yu5h1LibTest 的測試資料夾與場景路徑。
 
-- [ ] **6. 他驗**
+- [x] **6. 他驗**
   Outcome: 執行者以外的 session 依 Addressables 計畫確認結果。
   Checks:
-    - [ ] **驗收條件未被改動** `[acceptance]`
+    - [x] **驗收條件未被改動** `[acceptance]`
       - Action: 以 git log -p 檢查本檔第 6 項自寫入它的提交後的變更。
       - Expect: 只有標記與 Recorded 變動。
-    - [ ] **元件與替換方式** `[acceptance]`
+      - Recorded: claude:c50607b2-d738-4d3a-92d8-30c518e9ac75; at=2026-10-22T18:08:04Z; fp=e8a46528b16e
+    - [x] **元件與替換方式** `[acceptance]`
       - Action: 對照 `../Documentation/Addressables/plan.md#首輪範圍讀取處理器代理與角色載入` 的讀取處理器、代理、讀取器欄位與初始化器，以及 `#套件位置與依賴` 的讀取器位置，審查 `git log --grep loader-handler` 的變更。
       - Expect: 讀取器基底與 Resources 讀取器在 common、處理器／代理／初始化器在本套件；處理器是 singleton，讀取器是 MonoBehaviour 欄位、空時用 Resources；代理不是 singleton，讀取請求是 `AsyncProgressObject`；初始化器是消費端繼承的基底類別，掛在代理上；套件不認識消費端元件。
-    - [ ] **範圍界線** `[acceptance]`
+      - Recorded: claude:c50607b2-d738-4d3a-92d8-30c518e9ac75; at=2026-10-22T18:08:04Z; fp=c9e1f2c74789
+    - [x] **範圍界線** `[acceptance]`
       - Action: 對照本檔開頭的「不在範圍內」與 `../Documentation/Addressables/plan.md#首輪範圍讀取處理器代理與角色載入` 的順序，審查變更。
       - Expect: 沒有 Addressables 讀取器、備援測試角色流程或 VCP 程式；VCP 的 repo 沒有被修改。
-    - [ ] **在 Yu5h1LibTest 重現** `[acceptance]`
+      - Recorded: claude:c50607b2-d738-4d3a-92d8-30c518e9ac75; at=2026-10-22T18:08:04Z; fp=1ef5a4b81ce4
+    - [x] **在 Yu5h1LibTest 重現** `[acceptance]`
       - Action: 自行重跑 `unity_compile.py` 兩個 asmdef，在 Yu5h1LibTest 重跑新測試，並開本檔記錄的測試場景進入 Play（unityMCP 不可用時記錄原因）。
       - Expect: 兩個編輯器 0 錯誤；新測試通過；角色出現、初始化器加的元件存在。
+      - Recorded: claude:c50607b2-d738-4d3a-92d8-30c518e9ac75; at=2026-10-22T18:08:05Z; fp=dfbe8775d04b
