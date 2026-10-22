@@ -3,7 +3,7 @@
 Usage:
   python unity_guid.py <project> find <guid>          asset path, package and type for a GUID
   python unity_guid.py <project> guid <asset-path>    GUID of an asset (path relative to the project or absolute)
-  python unity_guid.py <project> refs <guid|path>     files that reference the asset
+  python unity_guid.py <project> refs <guid|path>     files that reference the asset (a GUID must belong to an indexed asset)
 Options:
   --cache   also index Library/PackageCache (registry packages); slower
   --json    print JSON instead of text
@@ -145,7 +145,9 @@ def main(argv=None):
             if guid is None:
                 print(f"no .meta for {path}", file=sys.stderr)
                 return 1
-        result = {"guid": guid, "references": find_refs(project, guid, args.cache)}
+        elif guid not in build_index(project, args.cache):
+            guid = None
+        result = {"guid": guid, "references": find_refs(project, guid, args.cache)} if guid else None
 
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))

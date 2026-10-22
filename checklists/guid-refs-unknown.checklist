@@ -4,16 +4,16 @@ Current round: `../Documentation/資料驅動的Agent翻譯器.md#第一層成�
 
 驗證方式：他驗。來源：第二個 agent 驗收 `guid-tool-exit-codes`（UnityExtension `1fad8df`）的觀察 1。現況：`Tools/agent/unity_guid.py refs <guid>` 不檢查 GUID 是否屬於任何資產，查不存在的 GUID 也以結束碼 0 結束（`refs 000…0` 列出 49 個含空引用的檔案），而 skill 的 Tools 表寫的契約是「1 = 查不到」。要達成：`refs` 收到不屬於任何資產的 GUID 時回報查不到、結束碼 1；屬於資產的 GUID 與用路徑查詢的行為不變。不在範圍內：`find`、`guid` 子指令、輸出格式、其他工具。
 
-- [ ] **1. refs 對未知 GUID 回報查不到**
+- [x] **1. refs 對未知 GUID 回報查不到**
   Outcome: `refs` 只在 GUID 屬於索引中的資產時列出引用，否則回報查不到並以 1 結束。
   Checks:
-    - [ ] **未知 GUID**
+    - [x] **未知 GUID**
       - Action: 對 VCP 執行 `refs 00000000000000000000000000000000`。
       - Expect: 回報查不到，結束碼 1，不列出任何檔案。
-    - [ ] **已知 GUID 不變**
+    - [x] **已知 GUID 不變**
       - Action: 對 VCP 執行 `refs 8e4dde05b46a5004ea369eca527d1481` 與 `refs Assets/NoSuchFile.asset`，和改動前比較。
       - Expect: 前者列出同樣 7 個檔案、結束碼 0；後者結束碼仍是 1。
-    - [ ] **skill 寫明**
+    - [x] **skill 寫明**
       - Action: 讀 `.agents/skills/unity-agent-operations/SKILL.md` 的 `unity_guid.py` 列。
       - Expect: 寫明 `refs` 的 GUID 必須屬於索引中的資產，否則視為查不到。
 
