@@ -2,7 +2,7 @@
 
 > Task ID: agent-data-translator
 
-狀態：計畫（2026-10-22），尚未實作。這是優化 agent 在 Unity 工作流程的唯一任務卡，依 CP 值分三層推進
+狀態：第一層與第二層已實作（2026-10-22）：agent 作業說明、`Tools/agent/` 三個命令列工具、inline SO 設定匯出；第三層未開始。這是優化 agent 在 Unity 工作流程的唯一任務卡，依 CP 值分三層推進
 （[發展步驟](#發展步驟依-cp-值)）。
 
 ## 目標
@@ -115,7 +115,7 @@ agent 在這個工作區操作 Unity 時實際付出的成本，以及對應的�
 不寫任何臨時腳本，只讀工具輸出，重現 2026-10-22 的 ChatScene 分析（[非同步工作〈ChatScene 的監聽器分布〉](非同步工作.md#chatscene-的監聽器分布)）：
 
 - 14 個請求物件與 `ChatRequest` 的全域回呼；
-- 各事件的筆數：Begin 13＋2、End 5＋2、True 18、False 6＋1、Completed 6；
+- 各事件的筆數：Begin 11＋2、End 5＋2、True 18、False 5＋1、Completed 6（2026-10-22 寫成 13＋2 與 6＋1 是手算重複加了全域回呼，翻譯器的輸出更正了它）；
 - 哪些監聽器讀取動態 string（True 5 筆、False 4 筆）。
 
 ## 執行方式

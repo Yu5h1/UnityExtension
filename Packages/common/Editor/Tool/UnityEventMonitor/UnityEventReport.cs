@@ -111,13 +111,13 @@ namespace Yu5h1Lib.EditorExtension
             return doc.broken;
         }
 
-        private static string GetArgument(string[] args, string name)
+        internal static string GetArgument(string[] args, string name)
         {
             var i = Array.IndexOf(args, name);
             return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
         }
 
-        private static string[] SplitArgument(string[] args, string name) =>
+        internal static string[] SplitArgument(string[] args, string name) =>
             (GetArgument(args, name) ?? string.Empty).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
     }
 }

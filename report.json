@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-22T05:19:47.338004+00:00",
+  "updated_at": "2026-10-22T05:25:45.018021+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1189,7 +1189,7 @@
     {
       "id": "agent-data-translator",
       "title": "Agent 在 Unity 的工作效率（翻譯器與工具）",
-      "status": "planned",
+      "status": "in_progress",
       "priority": 0,
       "summary": "降低 agent 操作 Unity 的成本，依 CP 值分三層：第一層（成本低、立即見效）agent 作業說明 skill、GUID／資產索引與反查、batchmode 執行器、不開 Unity 的編譯檢查；第二層 inline SO 設定匯出（翻譯器，也是 ChatRequest 遷移的安全網）；第三層長期：一般物件匯出、建置時比對、寫回 Unity。起因：2026-10-22 agent 手寫 Python 解析 ChatScene，漏掉 End 的 7 筆監聽器。設計：Documentation/資料驅動的Agent翻譯器.md。",
       "pending_items": [
@@ -1332,7 +1332,9 @@
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
-        },
+        }
+      ],
+      "completed_items": [
         {
           "id": "translator-inline-so-export",
           "title": "第二層：inline SO 設定匯出（common Editor），只讀輸出就能重現 ChatScene 的 TaskEvent 分析",
@@ -1342,18 +1344,28 @@
             "scope_id": "unity-extension",
             "task": "translator-inline-so-export"
           },
-          "status": "planned",
+          "status": "done",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-22T05:05:46.349585+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "started",
+              "actor": "claude",
+              "at": "2026-10-22T05:20:03.674792+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-10-22T05:25:45.018021+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
-        }
-      ],
-      "completed_items": [
+        },
         {
           "id": "agent-cli-tools",
           "title": "第一層 2～4：Tools/agent/ 的 Python 命令列工具——GUID／資產索引與反查、batchmode 執行器、不開 Unity 的編譯檢查（先支援 common），登記到 unity-agent-operations skill",

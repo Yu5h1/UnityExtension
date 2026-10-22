@@ -1,6 +1,7 @@
 // Collects every persistent call from loaded scenes, prefab assets and ScriptableObject assets,
 // and judges each one with UnityEventBase.GetValidMethodInfo, the rule Unity itself uses.
-// Shared core of UnityEventViewer (interactive) and UnityEventReport (batchmode).
+// Shared core of UnityEventViewer (interactive), UnityEventReport (batchmode) and InlineObjectExport,
+// which also takes the inline ScriptableObjects the walk reaches.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,18 @@ using Object = UnityEngine.Object;
 
 namespace Yu5h1Lib.EditorExtension
 {
+    /// <summary>
+    /// A ScriptableObject stored inside a scene or asset file (an inline instance or a sub-asset), with where it is held.
+    /// </summary>
+    public class EmbeddedObject
+    {
+        public ScriptableObject obj;
+        public Object holder;
+        public string holderPath;
+        public string fieldPath;
+        public string assetPath;
+    }
+
     public static class UnityEventScanner
     {
         private const string PersistentCalls = "m_PersistentCalls";
@@ -37,17 +50,23 @@ namespace Yu5h1Lib.EditorExtension
             return records;
         }
 
-        public static void ScanScene(Scene scene, List<UnityEventRecord> records, HashSet<Object> visited = null)
+        public static void ScanScene(Scene scene, List<UnityEventRecord> records, HashSet<Object> visited = null,
+            List<EmbeddedObject> embeddedOut = null)
         {
             visited ??= new HashSet<Object>();
             foreach (var root in scene.GetRootGameObjects())
-                ScanHierarchy(root, scene.path, records, visited);
+                ScanHierarchy(root, scene.path, records, visited, embeddedOut);
         }
 
         /// <summary>
         /// Scans prefab and ScriptableObject assets under the given folders or asset paths without opening them in an editor view.
         /// </summary>
-        public static List<UnityEventRecord> ScanAssets(params string[] pathsOrFolders)
+        public static List<UnityEventRecord> ScanAssets(params string[] pathsOrFolders) => ScanAssets(pathsOrFolders, null);
+
+        /// <summary>
+        /// Same as <see cref="ScanAssets(string[])"/>, also collecting the inline ScriptableObjects the walk reaches.
+        /// </summary>
+        public static List<UnityEventRecord> ScanAssets(string[] pathsOrFolders, List<EmbeddedObject> embeddedOut)
         {
             var records = new List<UnityEventRecord>();
             var visited = new HashSet<Object>();
@@ -57,12 +76,12 @@ namespace Yu5h1Lib.EditorExtension
                 {
                     var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
                     if (prefab != null)
-                        ScanHierarchy(prefab, path, records, visited);
+                        ScanHierarchy(prefab, path, records, visited, embeddedOut);
                 }
                 else
                 {
                     foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(path).OfType<ScriptableObject>())
-                        ScanObject(asset, path, records, visited);
+                        ScanObject(asset, DescribePath(asset), path, records, visited, embeddedOut);
                 }
             }
             return records;
@@ -77,12 +96,13 @@ namespace Yu5h1Lib.EditorExtension
             return files.Concat(found).Where(p => p.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase) || p.EndsWith(".asset", StringComparison.OrdinalIgnoreCase)).Distinct();
         }
 
-        public static void ScanHierarchy(GameObject root, string assetPath, List<UnityEventRecord> records, HashSet<Object> visited = null)
+        public static void ScanHierarchy(GameObject root, string assetPath, List<UnityEventRecord> records, HashSet<Object> visited = null,
+            List<EmbeddedObject> embeddedOut = null)
         {
             visited ??= new HashSet<Object>();
             foreach (var component in root.GetComponentsInChildren<Component>(true))
                 if (component != null)
-                    ScanObject(component, assetPath, records, visited);
+                    ScanObject(component, DescribePath(component), assetPath, records, visited, embeddedOut);
         }
 
         /// <summary>
@@ -90,23 +110,29 @@ namespace Yu5h1Lib.EditorExtension
         /// (inline instances in a scene or sub-assets of the same prefab/asset), which no hierarchy walk reaches.
         /// </summary>
         public static void ScanObject(Object obj, string assetPath, List<UnityEventRecord> records, HashSet<Object> visited = null) =>
-            ScanObject(obj, DescribePath(obj), assetPath, records, visited ?? new HashSet<Object>());
+            ScanObject(obj, DescribePath(obj), assetPath, records, visited ?? new HashSet<Object>(), null);
 
-        private static void ScanObject(Object obj, string ownerPath, string assetPath, List<UnityEventRecord> records, HashSet<Object> visited)
+        private static void ScanObject(Object obj, string ownerPath, string assetPath, List<UnityEventRecord> records, HashSet<Object> visited,
+            List<EmbeddedObject> embeddedOut)
         {
             if (!visited.Add(obj))
                 return;
-            var embedded = new List<ScriptableObject>();
+            var embedded = new List<(ScriptableObject so, string field)>();
             using (var so = new SerializedObject(obj))
                 CollectCalls(so, obj, ownerPath, assetPath, records, embedded);
-            foreach (var inner in embedded)
-                ScanObject(inner, $"{ownerPath} > {inner.GetType().Name}", assetPath, records, visited);
+            foreach (var (inner, field) in embedded)
+            {
+                if (embeddedOut != null && !visited.Contains(inner))
+                    embeddedOut.Add(new EmbeddedObject { obj = inner, holder = obj, holderPath = ownerPath, fieldPath = field, assetPath = assetPath });
+                ScanObject(inner, $"{ownerPath} > {inner.GetType().Name}", assetPath, records, visited, embeddedOut);
+            }
         }
 
         private static bool IsEmbedded(ScriptableObject so, string assetPath) =>
             !EditorUtility.IsPersistent(so) || AssetDatabase.GetAssetPath(so) == assetPath;
 
-        private static void CollectCalls(SerializedObject so, Object obj, string ownerPath, string assetPath, List<UnityEventRecord> records, List<ScriptableObject> embedded)
+        private static void CollectCalls(SerializedObject so, Object obj, string ownerPath, string assetPath, List<UnityEventRecord> records,
+            List<(ScriptableObject so, string field)> embedded)
         {
             var it = so.GetIterator();
             var enter = true;
@@ -116,7 +142,7 @@ namespace Yu5h1Lib.EditorExtension
                 if (it.propertyType == SerializedPropertyType.ObjectReference)
                 {
                     if (it.objectReferenceValue is ScriptableObject referenced && IsEmbedded(referenced, assetPath))
-                        embedded.Add(referenced);
+                        embedded.Add((referenced, it.propertyPath));
                     continue;
                 }
                 if (it.name != PersistentCalls)
@@ -130,8 +156,9 @@ namespace Yu5h1Lib.EditorExtension
                 {
                     var call = calls.GetArrayElementAtIndex(i);
                     records.Add(Evaluate(obj, ownerPath, assetPath, eventPath, i, call, eventArgs));
-                    if (call.FindPropertyRelative("m_Arguments.m_ObjectArgument").objectReferenceValue is ScriptableObject argument && IsEmbedded(argument, assetPath))
-                        embedded.Add(argument);
+                    var argumentProperty = call.FindPropertyRelative("m_Arguments.m_ObjectArgument");
+                    if (argumentProperty.objectReferenceValue is ScriptableObject argument && IsEmbedded(argument, assetPath))
+                        embedded.Add((argument, argumentProperty.propertyPath));
                 }
                 enter = false;
             }
