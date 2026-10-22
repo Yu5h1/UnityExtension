@@ -30,12 +30,14 @@ Current round: `../Documentation/資料驅動的Agent翻譯器.md#原則`.
       - Action: 讀 `.agents/skills/unity-agent-operations/SKILL.md` 的 inline SO 匯出列。
       - Expect: 寫明 `totals` 是一次執行中所有場景與資產的加總。
 
-- [ ] **3. 他驗**
+- [x] **3. 他驗**
   Outcome: 執行者以外的 session 依計畫〈原則〉確認結果。
   Checks:
-    - [ ] **驗收條件未被改動** `[acceptance]`
+    - [x] **驗收條件未被改動** `[acceptance]`
       - Action: 以 git log -p 檢查本檔第 3 項自寫入它的提交後的變更。
       - Expect: 只有標記與 Recorded 變動。
-    - [ ] **輸出穩定可 diff** `[acceptance]`
+      - Recorded: claude:f0409115-d767-43b3-b7a1-4683af36d9be; at=2026-10-22T13:34:15Z; fp=c0c0a6cda403
+    - [x] **輸出穩定可 diff** `[acceptance]`
       - Action: 對照 `../Documentation/資料驅動的Agent翻譯器.md#原則` 的「輸出要穩定排序，同一份場景重跑結果相同，改動前後的輸出可以直接 diff」，審查 `git log --grep inline-export-asset-order` 的變更，並自行建一份含巢狀子資產的暫存資產，在剛建立與從磁碟讀取兩種情況各匯出一次，用完刪除。
       - Expect: 兩份匯出逐位元組相同；ChatScene 的匯出與 UnityEvent 報告和改動前相同；消費專案沒有留下測試檔。
+      - Recorded: claude:f0409115-d767-43b3-b7a1-4683af36d9be; at=2026-10-22T13:34:15Z; fp=5100f1702359
