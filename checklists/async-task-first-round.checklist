@@ -1,0 +1,78 @@
+# Async Task First Round Checklist
+
+Current round: `../Documentation/非同步工作.md#首輪讀取角色`.
+
+驗證方式：他驗。指示（使用者 2026-10-22，〈非同步工作〉首輪，原本的六個無綁定步驟項目改成本項）：讀取角色需要非同步工作物件。現況：`Packages/common/Runtime/Task/AsyncTaskObject.cs` 是 `IEnumerator` 版的抽象 SO，只有 `_begin`、`_end`（UnityEvent）與 `_resultRecived`（BinaryEvent）；UnityExtension 與 `W:/UnityProject` 底下所有專案都沒有它的子類別，所以改寫它不會遺失任何序列化資料。要達成：依〈非同步工作〉的〈已決定〉與〈首輪：讀取角色〉，在 `com.yu5h1.common` 做出判斷物件基底、改寫成 `Awaitable` 的 `AsyncTaskObject`、`AsyncProgressObject`、`AsyncLoadObject<T>`，附測試與 agent 文件。不在範圍內：`TaskEvent`、VCP 的 `RequestData`／`ChatRequest`、PopupPanel 的 `LogicObject`（都屬〈之後：ChatRequest 優化〉）、解析 string 的判斷物件變體、Addressables 讀取器。名稱要能說明用途（UnityExtension plan〈設計原則〉的「直覺優先於教學」）。
+
+- [ ] **1. 判斷物件基底**
+  Outcome: common 有一個可 inline 使用的判斷物件基底：輸入 string，回傳成敗與內容，可以同步或非同步；自帶 True<string>、False<string>、Completed<bool> 三個事件。
+  Checks:
+    - [ ] **型別與事件**
+      - Action: 讀新的判斷物件基底。
+      - Expect: 是 ScriptableObject，在 `Yu5h1Lib.Common` 組件；判斷方法接受 string、回傳成敗與內容，非同步版本以 `Awaitable` 回傳；有 True<string>、False<string>、Completed<bool> 三個序列化事件。
+    - [ ] **同步與非同步子類別都能寫**
+      - Action: 在測試中各寫一個同步與一個非同步的判斷子類別。
+      - Expect: 兩者都能被工作物件 await 並觸發正確的分支事件。
+
+- [ ] **2. 改寫 AsyncTaskObject**
+  Outcome: `AsyncTaskObject` 用 `Awaitable` 執行，事件順序與取消行為照〈已決定〉。
+  Checks:
+    - [ ] **執行方法與事件**
+      - Action: 讀改寫後的 `AsyncTaskObject`。
+      - Expect: 有可直接 await、可傳 `CancellationToken` 的執行方法；固定事件只有 Begin<string> 與 End<string>；有選用的判斷欄位；`Awaitable` 不出現在序列化欄位或 UnityEvent 的參數型別。
+    - [ ] **事件順序**
+      - Action: 測試中執行一個掛了判斷物件的工作，記錄事件觸發順序。
+      - Expect: Begin → End（帶完整內容）→ 判斷 → True 或 False（帶內容）→ Completed(成敗)；沒掛判斷物件時只有 Begin 與 End。
+    - [ ] **取消**
+      - Action: 測試中在工作進行時取消。
+      - Expect: 觸發 End 與判斷物件的 Completed(false)，不觸發 True／False，也不呼叫判斷。
+
+- [ ] **3. AsyncProgressObject**
+  Outcome: 工作進行中能回報 0～1 的進度。
+  Checks:
+    - [ ] **進度事件**
+      - Action: 測試中執行一個分步回報進度的 `AsyncProgressObject` 子類別。
+      - Expect: `Progress<float>` 依序收到 0～1 之間遞增的值，最後一個不大於 1；進度在 Begin 之後、End 之前。
+
+- [ ] **4. AsyncLoadObject<T>**
+  Outcome: 讀取類工作用型別事件交出結果，End 仍帶 string。
+  Checks:
+    - [ ] **成功與失敗**
+      - Action: 測試中用一個讀到物件與一個讀不到物件的 `AsyncLoadObject<T>` 子類別各執行一次。
+      - Expect: 讀到時觸發 `Loaded<T>`、`Result` 是該物件、成敗為成功；讀不到時不觸發 `Loaded<T>`、`Result` 為 null、成敗為失敗（預設判斷：讀到物件就算成功）；兩次的 End 都帶 string（例如 key 或路徑）。
+
+- [ ] **5. 測試與編譯**
+  Outcome: 上面的行為都有自動測試，兩個 Unity 版本都能編譯。
+  Checks:
+    - [ ] **測試通過**
+      - Action: 在 `common/Tests` 的測試組件加入以上測試，於使用者開著的 Yu5h1LibTest 用 unityMCP 的 `run_tests` 執行；MCP 沒連上時，標 `[!]` 並請使用者在 Test Runner 執行。
+      - Expect: 新測試全部通過，既有的 common 測試結果不變。
+    - [ ] **兩個 Unity 版本都能編譯**
+      - Action: `python Tools/agent/unity_compile.py` 分別對 `Packages/common/Runtime/Yu5h1Lib.Common.asmdef` 與 `Packages/common/Editor/Yu5h1Lib.Common.Editor.asmdef` 執行。
+      - Expect: 6000.3.9f1 與 6000.6.0f1 都 0 錯誤；警告數不多於改動前（Runtime 60、Editor 4），新增的警告逐條說明。
+
+- [ ] **6. agent 文件與計畫狀態**
+  Outcome: agent 不讀程式就知道怎麼用這些工作物件；計畫標明首輪已實作。
+  Checks:
+    - [ ] **agent 文件**
+      - Action: 讀 UnityExtension `.agents` 裡寫上用法的 skill，以及 introduction 的連結。
+      - Expect: 寫有事件順序、取消行為、判斷物件的寫法、`AsyncProgressObject` 與 `AsyncLoadObject<T>` 的用法與一個程式呼叫範例。
+    - [ ] **計畫狀態**
+      - Action: 讀 `Documentation/非同步工作.md` 的狀態行與〈首輪：讀取角色〉。
+      - Expect: 標明首輪已實作與對應的 commit。
+
+- [ ] **7. 他驗**
+  Outcome: 執行者以外的 session 依〈非同步工作〉確認結果。
+  Checks:
+    - [ ] **驗收條件未被改動** `[acceptance]`
+      - Action: 以 git log -p 檢查本檔第 7 項自寫入它的提交後的變更。
+      - Expect: 只有標記與 Recorded 變動。
+    - [ ] **事件順序與取消** `[acceptance]`
+      - Action: 對照 `../Documentation/非同步工作.md#已決定` 的事件順序、判斷欄位與取消三條，審查 `git log --grep async-task-first-round` 的變更與測試。
+      - Expect: 順序是 Begin<string> → [Progress] → End<string> → 判斷 → True／False<string> → Completed<bool>；判斷物件由工作物件 await 並存下成敗；取消觸發 End 與 Completed(false)、不觸發 True／False；都有對應的測試。
+    - [ ] **型別範圍與界線** `[acceptance]`
+      - Action: 對照 `../Documentation/非同步工作.md#首輪讀取角色` 與 `#已決定` 的「非同步處理器先不做替換能力」，審查新增與修改的型別。
+      - Expect: 有判斷物件基底、`AsyncTaskObject`、`AsyncProgressObject`、`AsyncLoadObject<T>`（`Loaded<T>`、`Result`、預設判斷讀到即成功）；`Awaitable` 不在序列化欄位或 UnityEvent 簽章；`TaskEvent`、VCP 的程式與 PopupPanel 沒有被修改。
+    - [ ] **測試與編譯可重現** `[acceptance]`
+      - Action: 自行重跑 `unity_compile.py` 兩個 asmdef，並在 Yu5h1LibTest 重跑新測試（unityMCP 不可用時記錄原因）。
+      - Expect: 兩個編輯器 0 錯誤；新測試通過。

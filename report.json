@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-22T13:41:51.652045+00:00",
+  "updated_at": "2026-10-22T14:23:08.336419+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1064,34 +1064,34 @@
       "pending_items": [
         {
           "id": "step1-judge-base",
-          "title": "首輪 1：判斷物件基底（common）——輸入 string 回傳成敗與內容，可同步或非同步，自帶 True／False<string> 與 Completed<bool>",
+          "title": "（併入 async-task-first-round）首輪：判斷物件基底",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-22T04:53:04.908742+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T14:23:08.336419+00:00",
+              "session_id": "f0409115-d767-43b3-b7a1-4683af36d9be"
             }
           ]
         },
         {
           "id": "implement-task-objects",
-          "title": "首輪 2：改寫 AsyncTaskObject——Awaitable 執行方法（可傳 CancellationToken）、Begin／End<string>、選用的判斷欄位、取消時觸發 End 與 Completed(false)",
+          "title": "（併入 async-task-first-round）首輪：改寫 AsyncTaskObject",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-21T15:25:47.262414+00:00",
-              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
-            },
-            {
-              "event": "updated",
-              "actor": "claude",
-              "at": "2026-10-21T17:14:54.542080+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             },
             {
@@ -1105,62 +1105,92 @@
               "actor": "claude",
               "at": "2026-10-22T04:53:04.908742+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T14:23:08.336419+00:00",
+              "session_id": "f0409115-d767-43b3-b7a1-4683af36d9be"
             }
           ]
         },
         {
           "id": "step3-progress",
-          "title": "首輪 3：AsyncProgressObject——加 Progress<float>",
+          "title": "（併入 async-task-first-round）首輪：AsyncProgressObject",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-22T04:53:04.908742+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T14:23:08.336419+00:00",
+              "session_id": "f0409115-d767-43b3-b7a1-4683af36d9be"
             }
           ]
         },
         {
           "id": "step4-load-object",
-          "title": "首輪 4：AsyncLoadObject<T>——Loaded<T> 與 Result，預設判斷讀到物件就算成功",
+          "title": "（併入 async-task-first-round）首輪：AsyncLoadObject<T>",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-22T04:53:04.908742+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T14:23:08.336419+00:00",
+              "session_id": "f0409115-d767-43b3-b7a1-4683af36d9be"
             }
           ]
         },
         {
           "id": "step5-tests",
-          "title": "首輪 5：EditMode／PlayMode 測試直接 await 工作物件；Unity 6000.3.9f1 與 6000.6.0f1 編譯通過",
+          "title": "（併入 async-task-first-round）首輪：測試與編譯",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-22T04:53:04.908742+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T14:23:08.336419+00:00",
+              "session_id": "f0409115-d767-43b3-b7a1-4683af36d9be"
             }
           ]
         },
         {
           "id": "step6-agent-docs",
-          "title": "首輪 6：在 .agents 的 introduction 或 skill 寫上用法",
+          "title": "（併入 async-task-first-round）首輪：agent 文件",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-22T04:53:04.908742+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T14:23:08.336419+00:00",
+              "session_id": "f0409115-d767-43b3-b7a1-4683af36d9be"
             }
           ]
         },
@@ -1181,6 +1211,25 @@
               "actor": "claude",
               "at": "2026-10-22T04:53:04.908742+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "async-task-first-round",
+          "title": "首輪：判斷物件基底、Awaitable 的 AsyncTaskObject、AsyncProgressObject、AsyncLoadObject<T>，附測試與 agent 文件（他驗）",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "async-task-first-round"
+          },
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T14:23:08.336419+00:00",
+              "session_id": "f0409115-d767-43b3-b7a1-4683af36d9be"
             }
           ]
         }
