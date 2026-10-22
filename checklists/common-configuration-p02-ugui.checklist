@@ -11,3 +11,4 @@ Current round: `../../../UX/Documentation/ModuleSpec/Foundation/Configuration.md
       - Action: 開啟 Unity 專案 `W:/UnityProject/Yu5h1LibTest`，載入場景 `Assets/Scenes/PlayerPreferencesDemo.unity` 並進入 Play；在 uGUI 面板（Canvas 下的 SettingsPanel）把 MasterVolume 拖到另一個位置、切換 Fullscreen、在 PlayerName 輸入一段文字；停止 Play，再進入 Play。
       - Expect: 重開後 MasterVolume、Fullscreen、PlayerName 都是停止前改過的值；第一次進入 Play 時 Console 沒有「the save cannot be read」的 Error（既有存檔以版本 0 正常讀入）。
       - Reason: 目標 2 的完成條件指定由使用者在 demo 確認生命週期（UX 第 89 題）。
+      - Recorded: legacy; at=2026-10-22T11:34:55Z; fp=0ac519b30894

@@ -11,19 +11,24 @@ Current round: `../Documentation/UnityEvent監控.md#驗收與遷移`.
       - Action: 開啟 Unity 專案 `W:/UnityProject/Virtual-Chat-Partner`，載入 `Assets/Scene/ChatScene.unity`，開 `Tools/UnityEvent Viewer`，掃描目前場景；分組先切「依資產 → 擁有者物件」再切「依失效原因」。
       - Expect: 表格列出場景的 persistent call，只看失效時有 23 筆，依失效原因分組時正好是設計文件表中的五種原因，各組數量與該表相同（其中「存下來的參數型別名稱過期」8 筆）；依資產分組時每筆掛在正確的場景與擁有者物件下。
       - Reason: 分組結果與列表內容要在編輯器畫面上看，由使用者判。
+      - Recorded: legacy; at=2026-10-22T11:34:55Z; fp=363594c641df
     - [x] **篩選** `[manual]`
       - Action: 勾「只看失效」；在文字搜尋輸入一個物件名稱、一個方法名稱、一個型別名稱各試一次；清空搜尋。
       - Expect: 只看失效時其他列消失；搜尋只留下物件、方法或型別含該文字的列；清空後列表恢復。
       - Reason: 篩選結果由使用者判。
+      - Recorded: legacy; at=2026-10-22T11:34:55Z; fp=e7fc7682e8e9
     - [x] **點選 Ping** `[manual]`
       - Action: 點一筆失效列；再把視窗縮窄到擁有者欄放不下完整路徑。
       - Expect: Hierarchy 選取並 Ping 到該筆的擁有者物件；欄寬不夠時路徑從開頭截斷、保留物件名稱與型別（例如 `…Request (ChatRequest)`）。
       - Reason: 選取與 Ping 的動畫只在編輯器裡看得到，由使用者判。
+      - Recorded: legacy; at=2026-10-22T11:34:55Z; fp=6e083322ea91
     - [x] **反查** `[manual]`
       - Action: 在 Hierarchy 選一個被其他接線指向的物件，視窗切到「指向此物件」；再輸入一個方法名稱反查。
       - Expect: 「指向此物件」只列目標是該物件的接線；方法名稱反查列出所有呼叫該方法的接線，沒有漏也沒有多。
       - Reason: 反查結果要對照場景內容，由使用者判。
+      - Recorded: legacy; at=2026-10-22T11:34:55Z; fp=aa6a77113f1e
     - [x] **匯出** `[manual]`
       - Action: 在視窗按匯出，把 JSON 存到任意位置後開啟。
       - Expect: JSON 每筆一個物件、欄位同〈一筆紀錄〉，筆數與失效筆數和視窗目前的掃描結果相同；與 batchmode 報告的差只有 Prefab 內部那 1 筆（視窗掃場景時不含）。
       - Reason: 匯出檔與視窗的對照由使用者判。
+      - Recorded: legacy; at=2026-10-22T11:34:55Z; fp=96563a17e16d

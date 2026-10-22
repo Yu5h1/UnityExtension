@@ -38,6 +38,7 @@ Current round: `../../../UX/Documentation/ModuleSpec/Controls/Button.md#行為`.
       - Action: 在 Yu5h1LibTest 開啟 Samples~/UxAcceptance（CurrentTarget.json 的 targetId 設為 button）進入 Play Mode；同時開啟 Web OptionPicker demo（127.0.0.1:8015）的「TaskProgress 外觀」快速設定，兩邊用同一個 size（32 與另一個值）並排。
       - Expect: 比例、圖示與名稱的排列、四種顯示組合、只顯示圖示的正方形，以及滑過、選中、焦點有無差異，兩邊一致；顏色不比（UIToolkit 尚未引用 VisualFoundation）。
       - Reason: 外觀由使用者判（UX 第 65 題），對照基準依第 83 題。
+      - Recorded: legacy; at=2026-10-22T11:34:55Z; fp=330c450a5ec0
 
 - [x] **5. 回歸**
   Depends on: 1.
