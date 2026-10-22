@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-21T17:57:17.034416+00:00",
+  "updated_at": "2026-10-22T04:53:04.908742+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1063,8 +1063,22 @@
       ],
       "pending_items": [
         {
+          "id": "step1-judge-base",
+          "title": "首輪 1：判斷物件基底（common）——輸入 string 回傳成敗與內容，可同步或非同步，自帶 True／False<string> 與 Completed<bool>",
+          "priority": 2,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T04:53:04.908742+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
           "id": "implement-task-objects",
-          "title": "首輪：實作 AsyncTaskObject（Awaitable、選用的判斷欄位）、AsyncProgressObject、AsyncLoadObject<T>（Loaded<T>、Result）與判斷物件基底（預設判斷：讀到物件就算成功）",
+          "title": "首輪 2：改寫 AsyncTaskObject——Awaitable 執行方法（可傳 CancellationToken）、Begin／End<string>、選用的判斷欄位、取消時觸發 End 與 Completed(false)",
           "priority": 2,
           "status": "planned",
           "activity": [
@@ -1072,12 +1086,6 @@
               "event": "created",
               "actor": "claude",
               "at": "2026-10-21T15:25:47.262414+00:00",
-              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
-            },
-            {
-              "event": "updated",
-              "actor": "claude",
-              "at": "2026-10-21T16:55:38.135098+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             },
             {
@@ -1091,12 +1099,74 @@
               "actor": "claude",
               "at": "2026-10-21T17:15:58.790695+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T04:53:04.908742+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "step3-progress",
+          "title": "首輪 3：AsyncProgressObject——加 Progress<float>",
+          "priority": 2,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T04:53:04.908742+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "step4-load-object",
+          "title": "首輪 4：AsyncLoadObject<T>——Loaded<T> 與 Result，預設判斷讀到物件就算成功",
+          "priority": 2,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T04:53:04.908742+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "step5-tests",
+          "title": "首輪 5：EditMode／PlayMode 測試直接 await 工作物件；Unity 6000.3.9f1 與 6000.6.0f1 編譯通過",
+          "priority": 2,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T04:53:04.908742+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        },
+        {
+          "id": "step6-agent-docs",
+          "title": "首輪 6：在 .agents 的 introduction 或 skill 寫上用法",
+          "priority": 2,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T04:53:04.908742+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
         },
         {
           "id": "chatrequest-optimization",
-          "title": "之後：ChatRequest 優化（抽成 Network 時）——RequestData 換 Awaitable、vcpMessage 判斷物件、與 PopupPanel 共用判斷、TaskEvent 遷移",
+          "title": "之後：ChatRequest 優化（抽成 Network 時，排在 agent-data-translator 之後）——RequestData 換 Awaitable、vcpMessage 判斷物件、與 PopupPanel 共用判斷、TaskEvent 遷移；遷移用 DryRun／Apply 腳本加翻譯器前後比對",
           "priority": 3,
           "status": "planned",
           "activity": [
@@ -1104,6 +1174,12 @@
               "event": "created",
               "actor": "claude",
               "at": "2026-10-21T17:14:54.542080+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T04:53:04.908742+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
             }
           ]
@@ -1114,7 +1190,7 @@
       "id": "agent-data-translator",
       "title": "資料驅動的 Agent 翻譯器",
       "status": "planned",
-      "priority": 2,
+      "priority": 0,
       "summary": "把場景、Prefab、SO 裡的組裝（inline SO 設定、UnityEvent 接線）翻譯成 agent 可直接讀的文字，引用解析成名稱路徑與型別，用 Unity 的 SerializedObject 讀取、batchmode 可跑、只讀。起因：2026-10-22 agent 手寫 Python 解析 ChatScene，漏掉 End 的 7 筆監聽器。第一步 UnityEvent 監控已有；下一步 inline SO 設定匯出。設計：Documentation/資料驅動的Agent翻譯器.md。",
       "pending_items": [
         {

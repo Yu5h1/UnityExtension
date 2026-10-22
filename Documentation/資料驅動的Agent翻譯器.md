@@ -67,6 +67,9 @@ Unity 專案的場景、Prefab、ScriptableObject（YAML：fileID、GUID）
 
 ## 之後
 
+- 當作 ChatRequest 優化的遷移安全網：遷移前後各跑一次報告比對（[非同步工作〈遷移〉](非同步工作.md#遷移)），
+  所以本工具排在 ChatRequest 優化之前。
+
 - 擴充到一般物件：階層、元件與欄位（給 agent 理解 prefab 組裝，例如角色 prefab 的元件組成）。
 - 測試 agent 能不能直接改輸出；可行就成為 Agent friendly workflow 的格式候選，寫回由文字結構同步負責。
 - 在建置流程中跑報告並和上次 diff，讓接線斷掉在建置時就被看到。
