@@ -13,13 +13,12 @@ Task ID `addressables-package` (declared in [plan.md](plan.md); card in the root
 
 ## Next steps
 
-- After [非同步工作 § 首輪](../非同步工作.md#首輪讀取角色) (task objects with a default judge) is implemented, implement the loader handler and agent with the Resources loader (loader base and Resources loader in common), then the Addressables loader in `Packages/Addressables/Runtime`.
-- Settle the remaining [首輪（VCP）](plan.md#首輪vcp) questions: character-specific data, where to validate before VCP's delivery.
+- [非同步工作 § 首輪](../非同步工作.md#首輪讀取角色) is done (accepted 2026-10-22, `c8e9260`). Next is the cross-verified item `loader-handler` (`checklists/loader-handler.checklist`): loader base and Resources loader in common; loader handler (`SingletonBehaviour`, loader in a MonoBehaviour field, Resources loader when empty), agent and initializer base in `Packages/Addressables/Runtime`; validated in Yu5h1LibTest with a test character. Then the Addressables loader in `Packages/Addressables/Runtime`.
+- [首輪（VCP）](plan.md#首輪vcp) settled 2026-10-23 as recommended (character-specific data in the main program keyed by key, applied by the consumer's initializer; validate in Yu5h1LibTest before VCP's delivery); the user also set the loader as a MonoBehaviour field on the handler and the initializer as a base class the consumer subclasses ([首輪範圍](plan.md#首輪範圍讀取處理器代理與角色載入)).
 - Use [驗收清單](plan.md#驗收清單) to capture network/build-layout evidence as each prototype stage runs.
 
 ## Open decisions
 
-- [首輪（VCP）](plan.md#首輪vcp): character-specific data, pre-delivery validation host.
 - Loading presentation (blocking vs non-blocking, failure handling): UX decision 98 in `UX/decisions/ux-foundation.decisions`.
 - [頭像原型（遠端測試之後）](plan.md#頭像原型遠端測試之後): avatar overlay meaning, nonblocking menu entry.
 

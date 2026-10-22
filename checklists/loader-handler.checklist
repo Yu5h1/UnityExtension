@@ -1,0 +1,80 @@
+# Loader Handler Checklist
+
+Current round: `../Documentation/Addressables/plan.md#首輪範圍讀取處理器代理與角色載入`.
+
+驗證方式：他驗。指示（使用者 2026-10-23）：Addressables 首輪第 1 步在 Yu5h1LibTest 測；做基礎初始化器，讓 VCP 繼承後引用即可；讀取器的替換做成 MonoBehaviour 欄位。現況：`com.yu5h1.addressables`（`Packages/Addressables`）只有骨架、沒有程式；common 已有 `AsyncTaskObject`、`AsyncProgressObject`、`AsyncLoadObject<T>` 與 `ResultJudge`（〈非同步工作〉首輪，`c8e9260`）；`SingletonBehaviour<T>`（Yu5h1Lib Core）先找場景實例，再從 Resources 的同名 prefab 產生，最後新建。Yu5h1LibTest 以 `file:` 引用 UnityExtension 的套件，但還沒有 `com.yu5h1.addressables`；它不是 git repo，使用者常開著它的編輯器。要達成：讀取器基底與 Resources 讀取器（common）、讀取處理器、代理與初始化器基底（`Packages/Addressables/Runtime`），並在 Yu5h1LibTest 用一個測試角色（prefab＋Animator Override Controller）驗證。不在範圍內：Addressables 讀取器、讀取失敗改用測試角色的備援、VCP 的初始化器與角色資料、載入畫面（UX 第 98 題）、遠端內容。名稱要能說明用途（UnityExtension plan〈設計原則〉的「直覺優先於教學」）。
+
+- [ ] **1. 讀取器基底與 Resources 讀取器（common）**
+  Outcome: common 有讀取器基底（MonoBehaviour）與 Resources 讀取器，用 key 非同步讀取物件，回報進度、可以取消。
+  Checks:
+    - [ ] **型別與 API**
+      - Action: 讀新的讀取器基底與 Resources 讀取器。
+      - Expect: 在 `Yu5h1Lib.Common` 組件，不依賴 Addressables；讀取方法以 key 讀取、可帶進度回報與 `CancellationToken`、以 `Awaitable` 回傳結果；讀不到時回傳 null，不丟例外。
+    - [ ] **讀取與取消**
+      - Action: 測試中用 Resources 讀取器讀一個存在與一個不存在的 key，另外在讀取中取消一次。
+      - Expect: 存在時拿到物件、不存在時為 null；取消時不回傳物件，也不留下未完成的工作。
+
+- [ ] **2. 讀取處理器**
+  Outcome: 全域唯一的讀取處理器，透過欄位裡的讀取器讀取。
+  Checks:
+    - [ ] **singleton 與讀取器欄位**
+      - Action: 讀讀取處理器。
+      - Expect: 在 `Packages/Addressables/Runtime`，以 `SingletonBehaviour<T>` 取得實例；讀取器是序列化的 MonoBehaviour 欄位，欄位空著時用 Resources 讀取器；可從程式呼叫，不必經過 Inspector。
+    - [ ] **替換讀取器**
+      - Action: 測試中在處理器的欄位放一個測試用讀取器，讀一次；再清空欄位讀一次。
+      - Expect: 第一次由測試用讀取器處理，第二次由 Resources 讀取器處理。
+
+- [ ] **3. 代理與初始化器基底**
+  Outcome: 場景裡的代理接受讀取通知，把讀取交給處理器，載入後交給初始化器。
+  Checks:
+    - [ ] **代理**
+      - Action: 讀代理。
+      - Expect: 一般 MonoBehaviour（不是 singleton）；有可從 UnityEvent 呼叫的通知讀取方法（例如 `Prepare(string)`）；持有讀取請求，讀取請求是 common 的 `AsyncProgressObject`（例如 `AsyncLoadObject<GameObject>`），Begin／Progress／End 與判斷物件的事件照〈非同步工作〉觸發；釋放載入內容的方式由代理定義並寫明。
+    - [ ] **初始化器基底**
+      - Action: 讀初始化器基底與代理引用它的欄位。
+      - Expect: 抽象 MonoBehaviour，消費端繼承它，收到載入的實例與 key；代理以序列化欄位引用它；套件不認識任何消費端元件。
+    - [ ] **讀取後初始化**
+      - Action: 測試中讓代理讀取一個 prefab，代理上掛一個測試初始化器。
+      - Expect: 實例產生後，初始化器在 `Loaded` 之前被呼叫一次，收到同一個實例與 key；沒有掛初始化器時照樣讀取成功。
+
+- [ ] **4. 在 Yu5h1LibTest 驗證**
+  Outcome: Yu5h1LibTest 引用本套件，用測試角色走一次完整流程。
+  Checks:
+    - [ ] **安裝套件**
+      - Action: 把 `com.yu5h1.addressables`（`file:` 指向 `Packages/Addressables`）加進 Yu5h1LibTest 的 manifest，讓 Unity 解析 `com.unity.addressables`。
+      - Expect: 套件解析成功，Console 沒有編譯錯誤；記錄 manifest 加了哪幾行。
+    - [ ] **測試角色與場景**
+      - Action: 在 Yu5h1LibTest 的一個資料夾（例如 `Assets/AddressablesTest`）放測試角色（prefab＋Animator Override Controller，放在 `Resources` 下）、一個測試初始化器（替實例加一個元件）與一個場景：代理同一個 GameObject 上的 MonoBehaviourEvent 在 Start 呼叫代理讀取測試角色。
+      - Expect: 進入 Play 後角色出現、測試初始化器加的元件存在，代理的 Begin／End 與 `Loaded` 都觸發；記錄資料夾與場景路徑（Yu5h1LibTest 沒有 git，路徑要寫在本檔）。
+    - [ ] **自動測試**
+      - Action: 把第 1～3 項的測試放進 common 與本套件的測試組件，在 Yu5h1LibTest 以 unityMCP 的 `run_tests` 執行；編輯器沒開時改用 `Tools/agent/unity_batch.py` 帶 `-runTests`。
+      - Expect: 新測試全部通過，既有的 common 測試結果不變。
+    - [ ] **兩個 Unity 版本都能編譯**
+      - Action: `python Tools/agent/unity_compile.py` 對 `Packages/common/Runtime/Yu5h1Lib.Common.asmdef` 與 `Packages/Addressables/Runtime/Yu5h1Lib.Addressables.asmdef` 執行（參考專案用 Yu5h1LibTest）。
+      - Expect: 6000.3.9f1 與 6000.6.0f1 都 0 錯誤；common Runtime 的警告數不多於 57，新增的警告逐條說明。
+
+- [ ] **5. agent 文件與計畫狀態**
+  Outcome: agent 不讀程式就知道怎麼接讀取處理器、代理與初始化器；計畫標明第 1 步已實作。
+  Checks:
+    - [ ] **agent 文件**
+      - Action: 讀 UnityExtension `.agents` 裡寫上用法的 skill（或套件 README），以及 introduction 的連結。
+      - Expect: 寫有元件關係（處理器、讀取器欄位、代理、初始化器）、換讀取器的方法、消費端怎麼繼承初始化器，以及一個場景接線範例。
+    - [ ] **計畫狀態**
+      - Action: 讀 `Documentation/Addressables/plan.md` 的〈首輪範圍〉與 `Documentation/Addressables/handoff.md`。
+      - Expect: 標明第 1 步已實作與對應的 commit，以及 Yu5h1LibTest 的測試資料夾與場景路徑。
+
+- [ ] **6. 他驗**
+  Outcome: 執行者以外的 session 依 Addressables 計畫確認結果。
+  Checks:
+    - [ ] **驗收條件未被改動** `[acceptance]`
+      - Action: 以 git log -p 檢查本檔第 6 項自寫入它的提交後的變更。
+      - Expect: 只有標記與 Recorded 變動。
+    - [ ] **元件與替換方式** `[acceptance]`
+      - Action: 對照 `../Documentation/Addressables/plan.md#首輪範圍讀取處理器代理與角色載入` 的讀取處理器、代理、讀取器欄位與初始化器，以及 `#套件位置與依賴` 的讀取器位置，審查 `git log --grep loader-handler` 的變更。
+      - Expect: 讀取器基底與 Resources 讀取器在 common、處理器／代理／初始化器在本套件；處理器是 singleton，讀取器是 MonoBehaviour 欄位、空時用 Resources；代理不是 singleton，讀取請求是 `AsyncProgressObject`；初始化器是消費端繼承的基底類別，掛在代理上；套件不認識消費端元件。
+    - [ ] **範圍界線** `[acceptance]`
+      - Action: 對照本檔開頭的「不在範圍內」與 `../Documentation/Addressables/plan.md#首輪範圍讀取處理器代理與角色載入` 的順序，審查變更。
+      - Expect: 沒有 Addressables 讀取器、備援測試角色流程或 VCP 程式；VCP 的 repo 沒有被修改。
+    - [ ] **在 Yu5h1LibTest 重現** `[acceptance]`
+      - Action: 自行重跑 `unity_compile.py` 兩個 asmdef，在 Yu5h1LibTest 重跑新測試，並開本檔記錄的測試場景進入 Play（unityMCP 不可用時記錄原因）。
+      - Expect: 兩個編輯器 0 錯誤；新測試通過；角色出現、初始化器加的元件存在。

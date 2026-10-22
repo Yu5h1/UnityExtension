@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-22T15:52:05.677451+00:00",
+  "updated_at": "2026-10-22T17:38:30.380657+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -821,6 +821,32 @@
       "summary": "com.yu5h1.addressables：把角色等大型資源和本體分開、執行期非同步讀取。首輪：讀取處理器（singleton，可替換讀取器）與場景代理先用 Resources 讀取器驗證，再接 Addressables 讀取器以 local group 驗證；角色只交 prefab 與 Animator Override Controller，其餘由消費端初始化。依賴 async-task。之後才做遠端內容測試，LFS 與 Windows 頭像原型再之後。第一個消費端：VCP streaming-assets。設計：Documentation/Addressables/plan.md。",
       "completed_items": [
         {
+          "id": "first-round-discussion",
+          "title": "首輪待決（2026-10-23 照建議定案）：角色專屬資料放主程式以 key 對應、由消費端初始化器套用；交貨前在 Yu5h1LibTest 驗證",
+          "priority": 1,
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
+              "at": "2026-10-21T11:22:49+00:00"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-21T15:25:47.262414+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-10-22T17:38:30.380657+00:00",
+              "session_id": "f0409115-d767-43b3-b7a1-4683af36d9be"
+            }
+          ],
+          "status": "done"
+        },
+        {
           "id": "decide-package",
           "title": "決定套件：com.yu5h1.addressables、namespace Yu5h1Lib.AddressableAssets、直接相依 Addressables 2.8.1 以上（2026-10-21）",
           "activity": [
@@ -859,27 +885,8 @@
       ],
       "pending_items": [
         {
-          "id": "first-round-discussion",
-          "title": "討論首輪剩下的待決：角色專屬資料來處、VCP 交貨前的驗證場",
-          "priority": 1,
-          "activity": [
-            {
-              "event": "created",
-              "actor": "claude",
-              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
-              "at": "2026-10-21T11:22:49+00:00"
-            },
-            {
-              "event": "updated",
-              "actor": "claude",
-              "at": "2026-10-21T15:25:47.262414+00:00",
-              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
-            }
-          ]
-        },
-        {
           "id": "handler",
-          "title": "讀取處理器（singleton，可替換讀取器）與場景代理（Prepare、requests、釋放由代理定義），用 Resources 讀取器驗證；讀取器基底與 Resources 讀取器放 common",
+          "title": "（併入 loader-handler）讀取處理器與場景代理，用 Resources 讀取器驗證",
           "priority": 2,
           "activity": [
             {
@@ -893,8 +900,15 @@
               "actor": "claude",
               "at": "2026-10-21T15:25:47.262414+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-22T17:38:30.380657+00:00",
+              "session_id": "f0409115-d767-43b3-b7a1-4683af36d9be"
             }
-          ]
+          ],
+          "status": "archive"
         },
         {
           "id": "addressables-loader",
@@ -952,6 +966,25 @@
               "actor": "claude",
               "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
               "at": "2026-10-21T11:22:49+00:00"
+            }
+          ]
+        },
+        {
+          "id": "loader-handler",
+          "title": "首輪第 1 步：讀取器基底與 Resources 讀取器、讀取處理器（讀取器為 MonoBehaviour 欄位）、代理與初始化器基底，在 Yu5h1LibTest 用測試角色驗證（他驗）",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "loader-handler"
+          },
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-22T17:38:30.380657+00:00",
+              "session_id": "f0409115-d767-43b3-b7a1-4683af36d9be"
             }
           ]
         }
