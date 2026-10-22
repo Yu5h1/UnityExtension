@@ -63,18 +63,22 @@ Current round: `../Documentation/非同步工作.md#首輪讀取角色`.
       - Action: 讀 `Documentation/非同步工作.md` 的狀態行與〈首輪：讀取角色〉。
       - Expect: 標明首輪已實作與對應的 commit。
 
-- [ ] **7. 他驗**
+- [x] **7. 他驗**
   Outcome: 執行者以外的 session 依〈非同步工作〉確認結果。
   Checks:
-    - [ ] **驗收條件未被改動** `[acceptance]`
+    - [x] **驗收條件未被改動** `[acceptance]`
       - Action: 以 git log -p 檢查本檔第 7 項自寫入它的提交後的變更。
       - Expect: 只有標記與 Recorded 變動。
-    - [ ] **事件順序與取消** `[acceptance]`
+      - Recorded: claude:1987c6f7-214b-42ef-96d2-e35ee37474a4; at=2026-10-22T16:13:35Z; fp=aaafd50e730c
+    - [x] **事件順序與取消** `[acceptance]`
       - Action: 對照 `../Documentation/非同步工作.md#已決定` 的事件順序、判斷欄位與取消三條，審查 `git log --grep async-task-first-round` 的變更與測試。
       - Expect: 順序是 Begin<string> → [Progress] → End<string> → 判斷 → True／False<string> → Completed<bool>；判斷物件由工作物件 await 並存下成敗；取消觸發 End 與 Completed(false)、不觸發 True／False；都有對應的測試。
-    - [ ] **型別範圍與界線** `[acceptance]`
+      - Recorded: claude:1987c6f7-214b-42ef-96d2-e35ee37474a4; at=2026-10-22T16:13:35Z; fp=eac0f5280600
+    - [x] **型別範圍與界線** `[acceptance]`
       - Action: 對照 `../Documentation/非同步工作.md#首輪讀取角色` 與 `#已決定` 的「非同步處理器先不做替換能力」，審查新增與修改的型別。
       - Expect: 有判斷物件基底、`AsyncTaskObject`、`AsyncProgressObject`、`AsyncLoadObject<T>`（`Loaded<T>`、`Result`、預設判斷讀到即成功）；`Awaitable` 不在序列化欄位或 UnityEvent 簽章；`TaskEvent`、VCP 的程式與 PopupPanel 沒有被修改。
-    - [ ] **測試與編譯可重現** `[acceptance]`
+      - Recorded: claude:1987c6f7-214b-42ef-96d2-e35ee37474a4; at=2026-10-22T16:13:35Z; fp=54e27928ed85
+    - [x] **測試與編譯可重現** `[acceptance]`
       - Action: 自行重跑 `unity_compile.py` 兩個 asmdef，並在 Yu5h1LibTest 重跑新測試（unityMCP 不可用時記錄原因）。
       - Expect: 兩個編輯器 0 錯誤；新測試通過。
+      - Recorded: claude:1987c6f7-214b-42ef-96d2-e35ee37474a4; at=2026-10-22T16:13:36Z; fp=e2413ac8651f
