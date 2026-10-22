@@ -10,6 +10,13 @@ Usage:
 - Kills the Unity process tree when the timeout expires.
 - Prints a summary (editor, seconds, exit code, compile errors) and exits with Unity's exit code;
   2 means it refused to start, 124 means it timed out.
+
+Test runs: when the extra Unity args contain -runTests, the runner leaves out -quit (Unity would
+exit before the tests run and write no results) and, unless -testResults is given, writes the
+results to <log dir>/<stamp>-tests.xml. It then exits with its own code instead of Unity's:
+  0 = every test passed, 1 = one or more tests failed,
+  3 = Unity error (a run error, compile errors, no result file, or no test ran at all);
+2 and 124 keep their meaning.
 """
 import argparse
 import datetime
@@ -18,6 +25,7 @@ import re
 import subprocess
 import sys
 import time
+import xml.etree.ElementTree as ET
 
 HUB_EDITORS = r"C:\Program Files\Unity\Hub\Editor"
 
@@ -35,6 +43,26 @@ def kill_tree(pid):
         subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True)
     else:
         os.kill(pid, 9)
+
+
+def arg_value(args, name):
+    lowered = [a.lower() for a in args]
+    if name.lower() in lowered:
+        i = lowered.index(name.lower())
+        if i + 1 < len(args):
+            return args[i + 1]
+    return None
+
+
+def read_results(path):
+    """Return (totals, failed test names) from an NUnit 3 result file, or None if unreadable."""
+    try:
+        root = ET.parse(path).getroot()
+    except (OSError, ET.ParseError):
+        return None
+    totals = {k: int(root.get(k, 0)) for k in ("total", "passed", "failed", "inconclusive", "skipped")}
+    failed = [c.get("fullname") for c in root.iter("test-case") if c.get("result") == "Failed"]
+    return totals, failed
 
 
 def main(argv=None):
@@ -70,13 +98,22 @@ def main(argv=None):
     log_dir = args.log_dir or os.path.join(os.path.dirname(project), f"{name}-Build", "logs")
     os.makedirs(log_dir, exist_ok=True)
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    label = args.method.rsplit(".", 1)[-1] if args.method else "quit"
+    run_tests = "-runtests" in (a.lower() for a in extra)
+    label = args.method.rsplit(".", 1)[-1] if args.method else ("tests" if run_tests else "quit")
     log = os.path.join(log_dir, f"{stamp}-{label}.log")
 
-    cmd = [editor, "-batchmode", "-quit", "-projectPath", project, "-logFile", log]
+    cmd = [editor, "-batchmode"] + ([] if run_tests else ["-quit"]) + ["-projectPath", project, "-logFile", log]
     if args.method:
         cmd += ["-executeMethod", args.method]
     cmd += extra
+    results = None
+    if run_tests:
+        results = arg_value(extra, "-testResults")
+        if results:
+            results = os.path.abspath(results)
+        else:
+            results = os.path.join(log_dir, f"{stamp}-tests.xml")
+            cmd += ["-testResults", results]
 
     start = time.time()
     proc = subprocess.Popen(cmd)
@@ -99,7 +136,20 @@ def main(argv=None):
     print(f"compile errors: {len(errors)}")
     for line in errors[:20]:
         print(f"  {line}")
-    return code
+    if not run_tests or timed_out:
+        return code
+
+    parsed = read_results(results) if os.path.exists(results) else None
+    print(f"test results: {results}" + ("" if parsed else " (missing or unreadable)"))
+    if parsed is None:
+        return 3
+    totals, failed = parsed
+    print("tests: " + ", ".join(f"{k} {v}" for k, v in totals.items()))
+    for name in failed[:20]:
+        print(f"  failed: {name}")
+    if errors or code not in (0, 2) or totals["total"] == 0:
+        return 3
+    return 1 if code == 2 or totals["failed"] else 0
 
 
 if __name__ == "__main__":
