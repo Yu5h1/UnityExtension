@@ -24,12 +24,14 @@ Current round: `../Documentation/資料驅動的Agent翻譯器.md#第一層成�
       - Action: 在 VCP 的 csproj 中找一個 `ProjectReference` 指向 `Yu5h1Lib.Internal`（或 `Unity/Core` 其他 asmdef）的 UnityExtension 組件，對它跑編譯；沒有這樣的組件時，記錄搜尋結果。
       - Expect: 依賴被先編譯並參考，不再出現「not under UnityExtension/Packages」的提示；或記錄沒有這樣的組件。
 
-- [ ] **3. 他驗**
+- [x] **3. 他驗**
   Outcome: 執行者以外的 session 依計畫第一層第 4 步確認結果。
   Checks:
-    - [ ] **驗收條件未被改動** `[acceptance]`
+    - [x] **驗收條件未被改動** `[acceptance]`
       - Action: 以 git log -p 檢查本檔第 3 項自寫入它的提交後的變更。
       - Expect: 只有標記與 Recorded 變動。
-    - [ ] **過期警告與依賴解析** `[acceptance]`
+      - Recorded: claude:f0409115-d767-43b3-b7a1-4683af36d9be; at=2026-10-22T13:43:16Z; fp=c0c0a6cda403
+    - [x] **過期警告與依賴解析** `[acceptance]`
       - Action: 對照 `../Documentation/資料驅動的Agent翻譯器.md#第一層成本低立即見效` 第 4 步（對套件的 asmdef 原始碼，用兩個版本的 Managed DLL 與 Core DLL 編譯，回報錯誤與警告），審查 `git log --grep compile-check-staleness` 的變更，並自行做一次「多一個原始碼檔」的暫存複本編譯，用完刪除。
       - Expect: 過期時有警告且編譯照常完成；清單相同時沒有警告，common Runtime 與 Editor 在兩個編輯器的錯誤與警告數和改動前相同；`Unity/Core` 的 asmdef 能被找到；套件原始碼沒有被修改。
+      - Recorded: claude:f0409115-d767-43b3-b7a1-4683af36d9be; at=2026-10-22T13:43:16Z; fp=5f30d1eb850a
