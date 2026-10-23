@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-23T17:13:59.601357+00:00",
+  "updated_at": "2026-10-23T17:20:23.755200+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1625,9 +1625,16 @@
               "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
             },
             {
+              "event": "started",
+              "actor": "claude",
+              "at": "2026-10-23T17:20:22.486975+00:00",
+              "session": "write-back-test",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            },
+            {
               "event": "released",
               "actor": "claude",
-              "at": "2026-10-23T17:13:59.601357+00:00",
+              "at": "2026-10-23T17:20:23.755200+00:00",
               "session": "write-back-test",
               "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
             }
@@ -1860,6 +1867,36 @@
               "event": "created",
               "actor": "claude",
               "at": "2026-10-23T17:13:49.006796+00:00",
+              "session": "write-back-test",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            }
+          ]
+        },
+        {
+          "id": "problem-asset-subobject-names",
+          "title": "問題：非 Prefab 資產的子物件引用只寫名稱，同名子物件分不清（例如 Global 的 PlayableDirector m_SceneBindings 有 6 筆 key 都是 Global.playable > Animation Track，PlayableDirectorAddon 的 10 筆 _skipPointEvents key 都是 Global.playable > Skip Point）（write-back-test 他驗 2026-10-24）",
+          "priority": 2,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-23T17:20:22.486975+00:00",
+              "session": "write-back-test",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            }
+          ]
+        },
+        {
+          "id": "problem-slash-in-names",
+          "title": "問題：名稱路徑不跳脫名稱裡的斜線，GameManager/XRDeviceSimulatorPlatformActivator/F10 TurnOn/Off Simulator 會讀成不存在的 F10 TurnOn 底下的 Off Simulator（write-back-test 他驗 2026-10-24）",
+          "priority": 2,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-23T17:20:22.486975+00:00",
               "session": "write-back-test",
               "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
             }

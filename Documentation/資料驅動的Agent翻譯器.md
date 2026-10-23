@@ -198,7 +198,7 @@ agent 在這個工作區操作 Unity 時實際付出的成本，以及對應的�
   沒有「格式不足」，也沒有「agent 寫錯」。
 - 受測 agent 用了 16 次工具呼叫，沒有格式錯誤。它用腳本查詢與改寫 25 MB 的輸出，沒有整份讀入。
 
-輸出還有五個〈原則〉缺口。九題沒有踩到，但寫回前要補上：
+輸出還有七個〈原則〉缺口。九題沒有踩到，但寫回前要補上（第 6、7 個由他驗找到）：
 
 1. **Prefab 內的引用只寫物件名稱**（身分穩定）。場景裡的引用是名稱路徑加元件識別，Prefab 裡卻是
    `<Prefab 路徑> > <物件名稱> <型別>`，例如 `MainGuy.prefab > mixamorig:Spine2 <Transform>`：沒有父路徑、沒有 `#n`，
@@ -213,6 +213,11 @@ agent 在這個工作區操作 Unity 時實際付出的成本，以及對應的�
    MainGuy 本身是模型的 Variant。哪些欄位是覆寫、哪些物件與元件是新增的，輸出看不出來；照實際值全部寫回，會把每個欄位都變成覆寫。
 5. **inline SO 的身分是持有欄位的路徑，含監聽器的陣列索引**（身分穩定）。例如 `_Stopped.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgument`。
    刪除或重排前面的監聽器，後面持有的 inline SO 路徑就跟著變。第 7 題刪的是第 2 筆，第 1 筆沒動，所以沒有踩到。
+6. **非 Prefab 資產的子物件只寫名稱**（身分穩定）。例如 Global 的 PlayableDirector 的 `m_SceneBindings` 有 6 筆 key
+   都是 `Global.playable > Animation Track <AnimationTrack>`，各綁不同的 Animator；PlayableDirectorAddon 的 10 筆
+   `_skipPointEvents` key 都是 `Global.playable > Skip Point <SkipPoint>`。分不出是哪條軌道或哪個標記。
+7. **名稱裡的斜線沒有跳脫**（身分穩定）。`GameManager/XRDeviceSimulatorPlatformActivator/F10 TurnOn/Off Simulator`
+   是一個名為 `F10 TurnOn/Off Simulator` 的物件，卻會讀成 `F10 TurnOn` 底下的 `Off Simulator`，而 `F10 TurnOn` 並不存在。
 
 證據放在 `W:/UnityProject/BonghuoVR-Build/translator/writeback/`：`base.json`、`oracle.json`、`subject.json`、
 `compare.py` 與 `compare.txt`、受測 agent 的 `prompt.md` 與 `notes.md`、標準答案的 `WriteBackOracle.cs`。
