@@ -2,7 +2,7 @@
 
 > Task ID: uitk-input
 >
-> 狀態：completed（待使用者視覺與手感確認）（2026-10-18，第一輪：Input 3.0.1）。依跨平台 `HoldManipulator` 驗收計畫，在 `Yu5h1Lib.UIToolkit` 實作 [`HoldManipulator : PointerManipulator`](../../Runtime/Gesture/HoldManipulator.cs) 對齊 UX `Foundation/Input` 3.0.1 之跨平台長按與按住滑選操作器契約，並重構 [`OptionPicker`](../../Runtime/WebUI/OptionPicker/OptionPicker.cs) 直接組合 `HoldManipulator`，同時於統一驗收入口 `UxAcceptanceHost` 註冊 `input` 互動案例。
+> 採用基準：2026-10-18，第一輪 Input 3.0.1。依跨平台 `HoldManipulator` 驗收計畫，在 `Yu5h1Lib.UIToolkit` 實作 [`HoldManipulator : PointerManipulator`](../../Runtime/Gesture/HoldManipulator.cs) 對齊 UX `Foundation/Input` 3.0.1 之跨平台長按與按住滑選操作器契約，並重構 [`OptionPicker`](../../Runtime/WebUI/OptionPicker/OptionPicker.cs) 直接組合 `HoldManipulator`，同時於統一驗收入口 `UxAcceptanceHost` 註冊 `input` 互動案例。
 
 ```text
 UnityExtension
@@ -39,6 +39,8 @@ UnityExtension
 | INPUT-CANCEL / INPUT-LIFECYCLE | `OnPointerDown`（第二指標）、`OnKeyDown(Escape)`、`OnPointerCancel`、`OnDetachFromPanel` | 第二指標按下、Escape、系統取消或元素卸載時，中止計時器、釋放捕獲並發出 `HoldCanceled` |
 
 ## 驗收對照
+
+工作進度見 [UnityExtension Report](http://127.0.0.1:8001/?scope=unity-extension&pin=cross-platform-ui-parity)。人工結果由 [Input checklist 第 5 項](../../../../checklists/uitk-input.checklist) 與 [OptionPicker checklist 第 6 項](../../../../checklists/uitk-optionpicker.checklist) 擁有；本文不另維護待確認或通過狀態。
 
 每項檢查的結果記在 [checklist](../../../../checklists/uitk-input.checklist)，本文不重複。
 
