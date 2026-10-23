@@ -47,6 +47,7 @@ namespace Yu5h1Lib.EditorExtension
 
         [NonSerialized] public UnityEngine.Object owner;
         [NonSerialized] public UnityEngine.Object target;
+        [NonSerialized] public UnityEngine.Object argumentObject;
 
         public bool IsBroken => IsBrokenStatus(status);
 

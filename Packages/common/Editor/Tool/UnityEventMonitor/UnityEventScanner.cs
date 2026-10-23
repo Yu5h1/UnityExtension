@@ -4,6 +4,7 @@
 // which also take the inline ScriptableObjects the walk reaches, and of the hierarchy paths all of them print.
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
@@ -36,6 +37,7 @@ namespace Yu5h1Lib.EditorExtension
         /// </summary>
         public static List<UnityEventRecord> ScanOpenScenes()
         {
+            ClearReferenceCache();
             var records = new List<UnityEventRecord>();
             var visited = new HashSet<Object>();
             for (int i = 0; i < SceneManager.sceneCount; i++)
@@ -53,6 +55,7 @@ namespace Yu5h1Lib.EditorExtension
         public static void ScanScene(Scene scene, List<UnityEventRecord> records, HashSet<Object> visited = null,
             List<EmbeddedObject> embeddedOut = null)
         {
+            ClearReferenceCache();
             visited ??= new HashSet<Object>();
             foreach (var root in scene.GetRootGameObjects())
                 ScanHierarchy(root, scene.path, records, visited, embeddedOut);
@@ -68,6 +71,7 @@ namespace Yu5h1Lib.EditorExtension
         /// </summary>
         public static List<UnityEventRecord> ScanAssets(string[] pathsOrFolders, List<EmbeddedObject> embeddedOut)
         {
+            ClearReferenceCache();
             var records = new List<UnityEventRecord>();
             var visited = new HashSet<Object>();
             foreach (var path in ResolveAssetPaths(pathsOrFolders))
@@ -226,6 +230,7 @@ namespace Yu5h1Lib.EditorExtension
                 methodName = call.FindPropertyRelative("m_MethodName").stringValue,
                 mode = (PersistentListenerMode)call.FindPropertyRelative("m_Mode").intValue,
                 callState = (UnityEventCallState)call.FindPropertyRelative("m_CallState").intValue,
+                argumentObject = args.FindPropertyRelative("m_ObjectArgument").objectReferenceValue,
             };
             record.argument = DescribeArgument(record.mode, args);
 
@@ -329,9 +334,9 @@ namespace Yu5h1Lib.EditorExtension
 
         private static string DescribeArgument(PersistentListenerMode mode, SerializedProperty args) => mode switch
         {
-            PersistentListenerMode.Object => args.FindPropertyRelative("m_ObjectArgument").objectReferenceValue is Object o && o != null ? o.name : "None",
-            PersistentListenerMode.Int => args.FindPropertyRelative("m_IntArgument").intValue.ToString(),
-            PersistentListenerMode.Float => args.FindPropertyRelative("m_FloatArgument").floatValue.ToString(),
+            PersistentListenerMode.Object => DescribeReference(args.FindPropertyRelative("m_ObjectArgument").objectReferenceValue),
+            PersistentListenerMode.Int => args.FindPropertyRelative("m_IntArgument").intValue.ToString(CultureInfo.InvariantCulture),
+            PersistentListenerMode.Float => args.FindPropertyRelative("m_FloatArgument").floatValue.ToString("R", CultureInfo.InvariantCulture),
             PersistentListenerMode.String => $"\"{args.FindPropertyRelative("m_StringArgument").stringValue}\"",
             PersistentListenerMode.Bool => args.FindPropertyRelative("m_BoolArgument").boolValue.ToString(),
             PersistentListenerMode.EventDefined => "(dynamic)",
@@ -339,9 +344,61 @@ namespace Yu5h1Lib.EditorExtension
         };
 
         /// <summary>
+        /// A reference as the exports write it: "null"; "&lt;path&gt; &lt;Type&gt;" for a scene object;
+        /// "&lt;asset&gt; &lt;Type&gt;" for a main asset; "&lt;asset&gt; &gt; &lt;path&gt; &lt;Type&gt;" for a GameObject or component
+        /// inside a prefab or model; "&lt;asset&gt; &gt; &lt;name&gt; &lt;Type&gt;" for another sub-asset, with #2, #3… when
+        /// sub-assets of that asset share its name and type, numbered by local file id.
+        /// </summary>
+        public static string DescribeReference(Object obj)
+        {
+            if (obj == null)
+                return "null";
+            var type = obj.GetType().Name;
+            if (!EditorUtility.IsPersistent(obj))
+                return $"{DescribePath(obj)} <{type}>";
+            var assetPath = AssetDatabase.GetAssetPath(obj);
+            if (AssetDatabase.IsMainAsset(obj))
+                return $"{assetPath} <{type}>";
+            var inFile = obj is GameObject or Component ? DescribePath(obj) : SubAssetName(obj, assetPath);
+            return $"{assetPath} > {inFile} <{type}>";
+        }
+
+        private static readonly Dictionary<string, Object[]> SubAssets = new();
+
+        /// <summary>
+        /// Forgets the sub-asset lists <see cref="DescribeReference"/> caches; every scan starts with it, so a long editor
+        /// session never numbers sub-assets from a stale list.
+        /// </summary>
+        private static void ClearReferenceCache() => SubAssets.Clear();
+
+        private static string SubAssetName(Object obj, string assetPath)
+        {
+            if (!SubAssets.TryGetValue(assetPath, out var all))
+                SubAssets[assetPath] = all = AssetDatabase.LoadAllAssetsAtPath(assetPath)
+                    .Where(a => a != null && a is not GameObject && a is not Component && !AssetDatabase.IsMainAsset(a))
+                    .OrderBy(LocalFileId).ToArray();
+            var type = obj.GetType();
+            var ordinal = 1;
+            foreach (var other in all)
+            {
+                if (other == obj)
+                    break;
+                if (other.name == obj.name && other.GetType() == type)
+                    ordinal++;
+            }
+            return WithOrdinal(Escape(obj.name), ordinal);
+        }
+
+        /// <summary>
+        /// A name as it appears in a path: backslash, slash and # are written \\, \/ and \#, so a name is never read as
+        /// two path segments or as a #n ordinal.
+        /// </summary>
+        internal static string Escape(string name) => name.Replace("\\", "\\\\").Replace("/", "\\/").Replace("#", "\\#");
+
+        /// <summary>
         /// Hierarchy path for scene and prefab objects, asset name otherwise. A GameObject named like an earlier sibling
         /// gets #2, #3… after its name, and so does a component whose type repeats on its GameObject, so no two objects
-        /// in one file share a path.
+        /// in one file share a path. Names are escaped as <see cref="Escape"/> says.
         /// </summary>
         public static string DescribePath(Object obj)
         {
@@ -394,7 +451,7 @@ namespace Yu5h1Lib.EditorExtension
                         ordinal++;
                 }
             }
-            return WithOrdinal(name, ordinal);
+            return WithOrdinal(Escape(name), ordinal);
         }
     }
 }

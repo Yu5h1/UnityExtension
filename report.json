@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-23T18:52:33.157421+00:00",
+  "updated_at": "2026-10-23T19:00:32.116435+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1980,6 +1980,20 @@
               "event": "updated",
               "actor": "claude",
               "at": "2026-10-23T18:52:33.157421+00:00",
+              "session": "translator-writeback-gaps",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            },
+            {
+              "event": "started",
+              "actor": "claude",
+              "at": "2026-10-23T18:52:54.341001+00:00",
+              "session": "translator-writeback-gaps",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            },
+            {
+              "event": "released",
+              "actor": "claude",
+              "at": "2026-10-23T19:00:32.116435+00:00",
               "session": "translator-writeback-gaps",
               "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
             }

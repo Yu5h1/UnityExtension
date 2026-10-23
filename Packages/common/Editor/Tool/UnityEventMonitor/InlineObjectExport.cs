@@ -1,6 +1,6 @@
 // Batchmode entry of the agent translator: exports every inline ScriptableObject in the given scenes and assets
 // with its serialized fields and UnityEvent calls, plus the UnityEvents of the objects that hold them.
-// References are written as names, hierarchy paths, asset paths or inline paths, never as fileID or GUID.
+// References are written as UnityEventScanner.DescribeReference writes them, or as inline paths, never as fileID or GUID.
 // Shares UnityEventScanner's walk and records with UnityEventReport; ObjectExport writes fields and events through
 // the helpers here.
 //
@@ -43,6 +43,7 @@ namespace Yu5h1Lib.EditorExtension
             public string method;
             public string mode;
             public string argument;
+            public string callState;
             public string status;
         }
 
@@ -211,7 +212,8 @@ namespace Yu5h1Lib.EditorExtension
                     targetType = r.targetType,
                     method = r.methodName,
                     mode = r.mode.ToString(),
-                    argument = r.argument,
+                    argument = r.mode == PersistentListenerMode.Object ? Describe(r.argumentObject, inlinePaths) : r.argument,
+                    callState = r.callState.ToString(),
                     status = r.status.ToString(),
                 }).ToList(),
             }).ToList();
@@ -316,15 +318,9 @@ namespace Yu5h1Lib.EditorExtension
         {
             if (obj == null)
                 return "null";
-            var type = obj.GetType().Name;
-            if (inlinePaths.TryGetValue(obj, out var inline))
-                return $"inline: {inline} <{type}>";
-            if (EditorUtility.IsPersistent(obj))
-            {
-                var path = AssetDatabase.GetAssetPath(obj);
-                return AssetDatabase.IsMainAsset(obj) ? $"{path} <{type}>" : $"{path} > {obj.name} <{type}>";
-            }
-            return $"{UnityEventScanner.DescribePath(obj)} <{type}>";
+            return inlinePaths.TryGetValue(obj, out var inline)
+                ? $"inline: {inline} <{obj.GetType().Name}>"
+                : UnityEventScanner.DescribeReference(obj);
         }
 
         internal static void Write(object doc, string path)

@@ -4,64 +4,64 @@ Current round: `../Documentation/資料驅動的Agent翻譯器.md#一般物件�
 
 驗證方式：他驗（依計畫推導實作）。指示：把 `write-back-test` 找到的〈原則〉缺口補進翻譯器（使用者 2026-10-24 以 `/task-progress-items auto agent-data-translator` 要求處理卡上的「問題：」項目）。現況：Prefab 內與資產子物件的引用只寫名稱、名稱裡的斜線沒有跳脫、Object 模式監聽器的參數只寫物件名稱、監聽器沒有呼叫狀態、Prefab 實例與 Variant 分不出覆寫，見〈改輸出的測試〉結果的缺口 1–4、6、7。要達成：〈一般物件匯出〉的「寫回前要補的寫法」。不在範圍內：缺口 5（inline SO 的身分含監聽器索引，handoff〈Ruled-out directions〉已排除）、寫回工具、建置比對的接線清單格式。測試檔只放在 BonghuoVR 的暫存資料夾 `Assets/__AgentWriteBack`，用完刪除；輸出放 `W:/UnityProject/BonghuoVR-Build/translator/gaps/`。本輪只放 agent 的檢查，沒有人工檢查。
 
-- [ ] **1. 引用與名稱**
+- [x] **1. 引用與名稱**
   Outcome: 每個引用都指得到唯一的物件，名稱本身不會被讀成路徑或編號。
   Checks:
-    - [ ] **Prefab 內的引用**
+    - [x] **Prefab 內的引用**
       - Action: 在沒被編輯器開著的 BonghuoVR 匯出 `Assets/StaticResources/NPC/Prefab/MainGuy.prefab`，讀 SkinnedMeshRenderer 的 `m_Bones`、`m_RootBone`。
       - Expect: 每筆都是 `MainGuy.prefab > <名稱路徑> (Transform) <Transform>`，名稱路徑都在同一份輸出的 `gameObjects` 裡；沒有只寫物件名稱的同檔引用。
-    - [ ] **子資產編號**
+    - [x] **子資產編號**
       - Action: 匯出 `Assets/Scenes/Main.unity`，讀 Global 的 PlayableDirector `m_SceneBindings` 與 PlayableDirectorAddon `_skipPointEvents` 的 key，以及 MeshFilter／SkinnedMeshRenderer 的 Mesh 引用。
-      - Expect: 6 個 `Animation Track` 寫成 `Animation Track`、`Animation Track#2`…`#6`，10 個 `Skip Point` 也各不相同；兩次匯出編號相同；模型的 Mesh 沒有被編號。
-    - [ ] **名稱跳脫**
+      - Expect: 6 個 `Animation Track` 寫成 `Animation Track`、`Animation Track#2`…`#6`，10 個 `Skip Point` 也各不相同；兩次匯出編號相同；模型的 Mesh 只在同一模型裡有同名的 Mesh 時才編號，不會因為同名的 GameObject 被編號（例如 `Happy MainGuy.fbx > Boat_Past_MainGuy_Body <Mesh>`）。
+    - [x] **名稱跳脫**
       - Action: 讀 Main 的匯出，並在暫存資料夾的探測場景放一個名為 `A/B#1\C` 的物件後匯出。
       - Expect: `GameManager/XRDeviceSimulatorPlatformActivator/F10 TurnOn\/Off Simulator`；探測物件寫成 `A\/B\#1\\C`，它的同名第二個物件寫成 `A\/B\#1\\C#2`。
 
-- [ ] **2. 監聽器的參數與呼叫狀態**
+- [x] **2. 監聽器的參數與呼叫狀態**
   Outcome: 監聽器的參數用引用寫法、數值完整，呼叫狀態看得到。
   Checks:
-    - [ ] **Object 參數**
+    - [x] **Object 參數**
       - Action: 讀 Main 匯出裡 Object 模式的 23 筆呼叫。
       - Expect: 參數是名稱路徑、資產路徑或 `inline: Global (PlayableDirectorAddon) > _Stopped.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgument <TransformInfoObject>`，沒指定的是 `null`；6 筆 `static_Interactable` 各指向完整路徑。
-    - [ ] **Float 參數與呼叫狀態**
+    - [x] **Float 參數與呼叫狀態**
       - Action: 探測場景加兩個監聽器：一個 Float 參數 0.1f＋1e-7f，一個呼叫狀態 Off；匯出。
       - Expect: Float 參數寫成可還原的完整精度；每筆呼叫都有 `callState`，Off 那筆寫 `Off`，其他寫原本的狀態。
-    - [ ] **UnityEvent 報告**
+    - [x] **UnityEvent 報告**
       - Action: 改動前後各對 Main 跑一次 UnityEvent 報告並比較。
       - Expect: 除了 `generatedAt`，只有 Object 與 Float 參數的寫法、含跳脫字元的名稱不同；筆數與狀態相同。
 
-- [ ] **3. Prefab 覆寫**
+- [x] **3. Prefab 覆寫**
   Outcome: 從輸出看得出 Prefab 實例與 Variant 裡哪些是覆寫、新增或移除的。
   Checks:
-    - [ ] **Variant**
+    - [x] **Variant**
       - Action: 用 `write-back-test` 的 `WriteBackOracle` 在暫存資料夾複製 MainGuy 並做那九題的改動，匯出複本。
-      - Expect: Animator 的 `overrides` 有 `m_ApplyRootMotion`，Clothes 有 `m_Materials.Array.data[1]`，Face 有 `m_RootBone`；HeadSocket 與根物件的 BoxCollider `added` 為 true；沒改的元件 `overrides` 是空的。
-    - [ ] **場景裡的 Prefab 實例**
+      - Expect: Animator 的 `overrides` 有 `m_ApplyRootMotion`，Clothes 有 `m_Materials.Array.data[1]`，Face 有 `m_RootBone`；HeadSocket 與根物件的 BoxCollider `added` 為 true；除了這三個欄位，`overrides` 和原檔 MainGuy 的匯出相同（Variant 原有的覆寫）。
+    - [x] **場景裡的 Prefab 實例**
       - Action: 探測場景放一個 MainGuy 複本的實例：改一個欄位、加一個元件、移除 Face 的 SkinnedMeshRenderer 與 `mixamorig:HeadTop_End`；匯出。
       - Expect: 改的欄位在 `overrides`，加的元件 `added` 為 true；實例根的 `removedComponents` 有 Face 的 SkinnedMeshRenderer，`removedGameObjects` 有 HeadTop_End，都寫成來源 Prefab 裡的名稱路徑；不是 Prefab 實例的物件 `added` 為 false、`overrides` 是空的。
 
-- [ ] **4. 穩定、相容與清理**
+- [x] **4. 穩定、相容與清理**
   Depends on: 1, 2, 3.
   Outcome: 輸出仍穩定可 diff，兩個 Unity 版本都能編譯，消費專案沒有留下測試檔。
   Checks:
-    - [ ] **輸出穩定**
+    - [x] **輸出穩定**
       - Action: 對 Main 與 MainGuy 連跑兩次一般物件匯出並比較。
       - Expect: 兩份完全相同。
-    - [ ] **inline SO 匯出**
+    - [x] **inline SO 匯出**
       - Action: 對 Main 跑 inline SO 匯出，和 `W:/UnityProject/BonghuoVR-Build/translator/inline-main-fix.json` 比較。
       - Expect: 只多了 `callState`，Object 參數改成 inline 與路徑寫法；其餘相同。
-    - [ ] **兩個 Unity 版本都能編譯**
+    - [x] **兩個 Unity 版本都能編譯**
       - Action: `python Tools/agent/unity_compile.py Packages/common/Editor/Yu5h1Lib.Common.Editor.asmdef`。
       - Expect: 6000.3.9f1 與 6000.6.0f1 都 0 錯誤，警告仍為 4 個。
-    - [ ] **清除暫存資料夾**
+    - [x] **清除暫存資料夾**
       - Action: 以 batchmode 刪除 `Assets/__AgentWriteBack`，看 BonghuoVR 的 `git status`。
       - Expect: 資料夾不在，`git status` 和測試前相同。
 
-- [ ] **5. agent 知道新寫法**
+- [x] **5. agent 知道新寫法**
   Depends on: 1, 2, 3.
   Outcome: agent 不必讀程式就知道引用、跳脫、呼叫狀態與覆寫怎麼讀。
   Checks:
-    - [ ] **skill 的說明**
+    - [x] **skill 的說明**
       - Action: 讀 `.agents/skills/unity-agent-operations/SKILL.md` 的 Tools 表與〈Reading scene and asset data〉。
       - Expect: 寫明四種引用寫法、名稱跳脫、`callState`、`added`／`overrides`／`removedComponents`／`removedGameObjects`；不再說引用一律是名稱路徑。
 

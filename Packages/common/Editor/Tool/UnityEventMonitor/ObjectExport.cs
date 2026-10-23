@@ -35,6 +35,8 @@ namespace Yu5h1Lib.EditorExtension
             public string id;
             public string type;
             public string enabled;
+            public bool added;
+            public List<string> overrides = new();
             public List<Field> fields = new();
             public List<EventEntry> events = new();
         }
@@ -48,6 +50,10 @@ namespace Yu5h1Lib.EditorExtension
             public string tag;
             public string layer;
             public string prefab;
+            public bool added;
+            public List<string> overrides = new();
+            public List<string> removedComponents = new();
+            public List<string> removedGameObjects = new();
             public List<ComponentEntry> components = new();
         }
 
@@ -168,7 +174,18 @@ namespace Yu5h1Lib.EditorExtension
                 tag = go.tag,
                 layer = LayerMask.LayerToName(go.layer) is { Length: > 0 } layerName ? layerName : go.layer.ToString(),
                 prefab = PrefabSourceOf(go),
+                added = IsAdded(go),
+                overrides = OverridesOf(go, GameObjectFields),
             };
+            if (PrefabUtility.IsAnyPrefabInstanceRoot(go))
+            {
+                entry.removedComponents = PrefabUtility.GetRemovedComponents(go)
+                    .Where(r => r.assetComponent != null).Select(r => UnityEventScanner.DescribePath(r.assetComponent))
+                    .OrderBy(p => p, StringComparer.Ordinal).ToList();
+                entry.removedGameObjects = PrefabUtility.GetRemovedGameObjects(go)
+                    .Where(r => r.assetGameObject != null).Select(r => UnityEventScanner.DescribePath(r.assetGameObject))
+                    .OrderBy(p => p, StringComparer.Ordinal).ToList();
+            }
             var missingOrdinal = 0;
             foreach (var component in go.GetComponents<Component>())
             {
@@ -185,6 +202,8 @@ namespace Yu5h1Lib.EditorExtension
                     id = UnityEventScanner.ComponentId(component),
                     type = component.GetType().FullName,
                     enabled = EditorUtility.GetObjectEnabled(component) switch { 0 => "false", 1 => "true", _ => string.Empty },
+                    added = entry.added || (PrefabUtility.GetCorrespondingObjectFromSource(component) == null && HasSource(go)),
+                    overrides = OverridesOf(component, fields.Select(f => f.path)),
                     fields = fields,
                     events = InlineObjectExport.EventsOf(component, callsByOwner, inlinePaths),
                 });
@@ -210,6 +229,48 @@ namespace Yu5h1Lib.EditorExtension
             return EditorUtility.IsPersistent(go)
                 ? AssetDatabase.GetAssetPath(PrefabUtility.GetCorrespondingObjectFromSource(go))
                 : PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(go);
+        }
+
+        private static readonly string[] GameObjectFields = { "m_Name", "m_IsActive", "m_TagString", "m_Layer" };
+
+        private static bool HasSource(Object obj) => PrefabUtility.GetCorrespondingObjectFromSource(obj) != null;
+
+        /// <summary>
+        /// Whether the GameObject was added inside a prefab instance or variant: it has no source object while an
+        /// ancestor has one. Children of an added GameObject count as added too.
+        /// </summary>
+        private static bool IsAdded(GameObject go)
+        {
+            if (HasSource(go))
+                return false;
+            for (var t = go.transform.parent; t != null; t = t.parent)
+                if (HasSource(t.gameObject))
+                    return true;
+            return false;
+        }
+
+        /// <summary>
+        /// The given property paths whose value overrides the prefab source, as the Inspector shows them in bold. An array
+        /// counts as overridden when its size is; its elements are listed by their own paths.
+        /// </summary>
+        private static List<string> OverridesOf(Object obj, IEnumerable<string> paths)
+        {
+            var overrides = new List<string>();
+            if (!HasSource(obj))
+                return overrides;
+            using var so = new SerializedObject(obj);
+            foreach (var path in paths)
+            {
+                var p = so.FindProperty(path);
+                if (p == null)
+                    continue;
+                var overridden = p.isArray && p.propertyType == SerializedPropertyType.Generic
+                    ? p.FindPropertyRelative("Array.size")?.prefabOverride == true
+                    : p.prefabOverride;
+                if (overridden)
+                    overrides.Add(path);
+            }
+            return overrides;
         }
 
         internal static bool IsReference(Field field) => field.type.StartsWith("PPtr<", StringComparison.Ordinal);
