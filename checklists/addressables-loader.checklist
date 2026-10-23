@@ -94,14 +94,16 @@ Current round: `../Documentation/Addressables/plan.md#首輪範圍讀取處理�
       - Expect: 兩個編輯器 0 錯誤；測試通過；成功時角色出現、監看狀態為成功；錯誤 key 時監看狀態為失敗、原角色留著、Console 沒有錯誤。
       - Recorded: claude:5b1ffe88-d11c-4454-9af7-2c7a79d0dd8a; at=2026-10-23T11:14:58Z; fp=3f0b03d82b69
 
-- [ ] **7. 人工驗收**
+- [x] **7. 人工驗收**
   Outcome: 使用者目視確認 IMGUI 監看畫面在成功與失敗時的顯示。
   Checks:
-    - [ ] **成功路徑** `[manual]`
+    - [x] **成功路徑** `[manual]`
       - Action: 在 Unity 開 `Yu5h1LibTest` 的 `Assets/AddressablesTest/AddressablesTest.unity`，確認 `Window > Asset Management > Addressables > Groups` 的 Play Mode Script 是 Use Existing Build，按 Play。
       - Expect: Game 視窗左上的文字從「載入中」與百分比變成「成功」並帶測試角色的 key；角色出現在畫面中。
       - Reason: 畫面由使用者目視確認。
-    - [ ] **錯誤的 key** `[manual]`
+      - Recorded: user; at=2026-10-23T11:29:41Z; fp=8e9cb7c2a61a
+    - [x] **錯誤的 key** `[manual]`
       - Action: 承上仍在 Play 中，在 Hierarchy 選 `WrongKeyTrigger`，在 Inspector 勾選啟用它。
       - Expect: 文字變成「失敗」並帶那個不存在的 key；原本的角色仍在畫面中。
       - Reason: 畫面由使用者目視確認。
+      - Recorded: user; at=2026-10-23T11:31:02Z; fp=de4f066c21b6

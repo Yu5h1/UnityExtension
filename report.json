@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-23T11:10:58.252028+00:00",
+  "updated_at": "2026-10-23T11:31:08.089Z",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1792,7 +1792,7 @@
     }
   ],
   "next": {
-    "task_id": "addressables-package",
-    "item_id": "addressables-loader"
+    "task_id": "agent-data-translator",
+    "item_id": "general-objects"
   }
 }
