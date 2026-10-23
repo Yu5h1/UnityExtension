@@ -6,10 +6,10 @@ Current round: `../Documentation/Addressables/入門操作.md#addressables-入�
 
 指示（使用者 2026-10-23）：把 Addressables 入門操作寫成 checklist，綁到 addressables-package。現況：`Documentation/Addressables/入門操作.md`（`c04a5d8`）的選單、按鈕與欄位名稱已對照 Yu5h1LibTest 的 Addressables 2.11.2 原始碼，但沒有人照著做過。要達成：使用者在 Yu5h1LibTest 照文件做一遍，確認每一節照做得通，學會勾選、address、group、Play Mode Script 與 Build。文件和畫面不一致時，在該檢查標 `[!]` 並寫下看到什麼，由 agent 修文件。不在範圍內：遠端內容、Profile 與 Labels。
 
-- [ ] **1. 文件與 Unity 介面一致**
+- [x] **1. 文件與 Unity 介面一致**
   Outcome: 入門操作提到的選單、按鈕、欄位與預設名稱都存在於 Yu5h1LibTest 的 Addressables 2.11.2。
   Checks:
-    - [ ] **介面名稱**
+    - [x] **介面名稱**
       - Action: 對照 Yu5h1LibTest `Library/PackageCache/com.unity.addressables@*/Editor` 的原始碼與 `Unsupported.GetSubmenus("Window")`，逐一檢查文件裡的 `Window → Asset Management → Addressables → Groups`、`Addressable` 勾選框、欄位 `Group Name \ Addressable Name`／`Path`／`Labels`、`New → Packed Assets`、`Play Mode Script`、`Use Existing Build (requires built groups)`、`Build → New Build → Default Build Script`，以及勾選 Resources 資產時會被搬出 Resources。
       - Expect: 每一個名稱與行為都找得到出處；不一致的已改進文件。
 
