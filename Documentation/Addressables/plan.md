@@ -267,6 +267,7 @@ Task ID `streaming-assets`），在本套件內開發、以消費端身分引用
    **已實作**（2026-10-23，`586ea84`；`loader-handler` 已驗收，2026-10-23，`ba1b38e`）：common 的 `AssetLoader`／`ResourcesLoader` 與 `MonoEventHandler` 的 Start 事件，本套件的 `LoaderHandler`、`LoaderAgent`、`InstanceLoad`、`InstanceInitializer`；
    Yu5h1LibTest 測試資料夾 `Assets/AddressablesTest`、場景 `Assets/AddressablesTest/AddressablesTest.unity`。用法見 [loader-handler](../../.agents/skills/loader-handler.md)。
 2. **Addressables 讀取器**，用 local group（建到 StreamingAssets）驗證。
+   **已實作**（2026-10-23，`c179b79`，待他驗 `addressables-loader`）：本套件的 `AddressablesLoader`；Yu5h1LibTest 的 local group `AddressablesTestCharacters`（address `characters/test-character`，Use Existing Build）與測試用 IMGUI 監看。用法見 [loader-handler](../../.agents/skills/loader-handler.md)。
 3. **角色只準備 prefab 與 Animator Override Controller**。其餘元件（VCP 的 AudioSource、vcpAnimationController、
    Character、uLipSync 等）不放進 prefab，由消費端的初始化流程在載入後自動添加。套件只提供掛接點，不認識消費端的元件；
    非同步表演用 [非同步工作](../非同步工作.md) 的事件物件掛接。

@@ -6,7 +6,7 @@ Design and reasons: [Addressables plan § 首輪範圍](../../Documentation/Addr
 (Task ID `addressables-package`). Events and cancellation of the request come from
 [async-task-objects.md](async-task-objects.md). Tests that show every rule below:
 `Packages/common/Tests/Editor/ResourcesLoaderTests.cs`, `Packages/Addressables/Tests/Editor/LoaderHandlerTests.cs`,
-`LoaderAgentTests.cs`.
+`LoaderAgentTests.cs`, `AddressablesLoaderTests.cs`.
 
 ## Components
 
@@ -24,6 +24,7 @@ scene event (Start/Enabled, button, scroll…)
 |---|---|---|
 | `AssetLoader` | common | Abstract MonoBehaviour: `LoadAsync<T>(key, IProgress<float>, CancellationToken)` → `Awaitable<T>`, null when nothing is at the key (never throws for that); cancellation throws `OperationCanceledException`. `Release(asset)` gives back what it loaded (no-op by default) |
 | `ResourcesLoader` | common | `Resources.LoadAsync`; key = path under a Resources folder. Awaits the request itself (no frame polling); progress is reported at start and as 1 at the end |
+| `AddressablesLoader` | Addressables | Addressables by key (address, or a label: first match). Looks the key's location up first, so a missing key returns null with no error log; progress is the operation's `PercentComplete`, 1 at the end; cancellation throws at once and the handle is released when Addressables finishes; a failed load releases and rethrows. Holds one handle per returned object until `Release(asset)` (once per load); destroying the loader releases nothing. Local or remote is the group's load path, not the loader |
 | `LoaderHandler` | Addressables | `SingletonBehaviour<LoaderHandler>`: scene instance, else a `LoaderHandler` prefab in Resources, else a new one. `loader` = the field, or a `ResourcesLoader` added to the handler when the field is empty. `LoadAsync<T>` for code |
 | `LoaderAgent` | Addressables | Scene stand-in: `Prepare(string)` for UnityEvents, `PrepareAsync(key, token)` → `Awaitable<bool>` for code; fields `_request` (`InstanceLoad`, `[Inline]`), `_initializer`, `_parent`; `instance`, `key`, `Release()` |
 | `InstanceLoad` | Addressables | The agent's `AsyncLoadObject<GameObject>`; wire the loading presentation to its events. The agent sets its key, so it has no key setting |
@@ -38,6 +39,12 @@ with the handler and its loader; `LoaderHandler.instance` instantiates it when t
 
 A loader that holds resources (Addressables handles) overrides `Release`; the agent calls it on the loader that
 loaded the asset, not on whatever the handler holds now.
+
+For Addressables, put `AddressablesLoader` next to the handler and drag it into the field. The content must be built
+(Addressables Groups > Build, or `AddressableAssetSettings.BuildPlayerContent`) and the Play Mode Script set to
+**Use Existing Build**; `Use Asset Database` is never the acceptance path ([plan § 目的與固定方向](../../Documentation/Addressables/plan.md#目的與固定方向)).
+A local group uses the default `Local.BuildPath`／`Local.LoadPath`: the player reads it from StreamingAssets `aa`, the
+editor's Use Existing Build from `Library/com.unity.addressables/aa/<platform>`.
 
 ## Consumer initializer
 
@@ -58,17 +65,27 @@ never references consumer components; whatever the prefab lacks is added here.
 
 ## Scene wiring example
 
-The Yu5h1LibTest scene `Assets/AddressablesTest/AddressablesTest.unity` (test character in
-`Assets/AddressablesTest/Resources`):
+The Yu5h1LibTest scene `Assets/AddressablesTest/AddressablesTest.unity`. The test character is the prefab
+`Assets/AddressablesTest/Content/TestCharacter.prefab` (with `TestCharacter.overrideController`) in the local group
+`AddressablesTestCharacters`, address `characters/test-character`; the Resources copy in
+`Assets/AddressablesTest/Resources` stays for the Resources loader.
 
 ```text
 CharacterAgent (GameObject)
-  LoaderAgent             initializer → TestCharacterInitializer; request events: Begin → LoadEventLog.Begin,
-                          End → LoadEventLog.End, Loaded → LoadEventLog.Loaded (dynamic)
+  LoaderAgent             initializer → TestCharacterInitializer; request judge → AcceptLoadedJudge (inline);
+                          request events: Begin → LoadEventLog.Begin, End → LoadEventLog.End,
+                          Loaded → LoadEventLog.Loaded (dynamic)
   TestCharacterInitializer
   LoadEventLog
-  MonoEventHandler        Start → LoaderAgent.Prepare("AddressablesTestCharacter")
+  MonoEventHandler        Start → LoaderAgent.Prepare("characters/test-character")
+LoaderHandler             LoaderHandler (loader → AddressablesLoader), AddressablesLoader
+LoadStatusMonitor         test-only IMGUI label: idle / loading n% / succeeded / failed, from the request's events
+WrongKeyTrigger           inactive; MonoEventHandler Enabled → LoaderAgent.Prepare("characters/missing-character")
 ```
+
+A request without a judge raises no True／False／Completed (`AsyncLoadObject<T>` fails a missing object without asking
+the judge, but only a judge raises those events), so anything that must show a failure needs a judge on the request;
+the test scene uses `AcceptLoadedJudge`, which accepts every loaded object.
 
 `MonoEventHandler` (common) raises Start, Enabled and Disabled; call the agent from Start, which runs after every
 Awake and OnEnable of the scene, so the handler and the listeners already exist. Wire the request's events
@@ -90,5 +107,10 @@ An unfocused editor barely runs the player loop in Edit Mode (`Time.frameCount` 
 2026-10-23), and `EditorApplication.QueuePlayerLoopUpdate` does not help, so anything awaiting
 `Awaitable.NextFrameAsync` stalls in an EditMode test run from unityMCP. Await the operation instead
 (`Awaitable.FromAsyncOperation`), as `ResourcesLoader` does, or hold the work on an `AwaitableCompletionSource<T>`.
+The first Addressables content build in a project (`BuildPlayerContent`) opens a modal dialog asking to turn on
+'Debug Build Layout'; it blocks the editor's main thread, so the unityMCP call times out until the user answers it
+(Yu5h1LibTest 2026-10-23). Tell the user before the first build. Loading built Addressables content is not an
+EditMode test: verify it in Play Mode.
+
 Test-only Resources assets go under the test assembly's `Editor/Resources/<unique folder>`: Resources.Load finds them
 in the editor and they never reach a build.

@@ -10,6 +10,11 @@ Current round: `../Documentation/Addressables/plan.md#首輪範圍讀取處理�
 
 進度的意思：讀取器回報的是這次讀取的整體進度（Addressables 操作的 `PercentComplete`，含相依內容），結束時為 1。plan〈頭像暗幕與進度通知〉要求的「下載位元組比例」是頭像原型（遠端測試之後）的呈現資料，不在本項。
 
+執行紀錄（2026-10-23，執行者 session `494bd2fa-f130-4ccd-9c60-f1386502277a`）：
+第 1 項 `e23815a`：`unity_compile.py` 找不到的參考改依參考方套件 `package.json` 的相依，到該版編輯器隨附的套件找（`BuiltInPackages/<name>`，否則把 `Editor/<name>-<version>.tgz` 解到暫存資料夾），從原始碼編譯；`precompiledReferences`（`nunit.framework.dll`）也從這些套件取（`c179b79`）。6000.3.9f1 的 `Yu5h1Lib.Addressables` 因此對 `Unity.Addressables`／`Unity.ResourceManager` 2.8.1（與 `Unity.Profiling.Core` 1.0.3）編譯。BonghuoVR 沒開著，以 `unity_batch.py W:/UnityProject/BonghuoVR --method UnityEditor.SyncVS.SyncSolution` 重產 csproj（58 秒，exit 0，BonghuoVR git 無變更），common 不再報 stale。
+第 2 項 `c179b79`：`Packages/Addressables/Runtime/AddressablesLoader.cs` 與 `Tests/Editor/AddressablesLoaderTests.cs`。unityMCP EditMode `Yu5h1Lib.Addressables.Editor.Tests`＋`Yu5h1Lib.Common.Editor.Tests` 119／119 通過（新增 3 個；第一次跑時取消測試用 `ThrowsAsync` 收到子類別 `TaskCanceledException` 而失敗，改用 `CatchAsync` 後通過）。`unity_compile.py`：Runtime 與 Tests 兩個 asmdef 在 6000.3.9f1、6000.6.0f1 皆 0 錯誤 0 警告；common 兩版 0 錯誤 57 警告（不變）。
+第 3、4 項（Yu5h1LibTest 沒有 git，路徑記在這裡）：Addressables 設定 `Assets/AddressableAssetsData/AddressableAssetSettings.asset`（`AddressableAssetSettingsDefaultObject.GetSettings(true)` 建立）；local group `AddressablesTestCharacters`（`Assets/AddressableAssetsData/AssetGroups/AddressablesTestCharacters.asset`，BundledAssetGroupSchema 的 build／load path 為 `Local.BuildPath`／`Local.LoadPath`＝`Library/com.unity.addressables/aa/Windows/StandaloneWindows64`／`{UnityEngine.AddressableAssets.Addressables.RuntimePath}/StandaloneWindows64`）；資產 `Assets/AddressablesTest/Content/TestCharacter.prefab`（Resources 角色的複本，Animator 改指同資料夾的 `TestCharacter.overrideController`），address `characters/test-character`；Play Mode Script 為 Use Existing Build（`BuildScriptPackedPlayMode`）。`BuildPlayerContent` 產生 `Library/com.unity.addressables/aa/Windows/StandaloneWindows64/addressablestestcharacters_assets_all_7dfaf6d0e95afd287f26d615925edc03.bundle`；第一次建置時編輯器跳出是否開啟 Debug Build Layout 的對話框，主執行緒停住、unityMCP 逾時，使用者處理後完成。場景 `Assets/AddressablesTest/AddressablesTest.unity`：新增 `LoaderHandler`（`LoaderHandler` 的 `_loader` → 同物件的 `AddressablesLoader`）、`LoadStatusMonitor`（`_agent` → `CharacterAgent` 的 `LoaderAgent`）、停用的 `WrongKeyTrigger`（`MonoEventHandler` Enabled → `LoaderAgent.Prepare("characters/missing-character")`）；`CharacterAgent` 的 Start 改為 `Prepare("characters/test-character")`，讀取請求的 judge 為 inline `AcceptLoadedJudge`。測試專案新增 `Assets/AddressablesTest/Scripts/AcceptLoadedJudge.cs`、`LoadStatusMonitor.cs`。unityMCP Play：`TestCharacter(Clone)`、Animator 為 `TestCharacter`（AnimatorOverrideController）、`TestCharacterMarker.key` = `characters/test-character`，監看「成功（characters/test-character）」；啟用 `WrongKeyTrigger`：Begin → Progress 0 → End → False → Completed(False)，原角色留著，監看「失敗（characters/missing-character）」；`Release()` 後重新 `Prepare`：Begin → Progress 0／0.25／0.25／0.56／1 → End → Loaded → True → Completed(True)，途中監看「載入中 56%」。Console 無錯誤與警告。驗證後編輯器切回原本開著的 `UxAcceptanceDemo` 場景。
+
 不在範圍內：讀取失敗改用 Resources 測試角色的備援流程（plan〈首輪範圍〉第 275 行只描述行為，沒有排進順序）；遠端內容與 `InternalIdTransformFunc`；VCP 的程式與 Cat；載入體驗的 UX 規範（UX 第 98 題，由另一個 session 在 UX repo 撰寫），監看畫面不預設顯示延遲、取消按鈕等決定。
 
 - [x] **1. 6000.3.9f1 編得到 Addressables**
@@ -36,36 +41,36 @@ Current round: `../Documentation/Addressables/plan.md#首輪範圍讀取處理�
       - Action: 對 `Packages/Addressables/Runtime/Yu5h1Lib.Addressables.asmdef` 與 `Packages/Addressables/Tests/Editor/Yu5h1Lib.Addressables.Editor.Tests.asmdef` 執行 `unity_compile.py`（參考來源：6000.6.0f1 是 Yu5h1LibTest 的 csproj；6000.3.9f1 是通用參考加第 1 項的隨附套件，common 取自 BonghuoVR 的 csproj）。
       - Expect: 兩個編輯器都 0 錯誤；新增的警告逐條說明。
 
-- [ ] **3. Yu5h1LibTest 以 local group 載入測試角色**
+- [x] **3. Yu5h1LibTest 以 local group 載入測試角色**
   Depends on: 2.
   Outcome: 測試角色是 local group 裡的 Addressables 內容，場景的讀取處理器透過 Addressables 讀取器、以 Use Existing Build 載入它；錯誤的 key 走失敗路徑。
   Checks:
-    - [ ] **Addressables 設定與 local group**
+    - [x] **Addressables 設定與 local group**
       - Action: 在 Yu5h1LibTest 建立 Addressables 設定，把測試角色（prefab＋Animator Override Controller，不放 `Resources`）放進一個獨立的 local group 並給它 address，Play Mode Script 設為 Use Existing Build，建置內容。
       - Expect: group 的 build／load path 是預設的 Local（Player 從 StreamingAssets 的 `aa` 讀取）；內容建置成功；記錄設定、group、資產路徑與 address（Yu5h1LibTest 沒有 git，路徑要寫在本檔）。
-    - [ ] **場景接線**
+    - [x] **場景接線**
       - Action: 在 `Assets/AddressablesTest/AddressablesTest.unity` 放讀取處理器，讀取器欄位接 Addressables 讀取器；代理的 Start 改讀測試角色的 address；讀取請求掛一個只在測試專案的判斷物件（讀到就成功），讓失敗也有事件；加一個平常停用的觸發物件，啟用時用不存在的 key 呼叫代理。
       - Expect: 記錄每個物件與欄位的接法；套件沒有為此新增程式。
-    - [ ] **成功與失敗路徑**
+    - [x] **成功與失敗路徑**
       - Action: 以 unityMCP 開該場景進入 Play，確認角色出現；再啟用錯誤 key 的觸發物件。
       - Expect: 成功時 `(Clone)` 出現、Animator 是 override controller、測試初始化器加的元件存在，請求依序觸發 Begin、Progress、End、Loaded、True；錯誤 key 時觸發 False 與 Completed(false)，原本的角色留著，Console 沒有錯誤。
 
-- [ ] **4. IMGUI 監看畫面**
+- [x] **4. IMGUI 監看畫面**
   Depends on: 3.
   Outcome: demo 場景有一個測試用的 OnGUI `GUI.Label`，從代理請求的事件顯示讀取狀態。
   Checks:
-    - [ ] **監看元件**
+    - [x] **監看元件**
       - Action: 在 `Assets/AddressablesTest/Scripts` 寫一個 MonoBehaviour，以欄位引用場景的代理，在 OnEnable／OnDisable 訂閱與解除代理請求的 Begin、Progress 與判斷物件的 Completed，OnGUI 只畫一個 `GUI.Label`；放進場景。
       - Expect: 顯示閒置、載入中＋進度百分比、成功、失敗四種狀態與 key；只在 Yu5h1LibTest，套件的 Runtime 沒有它；沒有按鈕、顯示延遲或其他 UX 規範的決定。
-    - [ ] **狀態實際切換**
+    - [x] **狀態實際切換**
       - Action: 以 unityMCP 進入 Play，於成功後與啟用錯誤 key 觸發物件後各讀一次監看元件的狀態。
       - Expect: 成功後是「成功」、錯誤 key 後是「失敗」，中間經過「載入中」。
 
-- [ ] **5. agent 文件**
+- [x] **5. agent 文件**
   Depends on: 2.
   Outcome: agent 不讀程式就知道怎麼用 Addressables 讀取器。
   Checks:
-    - [ ] **skill 與 README**
+    - [x] **skill 與 README**
       - Action: 讀 `.agents/skills/loader-handler.md` 與 `Packages/Addressables/README.md`。
       - Expect: 寫有 Addressables 讀取器的契約（key、進度、取消、釋放）、怎麼接到讀取處理器、Use Existing Build 要先建置內容，以及 Yu5h1LibTest 場景的新接線。
 
@@ -89,10 +94,10 @@ Current round: `../Documentation/Addressables/plan.md#首輪範圍讀取處理�
   Outcome: 使用者目視確認 IMGUI 監看畫面在成功與失敗時的顯示。
   Checks:
     - [ ] **成功路徑** `[manual]`
-      - Action: 在 Unity 開 `Yu5h1LibTest` 的 `Assets/AddressablesTest/AddressablesTest.unity`，確認 Addressables Groups 視窗的 Play Mode Script 是 Use Existing Build，按 Play。
+      - Action: 在 Unity 開 `Yu5h1LibTest` 的 `Assets/AddressablesTest/AddressablesTest.unity`，確認 `Window > Asset Management > Addressables > Groups` 的 Play Mode Script 是 Use Existing Build，按 Play。
       - Expect: Game 視窗左上的文字從「載入中」與百分比變成「成功」並帶測試角色的 key；角色出現在畫面中。
       - Reason: 畫面由使用者目視確認。
     - [ ] **錯誤的 key** `[manual]`
-      - Action: 承上仍在 Play 中，在 Hierarchy 勾選啟用錯誤 key 的觸發物件。
+      - Action: 承上仍在 Play 中，在 Hierarchy 選 `WrongKeyTrigger`，在 Inspector 勾選啟用它。
       - Expect: 文字變成「失敗」並帶那個不存在的 key；原本的角色仍在畫面中。
       - Reason: 畫面由使用者目視確認。
