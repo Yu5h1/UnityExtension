@@ -5,7 +5,9 @@ Usage:
 
 - The editor comes from ProjectSettings/ProjectVersion.txt (C:/Program Files/Unity/Hub/Editor/<version>);
   --editor overrides it.
-- Refuses to start when the project is already open in an editor (Temp/UnityLockfile exists).
+- Refuses to start when the project is already open in an editor: an open editor holds
+  Temp/UnityLockfile locked. A lockfile nobody holds is a leftover (Unity leaves it when batchmode
+  exits on compile errors); the runner deletes it, prints one line saying so, and continues.
 - Writes the log to <project's parent>/<project name>-Build/logs/ unless --log-dir is given.
 - Kills the Unity process tree when the timeout expires.
 - Prints a summary (editor, seconds, exit code, compile errors) and exits with Unity's exit code;
@@ -43,6 +45,24 @@ def kill_tree(pid):
         subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True)
     else:
         os.kill(pid, 9)
+
+
+def remove_stale_lockfile(path):
+    """Delete the lockfile unless an editor holds it. Return None when deleted, else why not."""
+    try:
+        if os.name != "nt":
+            import fcntl
+            with open(path, "rb") as f:
+                fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        # On Windows the editor opens the file without sharing, so deleting it fails while held.
+        os.remove(path)
+        return None
+    except BlockingIOError:
+        return "held"
+    except PermissionError as e:
+        return "held" if getattr(e, "winerror", None) == 32 else str(e)
+    except OSError as e:
+        return str(e)
 
 
 def arg_value(args, name):
@@ -83,10 +103,17 @@ def main(argv=None):
     if not os.path.isdir(os.path.join(project, "Assets")):
         print(f"not a Unity project: {project}", file=sys.stderr)
         return 2
-    if os.path.exists(os.path.join(project, "Temp", "UnityLockfile")):
-        print(f"refused: {project} is open in an editor (Temp/UnityLockfile exists). "
-              "Ask the user, or use unityMCP on the open editor.", file=sys.stderr)
-        return 2
+    lockfile = os.path.join(project, "Temp", "UnityLockfile")
+    if os.path.exists(lockfile):
+        why = remove_stale_lockfile(lockfile)
+        if why == "held":
+            print(f"refused: {project} is open in an editor (Temp/UnityLockfile is held). "
+                  "Ask the user, or use unityMCP on the open editor.", file=sys.stderr)
+            return 2
+        if why:
+            print(f"refused: cannot remove Temp/UnityLockfile in {project}: {why}", file=sys.stderr)
+            return 2
+        print(f"removed stale Temp/UnityLockfile (no editor holds it): {lockfile}", flush=True)
     version, editor = editor_for(project)
     if args.editor:
         editor = args.editor

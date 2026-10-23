@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-23T14:05:20.095Z",
+  "updated_at": "2026-10-23T14:27:48.232707+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1681,12 +1681,14 @@
               "session_id": "b580ea27-e5d6-4f63-801f-4133a27c36a6"
             }
           ]
-        },
+        }
+      ],
+      "completed_items": [
         {
           "id": "problem-batch-stale-lockfile",
           "title": "問題：Unity 在 batchmode 因編譯錯誤結束時會留下 Temp/UnityLockfile，unity_batch.py 之後就把專案當成已被編輯器開著而拒絕執行；只能人工確認沒有 Unity 行程後刪除該檔（2026-10-23 在 BonghuoVR 與暫存專案各遇到一次）",
           "priority": 2,
-          "status": "planned",
+          "status": "done",
           "activity": [
             {
               "event": "created",
@@ -1694,11 +1696,23 @@
               "at": "2026-10-23T13:41:36.739960+00:00",
               "session": "general-objects",
               "session_id": "854401b0-8694-4d52-95cb-62fe8a887ebe"
+            },
+            {
+              "event": "started",
+              "actor": "claude",
+              "at": "2026-10-23T14:25:57.063917+00:00",
+              "session": "batch-stale-lockfile",
+              "session_id": "9032bfc0-910c-496f-9004-44df3056e5ec"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-10-23T14:27:48.232707+00:00",
+              "session": "batch-stale-lockfile",
+              "session_id": "9032bfc0-910c-496f-9004-44df3056e5ec"
             }
           ]
-        }
-      ],
-      "completed_items": [
+        },
         {
           "id": "inline-export-subassets",
           "title": "inline SO 匯出的 -ioAssets 模式：先重現子資產漏列，再修正成與載入順序無關（驗收觀察 5）",

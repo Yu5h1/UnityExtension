@@ -54,7 +54,8 @@ agent 在這個工作區操作 Unity 時實際付出的成本，以及對應的�
 2. **GUID／資產索引與反查**：從 `.meta` 建立 GUID ↔ 路徑 ↔ 類別的對照，涵蓋 `Assets` 與 manifest 裡的 `file:` 套件；
    能反查哪些場景、Prefab、SO 引用了某個 GUID。只讀 `.meta` 的 guid 行與資產檔裡的 GUID 字串，不解析 YAML 結構。
 3. **batchmode 執行器**：一個指令就能對指定專案跑 Editor 方法：從 `ProjectVersion.txt` 找到對應的編輯器、log 寫到固定位置、
-   有逾時、回傳結束碼；專案已被編輯器開著（`Temp/UnityLockfile`）時直接拒絕並說明。
+   有逾時、回傳結束碼；專案已被編輯器開著（編輯器鎖住 `Temp/UnityLockfile`）時直接拒絕並說明；
+   沒有編輯器鎖住的殘留鎖檔（batchmode 因編譯錯誤結束時會留下）則刪除、印一行說明後繼續。
 4. **不開 Unity 的編譯檢查**：對一個套件的 asmdef 原始碼，用 6000.3.9f1 與 6000.6.0f1 的 Managed DLL 和 Core DLL 編譯，
    回報錯誤與警告。先支援 `com.yu5h1.common`。
 
