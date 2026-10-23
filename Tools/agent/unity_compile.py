@@ -153,6 +153,16 @@ def add_shipped_dependencies(asmdef, ctx):
         pending += list((package.get("dependencies") or {}).items())
 
 
+def shipped_dll(ctx, dll_name):
+    """A precompiled DLL of that file name inside the shipped packages indexed so far, or None."""
+    for folder in ctx["shipped"].values():
+        if folder:
+            found = glob.glob(os.path.join(folder, "**", dll_name), recursive=True)
+            if found:
+                return sorted(found)[0]
+    return None
+
+
 def unity_version_defines(asmdef, version):
     """Defines of versionDefines on the Unity version, written as a bare minimum version, that this editor meets."""
     return [vd["define"] for vd in asmdef.get("versionDefines", [])
@@ -318,6 +328,14 @@ def build(asmdef, ctx, built):
                                  f"the packages {version} ships; not compiled")
             else:
                 deps.append(dep)
+        for dll_name in asmdef.get("precompiledReferences", []):
+            if any(os.path.basename(r) == dll_name for r in refs):
+                continue
+            found = shipped_dll(ctx, dll_name) or (add_shipped_dependencies(asmdef, ctx) or shipped_dll(ctx, dll_name))
+            if found:
+                refs.append(found)
+            else:
+                ctx["notes"].add(f"{name}: precompiled reference {dll_name} not found in the packages {version} ships")
         evaluated = unity_version_defines(asmdef, version)
         defines = defines + evaluated
         for vd in asmdef.get("versionDefines", []):

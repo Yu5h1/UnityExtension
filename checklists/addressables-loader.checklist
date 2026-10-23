@@ -22,17 +22,17 @@ Current round: `../Documentation/Addressables/plan.md#首輪範圍讀取處理�
       - Action: BonghuoVR 沒開著時，以 `Tools/agent/unity_batch.py` 帶 `--method UnityEditor.SyncVS.SyncSolution` 重產 csproj，再對 `Packages/common/Runtime/Yu5h1Lib.Common.asmdef` 執行 `unity_compile.py`。
       - Expect: 6000.3.9f1 不再出現 `Yu5h1Lib.Common.csproj looks stale`；BonghuoVR 的 git 狀態不變（csproj 是 gitignore 的）。
 
-- [ ] **2. Addressables 讀取器**
+- [x] **2. Addressables 讀取器**
   Depends on: 1.
   Outcome: `Packages/Addressables/Runtime` 有一個繼承 `AssetLoader` 的 Addressables 讀取器，照 key 載入、回報進度、可以取消，並負責釋放它載入的物件。
   Checks:
-    - [ ] **型別與契約**
+    - [x] **型別與契約**
       - Action: 讀新的讀取器。
       - Expect: 在 `Yu5h1Lib.Addressables` 組件、namespace `Yu5h1Lib.AddressableAssets`，繼承 common 的 `AssetLoader`；照 `AssetLoader` 的契約：key 沒有對應內容時回傳 null、不丟例外也不留錯誤 log（先查 key 的位置）；`token` 取消時立刻丟 `OperationCanceledException`，Addressables 停不下的讀取在完成後自行釋放；載入失敗時釋放 handle 再讓例外傳出；進度以 `PercentComplete` 回報、結束時回報 1；`Release` 只釋放自己載入的物件，同一物件載入幾次就要釋放幾次。程式不分 local 或遠端（plan〈套件位置與依賴〉的讀取器段落）。
-    - [ ] **自動測試**
+    - [x] **自動測試**
       - Action: 在 `Yu5h1Lib.Addressables.Editor.Tests` 加讀取器的 EditMode 測試（空 key、已取消的 token、釋放不是自己載入的物件），在 Yu5h1LibTest 以 unityMCP `run_tests` 執行本套件與 common 的 EditMode 測試。
       - Expect: 新測試通過，既有測試結果不變。
-    - [ ] **兩個 Unity 版本都能編譯**
+    - [x] **兩個 Unity 版本都能編譯**
       - Action: 對 `Packages/Addressables/Runtime/Yu5h1Lib.Addressables.asmdef` 與 `Packages/Addressables/Tests/Editor/Yu5h1Lib.Addressables.Editor.Tests.asmdef` 執行 `unity_compile.py`（參考來源：6000.6.0f1 是 Yu5h1LibTest 的 csproj；6000.3.9f1 是通用參考加第 1 項的隨附套件，common 取自 BonghuoVR 的 csproj）。
       - Expect: 兩個編輯器都 0 錯誤；新增的警告逐條說明。
 
