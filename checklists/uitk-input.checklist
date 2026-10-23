@@ -35,10 +35,11 @@ Current round: `../../../UX/Documentation/ModuleSpec/Foundation/Input.md#跨平�
       - Action: 執行 `HoldManipulatorTests.SecondPointerAndLifecycle_CancelCleanly` 與 `OptionPicker_UsesHoldManipulatorForPickerAndDisablesHoldInCycleMode`。
       - Expect: 第二指標按下與 `RemoveManipulator` 均觸發 `cancel` 並清理狀態；`OptionPicker` 在 `Both` 模式長按 400ms 開啟面板，在 `Cycle` 模式不啟動長按且短按循環。
 
-- [ ] **5. 統一驗收入口與手感確認**
+- [x] **5. 統一驗收入口與手感確認**
   Outcome: 使用者在 `UxAcceptanceDemo` 統一入口切換至 `Input / HoldManipulator (3.0.1)` 與 `OptionPicker (3.0.2)` 確認長按與滑選手感。
   Checks:
-    - [ ] **互動體驗** `[manual]`
+    - [x] **互動體驗** `[manual]`
       - Action: 在 `UxAcceptanceDemo` 場景操作 `Input / HoldManipulator (3.0.1)` 的短按、400ms 長按抑制與按住滑選區域，以及 `OptionPicker` 的長按滑選。
       - Expect: 手感與回饋自然一致。
       - Reason: 長按、滑選手感與視覺回饋需由使用者實際操作確認。
+      - Recorded: user; at=2026-10-23T06:12:25Z; fp=da91f69c3fba
