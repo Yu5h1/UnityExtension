@@ -1,0 +1,59 @@
+# Write-back Test Checklist
+
+Current round: `../Documentation/資料驅動的Agent翻譯器.md#改輸出的測試`.
+
+驗證方式：他驗（依計畫推導實作，結論由執行者判斷容易偏向通過）。指示：翻譯器第三層第 8 步「測試 agent 能不能直接改翻譯器輸出；可行就成為 Agent friendly workflow 的格式候選」（使用者 2026-10-21 列入任務卡，2026-10-24 以 `/task-progress-items auto agent-data-translator` 執行）。現況：翻譯器的輸出照〈原則〉設計成將來能寫回，但沒有人試過 agent 只拿輸出能不能讀懂、改對。要達成：依〈改輸出的測試〉讓一個不帶執行者對話的子 agent 答兩題、改九題，和 Editor 腳本做出的標準答案比對，寫出結論。不在範圍內：寫回工具、修正翻譯器的缺口（每個缺口記成這張卡的「問題：」項目）、任何消費專案的修改。測試檔只放在 BonghuoVR 的暫存資料夾 `Assets/__AgentWriteBack`，用完刪除；證據放 `W:/UnityProject/BonghuoVR-Build/translator/writeback/`。本輪只放 agent 的檢查，沒有人工檢查。
+
+- [ ] **1. 測試材料**
+  Outcome: 複本的匯出（base）與標準答案（oracle）都在證據資料夾，BonghuoVR 沒有留下測試檔。
+  Checks:
+    - [ ] **複本的匯出**
+      - Action: 在沒被編輯器開著的 BonghuoVR，以 batchmode 把 `MainGuy.prefab` 與 `Main.unity` 複製到 `Assets/__AgentWriteBack`，對複本跑一般物件匯出，存成 `base.json`。
+      - Expect: 結束碼 0；`base.json` 只有兩個複本的物件，MainGuy 70 個、Main 2902 個 GameObject，和原檔的匯出相同。
+    - [ ] **標準答案**
+      - Action: 以 batchmode Editor 腳本把九題的改動做進複本，再匯出一次，存成 `oracle.json`。
+      - Expect: 結束碼 0；`base.json` 到 `oracle.json` 的差異只出現在九題改到的物件、元件與監聽器上，Unity 推算的值逐項列出。
+    - [ ] **清除暫存資料夾**
+      - Action: 以 batchmode 刪除 `Assets/__AgentWriteBack`，看 BonghuoVR 的 `git status`。
+      - Expect: 資料夾與 `.meta` 都不在；`git status` 和測試前相同。
+
+- [ ] **2. 受測 agent 讀與改**
+  Depends on: 1.
+  Outcome: 受測 agent 只靠輸出答了兩題、改了九題，過程有紀錄。
+  Checks:
+    - [ ] **受測條件**
+      - Action: 啟動一個不帶本對話的子 agent，交給它的提示存成 `prompt.md`。
+      - Expect: 提示只有 `base.json` 的位置、skill 對一般物件匯出的說明、兩題讀與九題改的一般話描述；沒有答案、程式位置或實作提示；它的 `notes.md` 寫明沒讀 YAML、專案其他檔案或匯出程式。
+    - [ ] **讀的兩題**
+      - Action: 把它的答案和 `base.json` 與原檔的組裝比對。
+      - Expect: 每題記下對或錯，錯的寫出錯在哪。
+    - [ ] **改的九題**
+      - Action: 讓它把改好的輸出存成 `subject.json`，每題的改法、工具呼叫次數、格式錯誤與拿不準的地方寫進 `notes.md`。
+      - Expect: 兩個檔案都在，`subject.json` 是合法 JSON。
+
+- [ ] **3. 比對與結論**
+  Depends on: 2.
+  Outcome: 每題有分類，結論依〈改輸出的測試〉的規則寫進文件，每個缺口都有「問題：」項目。
+  Checks:
+    - [ ] **逐題比對**
+      - Action: 用證據資料夾的 `compare.py` 比對 `base.json`、`oracle.json` 與 `subject.json`，輸出存成 `compare.txt`。
+      - Expect: 九題各歸入一致、省略即預設、agent 寫錯、格式不足其中一類，並附上相關的輸出項目。
+    - [ ] **〈原則〉缺口**
+      - Action: 對照〈原則〉的宣告式、內容完整、身分穩定、資產用可讀別名，讀 `base.json`。
+      - Expect: 每個缺口附一筆輸出裡的實例。
+    - [ ] **結論與問題項目**
+      - Action: 把結論寫進〈改輸出的測試〉與 Agent friendly workflow〈先讀後寫〉第 2 步，每個格式不足與缺口在這張卡加一個「問題：」項目。
+      - Expect: 結論符合〈改輸出的測試〉的規則；每個缺口都有項目。
+
+- [ ] **4. 他驗**
+  Outcome: 執行者以外的 session 依計畫確認結果。
+  Checks:
+    - [ ] **驗收條件未被改動** `[acceptance]`
+      - Action: 以 git log -p 檢查本檔第 4 項自寫入它的提交後的變更。
+      - Expect: 只有標記與 Recorded 變動。
+    - [ ] **測試照設計做** `[acceptance]`
+      - Action: 對照 `../Documentation/資料驅動的Agent翻譯器.md#改輸出的測試`，讀證據資料夾的 `prompt.md`、`notes.md`、`compare.txt` 與 `git log --grep write-back-test` 的變更；自己重跑 `compare.py`，再挑三題直接看 `base.json`、`oracle.json` 與 `subject.json` 的對應項目。
+      - Expect: 受測 agent 只拿到設計允許的材料；兩題讀與九題改就是設計列的題目；標準答案的差異只在九題改到的地方；重跑的結果和 `compare.txt` 相同；抽查的三題分類和輸出項目相符。
+    - [ ] **結論與缺口** `[acceptance]`
+      - Action: 對照同一節的結論規則與 `../Documentation/資料驅動的Agent翻譯器.md#原則`，讀文件的變更與這張卡新加的「問題：」項目，自己讀 `base.json` 找〈原則〉缺口。
+      - Expect: 結論照規則得出；自己找到的每個格式不足與缺口都寫在文件裡、也都有項目；沒有缺口是缺少輸出實例的。

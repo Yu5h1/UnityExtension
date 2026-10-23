@@ -152,6 +152,43 @@ agent 在這個工作區操作 Unity 時實際付出的成本，以及對應的�
 
 範圍只有建置中的場景。只由程式載入的 Prefab 與資產（Resources、Addressables）不在建置比對裡，要看它們就用一般物件匯出。
 
+## 改輸出的測試
+
+第三層第 8 步的設計（2026-10-24）。只回答一個問題：agent 只拿翻譯器的輸出，讀得懂、改得動嗎？測的是輸出格式，
+不是寫回工具。寫回由[文字結構同步](文字結構同步.md)負責；這裡用一段一般的 Editor 腳本把同樣的改動做進 Unity，
+再匯出一次，當作標準答案。
+
+- **案例**：BonghuoVR 的 `Assets/StaticResources/NPC/Prefab/MainGuy.prefab`（角色 prefab：骨架、SkinnedMeshRenderer、Animator）
+  與 `Assets/Scenes/Main.unity`（UI 按鈕的監聽器、PlayableDirector 的事件與它持有的 inline SO）。先複製到暫存資料夾再匯出與修改，
+  測完刪除，原檔不動。
+- **受測的 agent**：一個不帶執行者對話的子 agent。它只拿到複本的匯出檔、
+  [unity-agent-operations](../.agents/skills/unity-agent-operations/SKILL.md) 對一般物件匯出的說明，以及用一般話寫的題目；
+  不讀 YAML、專案裡的其他檔案或匯出程式。
+- **讀**：兩題，答案和匯出前的 Unity 組裝比對。
+  1. MainGuy 每個 SkinnedMeshRenderer 用哪個 mesh、哪些材質、root bone 是誰。
+  2. 按下 Settings Panel 的 Restart、Quit，以及 Global 的 PlayableDirector 停止時，各會做什麼。
+- **改**：九題，涵蓋欄位值、資產引用、同檔物件引用、新增物件、新增元件、監聽器的新增與刪除、inline SO 的欄位、改名後引用跟著改。
+  1. MainGuy 的 Animator 開啟 Apply Root Motion。
+  2. `Boat_Past_MainGuy_Clothes` 的第 2 個材質換成 `Boat_Past_MainGuy_Body` 用的材質。
+  3. `Boat_Past_MainGuy_Face` 的 root bone 改成 `mixamorig:Head`。
+  4. 在 `mixamorig:Head` 下新增空物件 `HeadSocket`，local position (0, 0.15, 0)。
+  5. MainGuy 根物件加一個 BoxCollider，center (0, 0.9, 0)、size (0.5, 1.8, 0.5)。
+  6. 按下 Restart 時另外把 `Settings Panel` 關掉（`GameObject.SetActive(false)`）。
+  7. Global 的 PlayableDirector 停止時不再開啟 Locomotion（刪掉那筆監聽器）。
+  8. 停止時套用的位置設定，scale 也一併套用，值為 (1, 1, 1)。
+  9. `Settings Panel/Panel/Quit` 改名為 `Exit`。
+- **比對**：受測 agent 改出的輸出，和標準答案逐筆比對：物件依名稱路徑、元件依識別、欄位依路徑、監聽器依通道與順序。
+  每題歸成一類：
+  - 一致：兩邊相同。
+  - 省略即預設：agent 沒寫的欄位，在 Unity 裡是預設值或由 Unity 推算（例如新元件的其他欄位）。寫回要補上，不算失敗。
+  - agent 寫錯：格式表達得了，agent 寫錯；記下原因，例如說明不夠。
+  - 格式不足：輸出表達不了這個改動，或寫法有歧義；記下違反〈[原則](#原則)〉的哪一條。
+- **結論**：讀的兩題答對、改的九題沒有「格式不足」，就是可行，輸出成為
+  [Agent friendly workflow〈先讀後寫〉](Agent%20friendly%20workflow%20Yu5h1Lib.UnityExtension.md#先讀後寫2026-10-22)
+  的格式候選；有「格式不足」就還不是候選，補完缺口再測。結論寫在本節與〈先讀後寫〉第 2 步。
+  另外記下受測 agent 的工具呼叫次數與格式錯誤，給〈驗證順序〉的對照實驗用。
+- 題目沒碰到、但讀輸出時看到的〈原則〉缺口也一併列出。每個「格式不足」與缺口在這張任務卡記成一個「問題：」項目。
+
 ## 執行方式
 
 每一步做成任務卡上的 agent 可執行項目（🤖），各自綁一份 checklist 當指示與證據；使用者核准計畫與決策，agent 依卡片執行，

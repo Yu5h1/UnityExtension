@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-23T14:27:48.232707+00:00",
+  "updated_at": "2026-10-23T17:05:42.815260+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1585,6 +1585,11 @@
           "id": "write-back-test",
           "title": "第三層：測試 agent 直接改翻譯器輸出；可行就成為 Agent friendly workflow 的格式候選（先讀後寫）",
           "priority": 3,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "write-back-test"
+          },
           "status": "planned",
           "activity": [
             {
@@ -1598,6 +1603,19 @@
               "actor": "claude",
               "at": "2026-10-22T05:05:46.349585+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-23T17:05:31+00:00",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-23T17:05:42.815260+00:00",
+              "session": "write-back-test",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
             }
           ]
         },
@@ -1994,6 +2012,6 @@
   ],
   "next": {
     "task_id": "agent-data-translator",
-    "item_id": "problem-batch-stale-lockfile"
+    "item_id": "write-back-test"
   }
 }
