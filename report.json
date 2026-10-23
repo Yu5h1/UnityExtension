@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-23T17:21:30.718210+00:00",
+  "updated_at": "2026-10-23T18:52:33.157421+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1799,9 +1799,9 @@
         },
         {
           "id": "problem-prefab-internal-refs",
-          "title": "問題：一般物件匯出在 Prefab 內的物件引用只寫「<Prefab 路徑> > <物件名稱> <型別>」，沒有父路徑、#n 與元件識別，同名物件或同型別元件分不清；unity-agent-operations 說引用一律是名稱路徑，與實際不符（write-back-test 2026-10-24，MainGuy 75 筆）",
+          "title": "（併入 translator-writeback-gaps）問題：一般物件匯出在 Prefab 內的物件引用只寫「<Prefab 路徑> > <物件名稱> <型別>」，沒有父路徑、#n 與元件識別，同名物件或同型別元件分不清；unity-agent-operations 說引用一律是名稱路徑，與實際不符（write-back-test 2026-10-24，MainGuy 75 筆）",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
@@ -1816,59 +1816,87 @@
               "at": "2026-10-23T17:21:30.718210+00:00",
               "session": "write-back-test",
               "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-23T18:52:31.965712+00:00",
+              "session": "translator-writeback-gaps",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
             }
           ]
         },
         {
           "id": "problem-object-argument-names",
-          "title": "問題：Object 模式監聽器的參數只寫物件名稱（例如 static_Interactable 出現 6 次而場景有多個同名物件；inline SO 寫成 TransformInfoObject(Instance) 而非 inline: 路徑；空參數寫 None 而非 null），寫回無法定位（write-back-test 2026-10-24）",
+          "title": "（併入 translator-writeback-gaps）問題：Object 模式監聽器的參數只寫物件名稱（例如 static_Interactable 出現 6 次而場景有多個同名物件；inline SO 寫成 TransformInfoObject(Instance) 而非 inline: 路徑；空參數寫 None 而非 null），寫回無法定位（write-back-test 2026-10-24）",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-23T17:13:49.006796+00:00",
               "session": "write-back-test",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-23T18:52:31.965712+00:00",
+              "session": "translator-writeback-gaps",
               "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
             }
           ]
         },
         {
           "id": "problem-call-state-missing",
-          "title": "問題：一般物件匯出與 inline SO 匯出的監聽器沒有呼叫狀態（Off／Editor and Runtime／Runtime Only），關掉的監聽器分不出來、新增時也指定不了；UnityEvent 報告有 callState（write-back-test 2026-10-24）",
+          "title": "（併入 translator-writeback-gaps）問題：一般物件匯出與 inline SO 匯出的監聽器沒有呼叫狀態（Off／Editor and Runtime／Runtime Only），關掉的監聽器分不出來、新增時也指定不了；UnityEvent 報告有 callState（write-back-test 2026-10-24）",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-23T17:13:49.006796+00:00",
               "session": "write-back-test",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-23T18:52:31.965712+00:00",
+              "session": "translator-writeback-gaps",
               "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
             }
           ]
         },
         {
           "id": "problem-prefab-overrides",
-          "title": "問題：一般物件匯出對 Prefab 實例與 Variant 只寫實際值，不分繼承值、覆寫與新增的物件／元件；照輸出寫回會把每個欄位都變成覆寫（write-back-test 2026-10-24，Main 85 個實例根，MainGuy 是模型的 Variant）",
+          "title": "（併入 translator-writeback-gaps）問題：一般物件匯出對 Prefab 實例與 Variant 只寫實際值，不分繼承值、覆寫與新增的物件／元件；照輸出寫回會把每個欄位都變成覆寫（write-back-test 2026-10-24，Main 85 個實例根，MainGuy 是模型的 Variant）",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-23T17:13:49.006796+00:00",
               "session": "write-back-test",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-23T18:52:31.965712+00:00",
+              "session": "translator-writeback-gaps",
               "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
             }
           ]
         },
         {
           "id": "problem-inline-index-identity",
-          "title": "問題：inline SO 的身分是持有欄位路徑，含監聽器陣列索引（…m_Calls.Array.data[0].m_Arguments.m_ObjectArgument），刪除或重排前面的監聽器時路徑會變（write-back-test 2026-10-24）",
+          "title": "（不處理，見 handoff〈Ruled-out directions〉）問題：inline SO 的身分是持有欄位路徑，含監聽器陣列索引（…m_Calls.Array.data[0].m_Arguments.m_ObjectArgument），刪除或重排前面的監聽器時路徑會變（write-back-test 2026-10-24）",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
@@ -1876,14 +1904,21 @@
               "at": "2026-10-23T17:13:49.006796+00:00",
               "session": "write-back-test",
               "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-23T18:52:31.965712+00:00",
+              "session": "translator-writeback-gaps",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
             }
           ]
         },
         {
           "id": "problem-asset-subobject-names",
-          "title": "問題：非 Prefab 資產的子物件引用只寫名稱，同名子物件分不清（例如 Global 的 PlayableDirector m_SceneBindings 有 6 筆 key 都是 Global.playable > Animation Track，PlayableDirectorAddon 的 10 筆 _skipPointEvents key 都是 Global.playable > Skip Point）（write-back-test 他驗 2026-10-24）",
+          "title": "（併入 translator-writeback-gaps）問題：非 Prefab 資產的子物件引用只寫名稱，同名子物件分不清（例如 Global 的 PlayableDirector m_SceneBindings 有 6 筆 key 都是 Global.playable > Animation Track，PlayableDirectorAddon 的 10 筆 _skipPointEvents key 都是 Global.playable > Skip Point）（write-back-test 他驗 2026-10-24）",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
@@ -1891,20 +1926,61 @@
               "at": "2026-10-23T17:20:22.486975+00:00",
               "session": "write-back-test",
               "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-23T18:52:31.965712+00:00",
+              "session": "translator-writeback-gaps",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
             }
           ]
         },
         {
           "id": "problem-slash-in-names",
-          "title": "問題：名稱路徑不跳脫名稱裡的斜線，GameManager/XRDeviceSimulatorPlatformActivator/F10 TurnOn/Off Simulator 會讀成不存在的 F10 TurnOn 底下的 Off Simulator（write-back-test 他驗 2026-10-24）",
+          "title": "（併入 translator-writeback-gaps）問題：名稱路徑不跳脫名稱裡的斜線，GameManager/XRDeviceSimulatorPlatformActivator/F10 TurnOn/Off Simulator 會讀成不存在的 F10 TurnOn 底下的 Off Simulator（write-back-test 他驗 2026-10-24）",
           "priority": 2,
-          "status": "planned",
+          "status": "archive",
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-23T17:20:22.486975+00:00",
               "session": "write-back-test",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-23T18:52:31.965712+00:00",
+              "session": "translator-writeback-gaps",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            }
+          ]
+        },
+        {
+          "id": "translator-writeback-gaps",
+          "title": "翻譯器輸出補上寫回前的缺口：Prefab 內與資產子物件的引用、名稱跳脫、監聽器參數與呼叫狀態、Prefab 覆寫標記",
+          "priority": 1,
+          "status": "planned",
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "translator-writeback-gaps"
+          },
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-23T18:52:31.965712+00:00",
+              "session": "translator-writeback-gaps",
+              "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-23T18:52:33.157421+00:00",
+              "session": "translator-writeback-gaps",
               "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
             }
           ]
@@ -2145,6 +2221,6 @@
   ],
   "next": {
     "task_id": "agent-data-translator",
-    "item_id": "problem-prefab-internal-refs"
+    "item_id": "translator-writeback-gaps"
   }
 }
