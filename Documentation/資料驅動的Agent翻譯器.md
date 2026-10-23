@@ -134,6 +134,8 @@ agent 在這個工作區操作 Unity 時實際付出的成本，以及對應的�
   UnityEvent 報告與 inline SO 匯出也一起改用，三者指向同一個物件時寫法相同。
 - 元件依物件上的順序列出：型別、識別（型別名稱，重複時加 `#n`）、是否啟用、每個序列化欄位的值、每個 UnityEvent 通道的監聽器，
   欄位與監聽器的寫法和 inline SO 匯出相同。Transform 的父子欄位不列，階層已由名稱路徑表達。
+- 浮點數一律寫完整精度，向量、四元數、顏色、Rect、Bounds 也一樣（Unity 預設的文字只留兩位小數，無法重建原值）；
+  inline SO 匯出共用同一套寫法，一起改。
 - 斷線分開標示：腳本遺失的元件列為 missing script；引用存在但物件已載不到（Inspector 顯示 Missing）的欄位寫 `missing`，
   沒指定的寫 `null`。
 - ScriptableObject 資產列出它自己的欄位與監聽器；inline SO 一併列出，內容同 inline SO 匯出。

@@ -24,7 +24,7 @@ Current round: `../Documentation/資料驅動的Agent翻譯器.md#一般物件�
       - Expect: 兩份完全相同。
     - [ ] **既有報告不變**
       - Action: 改動後對 BonghuoVR Main.unity 跑 UnityEvent 報告與 inline SO 匯出，和改動前的 `W:/UnityProject/BonghuoVR-Build/translator/ue-main-before.json`、`inline-main-before.json` 比較。
-      - Expect: 除了 `generatedAt` 與同名物件、同型別元件新加的 `#n`，逐列相同。
+      - Expect: 除了 `generatedAt`、同名物件與同型別元件新加的 `#n`，以及向量等浮點數值改為完整精度，逐列相同。
     - [ ] **兩個 Unity 版本都能編譯**
       - Action: `python Tools/agent/unity_compile.py Packages/common/Editor/Yu5h1Lib.Common.Editor.asmdef`。
       - Expect: 6000.3.9f1 與 6000.6.0f1 都 0 錯誤，警告仍為 4 個。
@@ -68,7 +68,7 @@ Current round: `../Documentation/資料驅動的Agent翻譯器.md#一般物件�
       - Expect: 只有標記與 Recorded 變動。
     - [ ] **一般物件匯出符合計畫** `[acceptance]`
       - Action: 對照 `../Documentation/資料驅動的Agent翻譯器.md#一般物件匯出` 與同文件〈原則〉，審查 `git log --grep general-objects` 的變更，並在一個沒被編輯器開著的消費專案自行匯出一個場景與一個 Prefab。
-      - Expect: 每個 GameObject、元件、欄位與監聽器都在輸出裡；同名有穩定識別；`missing` 與 `null` 分開；沒有 fileID 或 GUID；連跑兩次相同；UnityEvent 報告與 inline SO 匯出除同名識別外不變。
+      - Expect: 每個 GameObject、元件、欄位與監聽器都在輸出裡；同名有穩定識別；`missing` 與 `null` 分開；沒有 fileID 或 GUID；連跑兩次相同；浮點數值是完整精度；UnityEvent 報告與 inline SO 匯出除同名識別與浮點數精度外不變。
     - [ ] **建置時看得到斷線** `[acceptance]`
       - Action: 對照 `../Documentation/資料驅動的Agent翻譯器.md#建置時比對`，在 scratchpad 的暫存專案自行建置兩次，第二次前弄斷一筆監聽器與一個引用，用完刪除暫存專案。
       - Expect: 兩次建置都成功；第二次的警告列出那兩筆新斷線；開關關閉時不跑。
