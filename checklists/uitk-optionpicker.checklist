@@ -42,12 +42,13 @@ Current round: `../../../UX/Documentation/ModuleSpec/Controls/OptionPicker.md#�
       - Action: 執行 OptionPickerTests 之版面量測案例。
       - Expect: 觸發鈕與選項繼承 Button 2.0.0 排版；面板 padding 4px、選項間距 gap 4px；solid 與 ghost 面板類別正確套用。
 
-- [ ] **6. 手感與外觀確認 `[manual]`**
+- [ ] **6. 手感與外觀確認**
   Outcome: 使用者在範例中確認手感、互動與外觀符合預期。
   Checks:
-    - [ ] **範例操作體驗**
+    - [ ] **範例操作體驗** `[manual]`
       - Action: 在 `Yu5h1LibTest` 專案開啟 `Yu5h1Lib.UIToolkit` 範例場景 `Assets/Samples/Yu5h1Lib.UIToolkit/0.1.0/UxAcceptance/UxAcceptanceDemo.unity`（UI Toolkit）→ 進入 Play Mode → 在頂端測試對象選單（`Module:`）選擇 `OptionPicker (3.0.2)`，確認可見性（垂直對齊）與排序（垂直相鄰 both）之點擊、長按、鍵盤與外觀。
       - Expect: 操作流暢自然、面板定位精確、無文字偏移或破綻。
+      - Reason: 長按、滑選手感與視覺回饋需由使用者實際操作確認。
 
 - [x] **7. 回歸**
   Depends on: 1.
