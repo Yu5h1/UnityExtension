@@ -65,15 +65,20 @@ Current round: `../Documentation/資料驅動的Agent翻譯器.md#一般物件�
       - Action: 讀 `.agents/skills/unity-agent-operations/SKILL.md` 的 Tools 表與〈Reading scene and asset data〉。
       - Expect: 寫明四種引用寫法、名稱跳脫、`callState`、`added`／`overrides`／`removedComponents`／`removedGameObjects`；不再說引用一律是名稱路徑。
 
-- [ ] **6. 他驗**
+- [!] **6. 他驗**
   Outcome: 執行者以外的 session 依計畫確認結果。
   Checks:
-    - [ ] **驗收條件未被改動** `[acceptance]`
+    - [x] **驗收條件未被改動** `[acceptance]`
       - Action: 以 git log -p 檢查本檔第 6 項自寫入它的提交後的變更。
       - Expect: 只有標記與 Recorded 變動。
-    - [ ] **寫法符合計畫** `[acceptance]`
+      - Recorded: claude:a122a00d-7ab5-4390-9c7b-ec067b729bfe; at=2026-10-23T19:12:56Z; fp=e8a46528b16e
+    - [!] **寫法符合計畫** `[acceptance]`
       - Action: 對照 `../Documentation/資料驅動的Agent翻譯器.md#一般物件匯出` 的「寫回前要補的寫法」與同文件〈原則〉，審查 `git log --grep translator-writeback-gaps` 的變更，並在一個沒被編輯器開著的消費專案自己匯出一個場景與一個含 Prefab 實例的 Prefab 或場景。
       - Expect: 五類引用的寫法都和計畫相同、每個引用指得到唯一物件；名稱跳脫、Object 與 Float 參數、`callState` 正確；覆寫、新增、移除的標記和 Unity Overrides 視窗一致；兩次匯出相同；UnityEvent 報告只差參數寫法與跳脫。
-    - [ ] **缺口都補上** `[acceptance]`
+      - Observed: 在未開啟的 BonghuoVR（6000.3.9f1）自行匯出 Main.unity、探測場景與 MainGuy.prefab。符合：五類引用寫法與計畫相同，場景與所有被引用資產內以 DescribeReference 描述的物件無碰撞（僅未被引用的 URP 與 ShaderGraph 兩種同名 AssetVersion 子資產碰撞）；MainGuy 75 筆同檔引用都對得到 gameObjects；跳脫、Object 參數（null、inline、完整路徑）、Float 0.1000001 還原為同一 float、callState 222 筆皆有；兩次匯出逐位元組相同；UnityEvent 報告與改動前（gaps/ue-main-before.json）相比只差 23 筆 Object 參數與 1 筆跳脫，筆數 219／壞 6 相同；removedComponents／removedGameObjects 與 Unity 一致。不符：覆寫與新增標記和 Unity Overrides 視窗不一致：(1) 加進 Prefab 實例的巢狀 Prefab 實例 added 為 false——Main 的 `Objects/Sulfuric Fire Boat - Player /Deck/MainGuy`、`Deck/Uncle`、`Objects/Fishing boat_3/NPC4`，探測場景 `MainGuy/NPC1`（IsAdded 對自身有來源的物件回傳 false）；(2) 元件 m_Enabled 的覆寫不列入 overrides（Main 14 筆，探測場景 Clothes 的 SkinnedMeshRenderer）；(3) UnityEvent 監聽器的覆寫不列入（Main 17 筆，如 MessageReceiver、DOFade、EventSignalReceiver、SplineFollower；探測場景 TextButton 的 m_OnClick）。Overrides 視窗標為已修改的物件中，Main 有 16 個在匯出裡 overrides 為空、另 3 個缺一部分。證據：W:/UnityProject/BonghuoVR-Build/translator/accept-gaps/（oe-1/oe-2、oracle-overrides.json 以 PrefabUtility.GetObjectOverrides／GetAdded*／GetRemoved*／GetPropertyModifications 取得、oracle-unique.txt、a1–a5.py）。
+      - Recorded: claude:a122a00d-7ab5-4390-9c7b-ec067b729bfe; at=2026-10-23T19:12:31Z; fp=fe82acd380e2; reason=implementation
+    - [!] **缺口都補上** `[acceptance]`
       - Action: 對照 `../Documentation/資料驅動的Agent翻譯器.md#結果2026-10-24` 的缺口 1–4、6、7，在自己的匯出裡逐一找它們的實例。
       - Expect: 每個缺口原本的實例都已改成新寫法；缺口 5 留在 handoff〈Ruled-out directions〉並有理由。
+      - Observed: 缺口 1（MainGuy 75 筆引用改為完整名稱路徑）、2（Main 23 筆 Object 參數：名稱路徑、資產子物件、inline、null；6 筆 static_Interactable 各自不同）、3（所有呼叫都有 callState）、6（6 個 Animation Track 為 #1–#6、10 個 Skip Point 各不同，Mesh 只在同名 Mesh 間編號）、7（`F10 TurnOn\/Off Simulator`）都已改成新寫法；缺口 5 在 handoff〈Ruled-out directions〉並有理由。缺口 4 未補完：Main 的 Prefab 實例中，新增的巢狀 Prefab 實例（Deck/MainGuy、Deck/Uncle、Fishing boat_3/NPC4）仍看不出是新增的，16 個被覆寫的元件（12 個只有 m_Enabled、4 個只有監聽器）仍看不出覆寫，照實際值寫回仍會出錯。證據：W:/UnityProject/BonghuoVR-Build/translator/accept-gaps/（oe-1/oe-2、oracle-overrides.json 以 PrefabUtility.GetObjectOverrides／GetAdded*／GetRemoved*／GetPropertyModifications 取得、oracle-unique.txt、a1–a5.py）。
+      - Recorded: claude:a122a00d-7ab5-4390-9c7b-ec067b729bfe; at=2026-10-23T19:12:31Z; fp=e82656068578; reason=implementation

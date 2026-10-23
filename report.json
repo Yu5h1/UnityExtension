@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-23T19:00:32.116435+00:00",
+  "updated_at": "2026-10-23T19:14:10.708519+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1996,6 +1996,36 @@
               "at": "2026-10-23T19:00:32.116435+00:00",
               "session": "translator-writeback-gaps",
               "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
+            }
+          ]
+        },
+        {
+          "id": "problem-subasset-short-type",
+          "title": "問題：子資產引用的 #n 只在完整型別相同時編號，引用卻只寫短型別名稱；同一資產裡同名、短名相同但命名空間不同的子資產會寫成同一個引用，例如 BonghuoVR 的 Ocean.mat 等 8 個材質裡 URP 與 ShaderGraph 各一個名稱為空的 AssetVersion（目前沒有欄位引用它們；translator-writeback-gaps 他驗 2026-10-24）",
+          "priority": 2,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-23T19:14:10.708519+00:00",
+              "session": "translator-writeback-gaps accept",
+              "session_id": "a122a00d-7ab5-4390-9c7b-ec067b729bfe"
+            }
+          ]
+        },
+        {
+          "id": "problem-transient-object-ref",
+          "title": "問題：引用到不屬於場景階層也不是資產的暫時物件時，匯出寫成只有名稱的 `TextMeshPro Mesh <Mesh>`，不屬於計畫的五類引用寫法，也指不到存檔裡的物件（BonghuoVR Main.unity 1 筆，TextMeshPro 在編輯器產生的 Mesh；translator-writeback-gaps 他驗 2026-10-24）",
+          "priority": 2,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-23T19:14:10.708519+00:00",
+              "session": "translator-writeback-gaps accept",
+              "session_id": "a122a00d-7ab5-4390-9c7b-ec067b729bfe"
             }
           ]
         }
