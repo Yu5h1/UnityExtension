@@ -74,21 +74,25 @@ Current round: `../Documentation/Addressables/plan.md#首輪範圍讀取處理�
       - Action: 讀 `.agents/skills/loader-handler.md` 與 `Packages/Addressables/README.md`。
       - Expect: 寫有 Addressables 讀取器的契約（key、進度、取消、釋放）、怎麼接到讀取處理器、Use Existing Build 要先建置內容，以及 Yu5h1LibTest 場景的新接線。
 
-- [ ] **6. 他驗**
+- [x] **6. 他驗**
   Outcome: 執行者以外的 session 依 Addressables 計畫確認結果。
   Checks:
-    - [ ] **驗收條件未被改動** `[acceptance]`
+    - [x] **驗收條件未被改動** `[acceptance]`
       - Action: 以 git log -p 檢查本檔第 6、7 項自寫入它的提交後的變更。
       - Expect: 只有標記與 Recorded 變動，`[manual]` 只多了執行者補充的步驟。
-    - [ ] **讀取器符合計畫** `[acceptance]`
+      - Recorded: claude:5b1ffe88-d11c-4454-9af7-2c7a79d0dd8a; at=2026-10-23T11:14:57Z; fp=19e15415e2c7
+    - [x] **讀取器符合計畫** `[acceptance]`
       - Action: 對照 `../Documentation/Addressables/plan.md#套件位置與依賴` 的讀取器段落、`#第一個消費端vcpwebgl` 的非同步 API，以及 `../Packages/common/Runtime/Loader/AssetLoader.cs` 的契約，審查 `git log --grep addressables-loader` 的變更。
       - Expect: Addressables 讀取器在本套件、繼承 common 的 `AssetLoader`；用 `Awaitable`＋`IProgress<float>`＋`CancellationToken`，不依賴 UniTask；key 沒有內容時回傳 null 不丟例外；取消會丟 `OperationCanceledException` 且不留下沒有擁有者的 handle；程式不分 local 或遠端；有釋放載入物件的實作。
-    - [ ] **驗收路徑與範圍** `[acceptance]`
+      - Recorded: claude:5b1ffe88-d11c-4454-9af7-2c7a79d0dd8a; at=2026-10-23T11:14:58Z; fp=5a81af26b3f5
+    - [x] **驗收路徑與範圍** `[acceptance]`
       - Action: 對照 `../Documentation/Addressables/plan.md#目的與固定方向`（Use Existing Build、不用 Use Asset Database）與 `#首輪範圍讀取處理器代理與角色載入` 的第 2 步，以及本檔開頭的「不在範圍內」，審查變更與第 3、4 項的紀錄。
       - Expect: 測試角色在 local group、Play Mode Script 是 Use Existing Build；讀取處理器的讀取器欄位接的是 Addressables 讀取器；監看畫面只在 Yu5h1LibTest；沒有備援角色流程、遠端內容或 VCP 程式，VCP 的 repo 沒有被修改。
-    - [ ] **在 Yu5h1LibTest 重現** `[acceptance]`
+      - Recorded: claude:5b1ffe88-d11c-4454-9af7-2c7a79d0dd8a; at=2026-10-23T11:14:58Z; fp=9ba50ad49079
+    - [x] **在 Yu5h1LibTest 重現** `[acceptance]`
       - Action: 自行重跑第 2 項的 `unity_compile.py` 與 EditMode 測試，開 `Assets/AddressablesTest/AddressablesTest.unity` 進入 Play，再啟用錯誤 key 的觸發物件（unityMCP 不可用時記錄原因）。
       - Expect: 兩個編輯器 0 錯誤；測試通過；成功時角色出現、監看狀態為成功；錯誤 key 時監看狀態為失敗、原角色留著、Console 沒有錯誤。
+      - Recorded: claude:5b1ffe88-d11c-4454-9af7-2c7a79d0dd8a; at=2026-10-23T11:14:58Z; fp=3f0b03d82b69
 
 - [ ] **7. 人工驗收**
   Outcome: 使用者目視確認 IMGUI 監看畫面在成功與失敗時的顯示。
