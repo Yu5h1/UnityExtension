@@ -275,12 +275,42 @@ namespace Yu5h1Lib.EditorExtension
                 case SerializedPropertyType.Color: return p.colorValue.ToString("R", invariant);
                 case SerializedPropertyType.Rect: return p.rectValue.ToString("R", invariant);
                 case SerializedPropertyType.Bounds: return p.boundsValue.ToString("R", invariant);
-                case SerializedPropertyType.AnimationCurve: return $"AnimationCurve({p.animationCurveValue?.length ?? 0} keys)";
+                case SerializedPropertyType.AnimationCurve: return CurveText(p.animationCurveValue, invariant);
+                case SerializedPropertyType.Gradient: return GradientText(p.gradientValue, invariant);
                 default:
-                    try { return Convert.ToString(p.boxedValue, invariant) ?? string.Empty; }
+                    try { return BoxedText(p.boxedValue, invariant); }
                     catch { return $"({p.propertyType})"; }
             }
         }
+
+        private static string CurveText(AnimationCurve curve, IFormatProvider invariant)
+        {
+            if (curve == null)
+                return "null";
+            var keys = curve.keys.Select(k => string.Format(invariant, "({0:R}, {1:R}, in {2:R}, out {3:R}, weights {4:R} {5:R} {6})",
+                k.time, k.value, k.inTangent, k.outTangent, k.inWeight, k.outWeight, k.weightedMode));
+            return $"AnimationCurve({curve.preWrapMode}, {curve.postWrapMode}, [{string.Join("; ", keys)}])";
+        }
+
+        private static string GradientText(Gradient gradient, IFormatProvider invariant)
+        {
+            if (gradient == null)
+                return "null";
+            var colors = gradient.colorKeys.Select(k => string.Format(invariant, "{0} at {1:R}", k.color.ToString("R", invariant), k.time));
+            var alphas = gradient.alphaKeys.Select(k => string.Format(invariant, "{0:R} at {1:R}", k.alpha, k.time));
+            return $"Gradient({gradient.mode}, {gradient.colorSpace}, colors [{string.Join("; ", colors)}], alphas [{string.Join("; ", alphas)}])";
+        }
+
+        /// <summary>
+        /// Text of a value read through <see cref="SerializedProperty.boxedValue"/>. RenderingLayerMask's ToString only
+        /// names the type, so its bits are written instead.
+        /// </summary>
+        private static string BoxedText(object value, IFormatProvider invariant) => value switch
+        {
+            null => string.Empty,
+            RenderingLayerMask mask => mask.value.ToString(invariant),
+            _ => Convert.ToString(value, invariant) ?? string.Empty,
+        };
 
         private static string Describe(Object obj, Dictionary<Object, string> inlinePaths)
         {

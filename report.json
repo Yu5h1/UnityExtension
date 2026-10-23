@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-23T13:44:34.081675+00:00",
+  "updated_at": "2026-10-23T14:00:34.523119+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -195,6 +195,21 @@
               "event": "created",
               "actor": "claude",
               "at": "2026-10-23T13:38:42.123050+00:00",
+              "session": "general-objects",
+              "session_id": "854401b0-8694-4d52-95cb-62fe8a887ebe"
+            }
+          ]
+        },
+        {
+          "id": "problem-common-runtime-nunit",
+          "title": "問題：common 的 Runtime/Component/OptionSystem/ObjectCollectionOption.cs 在執行期組件裡 using NUnit.Framework，沒裝 com.unity.test-framework 的專案編譯不過（2026-10-23 general-objects 驗收時在新建的暫存專案遇到）",
+          "priority": 2,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-23T14:00:34.523119+00:00",
               "session": "general-objects",
               "session_id": "854401b0-8694-4d52-95cb-62fe8a887ebe"
             }
@@ -1475,9 +1490,16 @@
               "session_id": "854401b0-8694-4d52-95cb-62fe8a887ebe"
             },
             {
+              "event": "started",
+              "actor": "claude",
+              "at": "2026-10-23T13:57:24.140255+00:00",
+              "session": "general-objects",
+              "session_id": "854401b0-8694-4d52-95cb-62fe8a887ebe"
+            },
+            {
               "event": "released",
               "actor": "claude",
-              "at": "2026-10-23T13:44:34.081675+00:00",
+              "at": "2026-10-23T14:00:34.523119+00:00",
               "session": "general-objects",
               "session_id": "854401b0-8694-4d52-95cb-62fe8a887ebe"
             }
