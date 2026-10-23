@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-22T18:04:06.063324+00:00",
+  "updated_at": "2026-10-23T10:49:26.975293+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -912,15 +912,40 @@
         },
         {
           "id": "addressables-loader",
-          "title": "Addressables 讀取器：local group（StreamingAssets）驗證",
-          "priority": 2,
+          "title": "Addressables 讀取器：在 Packages/Addressables 繼承 AssetLoader 實作，Yu5h1LibTest 以 local group＋Use Existing Build 載入測試角色並以 IMGUI 監看成功與失敗（他驗＋人工）",
+          "priority": 1,
           "status": "planned",
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "addressables-loader"
+          },
           "activity": [
             {
               "event": "created",
               "actor": "claude",
               "at": "2026-10-21T15:25:47.262414+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-23T10:48:00+00:00",
+              "session_id": "494bd2fa-f130-4ccd-9c60-f1386502277a"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-23T10:49:26.975293+00:00",
+              "session": "addressables-loader executor",
+              "session_id": "494bd2fa-f130-4ccd-9c60-f1386502277a"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-23T10:49:26.975293+00:00",
+              "session": "addressables-loader executor",
+              "session_id": "494bd2fa-f130-4ccd-9c60-f1386502277a"
             }
           ]
         },
@@ -1751,5 +1776,9 @@
         }
       ]
     }
-  ]
+  ],
+  "next": {
+    "task_id": "addressables-package",
+    "item_id": "addressables-loader"
+  }
 }
