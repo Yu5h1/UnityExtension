@@ -45,15 +45,19 @@ Current round: `../Documentation/資料驅動的Agent翻譯器.md#改輸出的�
       - Action: 把結論寫進〈改輸出的測試〉與 Agent friendly workflow〈先讀後寫〉第 2 步，每個格式不足與缺口在這張卡加一個「問題：」項目。
       - Expect: 結論符合〈改輸出的測試〉的規則；每個缺口都有項目。
 
-- [ ] **4. 他驗**
+- [!] **4. 他驗**
   Outcome: 執行者以外的 session 依計畫確認結果。
   Checks:
-    - [ ] **驗收條件未被改動** `[acceptance]`
+    - [x] **驗收條件未被改動** `[acceptance]`
       - Action: 以 git log -p 檢查本檔第 4 項自寫入它的提交後的變更。
       - Expect: 只有標記與 Recorded 變動。
-    - [ ] **測試照設計做** `[acceptance]`
+      - Recorded: claude:d27234fd-b95a-4896-a4b0-9a7bd5c6ae12; at=2026-10-23T17:19:29Z; fp=971e9650312c
+    - [x] **測試照設計做** `[acceptance]`
       - Action: 對照 `../Documentation/資料驅動的Agent翻譯器.md#改輸出的測試`，讀證據資料夾的 `prompt.md`、`notes.md`、`compare.txt` 與 `git log --grep write-back-test` 的變更；自己重跑 `compare.py`，再挑三題直接看 `base.json`、`oracle.json` 與 `subject.json` 的對應項目。
       - Expect: 受測 agent 只拿到設計允許的材料；兩題讀與九題改就是設計列的題目；標準答案的差異只在九題改到的地方；重跑的結果和 `compare.txt` 相同；抽查的三題分類和輸出項目相符。
-    - [ ] **結論與缺口** `[acceptance]`
+      - Recorded: claude:d27234fd-b95a-4896-a4b0-9a7bd5c6ae12; at=2026-10-23T17:19:29Z; fp=303a73409d09
+    - [!] **結論與缺口** `[acceptance]`
       - Action: 對照同一節的結論規則與 `../Documentation/資料驅動的Agent翻譯器.md#原則`，讀文件的變更與這張卡新加的「問題：」項目，自己讀 `base.json` 找〈原則〉缺口。
       - Expect: 結論照規則得出；自己找到的每個格式不足與缺口都寫在文件裡、也都有項目；沒有缺口是缺少輸出實例的。
+      - Observed: 結論照規則（兩讀皆對、九改無格式不足→可行），五個缺口的實例數經核對（75、6、23、85）。但自讀 base.json 另找到兩個〈原則〉身分穩定缺口，文件與卡上都沒有：(1) 非 Prefab 資產的子物件只寫名稱，Global (PlayableDirector) 的 m_SceneBindings 有 6 筆 key 都是 Global.playable > Animation Track <AnimationTrack>、各綁不同 Animator，PlayableDirectorAddon 的 10 筆 _skipPointEvents key 都是 Global.playable > Skip Point <SkipPoint>，分不出是哪條軌道或標記；(2) 名稱含斜線不跳脫，GameManager/XRDeviceSimulatorPlatformActivator/F10 TurnOn/Off Simulator 讀成不存在的 F10 TurnOn 底下的 Off Simulator。
+      - Recorded: claude:d27234fd-b95a-4896-a4b0-9a7bd5c6ae12; at=2026-10-23T17:19:16Z; fp=4d04e0eac9e0; reason=implementation
