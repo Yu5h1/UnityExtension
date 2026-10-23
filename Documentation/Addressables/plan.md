@@ -264,7 +264,7 @@ Task ID `streaming-assets`），在本套件內開發、以消費端身分引用
 順序：
 
 1. **讀取處理器與代理**，用 Resources 讀取器驗證。只依賴 [非同步工作 § 首輪](../非同步工作.md#首輪讀取角色)（工作物件與預設判斷），不等 ChatRequest 優化。
-   **已實作**（2026-10-23，`586ea84`，待他驗 `loader-handler`）：common 的 `AssetLoader`／`ResourcesLoader` 與 `MonoEventHandler` 的 Start 事件，本套件的 `LoaderHandler`、`LoaderAgent`、`InstanceLoad`、`InstanceInitializer`；
+   **已實作**（2026-10-23，`586ea84`；`loader-handler` 已驗收，2026-10-23，`ba1b38e`）：common 的 `AssetLoader`／`ResourcesLoader` 與 `MonoEventHandler` 的 Start 事件，本套件的 `LoaderHandler`、`LoaderAgent`、`InstanceLoad`、`InstanceInitializer`；
    Yu5h1LibTest 測試資料夾 `Assets/AddressablesTest`、場景 `Assets/AddressablesTest/AddressablesTest.unity`。用法見 [loader-handler](../../.agents/skills/loader-handler.md)。
 2. **Addressables 讀取器**，用 local group（建到 StreamingAssets）驗證。
 3. **角色只準備 prefab 與 Animator Override Controller**。其餘元件（VCP 的 AudioSource、vcpAnimationController、
