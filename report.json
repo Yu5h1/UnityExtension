@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-23T11:31:08.089Z",
+  "updated_at": "2026-10-23T13:07:03.906730+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1045,6 +1045,26 @@
               "at": "2026-10-22T18:04:06.063324+00:00",
               "session": "loader-handler executor",
               "session_id": "2bc7ff37-fcee-4ff6-8702-55112ef87e40"
+            }
+          ]
+        },
+        {
+          "id": "addressables-intro",
+          "title": "照 Addressables 入門操作在 Yu5h1LibTest 做一遍：勾選、address、group、Use Existing Build、Build 後進 Play（人工）",
+          "priority": 2,
+          "status": "planned",
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "addressables-intro"
+          },
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-23T13:07:03.906730+00:00",
+              "session": "addressables-intro",
+              "session_id": "82815f75-e85e-4572-b216-abe0d6e803b8"
             }
           ]
         }
