@@ -189,6 +189,36 @@ agent 在這個工作區操作 Unity 時實際付出的成本，以及對應的�
   另外記下受測 agent 的工具呼叫次數與格式錯誤，給〈驗證順序〉的對照實驗用。
 - 題目沒碰到、但讀輸出時看到的〈原則〉缺口也一併列出。每個「格式不足」與缺口在這張任務卡記成一個「問題：」項目。
 
+### 結果（2026-10-24）
+
+可行：翻譯器的輸出是 Agent friendly workflow 的格式候選。
+
+- 讀的兩題都答對。受測 agent 還從輸出看出 Restart 與它的父物件 `Panel` 存檔時是關閉的。
+- 改的九題都是「一致」：受測 agent 改出的檔案和標準答案逐位元組相同，連新物件與新元件沒指定的欄位也照同類元件填對了。
+  沒有「格式不足」，也沒有「agent 寫錯」。
+- 受測 agent 用了 16 次工具呼叫，沒有格式錯誤。它用腳本查詢與改寫 25 MB 的輸出，沒有整份讀入。
+
+輸出還有五個〈原則〉缺口。九題沒有踩到，但寫回前要補上：
+
+1. **Prefab 內的引用只寫物件名稱**（身分穩定）。場景裡的引用是名稱路徑加元件識別，Prefab 裡卻是
+   `<Prefab 路徑> > <物件名稱> <型別>`，例如 `MainGuy.prefab > mixamorig:Spine2 <Transform>`：沒有父路徑、沒有 `#n`，
+   引用的元件也沒有識別。同名物件或同一物件上的同型別元件會分不清。MainGuy 有 75 筆這種引用。
+   unity-agent-operations 說引用一律是名稱路徑，和實際輸出不符。
+2. **Object 模式監聽器的參數只寫物件名稱**（身分穩定、資產用可讀別名）。例如 `static_Interactable` 出現 6 次，
+   但場景裡有好幾個同名物件；inline SO 參數寫成 `TransformInfoObject(Instance)`，而不是 `inline: <holder> > <field>`；
+   空參數寫 `None`，不是 `null`。Main 有 23 筆 Object 模式的呼叫。
+3. **監聽器沒有呼叫狀態**（內容完整）。Off／Editor and Runtime／Runtime Only 沒有輸出，關掉的監聽器和開著的分不清，
+   新增監聽器時也指定不了。UnityEvent 報告有 `callState`，一般物件匯出與 inline SO 匯出沒有。
+4. **Prefab 實例與 Variant 不分繼承值與覆寫**（宣告式、內容完整）。輸出只有實際值：Main 有 85 個 Prefab 實例的根，
+   MainGuy 本身是模型的 Variant。哪些欄位是覆寫、哪些物件與元件是新增的，輸出看不出來；照實際值全部寫回，會把每個欄位都變成覆寫。
+5. **inline SO 的身分是持有欄位的路徑，含監聽器的陣列索引**（身分穩定）。例如 `_Stopped.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgument`。
+   刪除或重排前面的監聽器，後面持有的 inline SO 路徑就跟著變。第 7 題刪的是第 2 筆，第 1 筆沒動，所以沒有踩到。
+
+證據放在 `W:/UnityProject/BonghuoVR-Build/translator/writeback/`：`base.json`、`oracle.json`、`subject.json`、
+`compare.py` 與 `compare.txt`、受測 agent 的 `prompt.md` 與 `notes.md`、標準答案的 `WriteBackOracle.cs`。
+受測 agent 開工前依它環境的全域規則讀了 `Yu5h1Lib/.agents/AgentsRule.md`。那份檔案只有工作流程規則，不含這個格式、
+場景或 Prefab 的內容。
+
 ## 執行方式
 
 每一步做成任務卡上的 agent 可執行項目（🤖），各自綁一份 checklist 當指示與證據；使用者核准計畫與決策，agent 依卡片執行，
