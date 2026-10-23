@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-23T14:00:34.523119+00:00",
+  "updated_at": "2026-10-23T14:05:20.095Z",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1904,6 +1904,6 @@
   ],
   "next": {
     "task_id": "agent-data-translator",
-    "item_id": "general-objects"
+    "item_id": "problem-batch-stale-lockfile"
   }
 }

@@ -60,19 +60,20 @@ Current round: `../Documentation/資料驅動的Agent翻譯器.md#一般物件�
       - Action: 讀 `.agents/skills/unity-agent-operations/SKILL.md` 的 Tools 表與〈Reading scene and asset data〉。
       - Expect: 有一般物件匯出的執行方式、輸出欄位與名稱路徑規則；有建置比對的結果位置、怎麼讀、怎麼關；寫明分析場景與 Prefab 的組裝時先用匯出。
 
-- [!] **4. 他驗**
+- [x] **4. 他驗**
   Outcome: 執行者以外的 session 依計畫確認結果。
   Checks:
     - [x] **驗收條件未被改動** `[acceptance]`
       - Action: 以 git log -p 檢查本檔第 4 項自寫入它的提交後的變更。
       - Expect: 只有標記與 Recorded 變動。
-      - Recorded: claude:926ec858-063a-40fd-9d08-54e10085e791; at=2026-10-23T13:56:04Z; fp=971e9650312c
-    - [!] **一般物件匯出符合計畫** `[acceptance]`
+      - Recorded: claude:926ec858-063a-40fd-9d08-54e10085e791; at=2026-10-23T14:05:43Z; fp=971e9650312c
+    - [x] **一般物件匯出符合計畫** `[acceptance]`
       - Action: 對照 `../Documentation/資料驅動的Agent翻譯器.md#一般物件匯出` 與同文件〈原則〉，審查 `git log --grep general-objects` 的變更，並在一個沒被編輯器開著的消費專案自行匯出一個場景與一個 Prefab。
       - Expect: 每個 GameObject、元件、欄位與監聽器都在輸出裡；同名有穩定識別；`missing` 與 `null` 分開；沒有 fileID 或 GUID；連跑兩次相同；浮點數值是完整精度；UnityEvent 報告與 inline SO 匯出除同名識別與浮點數精度外不變。
       - Observed: 對照〈一般物件匯出〉「每個序列化欄位的值」與〈原則〉「內容完整到足以重建」：自行在 BonghuoVR（batchmode）匯出 Main.unity＋Sulfuric Fire Boat - Player  Variant.prefab＋Main_Scene.prefab（3234 物件、7345 元件），並在暫存專案驗同名／missing script／missing 與 null。符合的部分：GameObject 依階層完整、同檔路徑無重複、#2 與元件 #2 穩定；Main 的 219 筆監聽器與 UnityEvent 報告逐筆對上；missing 與 null 分開；無 fileID／GUID（10 個 32 位 hex 是 Terrain Hash128 與 PlayableDirector exposed-reference 鍵字串）；兩次輸出位元組相同；向量浮點數與場景 YAML 一致；UnityEvent 報告只差 generatedAt、inline 匯出只差 3 個向量精度。不符：部分欄位沒有寫出值——Gradient 278 筆值為「UnityEngine.Gradient」、RenderingLayerMask 30 筆值為「UnityEngine.RenderingLayerMask」（遮罩數值遺失），AnimationCurve 2500 餘筆只寫「AnimationCurve(n keys)」，其中的浮點數也未輸出；agent 無法從輸出得知或重建這些值（ValueOf 的 default 分支以 boxedValue.ToString 輸出型別名）。
-      - Recorded: claude:926ec858-063a-40fd-9d08-54e10085e791; at=2026-10-23T13:55:39Z; fp=d8e6ee745c37; reason=implementation
+      - Resolved: 修正 10a47fe 後重驗：BonghuoVR 再匯出 Main.unity 與兩個 Prefab，沒有任何欄位值只剩型別名；AnimationCurve 2550 筆寫出包裝模式與每個鍵的 time、value、切線、權重（抽查 Torch Performance 的 SizeModule 曲線與 YAML 一致），Gradient 278 筆寫出模式、色彩空間、色鍵與透明度鍵（抽查 ColorModule 漸層與 YAML 一致），RenderingLayerMask 30 筆寫出數值 1；暫存專案的自訂曲線與漸層值正確。其餘條件重驗仍符合：兩次輸出位元組相同、219 筆監聽器與 UnityEvent 報告對上、無 fileID／GUID、#2 與 missing／null／missing script 正確、UnityEvent 報告只差 generatedAt、inline 匯出只差 3 個向量精度。
+      - Recorded: claude:926ec858-063a-40fd-9d08-54e10085e791; at=2026-10-23T14:05:44Z; fp=d8e6ee745c37
     - [x] **建置時看得到斷線** `[acceptance]`
       - Action: 對照 `../Documentation/資料驅動的Agent翻譯器.md#建置時比對`，在 scratchpad 的暫存專案自行建置兩次，第二次前弄斷一筆監聽器與一個引用，用完刪除暫存專案。
       - Expect: 兩次建置都成功；第二次的警告列出那兩筆新斷線；開關關閉時不跑。
-      - Recorded: claude:926ec858-063a-40fd-9d08-54e10085e791; at=2026-10-23T13:56:04Z; fp=9beee4ea9687
+      - Recorded: claude:926ec858-063a-40fd-9d08-54e10085e791; at=2026-10-23T14:05:44Z; fp=9beee4ea9687
