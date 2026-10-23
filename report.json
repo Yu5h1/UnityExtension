@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-23T13:07:17.446888+00:00",
+  "updated_at": "2026-10-23T13:44:34.081675+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -184,6 +184,21 @@
           "id": "item-solution-inventory-todo-4",
           "title": "為重要系統補齊 Documentation 指南",
           "priority": 4
+        },
+        {
+          "id": "problem-legacy-input-backend",
+          "title": "問題：common 的 Runtime/Input/LegacyInputBackend.cs 寫 new LegacyBackend()，類別名稱其實是 LegacyInputBackend；只用舊輸入系統（Active Input Handling 為 Input Manager）的專案因此編譯失敗（2026-10-23 在新建的空專案發現，VCP、BonghuoVR、Yu5h1LibTest 都啟用 Input System 而沒遇到）",
+          "priority": 2,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-23T13:38:42.123050+00:00",
+              "session": "general-objects",
+              "session_id": "854401b0-8694-4d52-95cb-62fe8a887ebe"
+            }
+          ]
         }
       ],
       "completed_items": []
@@ -1451,6 +1466,20 @@
               "actor": "claude",
               "at": "2026-10-23T13:40:00+00:00",
               "session_id": "854401b0-8694-4d52-95cb-62fe8a887ebe"
+            },
+            {
+              "event": "started",
+              "actor": "claude",
+              "at": "2026-10-23T13:30:37.778373+00:00",
+              "session": "general-objects",
+              "session_id": "854401b0-8694-4d52-95cb-62fe8a887ebe"
+            },
+            {
+              "event": "released",
+              "actor": "claude",
+              "at": "2026-10-23T13:44:34.081675+00:00",
+              "session": "general-objects",
+              "session_id": "854401b0-8694-4d52-95cb-62fe8a887ebe"
             }
           ]
         },
@@ -1628,6 +1657,21 @@
               "at": "2026-10-22T13:41:51.652045+00:00",
               "session": "compile-check-staleness",
               "session_id": "b580ea27-e5d6-4f63-801f-4133a27c36a6"
+            }
+          ]
+        },
+        {
+          "id": "problem-batch-stale-lockfile",
+          "title": "問題：Unity 在 batchmode 因編譯錯誤結束時會留下 Temp/UnityLockfile，unity_batch.py 之後就把專案當成已被編輯器開著而拒絕執行；只能人工確認沒有 Unity 行程後刪除該檔（2026-10-23 在 BonghuoVR 與暫存專案各遇到一次）",
+          "priority": 2,
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-23T13:41:36.739960+00:00",
+              "session": "general-objects",
+              "session_id": "854401b0-8694-4d52-95cb-62fe8a887ebe"
             }
           ]
         }

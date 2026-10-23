@@ -48,6 +48,8 @@ namespace Yu5h1Lib.EditorExtension
         [NonSerialized] public UnityEngine.Object owner;
         [NonSerialized] public UnityEngine.Object target;
 
-        public bool IsBroken => status < PersistentCallStatus.StaleTargetType;
+        public bool IsBroken => IsBrokenStatus(status);
+
+        public static bool IsBrokenStatus(PersistentCallStatus status) => status < PersistentCallStatus.StaleTargetType;
     }
 }

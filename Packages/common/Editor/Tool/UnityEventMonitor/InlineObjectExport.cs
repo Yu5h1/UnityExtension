@@ -1,7 +1,8 @@
 // Batchmode entry of the agent translator: exports every inline ScriptableObject in the given scenes and assets
 // with its serialized fields and UnityEvent calls, plus the UnityEvents of the objects that hold them.
 // References are written as names, hierarchy paths, asset paths or inline paths, never as fileID or GUID.
-// Shares UnityEventScanner's walk and records with UnityEventReport.
+// Shares UnityEventScanner's walk and records with UnityEventReport; ObjectExport writes fields and events through
+// the helpers here.
 //
 //   Unity.exe -batchmode -projectPath <project> -logFile <log>
 //     -executeMethod Yu5h1Lib.EditorExtension.InlineObjectExport.Run
@@ -26,7 +27,7 @@ namespace Yu5h1Lib.EditorExtension
     public static class InlineObjectExport
     {
         [Serializable]
-        private class Field
+        internal class Field
         {
             public string path;
             public string type;
@@ -34,7 +35,7 @@ namespace Yu5h1Lib.EditorExtension
         }
 
         [Serializable]
-        private class Call
+        internal class Call
         {
             public int index;
             public string target;
@@ -46,7 +47,7 @@ namespace Yu5h1Lib.EditorExtension
         }
 
         [Serializable]
-        private class EventEntry
+        internal class EventEntry
         {
             public string path;
             public int count;
@@ -55,7 +56,7 @@ namespace Yu5h1Lib.EditorExtension
         }
 
         [Serializable]
-        private class Entry
+        internal class Entry
         {
             public string asset;
             public string holder;
@@ -67,7 +68,7 @@ namespace Yu5h1Lib.EditorExtension
         }
 
         [Serializable]
-        private class Holder
+        internal class Holder
         {
             public string asset;
             public string path;
@@ -76,7 +77,7 @@ namespace Yu5h1Lib.EditorExtension
         }
 
         [Serializable]
-        private class ChannelTotal
+        internal class ChannelTotal
         {
             public string scope;
             public string eventPath;
@@ -85,7 +86,7 @@ namespace Yu5h1Lib.EditorExtension
         }
 
         [Serializable]
-        private class Document
+        internal class Document
         {
             public string unityVersion;
             public int inlineObjects;
@@ -94,10 +95,12 @@ namespace Yu5h1Lib.EditorExtension
             public List<Entry> objects = new();
         }
 
+        internal const string Missing = "missing";
+
         private static readonly HashSet<string> EngineFields = new()
         {
             "m_ObjectHideFlags", "m_CorrespondingSourceObject", "m_PrefabInstance", "m_PrefabAsset", "m_GameObject",
-            "m_Enabled", "m_EditorHideFlags", "m_Script", "m_Name", "m_EditorClassIdentifier",
+            "m_Enabled", "m_EditorHideFlags", "m_Script", "m_Name", "m_EditorClassIdentifier", "m_Children", "m_Father",
         };
 
         public static void Run()
@@ -135,10 +138,10 @@ namespace Yu5h1Lib.EditorExtension
         /// <summary>
         /// Adds one scan's inline objects and holders while the scanned objects are still loaded.
         /// </summary>
-        private static void Append(Document doc, List<UnityEventRecord> records, List<EmbeddedObject> embedded)
+        internal static void Append(Document doc, List<UnityEventRecord> records, List<EmbeddedObject> embedded)
         {
-            var inlinePaths = embedded.ToDictionary(e => (Object)e.obj, e => $"{e.holderPath} > {e.fieldPath}");
-            var callsByOwner = records.Where(r => r.owner != null).GroupBy(r => r.owner).ToDictionary(g => g.Key, g => g.ToList());
+            var inlinePaths = InlinePathsOf(embedded);
+            var callsByOwner = CallsByOwner(records);
 
             foreach (var holder in embedded.Where(e => !inlinePaths.ContainsKey(e.holder)).GroupBy(e => e.holder))
             {
@@ -168,6 +171,12 @@ namespace Yu5h1Lib.EditorExtension
             doc.totals = Totals(doc);
         }
 
+        internal static Dictionary<Object, string> InlinePathsOf(List<EmbeddedObject> embedded) =>
+            embedded.ToDictionary(e => (Object)e.obj, e => $"{e.holderPath} > {e.fieldPath}");
+
+        internal static Dictionary<Object, List<UnityEventRecord>> CallsByOwner(List<UnityEventRecord> records) =>
+            records.Where(r => r.owner != null).GroupBy(r => r.owner).ToDictionary(g => g.Key, g => g.ToList());
+
         private static List<ChannelTotal> Totals(Document doc)
         {
             var inline = doc.objects.SelectMany(o => o.events).Select(e => ("inline", e));
@@ -185,7 +194,7 @@ namespace Yu5h1Lib.EditorExtension
                 .ToList();
         }
 
-        private static List<EventEntry> EventsOf(Object owner, Dictionary<Object, List<UnityEventRecord>> callsByOwner,
+        internal static List<EventEntry> EventsOf(Object owner, Dictionary<Object, List<UnityEventRecord>> callsByOwner,
             Dictionary<Object, string> inlinePaths)
         {
             if (!callsByOwner.TryGetValue(owner, out var calls))
@@ -208,7 +217,7 @@ namespace Yu5h1Lib.EditorExtension
             }).ToList();
         }
 
-        private static List<Field> FieldsOf(Object obj, Dictionary<Object, string> inlinePaths)
+        internal static List<Field> FieldsOf(Object obj, Dictionary<Object, string> inlinePaths)
         {
             var fields = new List<Field>();
             using var so = new SerializedObject(obj);
@@ -241,6 +250,10 @@ namespace Yu5h1Lib.EditorExtension
             return fields;
         }
 
+        /// <summary>
+        /// The value as text. Floating-point values round-trip; an object reference is <c>missing</c> when it still stores
+        /// an object that cannot be loaded (the Inspector's "Missing") and <c>null</c> when nothing is assigned.
+        /// </summary>
         private static string ValueOf(SerializedProperty p, Dictionary<Object, string> inlinePaths)
         {
             var invariant = CultureInfo.InvariantCulture;
@@ -253,7 +266,15 @@ namespace Yu5h1Lib.EditorExtension
                 case SerializedPropertyType.Enum:
                     return p.enumValueIndex >= 0 && p.enumValueIndex < p.enumNames.Length ? p.enumNames[p.enumValueIndex] : p.intValue.ToString(invariant);
                 case SerializedPropertyType.LayerMask: return p.intValue.ToString(invariant);
-                case SerializedPropertyType.ObjectReference: return Describe(p.objectReferenceValue, inlinePaths);
+                case SerializedPropertyType.ObjectReference:
+                    return p.objectReferenceValue == null && UnityEventScanner.HoldsReference(p) ? Missing : Describe(p.objectReferenceValue, inlinePaths);
+                case SerializedPropertyType.Vector2: return p.vector2Value.ToString("R", invariant);
+                case SerializedPropertyType.Vector3: return p.vector3Value.ToString("R", invariant);
+                case SerializedPropertyType.Vector4: return p.vector4Value.ToString("R", invariant);
+                case SerializedPropertyType.Quaternion: return p.quaternionValue.ToString("R", invariant);
+                case SerializedPropertyType.Color: return p.colorValue.ToString("R", invariant);
+                case SerializedPropertyType.Rect: return p.rectValue.ToString("R", invariant);
+                case SerializedPropertyType.Bounds: return p.boundsValue.ToString("R", invariant);
                 case SerializedPropertyType.AnimationCurve: return $"AnimationCurve({p.animationCurveValue?.length ?? 0} keys)";
                 default:
                     try { return Convert.ToString(p.boxedValue, invariant) ?? string.Empty; }
@@ -276,7 +297,7 @@ namespace Yu5h1Lib.EditorExtension
             return $"{UnityEventScanner.DescribePath(obj)} <{type}>";
         }
 
-        private static void Write(Document doc, string path)
+        internal static void Write(object doc, string path)
         {
             var directory = Path.GetDirectoryName(Path.GetFullPath(path));
             if (!directory.IsEmpty())

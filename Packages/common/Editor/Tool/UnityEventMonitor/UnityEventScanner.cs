@@ -1,7 +1,7 @@
 // Collects every persistent call from loaded scenes, prefab assets and ScriptableObject assets,
 // and judges each one with UnityEventBase.GetValidMethodInfo, the rule Unity itself uses.
-// Shared core of UnityEventViewer (interactive), UnityEventReport (batchmode) and InlineObjectExport,
-// which also takes the inline ScriptableObjects the walk reaches.
+// Shared core of UnityEventViewer (interactive), UnityEventReport (batchmode), InlineObjectExport and ObjectExport,
+// which also take the inline ScriptableObjects the walk reaches, and of the hierarchy paths all of them print.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -98,7 +98,7 @@ namespace Yu5h1Lib.EditorExtension
         private static long LocalFileId(Object obj) =>
             AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out _, out long id) ? id : 0;
 
-        private static IEnumerable<string> ResolveAssetPaths(string[] pathsOrFolders)
+        internal static IEnumerable<string> ResolveAssetPaths(string[] pathsOrFolders)
         {
             var folders = pathsOrFolders.Where(AssetDatabase.IsValidFolder).ToArray();
             var files = pathsOrFolders.Where(p => !AssetDatabase.IsValidFolder(p));
@@ -290,7 +290,7 @@ namespace Yu5h1Lib.EditorExtension
         /// which is what the Inspector draws as "Missing". Reads the entity id on Unity versions that have it and the
         /// instance id on older ones; returns false when neither member exists.
         /// </summary>
-        private static bool HoldsReference(SerializedProperty property)
+        internal static bool HoldsReference(SerializedProperty property)
         {
             var id = ReferenceIdProperty?.GetValue(property);
             return id != null && !id.Equals(Activator.CreateInstance(id.GetType()));
@@ -339,17 +339,62 @@ namespace Yu5h1Lib.EditorExtension
         };
 
         /// <summary>
-        /// Hierarchy path for scene and prefab objects, asset name otherwise.
+        /// Hierarchy path for scene and prefab objects, asset name otherwise. A GameObject named like an earlier sibling
+        /// gets #2, #3… after its name, and so does a component whose type repeats on its GameObject, so no two objects
+        /// in one file share a path.
         /// </summary>
         public static string DescribePath(Object obj)
         {
             var go = obj switch { GameObject g => g, Component c => c.gameObject, _ => null };
             if (go == null)
                 return obj.name;
-            var path = go.name;
+            var path = NameAmongSiblings(go.transform);
             for (var t = go.transform.parent; t != null; t = t.parent)
-                path = $"{t.name}/{path}";
-            return obj is Component ? $"{path} ({obj.GetType().Name})" : path;
+                path = $"{NameAmongSiblings(t)}/{path}";
+            return obj is Component component ? $"{path} ({ComponentId(component)})" : path;
+        }
+
+        /// <summary>
+        /// The component's type name, followed by #n when an earlier component on the same GameObject has the same type.
+        /// </summary>
+        internal static string ComponentId(Component component)
+        {
+            var type = component.GetType();
+            var ordinal = 1;
+            foreach (var other in component.GetComponents<Component>())
+            {
+                if (other == component)
+                    break;
+                if (other != null && other.GetType() == type)
+                    ordinal++;
+            }
+            return WithOrdinal(type.Name, ordinal);
+        }
+
+        internal static string WithOrdinal(string name, int ordinal) => ordinal == 1 ? name : $"{name}#{ordinal}";
+
+        private static string NameAmongSiblings(Transform transform)
+        {
+            var name = transform.name;
+            var ordinal = 1;
+            var parent = transform.parent;
+            if (parent != null)
+            {
+                for (int i = 0, end = transform.GetSiblingIndex(); i < end; i++)
+                    if (parent.GetChild(i).name == name)
+                        ordinal++;
+            }
+            else if (transform.gameObject.scene.IsValid())
+            {
+                foreach (var root in transform.gameObject.scene.GetRootGameObjects())
+                {
+                    if (root.transform == transform)
+                        break;
+                    if (root.name == name)
+                        ordinal++;
+                }
+            }
+            return WithOrdinal(name, ordinal);
         }
     }
 }
