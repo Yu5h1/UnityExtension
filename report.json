@@ -397,27 +397,103 @@
       "id": "motion-system",
       "title": "Motion 系統重構",
       "status": "planned",
-      "summary": "2026-10-07 所有權變更：補間殼的設計規範交給 Motion（UNITYEXTENSION-MOTION-3），Core 介面由 DotNet 依 Motion 規格建立（UNITYEXTENSION-DOTNET-1）；Unity 端只保留 DOTween／PrimeTween 適配與 11 個既有組件遷移。Motion 收錄後刪除 Motion_System_Refactor.md 的規範內容。Canonical entry：.agents/plans/Motion_System_Refactor.md（Task ID: motion-system）。",
+      "summary": "Motion 已發布 Tween 1.0.0；Core 框架由 [DotNet](/?scope=dotnet&pin=core-motion-contracts) 擁有。本卡接入 Core 並實作 DOTween runner，重播目標 1；舊規範收斂與十一個組件遷移分開追蹤。",
       "pending_items": [
         {
           "id": "item-motion-system-todo-1",
-          "title": "等 Motion 依 MOTION-3 寫出補間殼模組規格，DotNet 依 DOTNET-1 在 Core 建立介面（取代原 Phase A 由 Unity 定契約）",
-          "priority": 4
+          "title": "確認 Core Tween 交付在 Unity 的來源／DLL 接入與契約相容性",
+          "priority": 4,
+          "status": "planned",
+          "waits_for": [
+            {
+              "scope_id": "dotnet",
+              "task_id": "core-motion-contracts",
+              "item_id": "core-tween-replay"
+            }
+          ],
+          "activity": [
+            {
+              "event": "updated",
+              "actor": "codex",
+              "at": "2026-10-23T14:26:34.976409+00:00",
+              "session": "Tween 跨專案工作安排",
+              "session_id": "f62c91dd-fddb-4a19-8799-5bb541945dfc"
+            }
+          ]
         },
         {
           "id": "item-motion-system-todo-2",
-          "title": "Motion 收錄後，刪除 Motion_System_Refactor.md 被取代的規範內容（§0–§7、§10–§11），保留 §8–§9",
-          "priority": 4
+          "title": "依已發布的 Tween 規格收斂 Motion_System_Refactor.md，刪除被取代的規範內容（§0–§7、§10–§11），保留 §8–§9",
+          "priority": 4,
+          "activity": [
+            {
+              "event": "updated",
+              "actor": "codex",
+              "at": "2026-10-23T14:26:34.976409+00:00",
+              "session": "Tween 跨專案工作安排",
+              "session_id": "f62c91dd-fddb-4a19-8799-5bb541945dfc"
+            }
+          ]
         },
         {
           "id": "item-motion-system-todo-3",
-          "title": "後續以 DOTweenRunner 驗證抽象",
-          "priority": 4
+          "title": "實作 DOTween runner 並重播 Tween 目標 1，交付 [Motion 雙端確認](/?scope=motion&pin=motion-tween-shell) 所需證據",
+          "priority": 0,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "item-motion-system-todo-3"
+          },
+          "activity": [
+            {
+              "event": "updated",
+              "actor": "codex",
+              "session": "Tween 跨專案工作安排",
+              "session_id": "f62c91dd-fddb-4a19-8799-5bb541945dfc",
+              "at": "2026-10-23T14:25:31.669570+00:00"
+            },
+            {
+              "event": "updated",
+              "actor": "codex",
+              "at": "2026-10-23T14:26:34.976409+00:00",
+              "session": "Tween 跨專案工作安排",
+              "session_id": "f62c91dd-fddb-4a19-8799-5bb541945dfc"
+            }
+          ],
+          "status": "planned",
+          "waits_for": [
+            {
+              "scope_id": "dotnet",
+              "task_id": "core-motion-contracts",
+              "item_id": "core-tween-replay"
+            },
+            {
+              "scope_id": "unity-extension",
+              "task_id": "motion-system",
+              "item_id": "item-motion-system-todo-1"
+            }
+          ]
         },
         {
           "id": "item-motion-system-todo-4",
-          "title": "再規劃 MotionBehaviour 與既有組件遷移",
-          "priority": 4
+          "title": "規劃 MotionBehaviour 與既有組件遷移（獨立於 Tween 目標 1）",
+          "priority": 4,
+          "waits_for": [
+            {
+              "scope_id": "unity-extension",
+              "task_id": "motion-system",
+              "item_id": "item-motion-system-todo-3"
+            }
+          ],
+          "activity": [
+            {
+              "event": "updated",
+              "actor": "codex",
+              "at": "2026-10-23T14:26:34.976409+00:00",
+              "session": "Tween 跨專案工作安排",
+              "session_id": "f62c91dd-fddb-4a19-8799-5bb541945dfc"
+            }
+          ]
         }
       ],
       "completed_items": []

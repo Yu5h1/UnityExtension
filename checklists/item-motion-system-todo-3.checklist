@@ -1,0 +1,28 @@
+# 實作並重播 DOTween runner Checklist
+
+Current round: `../../Motion/Documentation/ModuleSpec/Tween.md#goal`.
+
+沿用 Packages/Plugins/DOTween 的實際引擎與 DotNet Core 交付契約，新增 runner 適配與重播入口。紀錄放 Packages/Plugins/DOTween/Documentation/Motion/Tween.md；依 Unity 操作規範驗證實際 Core DLL／來源版本，不重寫 Core easing。本輪不遷移十一個組件、不安裝 PrimeTween。
+
+- [ ] **1. 實作並重播 DOTween runner**
+  Outcome: DOTween runner 透過真實公開入口完成 Tween 目標 1 的案例重播。
+  Checks:
+    - [ ] **實作來源契約**
+      - Action: 依 ../../Motion/Documentation/ModuleSpec/Tween.md §Contract 實作本端責任，固定 Tween、Interpolation、案例與 manifest 的版本、提交及 SHA-256。
+      - Expect: 採用 Core 共用契約與 easing；案例適配器呼叫真實 runner，不複製規格模型或計算預期答案。
+    - [ ] **重播共享案例**
+      - Action: 依 ../../Motion/Documentation/ModuleSpec/Tween.md §Cases and replay，以 replay_tween.mjs 或等價 adapter 對本 runner 跑完整 tween_control.json，核對 §Behavior and acceptance。
+      - Expect: 全部案例每步的觀測符合來源容差；建立、六動詞、延遲、端點更新、目標群組、拒絕設定與 easing 有實際證據。
+    - [ ] **界定平台與交付證據**
+      - Action: 依 ../../Motion/Documentation/ModuleSpec/Tween.md §Versioning and handover，在本端 Motion/Tween.md 驗收紀錄映射每條行為與測試入口，包含 provider model（TWEEN-P2）的實際檢查。
+      - Expect: 保留實作提交、依賴版本、命令及輸出；loops、非純量、平台時鐘／主機生命週期與未跑項目明列範圍，不因共享案例通過宣稱全面相容；進度路由 report、逐項結果路由本清單。
+
+- [ ] **2. 獨立驗收**
+  Outcome: 獨立驗收者依原始需求確認本輪交付。
+  Checks:
+    - [ ] **驗收條件未被改動** `[acceptance]`
+      - Action: 比對本檔建立提交或最新標有「條件修訂」的提交與目前 git diff，核對所有 acceptance 條件。
+      - Expect: 驗收條件未被執行者修改以配合實作結果。
+    - [ ] **真實實作符合目標** `[acceptance]`
+      - Action: 依 ../../Motion/Documentation/ModuleSpec/Tween.md §Goal、§Behavior and acceptance、§Cases and replay，獨立檢查實作與重播證據並執行必要的定向驗證。
+      - Expect: 全部共享案例經真實公開入口通過；數值容差與事件、寫入順序符合來源。規格 self-check 不算實作驗收；每條行為有本 runner 的映射與證據，平台／未涵蓋能力沒有假通過。
