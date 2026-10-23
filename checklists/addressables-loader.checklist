@@ -12,13 +12,13 @@ Current round: `../Documentation/Addressables/plan.md#首輪範圍讀取處理�
 
 不在範圍內：讀取失敗改用 Resources 測試角色的備援流程（plan〈首輪範圍〉第 275 行只描述行為，沒有排進順序）；遠端內容與 `InternalIdTransformFunc`；VCP 的程式與 Cat；載入體驗的 UX 規範（UX 第 98 題，由另一個 session 在 UX repo 撰寫），監看畫面不預設顯示延遲、取消按鈕等決定。
 
-- [ ] **1. 6000.3.9f1 編得到 Addressables**
+- [x] **1. 6000.3.9f1 編得到 Addressables**
   Outcome: `unity_compile.py` 在 6000.3.9f1 編譯 `Yu5h1Lib.Addressables` 時，`Unity.Addressables` 與 `Unity.ResourceManager` 是實際編入的參考；common 的參考專案檔不再過期。
   Checks:
-    - [ ] **從編輯器隨附的套件解析參考**
+    - [x] **從編輯器隨附的套件解析參考**
       - Action: 讓 `Tools/agent/unity_compile.py` 在 UnityExtension／Core 找不到某個 asmdef 時，再到該版編輯器的 `Data/Resources/PackageManager/Editor/*.tgz` 找（解壓到暫存資料夾，不改任何專案），找到就從原始碼先編譯它；再對 `Packages/Addressables/Runtime/Yu5h1Lib.Addressables.asmdef` 執行。
       - Expect: 6000.3.9f1 的輸出說明 `Unity.Addressables`、`Unity.ResourceManager`（與它引用的 `Unity.Profiling.Core`）取自 `com.unity.addressables-2.8.1`／`com.unity.profiling.core` 的隨附套件並編譯成功，沒有 `not found` 的 note；6000.6.0f1 的結果不變；工具說明與 `unity-agent-operations` skill 的工具列寫明這個來源。
-    - [ ] **重新產生 BonghuoVR 的專案檔**
+    - [x] **重新產生 BonghuoVR 的專案檔**
       - Action: BonghuoVR 沒開著時，以 `Tools/agent/unity_batch.py` 帶 `--method UnityEditor.SyncVS.SyncSolution` 重產 csproj，再對 `Packages/common/Runtime/Yu5h1Lib.Common.asmdef` 執行 `unity_compile.py`。
       - Expect: 6000.3.9f1 不再出現 `Yu5h1Lib.Common.csproj looks stale`；BonghuoVR 的 git 狀態不變（csproj 是 gitignore 的）。
 

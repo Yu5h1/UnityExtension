@@ -19,7 +19,11 @@ For each editor the tool compiles the asmdef's *current* source files in a throw
    Newtonsoft.Json ...) are missing in this mode, so its errors can be false.
 
 Referenced asmdefs found under UnityExtension/Packages or Unity/Core are compiled first from their current
-sources. Package sources are never modified; everything is built in a temp folder.
+sources. A reference found in neither (a Unity package such as Unity.Addressables) is looked up in the packages
+that editor ships, following the referencing package's package.json dependencies: the editor's
+Data/Resources/PackageManager/BuiltInPackages/<name> folder, else Data/Resources/PackageManager/Editor/<name>-<version>.tgz
+extracted into the temp folder (the declared version when shipped, else the newest), and compiled from source with
+the generic references. Package sources are never modified; everything is built in a temp folder.
 Exit code: 0 when every editor compiled without errors, 1 otherwise, 2 for a setup problem.
 """
 import argparse
@@ -30,6 +34,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 
 HUB_EDITORS = r"C:\Program Files\Unity\Hub\Editor"
@@ -71,17 +76,88 @@ def load_asmdef(path):
     return data
 
 
+def add_asmdefs(by_key, root):
+    for path in glob.glob(os.path.join(root, "**", "*.asmdef"), recursive=True):
+        if "~" in os.path.relpath(path, root):
+            continue
+        a = load_asmdef(path)
+        by_key.setdefault(a["name"], a)
+        if a["_guid"]:
+            by_key.setdefault("GUID:" + a["_guid"], a)
+
+
 def asmdef_index():
     by_key = {}
     for root in ASMDEF_ROOTS:
-        for path in glob.glob(os.path.join(root, "**", "*.asmdef"), recursive=True):
-            if "~" in path:
-                continue
-            a = load_asmdef(path)
-            by_key.setdefault(a["name"], a)
-            if a["_guid"]:
-                by_key.setdefault("GUID:" + a["_guid"], a)
+        add_asmdefs(by_key, root)
     return by_key
+
+
+def owning_package(asmdef):
+    """The package.json of the package holding the asmdef, or None."""
+    folder = asmdef["_dir"]
+    while True:
+        path = os.path.join(folder, "package.json")
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8-sig") as f:
+                return json.load(f)
+        parent = os.path.dirname(folder)
+        if parent == folder:
+            return None
+        folder = parent
+
+
+def version_key(version):
+    return [int(n) for n in re.findall(r"\d+", version)]
+
+
+def shipped_package(ctx, name, version):
+    """(folder, source) of package <name> as the editor ships it, a .tgz extracted into the work folder; (None, None)."""
+    shipped = os.path.join(ctx["editor_dir"], "Data", "Resources", "PackageManager")
+    builtin = os.path.join(shipped, "BuiltInPackages", name)
+    if os.path.isfile(os.path.join(builtin, "package.json")):
+        return builtin, "BuiltInPackages"
+    tarballs = {}
+    for path in glob.glob(os.path.join(shipped, "Editor", f"{name}-*.tgz")):
+        shipped_version = os.path.basename(path)[len(name) + 1:-len(".tgz")]
+        if re.fullmatch(r"\d[\w.+-]*", shipped_version):  # not another package sharing the prefix
+            tarballs[shipped_version] = path
+    if not tarballs:
+        return None, None
+    chosen = version if version in tarballs else max(tarballs, key=version_key)
+    root = os.path.join(ctx["work"], ctx["version"], "_shipped", f"{name}-{chosen}")
+    if not os.path.isdir(root):
+        with tarfile.open(tarballs[chosen], "r:gz") as tar:
+            for member in tar.getmembers():
+                target = os.path.normpath(os.path.join(root, member.name))
+                if target.startswith(root + os.sep) and (member.isfile() or member.isdir()):
+                    tar.extract(member, root)
+    return os.path.join(root, "package"), os.path.basename(tarballs[chosen])
+
+
+def add_shipped_dependencies(asmdef, ctx):
+    """Index the asmdefs of the shipped packages the asmdef's package depends on, transitively, once per package."""
+    pending = list(((owning_package(asmdef) or {}).get("dependencies") or {}).items())
+    while pending:
+        name, version = pending.pop(0)
+        if name in ctx["shipped"] or name.startswith(("com.unity.modules.", "com.yu5h1.")):
+            continue
+        folder, source = shipped_package(ctx, name, version)
+        ctx["shipped"][name] = folder
+        if folder is None:
+            continue
+        add_asmdefs(ctx["index"], folder)
+        with open(os.path.join(folder, "package.json"), encoding="utf-8-sig") as f:
+            package = json.load(f)
+        ctx["notes"].add(f"{name} {package.get('version')}: shipped with {ctx['version']} ({source})")
+        pending += list((package.get("dependencies") or {}).items())
+
+
+def unity_version_defines(asmdef, version):
+    """Defines of versionDefines on the Unity version, written as a bare minimum version, that this editor meets."""
+    return [vd["define"] for vd in asmdef.get("versionDefines", [])
+            if vd.get("name") == "Unity" and re.fullmatch(r"\d[\w.]*", vd.get("expression", ""))
+            and version_key(version) >= version_key(vd["expression"])]
 
 
 def sources(asmdef):
@@ -234,14 +310,19 @@ def build(asmdef, ctx, built):
         ctx["notes"].add(f"{name}: no generated csproj on {version}; generic references (consumer precompiled DLLs missing)")
         deps = []
         for key in asmdef.get("references", []):
+            if key not in ctx["index"]:
+                add_shipped_dependencies(asmdef, ctx)
             dep = ctx["index"].get(key)
             if dep is None:
-                ctx["notes"].add(f"{name}: reference {key} not found under UnityExtension/Packages or Unity/Core; "
-                                 f"not compiled")
+                ctx["notes"].add(f"{name}: reference {key} not found under UnityExtension/Packages, Unity/Core or "
+                                 f"the packages {version} ships; not compiled")
             else:
                 deps.append(dep)
+        evaluated = unity_version_defines(asmdef, version)
+        defines = defines + evaluated
         for vd in asmdef.get("versionDefines", []):
-            ctx["notes"].add(f"{name}: versionDefine {vd.get('define')} not evaluated; treated as absent")
+            if vd.get("define") not in evaluated:
+                ctx["notes"].add(f"{name}: versionDefine {vd.get('define')} not evaluated; treated as absent")
     dep_names_set = set()
     for dep in deps:
         dll, errors, warnings = build(dep, ctx, built)
@@ -291,8 +372,8 @@ def main(argv=None):
                 print(f"[{version}] editor not installed: {editor_dir}")
                 failed = True
                 continue
-            ctx = {"version": version, "editor_dir": editor_dir, "candidates": candidates, "index": index,
-                   "work": work, "extra_defines": list(args.define), "notes": set(), "warnings": []}
+            ctx = {"version": version, "editor_dir": editor_dir, "candidates": candidates, "index": dict(index),
+                   "shipped": {}, "work": work, "extra_defines": list(args.define), "notes": set(), "warnings": []}
             dll, errors, warnings = build(target, ctx, {})
             status = "ok" if dll else "FAILED"
             print(f"[{version}] {target['name']}: {status}, {len(errors)} error(s), {len(warnings)} warning(s)")
