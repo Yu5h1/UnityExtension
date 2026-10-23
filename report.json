@@ -1427,6 +1427,11 @@
           "id": "general-objects",
           "title": "第三層：擴充到一般物件的階層、元件與欄位；建置流程中跑報告並 diff",
           "priority": 3,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "general-objects"
+          },
           "status": "planned",
           "activity": [
             {
@@ -1440,6 +1445,12 @@
               "actor": "claude",
               "at": "2026-10-22T05:05:46.349585+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-23T13:40:00+00:00",
+              "session_id": "854401b0-8694-4d52-95cb-62fe8a887ebe"
             }
           ]
         },

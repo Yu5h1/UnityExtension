@@ -1,0 +1,74 @@
+# General Objects Export Checklist
+
+Current round: `../Documentation/資料驅動的Agent翻譯器.md#一般物件匯出與建置比對`.
+
+驗證方式：他驗（依計畫推導實作）。指示：翻譯器第三層第 6、7 步（使用者 2026-10-21 列入任務卡，2026-10-23 以 `/task-progress-items auto` 執行）。現況：翻譯器只匯出 inline SO 與 UnityEvent，agent 看不懂一般物件的階層與元件（例如角色 prefab 的元件組成），接線斷掉要等人點開 Inspector 才發現。要達成：一般物件匯出（階層、元件、欄位）；建置流程中跑報告並和上次比對，讓斷線在建置時就被看到。不在範圍內：agent 改輸出與寫回 Unity（`write-back-test`）、只由程式載入的資產的建置比對、任何消費專案的程式或場景修改。測試資產只放在消費專案的暫存資料夾或 scratchpad 的暫存專案，用完刪除。本輪只放 agent 的檢查，沒有人工檢查。
+
+- [ ] **1. 一般物件匯出可用**
+  Outcome: 對場景或 Prefab 跑一次，得到每個 GameObject 的階層、元件與欄位，引用都是名稱路徑與型別，輸出穩定可 diff。
+  Checks:
+    - [ ] **位置與共用核心**
+      - Action: 看新檔案的路徑與它用到的型別。
+      - Expect: 程式在 `Packages/common/Editor`，屬於 `Yu5h1Lib.Common.Editor`；欄位值與 UnityEvent 通道沿用 inline SO 匯出的寫法，監聽器由 UnityEvent 監控的掃描核心收集，沒有另寫一套。
+    - [ ] **場景的階層、元件與欄位**
+      - Action: 在沒被編輯器開著的 BonghuoVR，以 batchmode 匯出 `Assets/Scenes/Main.unity`，讀輸出。
+      - Expect: 每個 GameObject 有名稱路徑、啟用、Tag、Layer，Prefab 實例的根有來源 Prefab 路徑；每個元件有型別、識別、啟用與序列化欄位值；UnityEvent 通道列出目標、方法、模式、參數與狀態；輸出裡沒有 fileID 或 GUID。
+    - [ ] **Prefab 的元件組成**
+      - Action: 匯出 BonghuoVR `Assets/StaticResources/NPC/Prefab/MainGuy.prefab`，只讀輸出說出它的元件組成。
+      - Expect: 從輸出就能列出每個子物件的元件與它們引用的物件，不必開 Unity 或讀 YAML。
+    - [ ] **同名與斷線**
+      - Action: 在 BonghuoVR 的暫存資料夾以 batchmode 腳本建一個場景：同一父物件下兩個同名子物件、同一物件上兩個同型別元件、一個腳本遺失的元件、一個引用已刪除物件的欄位、一個沒指定的欄位；匯出後刪除暫存資料夾。
+      - Expect: 第二個同名物件與第二個同型別元件帶 `#2`；遺失腳本列為 missing script；已刪除物件的引用寫 `missing`，沒指定的寫 `null`；BonghuoVR 的 `git status` 沒有留下測試檔。
+    - [ ] **輸出穩定**
+      - Action: 對 BonghuoVR Main.unity 連跑兩次匯出，比對兩份輸出。
+      - Expect: 兩份完全相同。
+    - [ ] **既有報告不變**
+      - Action: 改動後對 BonghuoVR Main.unity 跑 UnityEvent 報告與 inline SO 匯出，和改動前的 `W:/UnityProject/BonghuoVR-Build/translator/ue-main-before.json`、`inline-main-before.json` 比較。
+      - Expect: 除了 `generatedAt` 與同名物件、同型別元件新加的 `#n`，逐列相同。
+    - [ ] **兩個 Unity 版本都能編譯**
+      - Action: `python Tools/agent/unity_compile.py Packages/common/Editor/Yu5h1Lib.Common.Editor.asmdef`。
+      - Expect: 6000.3.9f1 與 6000.6.0f1 都 0 錯誤，警告仍為 4 個。
+
+- [ ] **2. 建置時比對**
+  Depends on: 1.
+  Outcome: 建置 player 時自動對建置中的場景跑報告並和上一次比對，新的斷線出現在警告裡，建置照常完成。
+  Checks:
+    - [ ] **第一次建置寫出結果**
+      - Action: 在 scratchpad 建一個 6000.6.0f1 暫存專案，以 `file:` 引用 common 與 Core，加一個含 Button 監聽器與物件引用的場景，batchmode 建置 Windows player。
+      - Expect: 建置成功；專案 `Library` 下有本次的匯出與接線清單；log 寫明沒有上一次可比對。
+    - [ ] **斷線在第二次建置被列出**
+      - Action: 讓那筆監聽器的方法失效、刪掉被引用的物件，再建置一次。
+      - Expect: 建置成功，沒有被擋；警告逐筆列出新的失效監聽器與 `missing` 引用，並給出上次與本次接線清單的路徑。
+    - [ ] **可以關閉**
+      - Action: 在建置腳本裡關掉 Preferences 的開關後建置，結束時恢復預設。
+      - Expect: 不寫結果也不出警告；開關恢復為預設開啟。
+    - [ ] **不影響 Play Mode**
+      - Action: 讀掛鉤處理場景的程式。
+      - Expect: 沒有建置報告（進入 Play Mode）時直接返回。
+    - [ ] **兩個 Unity 版本都能編譯**
+      - Action: `python Tools/agent/unity_compile.py Packages/common/Editor/Yu5h1Lib.Common.Editor.asmdef`。
+      - Expect: 6000.3.9f1 與 6000.6.0f1 都 0 錯誤，警告仍為 4 個。
+    - [ ] **暫存專案已清除**
+      - Action: 測完刪除暫存專案。
+      - Expect: scratchpad 裡沒有留下暫存專案。
+
+- [ ] **3. agent 知道怎麼用**
+  Depends on: 1, 2.
+  Outcome: agent 不必讀程式就知道怎麼跑一般物件匯出、怎麼讀建置比對的結果。
+  Checks:
+    - [ ] **Tools 表與讀資料的指引**
+      - Action: 讀 `.agents/skills/unity-agent-operations/SKILL.md` 的 Tools 表與〈Reading scene and asset data〉。
+      - Expect: 有一般物件匯出的執行方式、輸出欄位與名稱路徑規則；有建置比對的結果位置、怎麼讀、怎麼關；寫明分析場景與 Prefab 的組裝時先用匯出。
+
+- [ ] **4. 他驗**
+  Outcome: 執行者以外的 session 依計畫確認結果。
+  Checks:
+    - [ ] **驗收條件未被改動** `[acceptance]`
+      - Action: 以 git log -p 檢查本檔第 4 項自寫入它的提交後的變更。
+      - Expect: 只有標記與 Recorded 變動。
+    - [ ] **一般物件匯出符合計畫** `[acceptance]`
+      - Action: 對照 `../Documentation/資料驅動的Agent翻譯器.md#一般物件匯出` 與同文件〈原則〉，審查 `git log --grep general-objects` 的變更，並在一個沒被編輯器開著的消費專案自行匯出一個場景與一個 Prefab。
+      - Expect: 每個 GameObject、元件、欄位與監聽器都在輸出裡；同名有穩定識別；`missing` 與 `null` 分開；沒有 fileID 或 GUID；連跑兩次相同；UnityEvent 報告與 inline SO 匯出除同名識別外不變。
+    - [ ] **建置時看得到斷線** `[acceptance]`
+      - Action: 對照 `../Documentation/資料驅動的Agent翻譯器.md#建置時比對`，在 scratchpad 的暫存專案自行建置兩次，第二次前弄斷一筆監聽器與一個引用，用完刪除暫存專案。
+      - Expect: 兩次建置都成功；第二次的警告列出那兩筆新斷線；開關關閉時不跑。

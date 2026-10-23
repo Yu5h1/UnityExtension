@@ -2,8 +2,8 @@
 
 > Task ID: agent-data-translator
 
-狀態：第一層與第二層已實作（2026-10-22）：agent 作業說明、`Tools/agent/` 三個命令列工具、inline SO 設定匯出；第三層未開始。這是優化 agent 在 Unity 工作流程的唯一任務卡，依 CP 值分三層推進
-（[發展步驟](#發展步驟依-cp-值)）。
+這是優化 agent 在 Unity 工作流程的唯一任務卡，依 CP 值分三層推進（[發展步驟](#發展步驟依-cp-值)）；
+各步的進度看 UnityExtension Report 的這張卡。
 
 ## 目標
 
@@ -69,7 +69,8 @@ agent 在這個工作區操作 Unity 時實際付出的成本，以及對應的�
 ### 第三層：長期發展
 
 6. 擴充到一般物件：階層、元件與欄位（給 agent 理解 prefab 組裝，例如角色 prefab 的元件組成）。
-7. 在建置流程中跑報告並和上次 diff，讓接線斷掉在建置時就被看到。
+   設計見[一般物件匯出](#一般物件匯出)。
+7. 在建置流程中跑報告並和上次 diff，讓接線斷掉在建置時就被看到。設計見[建置時比對](#建置時比對)。
 8. 測試 agent 能不能直接改翻譯器輸出；可行就成為 Agent friendly workflow 的格式候選，寫回由文字結構同步負責。
 
 ## 翻譯器
@@ -118,6 +119,36 @@ agent 在這個工作區操作 Unity 時實際付出的成本，以及對應的�
 - 各事件的筆數：Begin 11＋2、End 5＋2、True 18、False 5＋1、Completed 6（2026-10-22 寫成 13＋2 與 6＋1 是手算重複加了全域回呼，翻譯器的輸出更正了它）；
 - 哪些監聽器讀取動態 string（True 5 筆、False 4 筆）。
 
+## 一般物件匯出與建置比對
+
+第三層第 6、7 步的設計（2026-10-23）。和 inline SO 設定匯出是同一個翻譯器：用 `SerializedObject` 讀、能在 batchmode 跑、
+只讀、和 UnityEvent 監控共用掃描核心，輸出遵守〈[原則](#原則)〉。
+
+### 一般物件匯出
+
+對場景、Prefab 與 ScriptableObject 資產跑一次，列出每個 GameObject 的階層、元件與欄位，給 agent 理解組裝，
+例如角色 prefab 的元件組成。
+
+- 每個 GameObject 一筆：名稱路徑、是否啟用、Tag、Layer；Prefab 實例的根另記來源 Prefab 的資產路徑。
+- 名稱路徑在同一個父物件下同名時，第二個起加 `#2`、`#3`；同一物件上重複的元件型別也一樣。這套路徑由掃描核心提供，
+  UnityEvent 報告與 inline SO 匯出也一起改用，三者指向同一個物件時寫法相同。
+- 元件依物件上的順序列出：型別、識別（型別名稱，重複時加 `#n`）、是否啟用、每個序列化欄位的值、每個 UnityEvent 通道的監聽器，
+  欄位與監聽器的寫法和 inline SO 匯出相同。Transform 的父子欄位不列，階層已由名稱路徑表達。
+- 斷線分開標示：腳本遺失的元件列為 missing script；引用存在但物件已載不到（Inspector 顯示 Missing）的欄位寫 `missing`，
+  沒指定的寫 `null`。
+- ScriptableObject 資產列出它自己的欄位與監聽器；inline SO 一併列出，內容同 inline SO 匯出。
+
+### 建置時比對
+
+每次建置 player 時，對建置中的每個場景跑一般物件匯出，取出接線——每個物件引用欄位的值、每筆 UnityEvent 監聽器與它的狀態、
+每個 missing script——一行一筆排序後存進專案的 `Library`，和同一平台上一次建置的結果比對：
+
+- 寫出新增與消失的接線筆數；新出現的斷線（`missing` 引用、失效的監聽器、missing script）逐筆列在 Console 與建置 log 的警告裡。
+- 只警告，不讓建置失敗；可在 Preferences 關閉。
+- 沒有上一次的結果時（第一次建置、Library 重建後）只寫出本次。
+
+範圍只有建置中的場景。只由程式載入的 Prefab 與資產（Resources、Addressables）不在建置比對裡，要看它們就用一般物件匯出。
+
 ## 執行方式
 
 每一步做成任務卡上的 agent 可執行項目（🤖），各自綁一份 checklist 當指示與證據；使用者核准計畫與決策，agent 依卡片執行，
@@ -133,3 +164,11 @@ agent 在這個工作區操作 Unity 時實際付出的成本，以及對應的�
   agent 已經在用；UnityExtension 根目錄不是 Unity 專案，專案只透過 `file:` 引用 `Packages/` 底下的套件，所以 `Tools/` 不會被匯入。
   其他選項（C# 主控台、PowerShell、全部做成 batchmode 的 Editor 方法）的取捨記在決策檔
   [agent-data-translator.decisions](../decisions/agent-data-translator.decisions)。
+
+- **建置時比對預設開啟、只警告、不擋建置**（2026-10-23，agent 依第 7 步的目標判斷，使用者尚未確認）：目標是「讓接線斷掉在建置時就被看到」，
+  預設關就看不到，所以預設開；「被看到」不要求擋下建置，只警告就不改變任何專案的建置結果，日後要改成擋建置只是改一個判斷。
+  開關沿用 common 既有建置掛鉤（`CICD_PreBuildProcess`）的 Preferences 作法。結果存在 `Library`：它是這台機器上次建置的紀錄，
+  不進版本控制。
+
+- **同名識別放在掃描核心**（2026-10-23）：一般物件匯出要用名稱路徑指向其他物件，〈原則〉要求同名時加穩定 ID；
+  UnityEvent 報告與 inline SO 匯出也輸出名稱路徑，只在一處加識別，三份輸出指向同一物件時才寫法相同。
