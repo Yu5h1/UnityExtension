@@ -377,13 +377,14 @@ namespace Yu5h1Lib.EditorExtension
                 SubAssets[assetPath] = all = AssetDatabase.LoadAllAssetsAtPath(assetPath)
                     .Where(a => a != null && a is not GameObject && a is not Component && !AssetDatabase.IsMainAsset(a))
                     .OrderBy(LocalFileId).ToArray();
-            var type = obj.GetType();
+            // Compared by short type name, the name the reference writes, so two types of one name are numbered apart.
+            var type = obj.GetType().Name;
             var ordinal = 1;
             foreach (var other in all)
             {
                 if (other == obj)
                     break;
-                if (other.name == obj.name && other.GetType() == type)
+                if (other.name == obj.name && other.GetType().Name == type)
                     ordinal++;
             }
             return WithOrdinal(Escape(obj.name), ordinal);

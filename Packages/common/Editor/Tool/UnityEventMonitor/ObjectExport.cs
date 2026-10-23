@@ -113,7 +113,7 @@ namespace Yu5h1Lib.EditorExtension
             var inlinePaths = InlineObjectExport.InlinePathsOf(embedded);
             var callsByOwner = InlineObjectExport.CallsByOwner(records);
             foreach (var root in scene.GetRootGameObjects())
-                AppendHierarchy(doc, root, scene.path, inlinePaths, callsByOwner);
+                AppendHierarchy(doc, root, scene.path, inlinePaths, callsByOwner, false);
             AppendInline(doc, records, embedded);
         }
 
@@ -132,7 +132,7 @@ namespace Yu5h1Lib.EditorExtension
                 {
                     var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
                     if (prefab != null)
-                        AppendHierarchy(doc, prefab, path, inlinePaths, callsByOwner);
+                        AppendHierarchy(doc, prefab, path, inlinePaths, callsByOwner, false);
                 }
                 else if (AssetDatabase.LoadMainAssetAtPath(path) is ScriptableObject asset)
                 {
@@ -164,7 +164,7 @@ namespace Yu5h1Lib.EditorExtension
         /// Adds the GameObject and its descendants depth-first in sibling order, each with its components in GameObject order.
         /// </summary>
         private static void AppendHierarchy(Document doc, GameObject go, string assetPath, Dictionary<Object, string> inlinePaths,
-            Dictionary<Object, List<UnityEventRecord>> callsByOwner)
+            Dictionary<Object, List<UnityEventRecord>> callsByOwner, bool parentAdded)
         {
             var entry = new GameObjectEntry
             {
@@ -174,7 +174,7 @@ namespace Yu5h1Lib.EditorExtension
                 tag = go.tag,
                 layer = LayerMask.LayerToName(go.layer) is { Length: > 0 } layerName ? layerName : go.layer.ToString(),
                 prefab = PrefabSourceOf(go),
-                added = IsAdded(go),
+                added = parentAdded || IsAdded(go),
                 overrides = OverridesOf(go, GameObjectFields),
             };
             if (PrefabUtility.IsAnyPrefabInstanceRoot(go))
@@ -202,8 +202,8 @@ namespace Yu5h1Lib.EditorExtension
                     id = UnityEventScanner.ComponentId(component),
                     type = component.GetType().FullName,
                     enabled = EditorUtility.GetObjectEnabled(component) switch { 0 => "false", 1 => "true", _ => string.Empty },
-                    added = entry.added || (PrefabUtility.GetCorrespondingObjectFromSource(component) == null && HasSource(go)),
-                    overrides = OverridesOf(component, fields.Select(f => f.path)),
+                    added = entry.added || PrefabUtility.IsAddedComponentOverride(component) || (!HasSource(component) && HasSource(go)),
+                    overrides = OverridesOf(component, fields.Select(f => f.path).Prepend(EnabledField).Concat(EventPathsOf(component))),
                     fields = fields,
                     events = InlineObjectExport.EventsOf(component, callsByOwner, inlinePaths),
                 });
@@ -212,7 +212,7 @@ namespace Yu5h1Lib.EditorExtension
             doc.gameObjects.Add(entry);
             doc.gameObjectCount++;
             foreach (Transform child in go.transform)
-                AppendHierarchy(doc, child.gameObject, assetPath, inlinePaths, callsByOwner);
+                AppendHierarchy(doc, child.gameObject, assetPath, inlinePaths, callsByOwner, entry.added);
         }
 
         /// <summary>
@@ -235,12 +235,17 @@ namespace Yu5h1Lib.EditorExtension
 
         private static bool HasSource(Object obj) => PrefabUtility.GetCorrespondingObjectFromSource(obj) != null;
 
+        private const string EnabledField = "m_Enabled";
+
         /// <summary>
-        /// Whether the GameObject was added inside a prefab instance or variant: it has no source object while an
-        /// ancestor has one. Children of an added GameObject count as added too.
+        /// Whether the GameObject was added inside a prefab instance or variant: Unity reports it as an added GameObject
+        /// (a nested prefab instance added to an instance included), or it has no source object while an ancestor has one,
+        /// as inside a variant. The caller marks everything under an added GameObject as added too.
         /// </summary>
         private static bool IsAdded(GameObject go)
         {
+            if (PrefabUtility.IsAddedGameObjectOverride(go))
+                return true;
             if (HasSource(go))
                 return false;
             for (var t = go.transform.parent; t != null; t = t.parent)
@@ -250,8 +255,24 @@ namespace Yu5h1Lib.EditorExtension
         }
 
         /// <summary>
+        /// Paths of the UnityEvent channels on the object, as <c>events[].path</c> writes them, including channels with no
+        /// listener left, so a channel whose listeners override the source can be listed.
+        /// </summary>
+        private static IEnumerable<string> EventPathsOf(Object obj)
+        {
+            var paths = new List<string>();
+            using var so = new SerializedObject(obj);
+            var it = so.GetIterator();
+            while (it.Next(true))
+                if (it.name == "m_PersistentCalls" && it.propertyType == SerializedPropertyType.Generic)
+                    paths.Add(it.propertyPath.Substring(0, Math.Max(0, it.propertyPath.Length - "m_PersistentCalls".Length - 1)));
+            return paths;
+        }
+
+        /// <summary>
         /// The given property paths whose value overrides the prefab source, as the Inspector shows them in bold. An array
-        /// counts as overridden when its size is; its elements are listed by their own paths.
+        /// counts as overridden when its size is; its elements are listed by their own paths. A UnityEvent channel counts
+        /// when any of its listeners does, and <c>m_Enabled</c> stands for the component's <c>enabled</c>.
         /// </summary>
         private static List<string> OverridesOf(Object obj, IEnumerable<string> paths)
         {
@@ -264,8 +285,9 @@ namespace Yu5h1Lib.EditorExtension
                 var p = so.FindProperty(path);
                 if (p == null)
                     continue;
-                var overridden = p.isArray && p.propertyType == SerializedPropertyType.Generic
-                    ? p.FindPropertyRelative("Array.size")?.prefabOverride == true
+                var calls = p.FindPropertyRelative("m_PersistentCalls");
+                var overridden = calls != null ? calls.prefabOverride
+                    : p.isArray && p.propertyType == SerializedPropertyType.Generic ? p.FindPropertyRelative("Array.size")?.prefabOverride == true
                     : p.prefabOverride;
                 if (overridden)
                     overrides.Add(path);

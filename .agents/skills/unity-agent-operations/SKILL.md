@@ -121,13 +121,15 @@ References (field values and Object-mode listener arguments) take one of these f
 - `<asset path> > Parent/Child (Component) <Type>`: a GameObject or component inside a prefab or model,
   by its path in that file;
 - `<asset path> > <name> <Type>`: another sub-asset, with `#2`, `#3`… when sub-assets of that asset share
-  its name and type, numbered by local file id (Timeline tracks, markers, meshes of one model);
+  its name and type name, numbered by local file id (Timeline tracks, markers, meshes of one model);
 - `inline: <holder> > <field> <Type>`: an inline ScriptableObject, listed under `inlineObjects`;
 - `null` when empty, `missing` when the stored object can no longer be loaded.
 
 Prefab instances and variants list every value as it is, and mark where it comes from: `added` on a
-GameObject or component added in the instance or variant, `overrides` with the field paths that override
-the source (on a GameObject: `m_Name`, `m_IsActive`, `m_TagString`, `m_Layer`), and on an instance root
+GameObject or component added in the instance or variant (an added nested prefab instance included) and on
+everything under an added GameObject, `overrides` with the field paths that override the source (on a
+GameObject: `m_Name`, `m_IsActive`, `m_TagString`, `m_Layer`; on a component also `m_Enabled` for `enabled`
+and an event channel path, as in `events[].path`, when one of its listeners is overridden), and on an instance root
 `removedComponents` and `removedGameObjects`, by their path in the source prefab.
 
 ## Tools

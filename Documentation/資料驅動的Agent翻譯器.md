@@ -147,15 +147,17 @@ agent 在這個工作區操作 Unity 時實際付出的成本，以及對應的�
   - 場景物件：`<名稱路徑> <型別>`，元件是 `<名稱路徑> (<元件識別>) <型別>`；
   - 資產檔裡的 GameObject 與元件（Prefab、模型）：`<資產路徑> > <名稱路徑> [(<元件識別>)] <型別>`；
   - 主資產：`<資產路徑> <型別>`；
-  - 其他子資產：`<資產路徑> > <名稱> <型別>`，同一資產裡同名同型別的子資產依 local file ID 排序，第二個起加 `#2`、`#3`；
+  - 其他子資產：`<資產路徑> > <名稱> <型別>`，同一資產裡同名、型別名稱也相同的子資產依 local file ID 排序，第二個起加 `#2`、`#3`；
   - inline SO：`inline: <holder> > <field> <型別>`。
 - **名稱裡的** `\`、`/`、`#` 寫成 `\\`、`\/`、`\#`，名稱路徑與 `#n` 才不會被名稱本身混淆。
 - **監聽器的參數**：Object 模式用上面的引用寫法，沒指定寫 `null`；Float 模式寫完整精度。每筆監聽器另寫呼叫狀態
   `callState`（`Off`、`EditorAndRuntime`、`RuntimeOnly`）。UnityEvent 報告的參數用同一套寫法。
 - **Prefab 覆寫**：實際值照舊全列，另外標出哪些來自覆寫。
-  - 每個 GameObject 與元件有 `added`：它是 Prefab 實例裡新增的（Variant 裡新增的也算）。
+  - 每個 GameObject 與元件有 `added`：它是 Prefab 實例裡新增的（Variant 裡新增的、加進實例的巢狀 Prefab 實例也算），
+    新增物件底下的物件與元件也標 `added`。
   - 每個 GameObject 與元件有 `overrides`：被覆寫的欄位路徑，寫法和 `fields` 的 `path` 相同；
-    GameObject 自己的欄位是 `m_Name`、`m_IsActive`、`m_TagString`、`m_Layer`。
+    GameObject 自己的欄位是 `m_Name`、`m_IsActive`、`m_TagString`、`m_Layer`；元件的 `enabled` 寫 `m_Enabled`；
+    UnityEvent 通道裡有監聽器被覆寫時，寫通道的路徑（和 `events` 的 `path` 相同）。
   - Prefab 實例的根另列 `removedComponents` 與 `removedGameObjects`：從來源 Prefab 移除的元件與物件，
     寫成來源 Prefab 裡的名稱路徑（元件加識別）。
 
