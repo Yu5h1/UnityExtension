@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-24T11:03:52.667679+00:00",
+  "updated_at": "2026-10-24T18:54:32.614257+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1122,6 +1122,28 @@
       "priority": 2,
       "summary": "com.yu5h1.addressables：把角色等大型資源和本體分開、執行期非同步讀取。首輪：讀取處理器（singleton，可替換讀取器）與場景代理先用 Resources 讀取器驗證，再接 Addressables 讀取器以 local group 驗證；角色只交 prefab 與 Animator Override Controller，其餘由消費端初始化。依賴 async-task。之後才做遠端內容測試，LFS 與 Windows 頭像原型再之後。第一個消費端：VCP streaming-assets。設計：Documentation/Addressables/plan.md。",
       "completed_items": [
+        {
+          "id": "local-load-test-delay",
+          "status": "done",
+          "priority": 2,
+          "title": "Yu5h1LibTest 本機讀取範例加入可關閉的測試延遲，預設開啟 0.5 秒，期間顯示 loading...0%；測試腳本 Unity 6.6 編譯通過，入門人工檢查仍由使用者執行",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-10-24T18:54:32.614257+00:00",
+              "session": "Local load test delay",
+              "session_id": "01a16d7f-1565-75d3-b506-6ac53e25aae6"
+            },
+            {
+              "event": "done",
+              "actor": "codex",
+              "at": "2026-10-24T18:54:32.614257+00:00",
+              "session": "Local load test delay",
+              "session_id": "01a16d7f-1565-75d3-b506-6ac53e25aae6"
+            }
+          ]
+        },
         {
           "id": "remote-local-http",
           "title": "本機遠端下載：Yu5h1LibTest 的 remote group 從另一個 port 的 LocalWebService（127.0.0.1:8002）以 HTTP 下載，快取後不重下；伺服器停止時已快取的照常載入、未快取的失敗（Editor PlayMode 測試）；內容建置改用 AddressablesContentBuild",
