@@ -94,4 +94,7 @@ Awaitable instances are pooled: await each `ExecuteAsync` result once. One run p
 migration).
 
 Tests: EditMode `async Task` tests (Test Framework 1.4) can await `ExecuteAsync` directly; hold the work on an
-`AwaitableCompletionSource<T>` the test resolves so nothing depends on frames advancing.
+`AwaitableCompletionSource<T>` the test resolves so nothing depends on frames advancing. To expect an exception from
+an `Awaitable` that is still pending, use `try { await … } catch` in the test: NUnit's `Assert.CatchAsync`/`ThrowsAsync`
+block the main thread on the task, and the Awaitable needs that thread to finish, so the test hangs (Yu5h1LibTest
+PlayMode 2026-10-24). They work only when the call throws before its first await.

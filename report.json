@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-24T05:26:23.904748+00:00",
+  "updated_at": "2026-10-24T06:01:33.597588+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -986,6 +986,55 @@
       "summary": "com.yu5h1.addressables：把角色等大型資源和本體分開、執行期非同步讀取。首輪：讀取處理器（singleton，可替換讀取器）與場景代理先用 Resources 讀取器驗證，再接 Addressables 讀取器以 local group 驗證；角色只交 prefab 與 Animator Override Controller，其餘由消費端初始化。依賴 async-task。之後才做遠端內容測試，LFS 與 Windows 頭像原型再之後。第一個消費端：VCP streaming-assets。設計：Documentation/Addressables/plan.md。",
       "completed_items": [
         {
+          "id": "remote-local-http",
+          "title": "本機遠端下載：Yu5h1LibTest 的 remote group 從另一個 port 的 LocalWebService（127.0.0.1:8002）以 HTTP 下載，快取後不重下；伺服器停止時已快取的照常載入、未快取的失敗（Editor PlayMode 測試）；內容建置改用 AddressablesContentBuild",
+          "priority": 1,
+          "status": "done",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-24T06:01:33.597588+00:00",
+              "session": "download and agent tools",
+              "session_id": "712d7724-e64f-4a09-afd9-39e35e47527d"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-10-24T06:01:33.597588+00:00",
+              "session": "download and agent tools",
+              "session_id": "712d7724-e64f-4a09-afd9-39e35e47527d"
+            }
+          ]
+        },
+        {
+          "id": "character-init",
+          "title": "角色載入：prefab＋override controller 載入後由消費端初始化流程添加元件；非同步表演用 async-task 的事件物件掛接",
+          "priority": 2,
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
+              "at": "2026-10-21T11:22:49+00:00"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-21T15:25:47.262414+00:00",
+              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-10-24T06:01:33.597588+00:00",
+              "session": "download and agent tools",
+              "session_id": "712d7724-e64f-4a09-afd9-39e35e47527d"
+            }
+          ],
+          "status": "done"
+        },
+        {
           "id": "first-round-discussion",
           "title": "首輪待決（2026-10-23 照建議定案）：角色專屬資料放主程式以 key 對應、由消費端初始化器套用；交貨前在 Yu5h1LibTest 驗證",
           "priority": 1,
@@ -1129,9 +1178,9 @@
           ]
         },
         {
-          "id": "character-init",
-          "title": "角色載入：prefab＋override controller 載入後由消費端初始化流程添加元件；非同步表演用 async-task 的事件物件掛接",
-          "priority": 2,
+          "id": "remote-test",
+          "title": "遠端內容測試：WebGL（同站與跨來源 CORS、瀏覽器暖快取），之後 R2",
+          "priority": 1,
           "activity": [
             {
               "event": "created",
@@ -1142,21 +1191,16 @@
             {
               "event": "updated",
               "actor": "claude",
-              "at": "2026-10-21T15:25:47.262414+00:00",
-              "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
-            }
-          ]
-        },
-        {
-          "id": "remote-test",
-          "title": "遠端內容測試：同站遠端，之後 R2",
-          "priority": 3,
-          "activity": [
+              "at": "2026-10-24T06:01:33.597588+00:00",
+              "session": "download and agent tools",
+              "session_id": "712d7724-e64f-4a09-afd9-39e35e47527d"
+            },
             {
-              "event": "created",
+              "event": "updated",
               "actor": "claude",
-              "session": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c",
-              "at": "2026-10-21T11:22:49+00:00"
+              "at": "2026-10-24T06:01:33.597588+00:00",
+              "session": "download and agent tools",
+              "session_id": "712d7724-e64f-4a09-afd9-39e35e47527d"
             }
           ]
         },
@@ -2086,12 +2130,14 @@
               "session_id": "e2d60158-9a65-4b1a-9063-9c6f68077327"
             }
           ]
-        },
+        }
+      ],
+      "completed_items": [
         {
           "id": "problem-transient-object-ref",
           "title": "問題：引用到不屬於場景階層也不是資產的暫時物件時，匯出寫成只有名稱的 `TextMeshPro Mesh <Mesh>`，不屬於計畫的五類引用寫法，也指不到存檔裡的物件（BonghuoVR Main.unity 1 筆，TextMeshPro 在編輯器產生的 Mesh；translator-writeback-gaps 他驗 2026-10-24）",
           "priority": 2,
-          "status": "planned",
+          "status": "done",
           "activity": [
             {
               "event": "created",
@@ -2113,6 +2159,13 @@
               "session_id": "01a15c8a-e2a6-72d1-8600-e673fdd38260",
               "at": "2026-10-24T04:16:44.480479+00:00",
               "note": "plan all：將既有問題／恢復範圍綁定決策；CLI 不支援既有 document_ref 更新。"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-10-24T06:01:33.597588+00:00",
+              "session": "download and agent tools",
+              "session_id": "712d7724-e64f-4a09-afd9-39e35e47527d"
             }
           ],
           "document_ref": {
@@ -2120,9 +2173,7 @@
             "scope_id": "unity-extension",
             "task": "agent-data-translator"
           }
-        }
-      ],
-      "completed_items": [
+        },
         {
           "id": "problem-batch-stale-lockfile",
           "title": "問題：Unity 在 batchmode 因編譯錯誤結束時會留下 Temp/UnityLockfile，unity_batch.py 之後就把專案當成已被編輯器開著而拒絕執行；只能人工確認沒有 Unity 行程後刪除該檔（2026-10-23 在 BonghuoVR 與暫存專案各遇到一次）",
@@ -2356,7 +2407,7 @@
     }
   ],
   "next": {
-    "task_id": "agent-data-translator",
-    "item_id": "problem-transient-object-ref"
+    "task_id": "addressables-package",
+    "item_id": "remote-test"
   }
 }

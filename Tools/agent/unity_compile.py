@@ -138,6 +138,10 @@ def shipped_package(ctx, name, version):
 def add_shipped_dependencies(asmdef, ctx):
     """Index the asmdefs of the shipped packages the asmdef's package depends on, transitively, once per package."""
     pending = list(((owning_package(asmdef) or {}).get("dependencies") or {}).items())
+    # Test assemblies use the test framework without their package declaring it: Unity puts it in every project.
+    if any("TestRunner" in r for r in asmdef.get("references", [])) or \
+            "nunit.framework.dll" in asmdef.get("precompiledReferences", []):
+        pending.append(("com.unity.test-framework", ""))
     while pending:
         name, version = pending.pop(0)
         if name in ctx["shipped"] or name.startswith(("com.unity.modules.", "com.yu5h1.")):

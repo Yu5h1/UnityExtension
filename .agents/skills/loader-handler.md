@@ -107,10 +107,35 @@ An unfocused editor barely runs the player loop in Edit Mode (`Time.frameCount` 
 2026-10-23), and `EditorApplication.QueuePlayerLoopUpdate` does not help, so anything awaiting
 `Awaitable.NextFrameAsync` stalls in an EditMode test run from unityMCP. Await the operation instead
 (`Awaitable.FromAsyncOperation`), as `ResourcesLoader` does, or hold the work on an `AwaitableCompletionSource<T>`.
-The first Addressables content build in a project (`BuildPlayerContent`) opens a modal dialog asking to turn on
-'Debug Build Layout'; it blocks the editor's main thread, so the unityMCP call times out until the user answers it
-(Yu5h1LibTest 2026-10-23). Tell the user before the first build. Loading built Addressables content is not an
-EditMode test: verify it in Play Mode.
+Build Addressables content with `AddressablesContentBuild` (unity-agent-operations, Tools), not
+`BuildPlayerContent`: the first build in a project otherwise opens a modal 'Debug Build Layout' dialog that blocks the
+editor and every unityMCP call until a person answers. Loading built Addressables content is not an EditMode test:
+verify it in Play Mode, as the remote tests below do.
 
 Test-only Resources assets go under the test assembly's `Editor/Resources/<unique folder>`: Resources.Load finds them
 in the editor and they never reach a build.
+
+## Remote content on this machine
+
+The loader is the same for local and remote content; a group's load path decides. Yu5h1LibTest's remote test is set up
+by `Assets/AddressablesTest/Editor/RemoteTestSetup.cs` (re-runnable; `--method RemoteTestSetup.Run` sets up and builds):
+
+```text
+group AddressablesTestRemote   Remote.BuildPath ServerData/[BuildTarget]
+                               Remote.LoadPath  http://127.0.0.1:8002/[BuildTarget]  (Default profile)
+entry characters/test-character-remote → Assets/AddressablesTest/Content/TestCharacterRemote.prefab
+Player Settings > Allow downloads over HTTP: Always allowed (Unity blocks http:// otherwise)
+catalog: stays in the build (local); a remote catalog belongs to content updates
+server:  python localHost.py --root W:\UnityProject\Yu5h1LibTest\ServerData --host 127.0.0.1 --port 8002 --no-browser
+         (LocalWebService; ask the user before starting it, stop it afterwards)
+```
+
+PlayMode tests `Assets/AddressablesTest/Tests/RemoteLoadTests.cs` (assembly `Yu5h1LibTest.AddressablesTest.Tests`) run
+in batchmode with `-runTests -testPlatform PlayMode -assemblyNames Yu5h1LibTest.AddressablesTest.Tests -testCategory <c>`:
+`RemoteServerUp` with the server running (bytes to download before the load, 0 after: cached), then `RemoteServerDown`
+after stopping it (the cached bundle loads; after clearing the cache the load fails with a Dependency Exception).
+Two things the tests had to learn: a released bundle unloads asynchronously, so `ClearDependencyCacheAsync` right after
+`Release` fails until it has unloaded (retry over frames); and `Assert.CatchAsync`/`ThrowsAsync` around a pending
+`Awaitable` deadlocks the main thread (async-task-objects, Tests). LocalWebService answers every file with
+`Cache-Control: no-store`; the Editor and a PC player cache bundles by hash and do not mind, but a WebGL player's
+bundle cache is the browser's, so a warm-cache test on WebGL needs the server to allow caching.

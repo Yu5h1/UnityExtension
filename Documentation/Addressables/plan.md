@@ -271,7 +271,17 @@ Task ID `streaming-assets`），在本套件內開發、以消費端身分引用
 3. **角色只準備 prefab 與 Animator Override Controller**。其餘元件（VCP 的 AudioSource、vcpAnimationController、
    Character、uLipSync 等）不放進 prefab，由消費端的初始化流程在載入後自動添加。套件只提供掛接點，不認識消費端的元件；
    非同步表演用 [非同步工作](../非同步工作.md) 的事件物件掛接。
-4. 以上完成後，才開始遠端內容測試（同站遠端，之後 R2、[學習與實作順序](#學習與實作順序) 的 LFS 與 Windows 頭像原型）。
+   實作：第 1 步的初始化器基底與讀取請求的事件就是掛接點；Yu5h1LibTest 的測試角色只有 prefab＋override controller，
+   `TestCharacterInitializer` 在載入後添加元件，監看畫面接讀取請求的事件。VCP 的初始化器屬於 VCP（`streaming-assets`）。
+4. 以上完成後，才開始遠端內容測試，依序：
+   - **本機遠端**（2026-10-24 使用者同意）：另一個 port 的 LocalWebService（`127.0.0.1:8002`）只提供 Yu5h1LibTest 的
+     `ServerData`，remote group 的 load path 指向它，Editor 以 Use Existing Build 走真的 HTTP。證明下載、快取後不重下，
+     以及伺服器停止時已快取的照常載入、未快取的失敗；證明不了 https、R2 的快取規則與真實延遲。Unity 預設擋 http，
+     測試專案要允許。catalog 仍在本體，遠端 catalog 屬於內容更新。實作：Yu5h1LibTest 的 `RemoteTestSetup` 與 PlayMode 測試，
+     見 [loader-handler](../../.agents/skills/loader-handler.md#remote-content-on-this-machine)。
+   - **WebGL**：頁面與內容同站，以及不同 port 的跨來源（CORS）。LocalWebService 每個回應都是 `no-store`，
+     WebGL 的 bundle 快取靠瀏覽器，暖快取要伺服器允許快取才測得準。
+   - **R2**，之後才接 [學習與實作順序](#學習與實作順序) 的 LFS 與 Windows 頭像原型。
 
 非必要內容（例如角色）讀取失敗時，用內建的測試角色代替並提示「此角色異常」，流程繼續；測試角色由 Resources 讀取器載入。
 畫面怎麼呈現由 UX 的載入體驗決定。
