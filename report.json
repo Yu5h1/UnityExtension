@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-23T19:22:57.915124+00:00",
+  "updated_at": "2026-10-24T04:17:06.786997+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -187,7 +187,7 @@
         },
         {
           "id": "problem-legacy-input-backend",
-          "title": "問題：common 的 Runtime/Input/LegacyInputBackend.cs 寫 new LegacyBackend()，類別名稱其實是 LegacyInputBackend；只用舊輸入系統（Active Input Handling 為 Input Manager）的專案因此編譯失敗（2026-10-23 在新建的空專案發現，VCP、BonghuoVR、Yu5h1LibTest 都啟用 Input System 而沒遇到）",
+          "title": "修正 LegacyInputBackend.Register 的建構型別，驗證只啟用 Input Manager 的專案可編譯（原問題保留來源於活動／版本紀錄）",
           "priority": 2,
           "status": "planned",
           "activity": [
@@ -197,12 +197,19 @@
               "at": "2026-10-23T13:38:42.123050+00:00",
               "session": "general-objects",
               "session_id": "854401b0-8694-4d52-95cb-62fe8a887ebe"
+            },
+            {
+              "event": "updated",
+              "actor": "codex",
+              "at": "2026-10-24T04:17:06.786997+00:00",
+              "session": "驗收 Web UX 項目",
+              "session_id": "01a15c8a-e2a6-72d1-8600-e673fdd38260"
             }
           ]
         },
         {
           "id": "problem-common-runtime-nunit",
-          "title": "問題：common 的 Runtime/Component/OptionSystem/ObjectCollectionOption.cs 在執行期組件裡 using NUnit.Framework，沒裝 com.unity.test-framework 的專案編譯不過（2026-10-23 general-objects 驗收時在新建的暫存專案遇到）",
+          "title": "移除 ObjectCollectionOption 執行期對 NUnit 的非必要依賴，驗證未裝 test-framework 的專案可編譯",
           "priority": 2,
           "status": "planned",
           "activity": [
@@ -212,6 +219,13 @@
               "at": "2026-10-23T14:00:34.523119+00:00",
               "session": "general-objects",
               "session_id": "854401b0-8694-4d52-95cb-62fe8a887ebe"
+            },
+            {
+              "event": "updated",
+              "actor": "codex",
+              "at": "2026-10-24T04:17:06.786997+00:00",
+              "session": "驗收 Web UX 項目",
+              "session_id": "01a15c8a-e2a6-72d1-8600-e673fdd38260"
             }
           ]
         }
@@ -840,7 +854,22 @@
           "id": "item-appsmenu-library-adoption-todo-4",
           "title": "依對照選擇改既有範例或另建模組（決策 appsmenu-approach 的後續）",
           "priority": 1,
-          "status": "planned"
+          "status": "planned",
+          "document_ref": {
+            "kind": "decision",
+            "scope_id": "unity-extension",
+            "task": "appsmenu-library-adoption"
+          },
+          "activity": [
+            {
+              "event": "updated",
+              "actor": "codex",
+              "session": "驗收 Web UX 項目",
+              "session_id": "01a15c8a-e2a6-72d1-8600-e673fdd38260",
+              "at": "2026-10-24T04:16:44.480479+00:00",
+              "note": "plan all：將既有問題／恢復範圍綁定決策；CLI 不支援既有 document_ref 更新。"
+            }
+          ]
         },
         {
           "id": "item-appsmenu-library-adoption-todo-5",
@@ -2046,8 +2075,21 @@
               "actor": "claude",
               "at": "2026-10-23T19:22:57.915124+00:00",
               "session_id": "a122a00d-7ab5-4390-9c7b-ec067b729bfe"
+            },
+            {
+              "event": "updated",
+              "actor": "codex",
+              "session": "驗收 Web UX 項目",
+              "session_id": "01a15c8a-e2a6-72d1-8600-e673fdd38260",
+              "at": "2026-10-24T04:16:44.480479+00:00",
+              "note": "plan all：將既有問題／恢復範圍綁定決策；CLI 不支援既有 document_ref 更新。"
             }
-          ]
+          ],
+          "document_ref": {
+            "kind": "decision",
+            "scope_id": "unity-extension",
+            "task": "agent-data-translator"
+          }
         }
       ],
       "completed_items": [

@@ -238,6 +238,9 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 ## Open decisions
 
+- [翻譯器暫時物件引用](decisions/agent-data-translator.decisions)：一般物件匯出五類引用之外的不可持久定位物件，先確認輸出與寫回邊界；原 Next 問題保留。
+- [AppsMenu 恢復基線](decisions/appsmenu-library-adoption.decisions)：舊 UX 1.0.1／Web 交付待辦與現行 UX／Core 架構有落差，先決定恢復範圍，不改寫舊驗收紀錄。
+
 - [UnityEvent 監控 — 尚未決定](Documentation/UnityEvent監控.md#尚未決定): repair operations, to be asked after the first version passes acceptance in VCP.
 
 - [Recycler — 後續決策](Documentation/Recycler_Refactor.md#後續決策): failure/reentrancy and retention semantics before the corresponding Core implementation; Unity convenience and migration choices before their slices.

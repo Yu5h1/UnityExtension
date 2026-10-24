@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.1",
+  "task_id": "appsmenu-library-adoption",
+  "updated_at": "2026-10-24T04:16:44.480479+00:00",
+  "decisions": [
+    {
+      "id": "appsmenu-baseline-on-resume",
+      "version": 1,
+      "question": "Unity AppsMenu 恢復採用時，如何處理舊 UX 基線與現行規格的落差？",
+      "context": "既有紀錄釘選 UX 1.0.1，屬歷史對照；目前 UX 為 5.1.3 且目標暫停。待辦仍提 Web 交付與直接 MotionThrow2D，後來的已定架構則要求 UX 擁有規範、Core 單一入口及畫面適配。原任務保留，但不能照舊文字直接開始或把舊紀錄改寫成新版驗收。",
+      "source_ref": "../Packages/UIToolkit/Documentation/Yu5h1Lib.UX/AppsMenu.md#結論與下一步",
+      "options": [
+        {
+          "id": "keep-paused",
+          "label": "保留暫停，恢復時重做基線差異盤點",
+          "description": "等來源與消費端恢復，再以當時確認版本更新映射及新輪次；舊證據保留。"
+        },
+        {
+          "id": "plan-current-baseline",
+          "label": "現在先規劃 UX 5.1.3 的差異",
+          "description": "先做文件／模型映射，不實作或宣稱相容，另與 UX 確認恢復範圍。"
+        },
+        {
+          "id": "limited-legacy",
+          "label": "保留舊版有限範圍交付",
+          "description": "明列排除能力與有效來源版本；仍遵守已定 Core 架構，不宣稱目前規格相容。"
+        }
+      ],
+      "recommendation": {
+        "option_id": "keep-paused",
+        "reason": "尊重已定暫停與先打基礎的順序；避免舊待辦被當成新版實作授權。"
+      },
+      "allow_other": true,
+      "status": "pending",
+      "answer": null
+    }
+  ]
+}
