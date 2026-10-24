@@ -41,7 +41,7 @@ A loader that holds resources (Addressables handles) overrides `Release`; the ag
 loaded the asset, not on whatever the handler holds now.
 
 For Addressables, put `AddressablesLoader` next to the handler and drag it into the field. The content must be built
-(Addressables Groups > Build, or `AddressableAssetSettings.BuildPlayerContent`) and the Play Mode Script set to
+(Addressables Groups > Build, or `Yu5h1Lib.EditorExtension.AddressablesContentBuild.Build()`) and the Play Mode Script set to
 **Use Existing Build**; `Use Asset Database` is never the acceptance path ([plan § 目的與固定方向](../../Documentation/Addressables/plan.md#目的與固定方向)).
 A local group uses the default `Local.BuildPath`／`Local.LoadPath`: the player reads it from StreamingAssets `aa`, the
 editor's Use Existing Build from `Library/com.unity.addressables/aa/<platform>`.
@@ -136,6 +136,24 @@ in batchmode with `-runTests -testPlatform PlayMode -assemblyNames Yu5h1LibTest.
 after stopping it (the cached bundle loads; after clearing the cache the load fails with a Dependency Exception).
 Two things the tests had to learn: a released bundle unloads asynchronously, so `ClearDependencyCacheAsync` right after
 `Release` fails until it has unloaded (retry over frames); and `Assert.CatchAsync`/`ThrowsAsync` around a pending
-`Awaitable` deadlocks the main thread (async-task-objects, Tests). LocalWebService answers every file with
-`Cache-Control: no-store`; the Editor and a PC player cache bundles by hash and do not mind, but a WebGL player's
-bundle cache is the browser's, so a warm-cache test on WebGL needs the server to allow caching.
+`Awaitable` deadlocks the main thread (async-task-objects, Tests). LocalWebService defaults to
+`Cache-Control: no-store`; the Editor and a PC player cache bundles by hash, while a WebGL player uses browser caching.
+For the browser cache experiment explicitly use `--cache-max-age 3600`; default development behavior stays no-store.
+A warm load may make a conditional request (304, zero body bytes), so distinguish request count from body transfer.
+The cache option and its error/control exclusions are owned by LocalWebService's `skills/local-web-service/SKILL.md`.
+
+### WebGL probe
+
+`python Tools/agent/unity_addressables_webgl.py W:\UnityProject\Yu5h1LibTest` builds an isolated player to
+`W:\UnityProject\Yu5h1LibTest-Build\addressables-webgl`, with timestamped backups in its sibling `backup` folder.
+It requires approval for the long build and temporary Player Settings changes. It temporarily calls the existing
+`RemoteTestSetup.Apply`, builds content through `AddressablesContentBuild`, builds only the probe scene, and restores
+Player/User/Addressables asset settings in `finally`. It refuses differing preexisting probe sources.
+The fixture lives under `Tools/agent/fixtures/AddressablesWebGL`; its page reports a non-null instantiated remote
+character, then releases it. It is a loading test, not the user's visual/Inspector introduction check.
+
+Serve the player directory and mount `/WebGL` to Yu5h1LibTest's `ServerData/WebGL`, using only approved loopback
+test services. At port 8002, `probe.html?remote-test=1&same-origin=1` uses the page origin; at port 8000,
+`probe.html?remote-test=1` uses content on port 8002. Explicitly allow `http://127.0.0.1:8000` on the content service.
+Changing the `run` query creates a fresh player for a warm run; inspect real bundle response bodies and browser logs.
+Stop both test services afterwards. Per-round evidence lives in `checklists/remote-test-webgl.checklist`.

@@ -1,0 +1,29 @@
+# Addressables WebGL remote test Checklist
+
+Current round: `Documentation/Addressables/plan.md#首輪範圍讀取處理器代理與角色載入`.
+
+Evidence recorded 2026-10-24:
+
+2026-10-24, Unity 6000.6.0f1 / Addressables 2.11.2. Final incremental build: 38 s, exit 0, zero compile errors; log W:/UnityProject/Yu5h1LibTest-Build/logs/20261024-185645-Run.log. All 46 backed-up Player/User/Addressables setting files restored byte-identically (backup/addressables-webgl-20261024-185645/restoration.json). Build failure and interruption cleanup also passed focused simulated checks.
+
+IAB Chromium WebGL player, page/content port 8002: PASS http://127.0.0.1:8002 TestCharacterRemote(Clone); bundle HTTP 200, 378107 body bytes. Browser loading-error list empty.
+
+Page port 8000 / content port 8002: PASS TestCharacterRemote(Clone); response Access-Control-Allow-Origin http://127.0.0.1:8000 and Vary Origin. The initial cross-origin run reused the already populated HTTP cache (304, zero body bytes); it is not a separate cold-cache test. Browser loading-error list empty.
+
+A fresh same-origin player passed with HTTP 304 and zero bundle body bytes; a fresh cross-origin player passed without a subsequent bundle HTTP request. This proves browser cache reuse, not a zero-request guarantee or offline support. Evidence: W:/UnityProject/Yu5h1LibTest-Build/logs/webgl-remote-results.json and webgl-http-8000.jsonl / webgl-http-8002.jsonl. Both test services were shut down after testing.
+
+- [x] **1. WebGL remote loading**
+  Outcome: The actual WebGL player loads the remote test character over same-origin and cross-origin HTTP, and a warm browser reuses the bundle.
+  Checks:
+    - [x] **Build the probe player**
+      - Action: Build the isolated WebGL probe in Yu5h1LibTest with AddressablesContentBuild, backing up and restoring Player Settings.
+      - Expect: The player build succeeds and Player Settings are restored byte-for-byte.
+    - [x] **Same-origin remote load**
+      - Action: Serve the player and WebGL ServerData from one LocalWebService origin and open the probe with same-origin=1.
+      - Expect: The actual player reports PASS with a non-null remote character and browser logs show no loading errors.
+    - [x] **Cross-origin remote load**
+      - Action: Open the same player on port 8000 with its remote content on port 8002, explicitly allowing the page origin.
+      - Expect: The actual player reports PASS and browser logs show no CORS or loading errors.
+    - [x] **Browser warm cache**
+      - Action: Repeat a successful load with explicit server caching enabled, inspecting browser and server bundle traffic.
+      - Expect: A cold load transfers the remote bundle, a fresh warm player still loads it successfully without transferring its body again.

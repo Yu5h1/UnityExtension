@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Addressables WebGL remote probe</title>
+<style>body{font:16px system-ui;background:#171b24;color:#eef;padding:24px}pre{white-space:pre-wrap}canvas{width:960px;height:600px;max-width:100%}</style>
+<h1>Addressables WebGL remote probe</h1>
+<pre id="remote-result">Starting WebGL player…</pre>
+<canvas id="unity-canvas" width="960" height="600" tabindex="0"></canvas>
+<script src="Build/addressables-webgl.loader.js"></script>
+<script>
+createUnityInstance(document.getElementById('unity-canvas'), {
+  arguments: [],
+  dataUrl: 'Build/addressables-webgl.data',
+  frameworkUrl: 'Build/addressables-webgl.framework.js',
+  codeUrl: 'Build/addressables-webgl.wasm',
+  streamingAssetsUrl: 'StreamingAssets',
+  companyName: 'DefaultCompany', productName: 'AddressablesRemoteProbe', productVersion: '0.1.0'
+}).catch(error => {
+  document.getElementById('remote-result').textContent = 'FAIL ' + error;
+  console.error(error);
+});
+</script>
+</html>

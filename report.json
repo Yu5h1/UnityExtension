@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-24T09:01:26.309749+00:00",
+  "updated_at": "2026-10-24T11:03:52.667679+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1316,7 +1316,7 @@
         },
         {
           "id": "remote-test",
-          "title": "遠端內容測試：WebGL（同站與跨來源 CORS、瀏覽器暖快取），之後 R2",
+          "title": "遠端內容測試：R2（依使用者指示暫緩，先確認本機讀取流程）",
           "priority": 1,
           "activity": [
             {
@@ -1338,8 +1338,30 @@
               "at": "2026-10-24T06:01:33.597588+00:00",
               "session": "download and agent tools",
               "session_id": "712d7724-e64f-4a09-afd9-39e35e47527d"
+            },
+            {
+              "event": "started",
+              "actor": "codex",
+              "at": "2026-10-24T10:46:40.324392+00:00",
+              "session": "Addressables WebGL remote test",
+              "session_id": "01a16d7f-1565-75d3-b506-6ac53e25aae6"
+            },
+            {
+              "event": "updated",
+              "actor": "codex",
+              "at": "2026-10-24T11:03:52.667679+00:00",
+              "session": "Addressables WebGL remote test",
+              "session_id": "01a16d7f-1565-75d3-b506-6ac53e25aae6"
+            },
+            {
+              "event": "released",
+              "actor": "codex",
+              "at": "2026-10-24T11:03:52.667679+00:00",
+              "session": "Addressables WebGL remote test",
+              "session_id": "01a16d7f-1565-75d3-b506-6ac53e25aae6"
             }
-          ]
+          ],
+          "status": "planned"
         },
         {
           "id": "lfs-avatar",
@@ -1425,6 +1447,40 @@
               "at": "2026-10-23T13:07:17.446888+00:00",
               "session": "addressables-intro",
               "session_id": "82815f75-e85e-4572-b216-abe0d6e803b8"
+            }
+          ]
+        },
+        {
+          "id": "remote-webgl",
+          "title": "本機 WebGL 遠端讀取：同站、跨來源 CORS 與瀏覽器暖快取",
+          "priority": 1,
+          "status": "planned",
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "remote-test-webgl"
+          },
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-10-24T11:00:04.432007+00:00",
+              "session": "Addressables WebGL remote test",
+              "session_id": "01a16d7f-1565-75d3-b506-6ac53e25aae6"
+            },
+            {
+              "event": "started",
+              "actor": "codex",
+              "at": "2026-10-24T11:00:04.432007+00:00",
+              "session": "Addressables WebGL remote test",
+              "session_id": "01a16d7f-1565-75d3-b506-6ac53e25aae6"
+            },
+            {
+              "event": "released",
+              "actor": "codex",
+              "at": "2026-10-24T11:03:52.667679+00:00",
+              "session": "Addressables WebGL remote test",
+              "session_id": "01a16d7f-1565-75d3-b506-6ac53e25aae6"
             }
           ]
         }
@@ -2557,9 +2613,5 @@
         }
       ]
     }
-  ],
-  "next": {
-    "task_id": "addressables-package",
-    "item_id": "remote-test"
-  }
+  ]
 }
