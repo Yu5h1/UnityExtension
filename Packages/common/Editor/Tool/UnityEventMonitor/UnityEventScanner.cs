@@ -347,13 +347,16 @@ namespace Yu5h1Lib.EditorExtension
         /// A reference as the exports write it: "null"; "&lt;path&gt; &lt;Type&gt;" for a scene object;
         /// "&lt;asset&gt; &lt;Type&gt;" for a main asset; "&lt;asset&gt; &gt; &lt;path&gt; &lt;Type&gt;" for a GameObject or component
         /// inside a prefab or model; "&lt;asset&gt; &gt; &lt;name&gt; &lt;Type&gt;" for another sub-asset, with #2, #3… when
-        /// sub-assets of that asset share its name and type, numbered by local file id.
+        /// sub-assets of that asset share its name and type, numbered by local file id; "transient: &lt;path or name&gt;
+        /// &lt;Type&gt;" for an object Unity does not save (<see cref="IsTransient"/>), which the saved file holds as null.
         /// </summary>
         public static string DescribeReference(Object obj)
         {
             if (obj == null)
                 return "null";
             var type = obj.GetType().Name;
+            if (IsTransient(obj))
+                return $"transient: {(obj is GameObject or Component ? DescribePath(obj) : Escape(obj.name))} <{type}>";
             if (!EditorUtility.IsPersistent(obj))
                 return $"{DescribePath(obj)} <{type}>";
             var assetPath = AssetDatabase.GetAssetPath(obj);
@@ -391,6 +394,16 @@ namespace Yu5h1Lib.EditorExtension
         }
 
         /// <summary>
+        /// Whether the object lives only in memory and Unity leaves it out of the file it belongs to: not an asset, and
+        /// flagged <see cref="HideFlags.DontSaveInEditor"/>, such as the mesh and MeshFilter TextMeshPro creates at edit time.
+        /// Built-in resources (the Cube mesh, LegacyRuntime font) carry that flag too but are assets, so they are not
+        /// transient. The exports skip transient GameObjects and components and do not count them for #n, so their paths are
+        /// the same whether or not those objects exist at the moment.
+        /// </summary>
+        internal static bool IsTransient(Object obj)
+            => (obj.hideFlags & HideFlags.DontSaveInEditor) != 0 && !EditorUtility.IsPersistent(obj);
+
+        /// <summary>
         /// A name as it appears in a path: backslash, slash and # are written \\, \/ and \#, so a name is never read as
         /// two path segments or as a #n ordinal.
         /// </summary>
@@ -423,7 +436,7 @@ namespace Yu5h1Lib.EditorExtension
             {
                 if (other == component)
                     break;
-                if (other != null && other.GetType() == type)
+                if (other != null && other.GetType() == type && !IsTransient(other))
                     ordinal++;
             }
             return WithOrdinal(type.Name, ordinal);
@@ -439,7 +452,7 @@ namespace Yu5h1Lib.EditorExtension
             if (parent != null)
             {
                 for (int i = 0, end = transform.GetSiblingIndex(); i < end; i++)
-                    if (parent.GetChild(i).name == name)
+                    if (parent.GetChild(i) is var sibling && sibling.name == name && !IsTransient(sibling.gameObject))
                         ordinal++;
             }
             else if (transform.gameObject.scene.IsValid())
@@ -448,7 +461,7 @@ namespace Yu5h1Lib.EditorExtension
                 {
                     if (root.transform == transform)
                         break;
-                    if (root.name == name)
+                    if (root.name == name && !IsTransient(root))
                         ordinal++;
                 }
             }

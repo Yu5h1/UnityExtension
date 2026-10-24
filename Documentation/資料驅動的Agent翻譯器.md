@@ -148,7 +148,11 @@ agent 在這個工作區操作 Unity 時實際付出的成本，以及對應的�
   - 資產檔裡的 GameObject 與元件（Prefab、模型）：`<資產路徑> > <名稱路徑> [(<元件識別>)] <型別>`；
   - 主資產：`<資產路徑> <型別>`；
   - 其他子資產：`<資產路徑> > <名稱> <型別>`，同一資產裡同名、型別名稱也相同的子資產依 local file ID 排序，第二個起加 `#2`、`#3`；
-  - inline SO：`inline: <holder> > <field> <型別>`。
+  - inline SO：`inline: <holder> > <field> <型別>`；
+  - 只在記憶體、Unity 不存檔的物件（`HideFlags.DontSaveInEditor` 且不是資產，例如 TextMeshPro 在編輯器產生的 Mesh）：
+    `transient: <名稱路徑或名稱> <型別>`，存檔裡這個欄位是空的。內建資源（Cube Mesh、LegacyRuntime 字型）也帶這個旗標，但它們是資產，照資產寫。
+    一般物件匯出不列 Unity 不存檔的 GameObject 與元件（例如 TextMeshPro 產生的 MeshFilter），三份輸出的 `#n` 也不算它們，
+    這些物件此刻存不存在，路徑都一樣（2026-10-24，BonghuoVR Main 的 `TextMeshPro Mesh`）。
 - **名稱裡的** `\`、`/`、`#` 寫成 `\\`、`\/`、`\#`，名稱路徑與 `#n` 才不會被名稱本身混淆。
 - **監聽器的參數**：Object 模式用上面的引用寫法，沒指定寫 `null`；Float 模式寫完整精度。每筆監聽器另寫呼叫狀態
   `callState`（`Off`、`EditorAndRuntime`、`RuntimeOnly`）。UnityEvent 報告的參數用同一套寫法。

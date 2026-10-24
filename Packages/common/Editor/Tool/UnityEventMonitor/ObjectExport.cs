@@ -113,7 +113,8 @@ namespace Yu5h1Lib.EditorExtension
             var inlinePaths = InlineObjectExport.InlinePathsOf(embedded);
             var callsByOwner = InlineObjectExport.CallsByOwner(records);
             foreach (var root in scene.GetRootGameObjects())
-                AppendHierarchy(doc, root, scene.path, inlinePaths, callsByOwner, false);
+                if (!UnityEventScanner.IsTransient(root))
+                    AppendHierarchy(doc, root, scene.path, inlinePaths, callsByOwner, false);
             AppendInline(doc, records, embedded);
         }
 
@@ -162,6 +163,7 @@ namespace Yu5h1Lib.EditorExtension
 
         /// <summary>
         /// Adds the GameObject and its descendants depth-first in sibling order, each with its components in GameObject order.
+        /// GameObjects and components Unity does not save (<see cref="UnityEventScanner.IsTransient"/>) are left out.
         /// </summary>
         private static void AppendHierarchy(Document doc, GameObject go, string assetPath, Dictionary<Object, string> inlinePaths,
             Dictionary<Object, List<UnityEventRecord>> callsByOwner, bool parentAdded)
@@ -195,6 +197,8 @@ namespace Yu5h1Lib.EditorExtension
                     doc.missingScripts++;
                     continue;
                 }
+                if (UnityEventScanner.IsTransient(component))
+                    continue;
                 var fields = InlineObjectExport.FieldsOf(component, inlinePaths);
                 doc.missingReferences += fields.Count(IsMissing);
                 entry.components.Add(new ComponentEntry
@@ -212,7 +216,8 @@ namespace Yu5h1Lib.EditorExtension
             doc.gameObjects.Add(entry);
             doc.gameObjectCount++;
             foreach (Transform child in go.transform)
-                AppendHierarchy(doc, child.gameObject, assetPath, inlinePaths, callsByOwner, entry.added);
+                if (!UnityEventScanner.IsTransient(child.gameObject))
+                    AppendHierarchy(doc, child.gameObject, assetPath, inlinePaths, callsByOwner, entry.added);
         }
 
         /// <summary>
