@@ -17,3 +17,14 @@
 | **Acceptance** | 規格寫明上列四點各用哪個角色（或寫明由模組自訂並給出理由），VisualFoundation 的 VP03 與 Button、OptionPicker 的外觀檢查涵蓋這些列。UnityExtension 依新版釘選重跑 `uitk-visualfoundation` 輪，並讓 light、dark 頁的實心靜止鈕通過使用者確認。 |
 | **Impact** | Yu5h1Lib.UIToolkit 的 Button 與 OptionPicker（以及之後的 Toggle 等引用 Button 外觀的控件）；uGUI 之後引用時同一缺口。dark 主題下實心鈕靜止的底色與文字對比目前不成立。 |
 | **Workaround** | 實心鈕靜止底色與 `solid` 面板外框維持 Unity 預設主題變數（`--unity-colors-button-background`、`--unity-colors-default-border`），驗收紀錄標為 blocked；一般按下用與選取相同的 `accent`／`onAccent`，選取後滑過維持選取外觀，都標為 UnityExtension 暫行解讀，不是規格。 |
+
+## UNITYEXTENSION-UX-2 — AppsMenu 設定檢查與佈局保存說法矛盾及入場尺寸未明
+
+| 欄位 | 內容 |
+|---|---|
+| **Status** | Implemented（2026-10-24：UX `4dcc807dff138d89b12f6980d9e840bec9c8bf53` 交付 AppsMenu 5.1.4；提出方從 Git blob 核對四份交付雜湊、兩處文字與未改的設計／案例／設定資料，獨立審查通過，保留 ChatPanel 交付。此需求驗收範圍是規格可判定性；Unity P07／P08／P11 尚未執行） |
+| **Requirement** | 澄清 AppsMenu 5.1.3 的設定與佈局保存邊界，以及入場 reach 公式中的 size 定義，並在來源交付更新相關檢查文字。 |
+| **Evidence** | [AppsMenu](../../../UX/Documentation/ModuleSpec/AppsMenu.md#驗收案例與覆蓋) P07 仍寫「位置仍非持久化」，APPS-CONFIG 也寫「位置不保存」；但目標 1 情境 6、佈局保存（APPS-LAYOUT）與 P11 要求重載恢復位置、順序與收納。另〈入場規範〉稱依縮放後尺寸算 reach，但公式中的 size 未定義；Unity Transition.Entrance.Plan 先計 size=baseSize×scale，Motion Interpolation 1.1.0 的固定起點規劃（ENT-03）也明定該乘積。不是原始 Unity 實作缺陷。 |
+| **Acceptance** | 明列設定存檔不含佈局、佈局另依宿主保存且應恢復，P07 不再與 P11 矛盾；入場公式明確使用縮放後尺寸，或核對並引用 Motion ENT-03。同步規格版本及 manifest 雜湊，保持現有案例 ID；實作端可依唯一預期執行對應檢查。 |
+| **Impact** | AppsMenu 的設定（APPS-CONFIG／P07）、佈局保存（APPS-LAYOUT／P11）、入場（APPS-OPENING／P08）；Web 與 Unity 後續採用。來源 sample 驗收不必等共用模組完成。 |
+| **Workaround** | 保留現有 sample；平台紀錄列出兩處含糊，不以靜態閱讀宣稱相關檢查通過。舊輪釘選與證據保留；不在 Unity 副本補寫規範。 |

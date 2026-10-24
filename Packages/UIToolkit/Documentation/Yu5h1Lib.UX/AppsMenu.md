@@ -2,7 +2,78 @@
 
 > Task ID: appsmenu-library-adoption
 
-Yu5h1Lib.UIToolkit 依 Yu5h1Lib.UX 的 AppsMenu 規範實作原生 AppsMenu，並以 Motion 的數值服務處理甩飛與吸塵器。本文件記錄 Unity 端的實作對應、採用的規範版本與驗收結果；體驗要求以 UX 規範為準，不在此重寫。Web 是另一個實作端，它的結果不代表 Unity。
+本文件分別記錄已完成的 AppsMenu sample 來源對照，以及依 Yu5h1Lib.UX 建立共用模組的採用紀錄。體驗要求以 UX 規範為準；sample 可驗收不代表後來新增的全部 UX 要求已實作。Web 是另一個實作端，它的結果不代表 Unity。
+
+## 2026-10-24：完成的 sample 與共用規範差異
+
+本次使用者指定 `Samples~/AppsMenu` 已完成、可以驗收；本次不重做 sample，也不以尚未建立 Core 模型否定 sample 的完成。以下是依 referenced-module-acceptance 的來源盤點，尚非新的執行驗收輪。下方〈身分〉至〈結論與下一步〉保留 2026-10-07 的 UX 1.0.1 採用規劃及當時證據，不能作為現行 sample 是否可驗收的判斷。
+
+### 來源與檢查邊界
+
+- 實作：UnityExtension `5ca4152c901690db5bca93414940b54b4aae6dba` 的 [AppsMenuDemo.cs](../../Samples~/AppsMenu/AppsMenuDemo.cs)，SHA-256 `ffa41b40b5ce9eaf8bbac8ff98f6a5f6c8d845cd576196d3a8c49d26f7d13728`；[AppsMenuDemo.uss](../../Samples~/AppsMenu/Resources/AppsMenuDemo.uss)，`c2043325e97f15930c5117c156517f1a75c5abf49ccf208f7d6b2db260c35d18`。
+- 對照來源：UX `9d54a67e886f1e8f75331b678927efa0ec690bcf`，[AppsMenu](../../../../../../UX/Documentation/ModuleSpec/AppsMenu.md) 5.1.3；規格 SHA-256 `b9cb28d5670b5e1fa8224f7bc225a84c585e504fb01a71bf2d0d76e66dff6666`。這是差異盤點基準，未替換舊輪釘選、未匯入 Unity 快照。
+- 設計 6.0.0：`f4548c5749450092f7987cc9aaa3fb9897492d4228fd59758304bfbebd2f0a7a`；案例 1.0.0（11 項）：`4075be6d7f6d86a479a0bf5299b9573d4c09797976af5e798c9c17103edf84a1`；設定宣告 1.4.0：`1731f32d4387abde03785cd7b32f16b210aa4f4c370dab116f3780016dab96b7`。均以 UX 原檔對照。
+- 公開來源入口：[AppsMenuDemo.unity](../../Samples~/AppsMenu/AppsMenuDemo.unity)／`AppsMenuDemo` 元件，執行期自行建立 UI。已讀取 Yu5h1LibTest 的 6000.6.0f1 版本與 package manifest；已確認 `Assets/Samples/Yu5h1Lib.UIToolkit/0.1.0/Apps Menu` junction 指回本 sample。沒有修改 host、場景或連結。
+- 最初盤點只有原碼、文件及路徑核對，沒有執行 Unity／11 項模型案例／P01～P12。工具清單沒有 unityMCP，未啟動 Editor 或接管使用者畫面；實際互動、數值與外觀結果均不能由靜態閱讀代替。驗收進度與阻塞由 [AppsMenu 卡片](http://127.0.0.1:8001/?scope=unity-extension&pin=appsmenu-library-adoption) 擁有。
+- DX 1.0.0 本次只用來檢查後續採用的入口需求；不追溯加進舊輪，也未開新 DX 輪。原 sample 的最小組裝已有場景與元件；可重用產品資料／動作政策入口屬共用模組的交付工作。
+
+來源基準只能證明規格是否符合它所抽取的來源，不證明其他平台已採用，也不證明其他消費端需要全部行為。本次來源未執行，不能宣稱來源基準通過；使用者所說的「完成、可驗收」也不是人工驗收結果。
+
+UX 本次補正已交付：使用者授權保留 ChatPanel 並合入 AppsMenu 的 manifest 版本與規格雜湊。來源 UX `4dcc807dff138d89b12f6980d9e840bec9c8bf53`，AppsMenu 5.1.4（SHA-256 `b5a10b67af7c96189f4d03b5a61daab8c1d027d93344fc84794dbde269021522`）只澄清設定／佈局分開保存及入場 size 為縮放後尺寸，設計與案例雜湊不變。以上 5.1.3 仍是本次盤點起始基準；兩處文字核對見 Requirements.UX 的 UNITYEXTENSION-UX-2，沒有把新版本寫成平台驗收通過。
+
+### 規範交付驗收與編譯預檢（2026-10-24）
+
+規範交付驗收：UX `4dcc807` 的 manifest 相對父 commit 只修改 AppsMenu 版本與規格雜湊。獨立審查以 Git blob 核對 AppsMenu 四份交付檔均符合 manifest，設計、案例與設定資料沒有變更；ChatPanel 三份交付檔、版本及 manifest 映射均與父 commit 相同。UNITYEXTENSION-UX-2 的規格澄清條件成立；這不代表平台行為通過。
+
+組裝入口預檢命令（UnityExtension 根目錄）：`python Tools/agent/unity_compile.py Packages/UIToolkit/Samples~/AppsMenu/Yu5h1Lib.UIToolkit.Samples.AppsMenu.asmdef --reference-project W:/UnityProject/Yu5h1LibTest --reference-project W:/UnityProject/BonghuoVR`。對象仍為上列 `5ca4152` 已提交原碼，sample SHA-256 未變；執行前後未修改程式、場景、host manifest 或 junction。
+
+- 首輪沙箱預檢回傳 `dependency Yu5h1Lib.Common failed`，工具未輸出底層 dotnet 診斷；另行讀取 `dotnet --info` 顯示 Service Control Manager access denied。未把這次環境失敗判為 sample 程式缺陷。
+- 經核准在沙箱外以同命令重跑：6000.3.9f1 與 6000.6.0f1 均 `ok, 0 error(s), 0 warning(s)`，exit code 0。6000.3 的 sample 與 UIToolkit 沒有對應 generated csproj，使用通用參考；6000.6 取自 Yu5h1LibTest generated csproj。這是無須啟動 Editor 的定向編譯，不是乾淨 host 上的執行驗收。
+- 本次沒有執行 APPS 中性模型案例、平台輸入、layout 量測或外觀確認；亦未建立替代模型來假裝測到 sample。公開語意 adapter 與非干擾的執行入口仍需準備。正式平台輪須依乾淨 checkout／host 重指規則另行執行；編譯不計為任何完整情境通過。
+
+### 哪些是 UX 缺口，哪些是 Unity 未採用
+
+| 元件／能力 | UX 規範缺口 | Unity UI Toolkit 的實際情況與本 sample 關係 |
+|---|---|---|
+| 格線與停靠 [GridDock](../../../../../../UX/Documentation/ModuleSpec/Collections/GridDock.md) | 0.1.0-draft，尚無已確認目標與發布案例 | 有 `GroupDragLayout`，不是完全沒有格線；sample 使用 free 散佈。通用 GridDock 尚無採用紀錄。四邊停靠、其他 app 釘選屬 AppsMenu 下一目標，不阻擋現有 sample；目標 1 的格線仍依 AppsMenu 自有條文 |
+| 集合換位 [CollectionSwitchPosition](../../../../../../UX/Documentation/ModuleSpec/Collections/CollectionSwitchPosition.md) | 0.1.0-draft；把手與長按比較原型尚未收斂成正式契約 | sample 已有 `SlotUnder`、`Reorder`、`MarkSlot` 的面板換位；沒有正式共用集合採用紀錄。不能把已有面板排序說成未實作，也不能要求先完成 swap／跨集合釘選才驗 sample |
+| 捲動視窗 [ScrollView](../../../../../../UX/Documentation/ModuleSpec/Collections/ScrollView.md) | 0.1.0-draft，溢位、拖出與排序的手勢仲裁尚待確認 | sample 的面板是換行容器，未接原生 ScrollView；現行 AppsMenu 目標 1 未要求溢位捲動，不是本輪硬前置 |
+| [Toggle](../../../../../../UX/Documentation/ModuleSpec/Controls/Toggle.md) 名稱與狀態 | 1.0.2 已發布；目標 1 明列 Unity 為範圍外，尚無 Unity 採用目標 | 尚無本套件的 Toggle 採用紀錄；sample 沒有排列切換 app。這是共用能力採用與目標範圍問題，不是 Toggle 沒有規則 |
+| [Icon](../../../../../../UX/Documentation/ModuleSpec/Foundation/Icon.md) 圖示來源與著色 | 1.0.1 已發布；三種來源的目標 1 只含 Web，Unity 烘焙／VectorImage 尚未納入目標 | [Button 紀錄](Button.md) 仍列 Icon blocked；sample 用數字 Label，沒有採用三來源圖示契約。不能由「圖示」一詞推定數字 demo 必須新增 SVG 管線 |
+| [Input](Input.md) | 基礎規則已發布 3.0.2；不能稱整份 UX 缺失 | 已有 `HoldManipulator` 採用 3.0.1 的紀錄。sample 使用舊 `Gesture.LongPress`，未整合該操作者；既有 Input 輪未涵蓋全部速度取樣與拖曳交易，不能外推為全通過 |
+| [Button](Button.md)／[VisualFoundation](VisualFoundation.md) | 已有正式規則；舊的狀態配色缺口 UNITYEXTENSION-UX-1 已結案 | 原生 Button＋USS、色票與狀態已有 Unity 證據；sample 使用自有 VisualElement 與固定色值，尚未接主題。不是缺少整個 Button／色票元件；AppsMenu 圖示尺寸也不能改套 Button 尺寸來驗 |
+| [Configuration](../../../../../../UX/Documentation/ModuleSpec/Foundation/Configuration.md) | 1.4.2 已發布，等級 1 在 Common 已有證據；AppsMenu 自己仍明列草稿／保存／套用流程，不能逕用等級 1 消除此要求 | sample 只有 Inspector 設定，未接設定保存。兩處歧義已由 UX 5.1.4 交付澄清，見 [Requirements.UX](../../../../Documentation/Requirements.UX.md#unityextension-ux-2--appsmenu-設定檢查與佈局保存說法矛盾及入場尺寸未明) 的規格矛盾 |
+| 入場與吸收包絡 | Motion [Interpolation](../../../../../../Motion/Documentation/ModuleSpec/Interpolation.md) 1.1.0 已發布 ENT-01～07／ENV-01；剩 UX 核對與改引用，不再是等發布 | sample 已用 `Transition.Entrance`／`Opening`；缺的是目前 AppsMenu 參數、吸收包絡及組合驗收，不是 Unity 沒有入場元件 |
+| 搖晃／彈簧、sorted Scatter | Motion 的 UX-MOTION-4／6 仍未交付正式對應；AppsMenu 已提供暫定公式 | Unity 有 `Reaction.Shake`／`Spring` 與 `GroupDragLayout`，可驗來源；不能說 Unity 尚無這些動態。跨平台共用入口與數值交付另依 [Requirements.DotNet](../../../../Documentation/Requirements.DotNet.md)／[Requirements.Motion](../../../../Documentation/Requirements.Motion.md) |
+
+### 現行行為到 sample 的映射
+
+下表為 2026-10-24 靜態對照，描述「已存在的來源能力」及「對 5.1.3 的差異」，不記任何執行 pass。檢查處方以 [AppsMenu 的行為／平台檢查表](../../../../../../UX/Documentation/ModuleSpec/AppsMenu.md#驗收案例與覆蓋) 為準。
+
+| 行為（檢查） | sample 入口與差異 |
+|---|---|
+| 資料與隔離 APPS-DATA（P01） | `BuildApps` 有項目及前 5 項桌面預設；沒有公開 configure、快照與政策驗證入口 |
+| 動作 APPS-ACTION（P02） | `BuildIcon` 長按切 mark，`OnIconUp` 計 click；產品啟動／可覆寫 action 通知尚未交付 |
+| 通知重入 APPS-REENTRY（P09） | 沒有對外通知／命令模型，不具中性重入檢查入口 |
+| 拖曳交易 APPS-DRAG（P01／P03） | `OnIconMove`、背景 `DragGroup` 已存在；沒有符合契約的完整 rollback 交易 |
+| 放置 APPS-DROP（P03） | `DropTarget`、`Reorder`、拉回桌面已存在；外側拒絕／自訂政策與原子提交需另驗／接入 |
+| 實體輸入 APPS-INPUT（P02／P03） | 舊 LongPress，app-0 容許量為 0，圖示移動即拖；不符合共用門檻與拖後 click 抑制規則 |
+| 面板 APPS-PANEL（P03） | `OpenPanel`／`ClosePanel` 可用；沒有完整鍵盤命令、可讀名稱與焦點回歸處理 |
+| 吸收 APPS-VACUUM（P04） | `OnAppsButtonMove`／`TickVacuum` 已存在；恰 8px 即成立，捕獲距離未取 min(radius,size×.6) |
+| 包絡 APPS-RAMP（P04） | 固定半徑 170／吸力 5，尚無隨時間增長包絡 |
+| 釋放 APPS-RELEASE（P05） | `EndVacuum` 以桌面全空才釋放；與規格「本次零捕獲才釋放」不同，是已完成 sample 與後定體驗的差異 |
+| 速度 APPS-VELOCITY（P05） | `Sample`／`Launch` 有平滑速度與甩飛；沒有 100ms 首末視窗及 releaseForce／releaseFan 分支 |
+| 甩飛接住 APPS-CATCH（P05） | `TickFlight`／`catchArmed` 已有離開後再接住與收納，不應再列成「規格沒有的行為」 |
+| 收納搖晃 APPS-SHAKE（P03／P05） | `Stash` 已搖 Apps 按鈕；固定播放，尚未接受擊方向／速度／reducedMotion 政策 |
+| 生命週期 APPS-LIFECYCLE（P06） | `OnDisable`／capture lost 有清理；尚無完整取消還原與失焦／resize／第二指標組合處理 |
+| 設定 APPS-CONFIG（P07） | Inspector 欄位可調；沒有宣告匯入、保存、草稿及失敗重試入口 |
+| 入場 APPS-OPENING（P08） | `StartOpening` 已有排程與跳過；總長仍 1.4s，現行 UX 為 .666s；曲線固定 linear |
+| 排列 APPS-ARRANGE（P10） | `GroupDragLayout` 有基礎能力；sample 未提供排／不排切換及現行釘選列定位 |
+| 騰空 APPS-REFLOW（P10） | `Apply` 有位置彈簧、面板有 slot 提示；沒有完整 sorted 候選格與面板項目彈簧騰空 |
+| 佈局保存 APPS-LAYOUT（P11） | 沒有佈局匯出／匯入與持久化入口 |
+| 排列切換 app APPS-FUNCTION（P12） | 沒有 arrange-toggle 資料或功能 app 入口 |
+
+這些差異不能用修改已完成 sample、降低 UX 要求或勾選未跑檢查來消除。來源互動驗收可先獨立進行；共用模組實作仍依原有 Core 架構決策另行採用。下一次執行驗收須用固定 commit 的乾淨 checkout、真實公開入口與所需 host，不能把此表算作 7 個情境已通過。
 
 ```text
 UnityExtension
