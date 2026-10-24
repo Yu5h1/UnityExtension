@@ -1,0 +1,25 @@
+# 接入 Core Tween 至 Unity Checklist
+
+Current round: `../../Motion/Documentation/ModuleSpec/Tween.md#goal`.
+
+DotNet 的程式與驗收通過不代表 Unity 載入了同一版本。本輪把已驗收的 Core Tween 交付接入 Unity，讓 DOTween runner 能使用同一份契約。來源在 DotNet 與 Unity/Core；本 repo 的 Runtime／Editor 備份不是來源。若需修改 Unity/Core 的專案檔，先依其路由處理該 repository 的授權與提交。版本與歷史接入證據寫入 Packages/Plugins/DOTween/Documentation/Motion/Tween.md，逐項狀態由本清單擁有。
+
+- [ ] **1. 接入並驗證 Core Tween**
+  Outcome: Unity 實際載入可追溯到 DotNet 驗收提交的 Tween 契約。
+  Checks:
+    - [ ] **來源與 DLL 交付**
+      - Action: 依 DotNet 的 Documentation/Motion/Tween.md 與來源清單，核對 Unity/Core/Runtime/Yu5h1Lib.Runtime.csproj 的 linked sources；依既有建置流程交付 Packages/Core 的 DLL，記錄來源提交、建置參數與產物雜湊。
+      - Expect: 新增 Tween 來源確實編入；Unity 使用的產物與來源相符，沒有讀取備份或沿用不含 Tween 的舊 DLL。
+    - [ ] **Unity 公開入口檢查**
+      - Action: 在依 Unity 操作規範準備的測試宿主，記錄解析的套件路徑與 assembly；透過 Core 公開入口建立純量 handle、Play、顯式推進、Stop，保留編譯與執行輸出。
+      - Expect: 實際載入的契約可建立與操作，未重定義 Core 型別；本檢查只證明接入，不代替 DOTween 的完整共享案例重播。
+
+- [ ] **2. 獨立驗收**
+  Outcome: 獨立驗收者確認 Unity 接入的是正確 Core 交付。
+  Checks:
+    - [ ] **驗收條件未被改動** `[acceptance]`
+      - Action: 比對本檔建立提交或最新標有「條件修訂」的提交與目前 git diff，核對所有 acceptance 條件。
+      - Expect: 驗收條件未被執行者修改以配合實作結果。
+    - [ ] **實際載入與來源可追溯** `[acceptance]`
+      - Action: 依 ../../Motion/Documentation/ModuleSpec/Tween.md §Goal、§Contract 與 Documentation/Requirements.DotNet.md 的 UNITYEXTENSION-DOTNET-1，核對來源、建置產物及宿主執行證據。
+      - Expect: Unity 透過 DotNet 共用契約實際操作純量 handle；來源提交、DLL 與宿主一致，沒有以 DotNet 測試結果推定 Unity 接入成功。

@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-24T04:17:06.786997+00:00",
+  "updated_at": "2026-10-24T05:26:23.904748+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -411,12 +411,12 @@
       "id": "motion-system",
       "title": "Motion 系統重構",
       "status": "planned",
-      "summary": "Motion 已發布 Tween 1.0.0；Core 框架由 [DotNet](/?scope=dotnet&pin=core-motion-contracts) 擁有。本卡接入 Core 並實作 DOTween runner，重播目標 1；舊規範收斂與十一個組件遷移分開追蹤。",
+      "summary": "Tween 目標 1：接入 [DotNet Core 交付](/?scope=dotnet&pin=core-motion-contracts)，驗證 Unity 實際載入後實作 DOTween runner 並重播共享案例，供 [Motion 核對](/?scope=motion&pin=motion-tween-shell)。既有組件遷移另列；舊計畫已收斂為 Unity 接入與遷移責任。",
       "pending_items": [
         {
           "id": "item-motion-system-todo-1",
-          "title": "確認 Core Tween 交付在 Unity 的來源／DLL 接入與契約相容性",
-          "priority": 4,
+          "title": "接入 Core Tween：建置並驗證 Unity 載入的來源、DLL 與公開入口，供本卡 DOTween runner 使用",
+          "priority": 0,
           "status": "planned",
           "waits_for": [
             {
@@ -432,22 +432,27 @@
               "at": "2026-10-23T14:26:34.976409+00:00",
               "session": "Tween 跨專案工作安排",
               "session_id": "f62c91dd-fddb-4a19-8799-5bb541945dfc"
-            }
-          ]
-        },
-        {
-          "id": "item-motion-system-todo-2",
-          "title": "依已發布的 Tween 規格收斂 Motion_System_Refactor.md，刪除被取代的規範內容（§0–§7、§10–§11），保留 §8–§9",
-          "priority": 4,
-          "activity": [
+            },
             {
               "event": "updated",
               "actor": "codex",
-              "at": "2026-10-23T14:26:34.976409+00:00",
-              "session": "Tween 跨專案工作安排",
+              "session": "Tween 目標與依賴對齊",
+              "session_id": "f62c91dd-fddb-4a19-8799-5bb541945dfc",
+              "at": "2026-10-24T05:25:47.610345+00:00"
+            },
+            {
+              "event": "updated",
+              "actor": "codex",
+              "at": "2026-10-24T05:26:23.904748+00:00",
+              "session": "Tween 目標與依賴對齊",
               "session_id": "f62c91dd-fddb-4a19-8799-5bb541945dfc"
             }
-          ]
+          ],
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "item-motion-system-todo-1"
+          }
         },
         {
           "id": "item-motion-system-todo-3",
@@ -472,15 +477,17 @@
               "at": "2026-10-23T14:26:34.976409+00:00",
               "session": "Tween 跨專案工作安排",
               "session_id": "f62c91dd-fddb-4a19-8799-5bb541945dfc"
+            },
+            {
+              "event": "updated",
+              "actor": "codex",
+              "at": "2026-10-24T05:26:23.904748+00:00",
+              "session": "Tween 目標與依賴對齊",
+              "session_id": "f62c91dd-fddb-4a19-8799-5bb541945dfc"
             }
           ],
           "status": "planned",
           "waits_for": [
-            {
-              "scope_id": "dotnet",
-              "task_id": "core-motion-contracts",
-              "item_id": "core-tween-replay"
-            },
             {
               "scope_id": "unity-extension",
               "task_id": "motion-system",
@@ -510,7 +517,30 @@
           ]
         }
       ],
-      "completed_items": []
+      "completed_items": [
+        {
+          "id": "item-motion-system-todo-2",
+          "title": "收斂 Motion_System_Refactor：移除已取代的殼規範，保留組件遷移素材與 Core 接入／DOTween 驗收路由",
+          "priority": 4,
+          "activity": [
+            {
+              "event": "updated",
+              "actor": "codex",
+              "at": "2026-10-23T14:26:34.976409+00:00",
+              "session": "Tween 跨專案工作安排",
+              "session_id": "f62c91dd-fddb-4a19-8799-5bb541945dfc"
+            },
+            {
+              "event": "done",
+              "actor": "codex",
+              "at": "2026-10-24T05:26:23.904748+00:00",
+              "session": "Tween 目標與依賴對齊",
+              "session_id": "f62c91dd-fddb-4a19-8799-5bb541945dfc"
+            }
+          ],
+          "status": "done"
+        }
+      ]
     },
     {
       "id": "atomic-components",
