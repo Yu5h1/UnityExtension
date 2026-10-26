@@ -15,7 +15,7 @@ namespace Yu5h1Lib.UIToolkit.Tests
     /// passes in CI and fails on a desk is worse than no test.
     /// </para>
     /// </summary>
-    public class WorldPanelTests
+    public class UIDocumentWorldPanelTests
     {
         private const float PanelWidth = 800, PanelHeight = 600;
 
@@ -27,14 +27,14 @@ namespace Yu5h1Lib.UIToolkit.Tests
         [SetUp]
         public void SetUp()
         {
-            camera = new GameObject("WorldPanelTests.Camera").AddComponent<Camera>();
+            camera = new GameObject("UIDocumentWorldPanelTests.Camera").AddComponent<Camera>();
             camera.transform.position = new Vector3(0, 0, -10);
             camera.orthographic = true;
             camera.orthographicSize = 5;
             camera.aspect = PanelWidth / PanelHeight;
 
             settings = ScriptableObject.CreateInstance<PanelSettings>();
-            host = new GameObject("WorldPanelTests.Document");
+            host = new GameObject("UIDocumentWorldPanelTests.Document");
             var document = host.AddComponent<UIDocument>();
             document.panelSettings = settings;
 
@@ -94,7 +94,7 @@ namespace Yu5h1Lib.UIToolkit.Tests
         public IEnumerator PlacingAnObjectOnTheAnchorGivesItsWorldRect()
         {
             yield return Settle();
-            Assert.IsTrue(World.TryPlace(viewport, anchor, camera, distance: 10, out var position, out var size));
+            Assert.IsTrue(UIDocumentWorld.TryPlace(viewport, anchor, camera, distance: 10, out var position, out var size));
 
             // The anchor is an eighth of the panel wide; the view is 10 units tall, so it is 10/6 units wide.
             Assert.AreEqual(PanelHeight / 100f, 6f, 1e-4f, "guard: the fixture assumes a 6:1 height ratio");
@@ -113,8 +113,8 @@ namespace Yu5h1Lib.UIToolkit.Tests
             viewport.Add(lower);
             yield return Settle();
 
-            Assert.IsTrue(World.TryPlace(viewport, anchor, camera, 10, out var upper, out _));
-            Assert.IsTrue(World.TryPlace(viewport, lower, camera, 10, out var below, out _));
+            Assert.IsTrue(UIDocumentWorld.TryPlace(viewport, anchor, camera, 10, out var upper, out _));
+            Assert.IsTrue(UIDocumentWorld.TryPlace(viewport, lower, camera, 10, out var below, out _));
             Assert.Greater(upper.y, below.y, "panel space is y-down, world space is y-up");
         }
 
@@ -122,18 +122,18 @@ namespace Yu5h1Lib.UIToolkit.Tests
         public IEnumerator AProjectedPointRoundTripsBackToTheSameElement()
         {
             yield return Settle();
-            Assert.IsTrue(World.TryPlace(viewport, anchor, camera, 10, out var position, out _));
-            Assert.IsTrue(World.IsVisible(viewport, viewport, camera, position, _ => false));
+            Assert.IsTrue(UIDocumentWorld.TryPlace(viewport, anchor, camera, 10, out var position, out _));
+            Assert.IsTrue(UIDocumentWorld.IsVisible(viewport, viewport, camera, position, _ => false));
         }
 
         [UnityTest]
         public IEnumerator ChromeOverTheObjectHidesIt()
         {
             yield return Settle();
-            Assert.IsTrue(World.TryPlace(viewport, anchor, camera, 10, out var position, out _));
+            Assert.IsTrue(UIDocumentWorld.TryPlace(viewport, anchor, camera, 10, out var position, out _));
 
             // The anchor's centre is at y=150, inside the chrome band that covers the top 260px.
-            Assert.IsFalse(World.IsVisible(viewport, viewport, camera, position, IsChrome),
+            Assert.IsFalse(UIDocumentWorld.IsVisible(viewport, viewport, camera, position, IsChrome),
                 "the caller's own rule must be what decides this");
         }
 
@@ -144,33 +144,33 @@ namespace Yu5h1Lib.UIToolkit.Tests
             viewport.Add(lower);
             yield return Settle();
 
-            Assert.IsTrue(World.TryPlace(viewport, lower, camera, 10, out var position, out _));
-            Assert.IsTrue(World.IsVisible(viewport, viewport, camera, position, IsChrome));
+            Assert.IsTrue(UIDocumentWorld.TryPlace(viewport, lower, camera, 10, out var position, out _));
+            Assert.IsTrue(UIDocumentWorld.IsVisible(viewport, viewport, camera, position, IsChrome));
         }
 
         [UnityTest]
         public IEnumerator TheObstacleRuleBelongsEntirelyToTheCaller()
         {
             yield return Settle();
-            Assert.IsTrue(World.TryPlace(viewport, anchor, camera, 10, out var position, out _));
+            Assert.IsTrue(UIDocumentWorld.TryPlace(viewport, anchor, camera, 10, out var position, out _));
 
-            Assert.IsFalse(World.IsVisible(viewport, viewport, camera, position, _ => true), "everything blocks");
-            Assert.IsTrue(World.IsVisible(viewport, viewport, camera, position, _ => false), "nothing blocks");
+            Assert.IsFalse(UIDocumentWorld.IsVisible(viewport, viewport, camera, position, _ => true), "everything blocks");
+            Assert.IsTrue(UIDocumentWorld.IsVisible(viewport, viewport, camera, position, _ => false), "nothing blocks");
         }
 
         [UnityTest]
         public IEnumerator IsClearAnswersForAPanelPointWithoutProjecting()
         {
             yield return Settle();
-            Assert.IsFalse(World.IsClear(viewport, new Vector2(400, 150), IsChrome), "inside the chrome band");
-            Assert.IsTrue(World.IsClear(viewport, new Vector2(400, 450), IsChrome), "below it");
+            Assert.IsFalse(UIDocumentWorld.IsClear(viewport, new Vector2(400, 150), IsChrome), "inside the chrome band");
+            Assert.IsTrue(UIDocumentWorld.IsClear(viewport, new Vector2(400, 450), IsChrome), "below it");
         }
 
         [UnityTest]
         public IEnumerator ProjectingAPanelPointLandsOnTheCameraAxisAtTheCentre()
         {
             yield return Settle();
-            Assert.IsTrue(World.TryProject(viewport, camera, new Vector2(PanelWidth / 2, PanelHeight / 2),
+            Assert.IsTrue(UIDocumentWorld.TryProject(viewport, camera, new Vector2(PanelWidth / 2, PanelHeight / 2),
                 distance: 10, out var world));
             Assert.AreEqual(0f, world.x, 1e-3f);
             Assert.AreEqual(0f, world.y, 1e-3f);

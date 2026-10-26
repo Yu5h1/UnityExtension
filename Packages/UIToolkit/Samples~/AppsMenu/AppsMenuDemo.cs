@@ -20,7 +20,7 @@ namespace Yu5h1LibTest
     /// <para>
     /// A 3D scene joins in the same way and not a second way: a plain <see cref="VisualElement"/> stands in
     /// for the object, takes the pointer events, and the object is projected onto its rectangle with
-    /// <c>World.TryPlace</c>. Interaction is always elements and pointer events.
+    /// <c>UIDocumentWorld.TryPlace</c>. Interaction is always elements and pointer events.
     /// </para>
     /// <para>
     /// This is the hands-on rig for what no unit test can judge - group drag, inertia, the throw and its

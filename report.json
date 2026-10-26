@@ -277,7 +277,7 @@
         },
         {
           "id": "item-uitoolkit-decoupling-todo-1",
-          "title": "HealthAI 第二階段接入：聊天面板走 HealthAI 任務 healthai-chat-module-migration；長按、BottomSheet、World 等其餘能力的接入尚未排定，由 HealthAI 決定",
+          "title": "HealthAI 第二階段接入：聊天面板走 HealthAI 任務 healthai-chat-module-migration；長按、BottomSheet、UIDocumentWorld 等其餘能力的接入尚未排定，由 HealthAI 決定",
           "priority": 4
         }
       ]

@@ -10,7 +10,7 @@ namespace Yu5h1Lib.UIToolkit.Tests
     /// <c>worldBound</c> worth reading and no panel to hit-test. So these cover the guards and whatever a
     /// document can prove on its own; placement and occlusion against a real panel are verified interactively.
     /// </summary>
-    public class WorldTests
+    public class UIDocumentWorldTests
     {
         private Camera camera;
         private GameObject host;
@@ -20,14 +20,14 @@ namespace Yu5h1Lib.UIToolkit.Tests
         [SetUp]
         public void SetUp()
         {
-            camera = new GameObject("WorldTests.Camera").AddComponent<Camera>();
+            camera = new GameObject("UIDocumentWorldTests.Camera").AddComponent<Camera>();
             camera.transform.position = new Vector3(0, 0, -10);
             camera.orthographic = true;
             camera.orthographicSize = 5;
             camera.aspect = 16f / 9f;
 
             settings = ScriptableObject.CreateInstance<PanelSettings>();
-            host = new GameObject("WorldTests.Document");
+            host = new GameObject("UIDocumentWorldTests.Document");
             document = host.AddComponent<UIDocument>();
             document.panelSettings = settings;
         }
@@ -43,7 +43,7 @@ namespace Yu5h1Lib.UIToolkit.Tests
         [Test]
         public void FillSizesTheDocumentToTheCameraView()
         {
-            Assert.IsTrue(World.Fill(document, camera, distance: 10));
+            Assert.IsTrue(UIDocumentWorld.Fill(document, camera, distance: 10));
 
             // Orthographic size 5 means a 10-unit tall view; at 100 px per unit that is 1000 px.
             var root = document.rootVisualElement;
@@ -54,7 +54,7 @@ namespace Yu5h1Lib.UIToolkit.Tests
         [Test]
         public void FillHonoursThePanelScale()
         {
-            Assert.IsTrue(World.Fill(document, camera, distance: 10, pixelsPerUnit: 50));
+            Assert.IsTrue(UIDocumentWorld.Fill(document, camera, distance: 10, pixelsPerUnit: 50));
             Assert.AreEqual(500f, document.rootVisualElement.style.height.value.value, 1e-2f);
         }
 
@@ -64,9 +64,9 @@ namespace Yu5h1Lib.UIToolkit.Tests
             camera.orthographic = false;
             camera.fieldOfView = 60;
 
-            Assert.IsTrue(World.Fill(document, camera, distance: 5));
+            Assert.IsTrue(UIDocumentWorld.Fill(document, camera, distance: 5));
             float near = document.rootVisualElement.style.height.value.value;
-            Assert.IsTrue(World.Fill(document, camera, distance: 20));
+            Assert.IsTrue(UIDocumentWorld.Fill(document, camera, distance: 20));
             float far = document.rootVisualElement.style.height.value.value;
 
             Assert.Greater(far, near, "a document further away must be bigger to fill the same view");
@@ -75,20 +75,20 @@ namespace Yu5h1Lib.UIToolkit.Tests
         [Test]
         public void FillRejectsDegenerateInput()
         {
-            Assert.IsFalse(World.Fill(null, camera, 10));
-            Assert.IsFalse(World.Fill(document, null, 10));
-            Assert.IsFalse(World.Fill(document, camera, float.NaN));
-            Assert.IsFalse(World.Fill(document, camera, 10, pixelsPerUnit: float.PositiveInfinity));
+            Assert.IsFalse(UIDocumentWorld.Fill(null, camera, 10));
+            Assert.IsFalse(UIDocumentWorld.Fill(document, null, 10));
+            Assert.IsFalse(UIDocumentWorld.Fill(document, camera, float.NaN));
+            Assert.IsFalse(UIDocumentWorld.Fill(document, camera, 10, pixelsPerUnit: float.PositiveInfinity));
 
             camera.aspect = 0;
-            Assert.IsFalse(World.Fill(document, camera, 10));
+            Assert.IsFalse(UIDocumentWorld.Fill(document, camera, 10));
         }
 
         [Test]
         public void ZeroHeightCameraCannotFill()
         {
             camera.orthographicSize = 0;
-            Assert.IsFalse(World.Fill(document, camera, 10));
+            Assert.IsFalse(UIDocumentWorld.Fill(document, camera, 10));
         }
 
         [Test]
@@ -96,9 +96,9 @@ namespace Yu5h1Lib.UIToolkit.Tests
         {
             var viewport = new VisualElement();
             var anchor = new VisualElement();
-            Assert.IsFalse(World.TryPlace(viewport, anchor, camera, 10, out _, out _));
-            Assert.IsFalse(World.TryProject(viewport, camera, Vector2.zero, 10, out _));
-            Assert.IsFalse(World.IsVisible(viewport, viewport, camera, Vector3.zero, _ => false));
+            Assert.IsFalse(UIDocumentWorld.TryPlace(viewport, anchor, camera, 10, out _, out _));
+            Assert.IsFalse(UIDocumentWorld.TryProject(viewport, camera, Vector2.zero, 10, out _));
+            Assert.IsFalse(UIDocumentWorld.IsVisible(viewport, viewport, camera, Vector3.zero, _ => false));
         }
 
         [Test]
@@ -106,17 +106,17 @@ namespace Yu5h1Lib.UIToolkit.Tests
         {
             Assert.DoesNotThrow(() =>
             {
-                Assert.IsFalse(World.TryPlace(null, null, camera, 10, out _, out _));
-                Assert.IsFalse(World.TryProject(null, camera, Vector2.zero, 10, out _));
-                Assert.IsFalse(World.IsVisible(null, null, camera, Vector3.zero, null));
-                Assert.IsFalse(World.IsClear(null, Vector2.zero, _ => true));
+                Assert.IsFalse(UIDocumentWorld.TryPlace(null, null, camera, 10, out _, out _));
+                Assert.IsFalse(UIDocumentWorld.TryProject(null, camera, Vector2.zero, 10, out _));
+                Assert.IsFalse(UIDocumentWorld.IsVisible(null, null, camera, Vector3.zero, null));
+                Assert.IsFalse(UIDocumentWorld.IsClear(null, Vector2.zero, _ => true));
             });
         }
 
         [Test]
         public void IsClearRejectsANonFinitePoint()
         {
-            Assert.IsFalse(World.IsClear(new VisualElement(), new Vector2(float.NaN, 0), _ => false));
+            Assert.IsFalse(UIDocumentWorld.IsClear(new VisualElement(), new Vector2(float.NaN, 0), _ => false));
         }
     }
 }

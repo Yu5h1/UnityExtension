@@ -24,7 +24,7 @@ namespace Yu5h1Lib.UIToolkit
     /// rectangle off an element, and asking a panel what covers a point.
     /// </para>
     /// </summary>
-    public static class World
+    public static class UIDocumentWorld
     {
         // Reused because PickAll fills a caller-owned list and this runs per frame per tracked object.
         private static readonly List<VisualElement> picked = new List<VisualElement>();
