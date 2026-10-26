@@ -4,11 +4,11 @@ This directory is the canonical AI-agent knowledge entry for UnityExtension and 
 
 `C:\Users\Yu5h1\Dev\VSProjects\Yu5h1Lib\Unity\UnityExtension\.agents`
 
-Scope: **everything under `Unity/UnityExtension/`, including every package**, whether or not that package keeps its own `handoff.md`.
+Scope: **all Unity development, packages, samples, and consumer projects using Yu5h1Lib Unity technologies** (including `Unity/**`, `UnityExtension/**`, and host/test projects), whether or not a package keeps its own `handoff.md`.
 
 ## House conventions
 
-Read before writing any Unity code in this tree. These two get written wrong most often, and each one costs a manual correction.
+Read before writing any Unity code in this tree or using Yu5h1Lib Unity technologies. These get written wrong most often, and each one costs a manual correction.
 
 - **Never write `[CreateAssetMenu]`.** Yu5h1Lib already handles ScriptableObject creation, driven by the field that references the object.
 - **Put `[Inline]` on every serialized ScriptableObject reference field.**
