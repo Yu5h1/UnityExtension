@@ -101,11 +101,11 @@ Pool 是跨平台的資源重用概念。Core 保留一致的借還契約；平�
 | 版本 | 檔案 | 年代 | 狀態 |
 |------|------|------|------|
 | V1 | `Yu5h1Lib/Unity/Core/Runtime/Unorganized/Singleton/Recycler.cs` | 2017 | 仍存在，包含 `Recyclable` / `RecyclableByEnumerator` / `RecyclableParticleSystems` / `RecyclableBySeconds` |
-| V2 | `Yu5h1Lib/Unity/CombatAesthetic/Runtime/Pattern/Pool/PooL.cs` | 2024 | **整檔註解掉** — V2 的廢棄前身 |
-| V2 | `Yu5h1Lib/Unity/CombatAesthetic/Runtime/Pattern/Pool/ComponentPooL.cs` | 2024 | 主實作 (`ComponentPool` + `Pool<T>`) |
-| V2 | `Yu5h1Lib/Unity/CombatAesthetic/Runtime/Pattern/Pool/PoolManager.cs` | 2024 | Singleton + 三套靜態字典 |
-| V2 | `Yu5h1Lib/Unity/CombatAesthetic/Runtime/Pattern/Pool/PoolElementHandler.cs` | 2024 | per-instance 回收用 MonoBehaviour |
-| V2 | `Yu5h1Lib/Unity/CombatAesthetic/Runtime/Pattern/Pool/MeshPool.cs` | 2024 | 包裝 Unity 內建 `ObjectPool<Mesh>` 的靜態類 |
+| V2 | `Yu5h1Lib/Unity/Combat-Aesthetics/Runtime/Pattern/Pool/PooL.cs` | 2024 | **整檔註解掉** — V2 的廢棄前身 |
+| V2 | `Yu5h1Lib/Unity/Combat-Aesthetics/Runtime/Pattern/Pool/ComponentPooL.cs` | 2024 | 主實作 (`ComponentPool` + `Pool<T>`) |
+| V2 | `Yu5h1Lib/Unity/Combat-Aesthetics/Runtime/Pattern/Pool/PoolManager.cs` | 2024 | Singleton + 三套靜態字典 |
+| V2 | `Yu5h1Lib/Unity/Combat-Aesthetics/Runtime/Pattern/Pool/PoolElementHandler.cs` | 2024 | per-instance 回收用 MonoBehaviour |
+| V2 | `Yu5h1Lib/Unity/Combat-Aesthetics/Runtime/Pattern/Pool/MeshPool.cs` | 2024 | 包裝 Unity 內建 `ObjectPool<Mesh>` 的靜態類 |
 | V3 | `Yu5h1Lib/Unity/UnityExtension/Packages/common/Runtime/Pool/SpawnPool.cs` | 2026 | 場景內 pre-place + 不增長 |
 | V3 | `Yu5h1Lib/Unity/UnityExtension/Packages/common/Runtime/Pool/SpawnPoolProxy.cs` | 2026 | UnityEvent 接口 |
 | V3 | `Yu5h1Lib/Unity/UnityExtension/Packages/common/Runtime/Pool/SpawnPoolRegistry.cs` | 2026 | 靜態 registry + Play Mode reset |

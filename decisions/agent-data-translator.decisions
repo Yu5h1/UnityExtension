@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1",
   "task_id": "agent-data-translator",
-  "updated_at": "2026-10-24T04:16:44.480479+00:00",
+  "updated_at": "2026-10-24T04:29:33.0153548\u002B00:00",
   "decisions": [
     {
       "id": "cli-tool-home",
@@ -10,73 +10,81 @@
       "answer": {
         "kind": "option",
         "option_id": "python-tools",
-        "confirmed_at": "2026-10-22T05:09:38.9880736+00:00"
+        "confirmed_at": "2026-10-22T05:09:38.9880736\u002B00:00"
       },
       "last_request": {
         "request_id": "e7a65340-58a0-4153-a95e-27a326d82f59",
         "fingerprint": "2001445b846faa996721283b0454ad272f8e59b2ab0caaccb4c36ddb998260db"
       },
-      "question": "第一層的命令列工具（GUID 索引、batchmode 執行器、不開 Unity 的編譯檢查）放在哪裡、用什麼語言寫？",
-      "context": "現況：這三個工具要在不開 Unity 的情況下執行（重點就是省下 batchmode 的 1–2 分鐘，並避開「專案已被編輯器開著」的限制），所以不能是 Unity 套件裡的 Editor 程式。UnityExtension 根目錄不是 Unity 專案，各專案只透過 manifest 的 file: 引用 Packages 底下的套件，所以根目錄的資料夾不會被任何專案匯入。本機已有 Python 3.10 與 dotnet SDK。2026-10-22 分析 ChatScene 時，agent 臨時用的就是 Python；Core 的 6000.3 編譯檢查與 UnityEvent 監控的編譯驗證用的是 dotnet。",
+      "question": "\u7B2C\u4E00\u5C64\u7684\u547D\u4EE4\u5217\u5DE5\u5177\uFF08GUID \u7D22\u5F15\u3001batchmode \u57F7\u884C\u5668\u3001\u4E0D\u958B Unity \u7684\u7DE8\u8B6F\u6AA2\u67E5\uFF09\u653E\u5728\u54EA\u88E1\u3001\u7528\u4EC0\u9EBC\u8A9E\u8A00\u5BEB\uFF1F",
+      "context": "\u73FE\u6CC1\uFF1A\u9019\u4E09\u500B\u5DE5\u5177\u8981\u5728\u4E0D\u958B Unity \u7684\u60C5\u6CC1\u4E0B\u57F7\u884C\uFF08\u91CD\u9EDE\u5C31\u662F\u7701\u4E0B batchmode \u7684 1\u20132 \u5206\u9418\uFF0C\u4E26\u907F\u958B\u300C\u5C08\u6848\u5DF2\u88AB\u7DE8\u8F2F\u5668\u958B\u8457\u300D\u7684\u9650\u5236\uFF09\uFF0C\u6240\u4EE5\u4E0D\u80FD\u662F Unity \u5957\u4EF6\u88E1\u7684 Editor \u7A0B\u5F0F\u3002UnityExtension \u6839\u76EE\u9304\u4E0D\u662F Unity \u5C08\u6848\uFF0C\u5404\u5C08\u6848\u53EA\u900F\u904E manifest \u7684 file: \u5F15\u7528 Packages \u5E95\u4E0B\u7684\u5957\u4EF6\uFF0C\u6240\u4EE5\u6839\u76EE\u9304\u7684\u8CC7\u6599\u593E\u4E0D\u6703\u88AB\u4EFB\u4F55\u5C08\u6848\u532F\u5165\u3002\u672C\u6A5F\u5DF2\u6709 Python 3.10 \u8207 dotnet SDK\u30022026-10-22 \u5206\u6790 ChatScene \u6642\uFF0Cagent \u81E8\u6642\u7528\u7684\u5C31\u662F Python\uFF1BCore \u7684 6000.3 \u7DE8\u8B6F\u6AA2\u67E5\u8207 UnityEvent \u76E3\u63A7\u7684\u7DE8\u8B6F\u9A57\u8B49\u7528\u7684\u662F dotnet\u3002",
       "options": [
         {
           "id": "python-tools",
-          "label": "UnityExtension 根目錄 Tools/agent/ 的 Python 腳本（只用標準函式庫）",
-          "description": "不用編譯、agent 改得動、沒有新依賴；編譯檢查內部再呼叫 dotnet。缺點：要有 Python。"
+          "label": "UnityExtension \u6839\u76EE\u9304 Tools/agent/ \u7684 Python \u8173\u672C\uFF08\u53EA\u7528\u6A19\u6E96\u51FD\u5F0F\u5EAB\uFF09",
+          "description": "\u4E0D\u7528\u7DE8\u8B6F\u3001agent \u6539\u5F97\u52D5\u3001\u6C92\u6709\u65B0\u4F9D\u8CF4\uFF1B\u7DE8\u8B6F\u6AA2\u67E5\u5167\u90E8\u518D\u547C\u53EB dotnet\u3002\u7F3A\u9EDE\uFF1A\u8981\u6709 Python\u3002"
         },
         {
           "id": "dotnet-tool",
-          "label": "Tools/agent/ 的 C# 主控台程式（dotnet）",
-          "description": "和 Unity 同語言、能用 System.Reflection.Metadata 這類 .NET 函式庫；每次修改要重新編譯，啟動較慢。"
+          "label": "Tools/agent/ \u7684 C# \u4E3B\u63A7\u53F0\u7A0B\u5F0F\uFF08dotnet\uFF09",
+          "description": "\u548C Unity \u540C\u8A9E\u8A00\u3001\u80FD\u7528 System.Reflection.Metadata \u9019\u985E .NET \u51FD\u5F0F\u5EAB\uFF1B\u6BCF\u6B21\u4FEE\u6539\u8981\u91CD\u65B0\u7DE8\u8B6F\uFF0C\u555F\u52D5\u8F03\u6162\u3002"
         },
         {
           "id": "powershell",
-          "label": "Tools/agent/ 的 PowerShell 腳本",
-          "description": "Windows 內建；複雜的解析與資料結構難寫，只能在 Windows 用。"
+          "label": "Tools/agent/ \u7684 PowerShell \u8173\u672C",
+          "description": "Windows \u5167\u5EFA\uFF1B\u8907\u96DC\u7684\u89E3\u6790\u8207\u8CC7\u6599\u7D50\u69CB\u96E3\u5BEB\uFF0C\u53EA\u80FD\u5728 Windows \u7528\u3002"
         },
         {
           "id": "unity-batchmode-only",
-          "label": "全部做成 Editor 方法，在 batchmode 跑",
-          "description": "不用另一種語言；但每次 1–2 分鐘、專案開著時不能跑，第一層的意義就沒了。"
+          "label": "\u5168\u90E8\u505A\u6210 Editor \u65B9\u6CD5\uFF0C\u5728 batchmode \u8DD1",
+          "description": "\u4E0D\u7528\u53E6\u4E00\u7A2E\u8A9E\u8A00\uFF1B\u4F46\u6BCF\u6B21 1\u20132 \u5206\u9418\u3001\u5C08\u6848\u958B\u8457\u6642\u4E0D\u80FD\u8DD1\uFF0C\u7B2C\u4E00\u5C64\u7684\u610F\u7FA9\u5C31\u6C92\u4E86\u3002"
         }
       ],
       "recommendation": {
         "option_id": "python-tools",
-        "reason": "第一層的重點是快與低成本：Python 不用編譯、沒有新依賴，agent 已經在用；需要 .NET 的部分（編譯檢查）由腳本去呼叫 dotnet 即可。"
+        "reason": "\u7B2C\u4E00\u5C64\u7684\u91CD\u9EDE\u662F\u5FEB\u8207\u4F4E\u6210\u672C\uFF1APython \u4E0D\u7528\u7DE8\u8B6F\u3001\u6C92\u6709\u65B0\u4F9D\u8CF4\uFF0Cagent \u5DF2\u7D93\u5728\u7528\uFF1B\u9700\u8981 .NET \u7684\u90E8\u5206\uFF08\u7DE8\u8B6F\u6AA2\u67E5\uFF09\u7531\u8173\u672C\u53BB\u547C\u53EB dotnet \u5373\u53EF\u3002"
       },
       "allow_other": true,
-      "source_ref": "../Documentation/資料驅動的Agent翻譯器.md#決策理由與替代方案"
+      "source_ref": "../Documentation/\u8CC7\u6599\u9A45\u52D5\u7684Agent\u7FFB\u8B6F\u5668.md#\u6C7A\u7B56\u7406\u7531\u8207\u66FF\u4EE3\u65B9\u6848"
     },
     {
       "id": "transient-object-reference",
       "version": 1,
-      "question": "翻譯器遇到不可持久定位的暫時物件引用，應如何表達？",
-      "context": "目前 Next 指向 BonghuoVR 中的 TextMeshPro 編輯器 Mesh：只有名稱，既不在場景階層也不是資產。既有五類引用約定不能持久定位它。這是輸出契約的未定邊界，不能將其誤寫為 null／missing 或假造可寫回的資產路徑。",
-      "source_ref": "../Documentation/資料驅動的Agent翻譯器.md#一般物件匯出",
+      "question": "\u7FFB\u8B6F\u5668\u9047\u5230\u4E0D\u53EF\u6301\u4E45\u5B9A\u4F4D\u7684\u66AB\u6642\u7269\u4EF6\u5F15\u7528\uFF0C\u61C9\u5982\u4F55\u8868\u9054\uFF1F",
+      "context": "\u76EE\u524D Next \u6307\u5411 BonghuoVR \u4E2D\u7684 TextMeshPro \u7DE8\u8F2F\u5668 Mesh\uFF1A\u53EA\u6709\u540D\u7A31\uFF0C\u65E2\u4E0D\u5728\u5834\u666F\u968E\u5C64\u4E5F\u4E0D\u662F\u8CC7\u7522\u3002\u65E2\u6709\u4E94\u985E\u5F15\u7528\u7D04\u5B9A\u4E0D\u80FD\u6301\u4E45\u5B9A\u4F4D\u5B83\u3002\u9019\u662F\u8F38\u51FA\u5951\u7D04\u7684\u672A\u5B9A\u908A\u754C\uFF0C\u4E0D\u80FD\u5C07\u5176\u8AA4\u5BEB\u70BA null\uFF0Fmissing \u6216\u5047\u9020\u53EF\u5BEB\u56DE\u7684\u8CC7\u7522\u8DEF\u5F91\u3002",
+      "source_ref": "../Documentation/\u8CC7\u6599\u9A45\u52D5\u7684Agent\u7FFB\u8B6F\u5668.md#\u4E00\u822C\u7269\u4EF6\u532F\u51FA",
       "options": [
         {
           "id": "explicit-transient",
-          "label": "明確標為暫時且不可寫回",
-          "description": "保留型別與名稱作診斷，與 null／missing 區分；寫回時拒絕以此建立持久引用。"
+          "label": "\u660E\u78BA\u6A19\u70BA\u66AB\u6642\u4E14\u4E0D\u53EF\u5BEB\u56DE",
+          "description": "\u4FDD\u7559\u578B\u5225\u8207\u540D\u7A31\u4F5C\u8A3A\u65B7\uFF0C\u8207 null\uFF0Fmissing \u5340\u5206\uFF1B\u5BEB\u56DE\u6642\u62D2\u7D55\u4EE5\u6B64\u5EFA\u7ACB\u6301\u4E45\u5F15\u7528\u3002"
         },
         {
           "id": "exclude-with-diagnostic",
-          "label": "從持久比對排除並另列診斷",
-          "description": "保留出處與排除原因；比對與寫回規則需同步說明排除邊界。"
+          "label": "\u5F9E\u6301\u4E45\u6BD4\u5C0D\u6392\u9664\u4E26\u53E6\u5217\u8A3A\u65B7",
+          "description": "\u4FDD\u7559\u51FA\u8655\u8207\u6392\u9664\u539F\u56E0\uFF1B\u6BD4\u5C0D\u8207\u5BEB\u56DE\u898F\u5247\u9700\u540C\u6B65\u8AAA\u660E\u6392\u9664\u908A\u754C\u3002"
         },
         {
           "id": "runtime-only-identity",
-          "label": "另加僅本次執行有效的識別",
-          "description": "可輔助執行中分析，但不保證重開後相同，也不可當持久引用。"
+          "label": "\u53E6\u52A0\u50C5\u672C\u6B21\u57F7\u884C\u6709\u6548\u7684\u8B58\u5225",
+          "description": "\u53EF\u8F14\u52A9\u57F7\u884C\u4E2D\u5206\u6790\uFF0C\u4F46\u4E0D\u4FDD\u8B49\u91CD\u958B\u5F8C\u76F8\u540C\uFF0C\u4E5F\u4E0D\u53EF\u7576\u6301\u4E45\u5F15\u7528\u3002"
         }
       ],
       "recommendation": {
         "option_id": "explicit-transient",
-        "reason": "保留可見資訊且不冒充穩定身分；輸出格式與寫回限制由使用者確認。"
+        "reason": "\u4FDD\u7559\u53EF\u898B\u8CC7\u8A0A\u4E14\u4E0D\u5192\u5145\u7A69\u5B9A\u8EAB\u5206\uFF1B\u8F38\u51FA\u683C\u5F0F\u8207\u5BEB\u56DE\u9650\u5236\u7531\u4F7F\u7528\u8005\u78BA\u8A8D\u3002"
       },
       "allow_other": true,
-      "status": "pending",
-      "answer": null
+      "status": "decided",
+      "answer": {
+        "kind": "option",
+        "option_id": "explicit-transient",
+        "confirmed_at": "2026-10-24T04:29:33.0153548\u002B00:00"
+      },
+      "last_request": {
+        "request_id": "b09f807d-a836-4ed9-89aa-aed49342f5a7",
+        "fingerprint": "f5358497ef14984770a453a9db3484f8239a8d7a8865adc58e773dd2bb4329bc"
+      }
     }
   ]
 }
