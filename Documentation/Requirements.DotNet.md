@@ -6,7 +6,7 @@
 - **未結案需求數**：2。
 - **提出日期**：2026-10-07。
 - **背景**：Yu5h1Lib 的動態與互動規範由來源庫擁有：補間殼、插值公式、物理互動的設計規範在 Motion（[Requirements.Motion.md](Requirements.Motion.md) MOTION-3、4 與既有 ModuleSpec），AppsMenu 的體驗規範在 Yu5h1Lib.UX。Core 以 C# 依規範建立框架與介面，因為使用端不只 Unity，還有 WPF、WinForms。依決策 `layering-doc-owner`、`core-contracts`、`ui-model-location`，使用者已授權在 Core 放這些合約。
-- **驗收責任**：DotNet 實作並以 referenced-module-acceptance 記錄對來源規格的驗收；UnityExtension 在 Unity 端接上後確認並更新本檔狀態。
+- **驗收責任**：DotNet 實作並以 spec-adoption 記錄對來源規格的驗收；UnityExtension 在 Unity 端接上後確認並更新本檔狀態。
 
 ## UNITYEXTENSION-DOTNET-1 — 依 Motion 規格在 Core 建立動態合約
 

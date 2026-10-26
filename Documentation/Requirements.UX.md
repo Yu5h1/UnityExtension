@@ -2,7 +2,7 @@
 
 - **目標專案（Target）**：Yu5h1Lib.UX，`C:\Users\Yu5h1\Dev\VSProjects\Yu5h1Lib\UX`。
 - **提出專案（Requester）**：UnityExtension，`C:\Users\Yu5h1\Dev\VSProjects\Yu5h1Lib\Unity\UnityExtension`。
-- **目前依賴方式**：Unity 實作套件依 referenced-module-acceptance 釘選 UX 的模組規範快照，見[跨平台 UI 一致性 § 引用模式](跨平台UI一致性.md#引用模式)；規格缺口只走本檔，不在實作端補寫規則。
+- **目前依賴方式**：Unity 實作套件依 spec-adoption 釘選 UX 的模組規範快照，見[跨平台 UI 一致性 § 引用模式](跨平台UI一致性.md#引用模式)；規格缺口只走本檔，不在實作端補寫規則。
 - **未結案需求數**：0。
 - **提出日期**：2026-10-21。
 - **驗收責任**：UX 改規格；UnityExtension 依新版重跑對應檢查，通過後更新本檔狀態。

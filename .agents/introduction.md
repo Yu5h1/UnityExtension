@@ -36,7 +36,7 @@ Reasoning for the first two is in [data-architecture.md](skills/data-architectur
 
 ## Adopting a UX module in a package
 
-The workflow (inspect, implement the gaps, accept) is the shared [referenced-module-acceptance](../../../.agents/skills/referenced-module-acceptance/SKILL.md) skill — the only adoption skill (UX decision 82; the former `web-replication` skill is deleted). This section keeps only what is Unity-specific.
+The workflow (inspect, implement the gaps, accept) is the shared [spec-adoption](../../../.agents/skills/spec-adoption/SKILL.md) skill — the only adoption skill (UX decision 82; the former `web-replication` skill is deleted). Verification-only requests use [spec-acceptance](../../../.agents/skills/spec-acceptance/SKILL.md), which routes to that shared workflow. This section keeps only what is Unity-specific.
 
 - **Sources.** Behavior comes from the module's UX spec, `UX/Documentation/ModuleSpec/[<layer>/]<Module>.md`, and nothing else: never derive behavior from old Unity samples or from Web source when the spec is silent — raise the gap in `Documentation/Requirements.UX.md` and wait. Theme (`Web/dist/theme/theme.css`) and config declarations stay Web deliveries with their manifests until UX takes them over (gaps go to `Requirements.Web.md`). Web tests passing never counts as Unity verification. Unity-side choices live in `decisions/cross-platform-ui-parity.decisions`.
 - **Pinning.** Snapshot the spec, design data and cases byte-identically into `Packages/<package>/Tests/Editor/UX~/<Module>/` (`.gitattributes` `-text`), and let an EditMode `<Module>DesignTests` check the SHA-256 against the UX manifest and the design values. Refuse an unknown major version or a dirty delivery unless the user accepts it. The Yu5h1Lib.UIToolkit Editor importer is for Theme and config only (USS variables, WebTheme, imported-version stamp; re-import of the same input produces no diff).
@@ -55,7 +55,7 @@ Read only what matches the current task:
 - [Unity agent operations](skills/unity-agent-operations/SKILL.md) — read before opening, running, scanning or compile-checking any Yu5h1Lib Unity project: which editor each project uses, the one-editor-per-project rule, batchmode commands and log locations, re-runnable DryRun/Apply editor scripts, unityMCP pitfalls, compile checks on 6000.3.9f1 and 6000.6.0f1, and the route to every agent tool.
 
 - [Unity UI extraction](skills/unity-ui-extraction/SKILL.md) — extract reusable Unity UI from consumer projects into shared packages, preserve assets/lifecycle, verify a second use, and migrate callers. Existing-control adoption routes to the relevant domain skill; Web extraction remains owned by Web.
-- Adopting a Yu5h1Lib.UX module in a package has no skill of its own here: the shared referenced-module-acceptance skill plus [the section above](#adopting-a-ux-module-in-a-package).
+- Adopting a Yu5h1Lib.UX module in a package has no skill of its own here: the shared spec-adoption skill plus [the section above](#adopting-a-ux-module-in-a-package).
 
 - [data-architecture.md](skills/data-architecture.md) — ScriptableObject architecture, Parameter/Member/Invocation objects, ValuePort, Theme, and presets. Load its linked architecture plan only for design or Timeline integration changes.
 - [editor-tooling.md](skills/editor-tooling.md) — Inspector and Editor extensions, SubAssets, Undo, shortcuts, and internal Unity APIs.
