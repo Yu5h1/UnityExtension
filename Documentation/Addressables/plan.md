@@ -280,7 +280,9 @@ Task ID `streaming-assets`），在本套件內開發、以消費端身分引用
      測試專案要允許。catalog 仍在本體，遠端 catalog 屬於內容更新。實作：Yu5h1LibTest 的 `RemoteTestSetup` 與 PlayMode 測試，
      見 [loader-handler](../../.agents/skills/loader-handler.md#remote-content-on-this-machine)。
    - **WebGL**：頁面與內容同站，以及不同 port 的跨來源（CORS）。LocalWebService 每個回應都是 `no-store`，
-     WebGL 的 bundle 快取靠瀏覽器，暖快取要伺服器允許快取才測得準。
+     WebGL 的 bundle 快取靠瀏覽器，暖快取要伺服器允許快取才測得準（LocalWebService 以 `--cache-max-age` 開啟）。
+     實作：本機的 WebGL 探測（`Tools/agent/unity_addressables_webgl.py`）與 GitHub Pages 用的 `WebGLTestBuild`，
+     見 [loader-handler](../../.agents/skills/loader-handler.md#webgl-probe)。
    - **R2**，之後才接 [學習與實作順序](#學習與實作順序) 的 LFS 與 Windows 頭像原型。
 
 非必要內容（例如角色）讀取失敗時，用內建的測試角色代替並提示「此角色異常」，流程繼續；測試角色由 Resources 讀取器載入。

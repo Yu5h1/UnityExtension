@@ -157,3 +157,19 @@ test services. At port 8002, `probe.html?remote-test=1&same-origin=1` uses the p
 `probe.html?remote-test=1` uses content on port 8002. Explicitly allow `http://127.0.0.1:8000` on the content service.
 Changing the `run` query creates a fresh player for a warm run; inspect real bundle response bodies and browser logs.
 Stop both test services afterwards. Per-round evidence lives in `checklists/remote-test-webgl.checklist`.
+
+### GitHub Pages
+
+`Assets/AddressablesTest/Editor/WebGLTestBuild.cs` in Yu5h1LibTest builds the content and a WebGL player of the test
+scene `AddressablesTest.unity` to `W:/UnityProject/Yu5h1LibTest-Build/WebGL/AddressablesTest`, for upload to a static
+host. Compression is off for that build only (GitHub Pages sends no Content-Encoding for Brotli/Gzip files); the
+project's setting is restored and the target switched back to Windows. The editor must be closed; about 5 minutes:
+
+```text
+python Tools/agent/unity_batch.py W:/UnityProject/Yu5h1LibTest --method WebGLTestBuild.Run -- -buildTarget WebGL
+```
+
+Only local groups work there: their bundles sit in `StreamingAssets/aa` beside `Build/` and the page fetches them from
+its own site over https; a load path of `http://127.0.0.1:…` would not load from a published page. The user uploaded
+the folder to GitHub Pages on 2026-10-27 and the test character loaded from its bundle. The page has no Hierarchy, so
+`WrongKeyTrigger` is not usable there, and IMGUI's default WebGL font has no CJK glyphs, so the test labels are English.
