@@ -19,7 +19,8 @@ public abstract class GameObjectWithComponentOption<T> : GameObjectOption where 
     protected override void OnSelected(int index)
     {
         base.OnSelected(index);
-        if (Items[index].TryGetComponent(out T component))
+        var component = FindComponent(Items[index]);
+        if (component != null)
         {
             _Component = component;
             _ComponentChanged?.Invoke(_Component);
@@ -28,5 +29,10 @@ public abstract class GameObjectWithComponentOption<T> : GameObjectOption where 
         else
             $"{gameObject.name} {typeof(T)} not found".printWarning();
     }
+    /// <summary>
+    /// The component of a selected item: the item's own by default. Override when it lives elsewhere, such as on a
+    /// model loaded under the item.
+    /// </summary>
+    protected virtual T FindComponent(GameObject item) => item.TryGetComponent(out T component) ? component : null;
     protected abstract void OnComponentChanged(T newItem);
 }
