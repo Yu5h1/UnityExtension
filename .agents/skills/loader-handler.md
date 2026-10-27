@@ -18,7 +18,12 @@ scene event (Start/Enabled, button, scroll…)
           → AssetLoader.LoadAsync<GameObject>(key, progress, token)
       → Instantiate(prefab, parent)
       → initializer.Initialize(instance, key)   optional InstanceInitializer on the agent, before Loaded
+  → SpriteAgent.Prepare(key)                 same flow for an image (portrait, icon): no instance, Loaded(sprite)
+      request: SpriteLoad (inline SO)        wire Loaded to Image.sprite / SpriteRenderer.sprite in the scene
 ```
+
+Both agents derive from `ContentAgent<TAsset, TResult>`, which owns keys, cancellation and release; a new kind of
+content is a small subclass (`CreateRequest`, `Produce`, optionally `DiscardResult`) and a `ContentLoad<T>` request.
 
 | Type | Where | Is |
 |---|---|---|
@@ -26,8 +31,10 @@ scene event (Start/Enabled, button, scroll…)
 | `ResourcesLoader` | common | `Resources.LoadAsync`; key = path under a Resources folder. Awaits the request itself (no frame polling); progress is reported at start and as 1 at the end |
 | `AddressablesLoader` | Addressables | Addressables by key (address, or a label: first match). Looks the key's location up first, so a missing key returns null with no error log; progress is the operation's `PercentComplete`, 1 at the end; cancellation throws at once and the handle is released when Addressables finishes; a failed load releases and rethrows. Holds one handle per returned object until `Release(asset)` (once per load); destroying the loader releases nothing. Local or remote is the group's load path, not the loader |
 | `LoaderHandler` | Addressables | `SingletonBehaviour<LoaderHandler>`: scene instance, else a `LoaderHandler` prefab in Resources, else a new one. `loader` = the field, or a `ResourcesLoader` added to the handler when the field is empty. `LoadAsync<T>` for code |
-| `LoaderAgent` | Addressables | Scene stand-in: `Prepare(string)` for UnityEvents, `PrepareAsync(key, token)` → `Awaitable<bool>` for code; fields `_request` (`InstanceLoad`, `[Inline]`), `_initializer`, `_parent`; `instance`, `key`, `Release()` |
-| `InstanceLoad` | Addressables | The agent's `AsyncLoadObject<GameObject>`; wire the loading presentation to its events. The agent sets its key, so it has no key setting |
+| `ContentAgent<TAsset, TResult>` | Addressables | Abstract scene stand-in: `Prepare(string)` for UnityEvents, `PrepareAsync(key, token)` → `Awaitable<bool>` for code, `key`, `Release()`, field `_request` (`ContentLoad<TResult>`, `[Inline]`); subclasses say how a loaded asset becomes what is shown (`Produce`) and how it is discarded (`DiscardResult`) |
+| `ContentLoad<T>` | Addressables | The agents' `AsyncLoadObject<T>`; wire the loading presentation to its events. The agent sets its key, so it has no key setting |
+| `LoaderAgent` | Addressables | `ContentAgent<GameObject, GameObject>`: instantiates the prefab under `_parent`, runs `_initializer`, destroys discarded instances; `instance`; request `InstanceLoad` |
+| `SpriteAgent` | Addressables | `ContentAgent<Sprite, Sprite>`: the sprite itself is the result; `sprite`; request `SpriteLoad`. The key is a texture imported as a Sprite (Addressables loads it as `Sprite`), or `address[name]` for one sprite of an atlas. The package does not reference UI: the scene wires Loaded to the Image |
 | `InstanceInitializer` | Addressables | Abstract MonoBehaviour the consumer derives from: `Initialize(GameObject instance, string key)` |
 
 ## Swapping the loader
@@ -81,7 +88,17 @@ CharacterAgent (GameObject)
 LoaderHandler             LoaderHandler (loader → AddressablesLoader), AddressablesLoader
 LoadStatusMonitor         test-only IMGUI label: idle / loading n% / succeeded / failed, from the request's events
 WrongKeyTrigger           inactive; MonoEventHandler Enabled → LoaderAgent.Prepare("characters/missing-character")
+PortraitCanvas/Portrait   UI Image, top right
+PortraitAgent             SpriteAgent, request Loaded → Portrait Image.sprite (dynamic);
+                          MonoEventHandler Start → SpriteAgent.Prepare("characters/test-character/portrait")
 ```
+
+The character's content is the prefab, its override controller and its portrait
+(`Assets/AddressablesTest/Content/TestCharacterPortrait.png`, a generated placeholder imported as a Sprite, in the same
+group at `characters/test-character/portrait`). `Assets/AddressablesTest/Editor/PortraitDemoSetup.cs` puts the
+portrait, its entry and the scene objects in place and builds (`--method PortraitDemoSetup.Run`); PlayMode tests
+`Assets/AddressablesTest/Tests/PortraitLoadTests.cs` (category `Local`) load it through the loader and check that the
+demo scene's Image shows it.
 
 A request without a judge raises no True／False／Completed (`AsyncLoadObject<T>` fails a missing object without asking
 the judge, but only a judge raises those events), so anything that must show a failure needs a judge on the request;
@@ -93,13 +110,18 @@ persistently in the Inspector, or subscribe from code in Awake.
 
 ## Release rules
 
-- The agent owns one instance and the asset it came from.
-- Loading another key replaces the instance only after the new one is ready; the old one stays visible meanwhile.
+The rules belong to `ContentAgent`; "result" is the instance for `LoaderAgent` and the sprite for `SpriteAgent`.
+
+- The agent owns one result and the asset it came from.
+- Loading another key replaces the result only after the new one is ready; the old one stays visible meanwhile, and
+  its asset is given back only after Loaded handed out the new one, so an Image switches before the old sprite goes.
+- `SpriteAgent.Release()` gives the sprite back while an Image may still show it: clear the Image first.
 - `Prepare` of the key already shown does nothing; of the key being loaded, waits for that load; of another key,
   cancels the running load first.
-- Failed, rejected (judge) or canceled loads destroy their instance and release their asset; the current instance
+- Failed, rejected (judge) or canceled loads discard their result and release their asset; the current result
   stays.
-- `Release()` and destroying the agent destroy the instance and call the loader's `Release`.
+- `Release()` and destroying the agent discard the result (`LoaderAgent` destroys the instance) and call the
+  loader's `Release`.
 
 ## Testing loaders in Edit Mode
 

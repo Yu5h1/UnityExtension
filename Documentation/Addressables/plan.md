@@ -255,6 +255,9 @@ Task ID `streaming-assets`），在本套件內開發、以消費端身分引用
   VCP 繼承它、在裡面添加自己的元件並套用角色專屬資料；代理以欄位引用初始化器。用基底類別而不是 C# 介面：
   Unity 的 Inspector 不能序列化介面型別的欄位。初始化器放在代理上而不是處理器上：處理器是全域唯一，之後也會讀取角色以外的內容（場景、音效），
   放在處理器上會讓每一種內容都套用角色的初始化；代理是場景裡、按內容種類放的物件，與〈第一個消費端〉的「場景事件一律指向代理」一致。
+- **角色內容含大頭貼**（2026-10-27 使用者）：角色的下載內容除了模型 prefab 與 Animator Override Controller，還有大頭貼圖片。
+  套件以圖片代理讀取 Sprite（和讀取角色的代理共用讀取、取消與釋放規則），由場景把讀到的圖片接到 UI；
+  Yu5h1LibTest 的範例角色已加上大頭貼（見 [loader-handler](../../.agents/skills/loader-handler.md#scene-wiring-example)）。
 - **角色專屬資料**（2026-10-23 定案）：prefab 與 override controller 以外的資料（口型 blendshape 對照、表情覆寫、鏡頭偏移、選單用 `DataView`）
   放在主程式內一份以 key 對應的角色資料，由消費端的初始化器套用。角色只交 prefab 與 override controller，這些資料要有來處；
   選單資料在下載前就要能顯示。

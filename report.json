@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-27T04:42:24.751538+00:00",
+  "updated_at": "2026-10-27T06:49:43.574375+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -1122,6 +1122,28 @@
       "priority": 2,
       "summary": "com.yu5h1.addressables：把角色等大型資源和本體分開、執行期非同步讀取。首輪：讀取處理器（singleton，可替換讀取器）與場景代理先用 Resources 讀取器驗證，再接 Addressables 讀取器以 local group 驗證；角色只交 prefab 與 Animator Override Controller，其餘由消費端初始化。依賴 async-task。之後才做遠端內容測試，LFS 與 Windows 頭像原型再之後。第一個消費端：VCP streaming-assets。設計：Documentation/Addressables/plan.md。",
       "completed_items": [
+        {
+          "id": "portrait-sprite",
+          "title": "角色大頭貼：SpriteAgent 讀取圖片（與 LoaderAgent 共用 ContentAgent 的讀取與釋放規則），Yu5h1LibTest 範例角色加上大頭貼並在 UI 顯示（使用者 2026-10-27）",
+          "priority": 1,
+          "status": "done",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-27T06:49:43.574375+00:00",
+              "session": "addressables portrait",
+              "session_id": "c9f49d5d-3ecc-408d-b0cb-854640b4da0d"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-10-27T06:49:43.574375+00:00",
+              "session": "addressables portrait",
+              "session_id": "c9f49d5d-3ecc-408d-b0cb-854640b4da0d"
+            }
+          ]
+        },
         {
           "id": "webgl-github-pages",
           "title": "GitHub Pages 讀取：Yu5h1LibTest 的 WebGL 建置（WebGLTestBuild，local group 在 StreamingAssets）上傳 GitHub Pages，測試角色從 bundle 載入成功（使用者 2026-10-27）",
