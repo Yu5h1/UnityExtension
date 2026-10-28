@@ -15,9 +15,25 @@ Read before writing any Unity code in this tree or using Yu5h1Lib Unity technolo
 - **The root namespace is `Yu5h1Lib`. There is no `Yu5h1` namespace.** A package nests under it (`Yu5h1Lib.UnifiedSolver`, `Yu5h1Lib.ParticlePhysics`). Never name a namespace after a type that lives in it, and never take a name `UnityEngine` already uses for a type — an enclosing namespace beats a `using`, so `Yu5h1Lib.Physics` would shadow `UnityEngine.Physics` in every file in the library.
 - **A custom inspector derives from `Editor<T>`,** never from `UnityEditor.Editor`. It hands you a cast `targetObject` and a full default inspector; see [editor-tooling.md](skills/editor-tooling.md).
 - **A setting is for a real choice.** If code can settle it, code settles it — never add a field, a toggle, or a `[RequireComponent]` for something already determined by other data. See [editor-tooling.md](skills/editor-tooling.md).
-- **Never read input from `UnityEngine.Input` directly; always go through `Yu5h1Lib.InputHandler`.** `InputHandler` (`Packages/common/Runtime/Input/InputHandler.cs`) abstracts input across Legacy Input (`LegacyInputBackend`) and the Input System package (`InputSystemBackend` in `Packages/InputSystem`) to avoid Unity version and Player Settings (`Active Input Handling`) incompatibilities. For UGUI `EventSystem` / `StandaloneInputModule`, attach `Yu5h1Lib.UI.UIInputHandler` (`BaseInput` bridge to `InputHandler`) as `inputOverride` rather than letting `StandaloneInputModule` fall back to `UnityEngine.Input`.
+- **Call the Yu5h1Lib wrapper, never the engine API it wraps.** Procedure and the known wrappers: [Engine API wrappers](#engine-api-wrappers).
 
 Reasoning for the first two is in [data-architecture.md](skills/data-architecture.md).
+
+## Engine API wrappers
+
+Unity renames and deprecates APIs between versions, and Core ships as one precompiled DLL that must load on both supported editors (6000.3 and 6000.6). Yu5h1Lib wraps the volatile engine APIs so each change is absorbed in one place; code that calls the engine API directly breaks again at the next rename. This applies in packages and consumer projects alike. Vendored third-party code (for example `Assets/Plugins/<vendor>/**`) stays as shipped.
+
+1. **Before calling a `UnityEngine` or `UnityEditor` API, look for its wrapper.** Search `Unity/Core/Runtime/Source`, `Unity/Core/Editor/Source` and `Packages/common` for the engine API's name; a Yu5h1Lib method that calls it is the wrapper. Unity Core ships no IntelliSense XML, so source search is the discovery route. The table below lists the wrappers already known.
+2. **Keep the call's behavior when switching to the wrapper.** Wrapper defaults can differ from the engine's; the table names those that do.
+3. **When the wrapper lacks what you need, compose it from the wrapper** (`ObjectUtility.FindObjects(type).FirstOrDefault()` for a single object by `Type`) **or ask the user for a Core addition.** Do not fall back to the engine API. An assembly with `overrideReferences` needs `Yu5h1Lib.Runtime.dll` in `precompiledReferences` to see Core.
+4. **Before reporting, read your diff for engine calls** that step 1 would have redirected.
+
+| Engine API | Wrapper | Behavior to keep |
+|---|---|---|
+| Scene queries: `Object.FindObjectsOfType`, `FindObjectOfType`, `FindObjectsByType`, `FindAnyObjectByType`, `FindFirstObjectByType` | `ObjectUtility.FindObject<T>`, `FindObjects<T>`, `FindObjects(Type)`, `TryFind<T>` (`Unity/Core/Runtime/Source/Utility/ObjectUtility.cs`) | `includeInactive` defaults to `true`; the engine's no-argument overloads exclude inactive objects, so pass `false` where the original call had no `FindObjectsInactive.Include`. Results are unordered. |
+| `UnityEngine.Input` | `Yu5h1Lib.InputHandler` (`Packages/common/Runtime/Input/InputHandler.cs`), over Legacy Input (`LegacyInputBackend`) or the Input System package (`InputSystemBackend`, `Packages/InputSystem`), whichever Player Settings' `Active Input Handling` allows | For UGUI, attach `Yu5h1Lib.UI.UIInputHandler` (a `BaseInput` bridge to `InputHandler`) as the `StandaloneInputModule`'s `inputOverride`, so the module never falls back to `UnityEngine.Input`. |
+
+Add a row when Core gains a wrapper; changing Core itself needs the user's authorization (`yu5h1lib-conventions`, `references/csharp-core.md`).
 
 ## Core source and backups
 

@@ -153,7 +153,7 @@ namespace Yu5h1Lib.UI.Acceptance
 
         private static void EnsureEventSystem()
         {
-            var es = EventSystem.current != null ? EventSystem.current : FindAnyObjectByType<EventSystem>();
+            var es = EventSystem.current != null ? EventSystem.current : ObjectUtility.FindObject<EventSystem>(false);
             if (es == null)
             {
                 var go = new GameObject("EventSystem", typeof(EventSystem), typeof(UIInputHandler), typeof(StandaloneInputModule));
