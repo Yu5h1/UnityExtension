@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-27T06:49:43.574375+00:00",
+  "updated_at": "2026-10-27T19:06:36.463513+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -2674,6 +2674,144 @@
               "actor": "claude",
               "at": "2026-10-21T17:51:41.490783+00:00",
               "session_id": "3a21dab2-0ba3-40f5-87b4-2ff309f9d73c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "camera-controller",
+      "title": "共用攝影機控制：CameraController／InputSource／Follow／LookDirection",
+      "status": "planned",
+      "summary": "集中共用攝影機控制：CameraController 提供控制方法，InputSource 由消費端實作裝置與操作意圖轉換，Follow 與 LookDirection 可獨立組合並支援 2D 固定觀看方向。納入 MotionGen、VCP、CombatAesthetic／WhiteRoom 的既有消費需求。CombatAesthetic 附屬功能由[攝影機拆分卡](/?scope=combat-aesthetic&pin=camera-controller-extraction)追蹤。本輪僅建立任務與項目，實作未開始。",
+      "pending_items": [
+        {
+          "id": "controller-contract",
+          "title": "整理 CameraController 控制方法與狀態歸屬：提供程式與 UI 可直接呼叫的入口，統一套用鏡頭結果，隔離裝置輸入與消費專案政策。",
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-10-27T19:06:36.463513+00:00",
+              "session": "攝影機控制收斂任務建卡"
+            }
+          ]
+        },
+        {
+          "id": "input-source",
+          "title": "建立 InputSource 操作意圖契約：消費端處理裝置、按鍵、拖曳、雙指與 UI 焦點，傳入旋轉、平移、縮放或重設；定義增量單位與時間語意，裝置讀取沿用 InputHandler。",
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-10-27T19:06:36.463513+00:00",
+              "session": "攝影機控制收斂任務建卡"
+            }
+          ]
+        },
+        {
+          "id": "follow",
+          "title": "支援 Follow：設定跟隨目標、位置 offset 與平滑；位置跟隨可獨立運作，停止或未提供裝置輸入時仍持續更新目標。",
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-10-27T19:06:36.463513+00:00",
+              "session": "攝影機控制收斂任務建卡"
+            }
+          ]
+        },
+        {
+          "id": "look-direction",
+          "title": "支援 LookDirection：觀看方向與 Follow 分開控制，支援固定方向及受控方向變更，避免位置跟隨強制 LookAt 目標，讓 2D 可維持固定觀看平面。",
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-10-27T19:06:36.463513+00:00",
+              "session": "攝影機控制收斂任務建卡"
+            }
+          ]
+        },
+        {
+          "id": "two-dimensional-composition",
+          "title": "以 Follow＋LookDirection 組合 2D 行為：保留固定觀看方向、平面跟隨、正交縮放與既有構圖需求；明確區分 orthographicSize、3D 距離與 FOV 的控制語意。",
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-10-27T19:06:36.463513+00:00",
+              "session": "攝影機控制收斂任務建卡"
+            }
+          ]
+        },
+        {
+          "id": "orbit-reuse",
+          "title": "收斂既有 Orbit／SceneView 計算與限制：盤點 MotionGen 行為、VCP 與 Core LookAt3rdPerson 的共用部分，確立單一維護來源並保存有實際差異的規則；Core 變更另依授權處理。",
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-10-27T19:06:36.463513+00:00",
+              "session": "攝影機控制收斂任務建卡"
+            }
+          ]
+        },
+        {
+          "id": "motiongen-consumer",
+          "title": "遷移 MotionGen 消費端：保留 SceneView／第三人稱切換、平移、旋轉、縮放、FOV 與重設行為；按鍵及 UI 判斷移至 InputSource。",
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-10-27T19:06:36.463513+00:00",
+              "session": "攝影機控制收斂任務建卡"
+            }
+          ]
+        },
+        {
+          "id": "vcp-consumer",
+          "title": "遷移 VCP 消費端：保留 TouchController 相容入口、角色 offset 保存、編輯模式、OffsetChanged、DistanceNormal、depthChanged、DragEnd 與重設功能。",
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-10-27T19:06:36.463513+00:00",
+              "session": "攝影機控制收斂任務建卡"
+            }
+          ]
+        },
+        {
+          "id": "combat-consumer",
+          "title": "規劃並接用 CombatAesthetic 2D 與 WhiteRoom 3D 消費端：保留目標跟隨、聚焦演出、第三人稱及避障需求；面板焦點與游標鎖定由消費端負責，既有資產與呼叫端保持相容。",
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-10-27T19:06:36.463513+00:00",
+              "session": "攝影機控制收斂任務建卡"
+            }
+          ]
+        },
+        {
+          "id": "consumer-acceptance",
+          "title": "驗證三個專案的消費案例：2D 固定觀看方向與正交縮放、3D Orbit／SceneView、輸入停止時持續跟隨、UI 焦點切換、目標切換、重設，以及序列化欄位與 UnityEvent 接線相容性。",
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-10-27T19:06:36.463513+00:00",
+              "session": "攝影機控制收斂任務建卡"
             }
           ]
         }
