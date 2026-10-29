@@ -5,7 +5,7 @@ using Yu5h1Lib.UX;
 namespace Yu5h1Lib
 {
     [DisallowMultipleComponent]
-    public class Viewer : MonoBehaviour, INavigator<View>
+    public class ViewNavigator : MonoBehaviour, INavigator<View>
     {
         public delegate bool BackHandler();
 
@@ -101,8 +101,6 @@ namespace Yu5h1Lib
             if (_baseView && _current != _baseView)
                 MoveTo(_baseView);
         }
-
-        public void Return() => Back();
 
         private void Focus(View view)
         {

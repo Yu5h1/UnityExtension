@@ -1,0 +1,70 @@
+# View／ViewNavigator 共用導覽元件 Checklist
+
+Current round: `../../Combat-Aesthetics/Documentation/plans/Priority-Decision-Report.md#已決定`.
+
+本輪依 CombatAesthetic 決策報告〈已決定〉實作 `Packages/common/Runtime/Component/UX` 的 `View` 與 `ViewNavigator`，並以 `Yu5h1Lib.Common.Tests`／`Yu5h1Lib.Common.Editor.Tests` 的測試證明行為。不在本輪：任何專案的遷移（VCP 由 `virtual-chat-partner` 的 `vcp-page-migration` 承接，CombatAesthetic／KFC 為第二輪）、`CanLeave`／`CanHide`、current changed 事件、計數鎖。一個檔案只放一輪。
+
+- [ ] **1. View 的返回目標與附屬物件**
+  Outcome: `View` 有序列化的 `backTarget`，以及 `visibles` 清單與 `AddVisible`／`RemoveVisible`；不含任何專案舊欄位名或 `[FormerlySerializedAs]`。
+  Checks:
+    - [ ] **欄位與方法**
+      - Action: 檢視 `View.cs` 的變更。
+      - Expect: 有 `backTarget`（View 型別、可在 Inspector 指定）、`visibles`、`AddVisible(GameObject)`（不重複加入）、`RemoveVisible(GameObject)`；沒有 `parentPage`、`previous`、`loaded` 等舊名，也沒有 `FormerlySerializedAs`。
+
+- [ ] **2. ViewNavigator 的切換、Popup 與 base view**
+  Depends on: 1.
+  Outcome: `MoveTo(View)` 切換時不隱藏 base view；`Popup(View)` 不隱藏底下的 View、讓 popup 成為 `Current`，並由 ViewNavigator 記住 popup 疊在哪個 View 上；切換時比對新舊兩組 `visibles`，兩邊都有的保持開啟。
+  Checks:
+    - [ ] **切換與 base view**
+      - Action: 執行涵蓋 `MoveTo` 的測試：從 base view 切到 A、從 A 切到 B。
+      - Expect: base view 保持 active；A 切到 B 時 A 被隱藏；`Current` 依序為 A、B。
+    - [ ] **Popup**
+      - Action: 執行涵蓋 `Popup` 的測試：在 A 上 Popup P，以及同一個 P 先後從 A、B 開啟。
+      - Expect: A 保持 active，`Current` 為 P；兩次開啟各自記住當時底下的 View（A、B）。
+    - [ ] **visibles 比對**
+      - Action: 執行測試：A 的 `visibles` 為 {X, Y}，B 為 {Y, Z}，從 A 切到 B。
+      - Expect: X 關閉，Y 全程保持開啟，Z 開啟。
+
+- [ ] **3. Back 流程與鎖**
+  Depends on: 2.
+  Outcome: `Back()` 依序為 back handlers（LIFO）→ 目前是 popup 時關閉並回到它底下的 View → 目前 View 的 `backTarget` → base view → 不處理；`locked` 為 true 時 `MoveTo`、`Popup`、`Back` 都不動作；`Return()` 不存在。
+  Checks:
+    - [ ] **handler LIFO**
+      - Action: 執行測試：依序註冊 h1、h2，h2 回傳 true；再改為 h2 回傳 false、h1 回傳 true。
+      - Expect: 第一次只呼叫 h2；第二次先 h2 後 h1；兩次都不切換 View。
+    - [ ] **popup 返回**
+      - Action: 執行測試：在 A 上 Popup P 後呼叫 `Back()`，且 P 的 `backTarget` 指向另一個 View C。
+      - Expect: P 被隱藏、`Current` 回到 A；不前往 C。
+    - [ ] **backTarget 與 base view**
+      - Action: 執行測試：`Current` 為設有 `backTarget` = A 的 B 時呼叫 `Back()`；再在沒有 `backTarget` 的 A 上呼叫；最後在 base view 上呼叫。
+      - Expect: 依序前往 A、前往 base view、不動作。
+    - [ ] **locked**
+      - Action: 執行測試：設 `locked = true` 後呼叫 `MoveTo`、`Popup`、`Back`，再設回 false 呼叫 `MoveTo`。
+      - Expect: 鎖住時三者都不改變 `Current` 與任何 active 狀態；解鎖後 `MoveTo` 正常切換。`locked` 是可由 UnityEvent 設定的 bool 屬性。
+
+- [ ] **4. 編譯與整組測試**
+  Depends on: 3.
+  Outcome: `Yu5h1Lib.Common` 在兩個 Unity 版本編譯無錯誤，common 的測試組全部通過。
+  Checks:
+    - [ ] **編譯**
+      - Action: `python Tools/agent/unity_compile.py Packages/common/Runtime/Yu5h1Lib.Common.asmdef`。
+      - Expect: 6000.3.9f1 與 6000.6.0f1 皆 0 error。
+    - [ ] **測試**
+      - Action: 在 Yu5h1LibTest 執行本輪新增的測試與整個 common 測試組（EditMode；PlayMode 若有新增也一併）。
+      - Expect: 全部通過，沒有既有測試退步。
+
+- [ ] **5. 獨立驗收**
+  Outcome: 另一個 agent session 確認實作符合決策報告。
+  Checks:
+    - [ ] **驗收條件未被改動** `[acceptance]`
+      - Action: 以 git log -p 檢查本檔第 5 項自寫入它的提交後的變更。
+      - Expect: 只有標記與 Recorded 變動。
+    - [ ] **行為符合已決定事項** `[acceptance]`
+      - Action: 對照 `../../Combat-Aesthetics/Documentation/plans/Priority-Decision-Report.md` 的〈View 的返回欄位〉〈Back 的位置、註冊方式與執行順序〉〈Popup 成為 Current，底層由 ViewNavigator 記住〉〈依現況採用的 API 與事件〉〈base view 不被隱藏〉〈ViewNavigator 的 `locked`〉〈`visibles` 進初版 View〉，審查 `git log --grep view-navigator-core` 的變更與第 2、3 項的測試。
+      - Expect: 每一條決定都有對應實作與測試；Back 五步順序、LIFO、popup 底層由 ViewNavigator 持有、base view 不被隱藏、`locked` 為單一 bool 屬性、`Popup(View)` 為單參數公開方法、沒有 `Return()`。
+    - [ ] **範圍** `[acceptance]`
+      - Action: 對照本檔開頭的「不在本輪」與〈共用元件位置與 DotNet 邊界〉，檢查變更的檔案。
+      - Expect: 只動 `Packages/common` 的 UX 元件與其測試；DotNet 層只有 `INavigable`／`INavigator`；沒有修改 VCP、KFC 或 Combat-Aesthetics 的程式。
+    - [ ] **重現測試** `[acceptance]`
+      - Action: 自行重跑第 4 項的編譯與測試（unityMCP 不可用時記錄原因）。
+      - Expect: 結果與第 4 項的紀錄一致。

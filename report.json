@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-27T19:06:36.463513+00:00",
+  "updated_at": "2026-10-29T13:47:44.332036+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -2812,6 +2812,33 @@
               "actor": "codex",
               "at": "2026-10-27T19:06:36.463513+00:00",
               "session": "攝影機控制收斂任務建卡"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "view-navigator",
+      "title": "View／ViewNavigator 共用導覽元件",
+      "status": "planned",
+      "summary": "依 [CombatAesthetic 決策報告](/?scope=combat-aesthetic) 的〈已決定〉，在 common 的 UX 元件實作返回目標、Popup、base view、鎖與 visibles；VCP 與 CombatAesthetic 的遷移以此為前置。",
+      "pending_items": [
+        {
+          "id": "view-navigator-core",
+          "title": "依決策報告實作 View／ViewNavigator 的返回、Popup、base view、locked 與 visibles",
+          "status": "planned",
+          "priority": 0,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "view-navigator-core"
+          },
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-10-29T13:47:44.332036+00:00",
+              "session": "Combat-Aesthetics Viewer／View 決策"
             }
           ]
         }
