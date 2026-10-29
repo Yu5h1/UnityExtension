@@ -3,6 +3,7 @@
     "rootNamespace": "Yu5h1Lib.Tests",
     "references": [
         "Yu5h1Lib.Animation",
+        "Yu5h1Lib.Animation.Editor",
         "Yu5h1Lib.Common",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
