@@ -99,6 +99,15 @@ namespace Yu5h1Lib.AddressableAssets
             Refresh();
         }
 
+        /// <summary>The user left the place (for example its page closed): the failure notice does not outlive that.</summary>
+        public void DismissNotice()
+        {
+            if (!noticeVisible)
+                return;
+            noticeVisible = false;
+            Refresh();
+        }
+
         /// <summary>Progress of a running load: the download share, or null when it is not known.</summary>
         public void Report(string key, float? ratio)
         {
