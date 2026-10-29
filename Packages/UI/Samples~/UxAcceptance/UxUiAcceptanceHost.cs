@@ -57,6 +57,10 @@ namespace Yu5h1Lib.UI.Acceptance
             {
                 UxUiModuleRegistry.Register(new UxUiButtonDemoCase());
             }
+            if (!UxUiModuleRegistry.Contains("backgroundload"))
+            {
+                UxUiModuleRegistry.Register(new UxUiBackgroundLoadDemoCase());
+            }
         }
 
         public void SelectCase(string targetId)

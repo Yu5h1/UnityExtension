@@ -8,7 +8,7 @@ using System.Text;
 using NUnit.Framework;
 using UnityEditor.PackageManager;
 
-namespace Yu5h1Lib.AddressableAssets.Tests
+namespace Yu5h1Lib.Tests
 {
     /// <summary>
     /// Runs the pinned UX BackgroundLoad neutral cases (<c>Tests/Editor/UX~/BackgroundLoad</c>) against
@@ -27,7 +27,7 @@ namespace Yu5h1Lib.AddressableAssets.Tests
         private static string SnapshotPath(string file)
         {
             var package = PackageInfo.FindForAssembly(typeof(BackgroundLoadCaseTests).Assembly);
-            Assert.IsNotNull(package, "com.yu5h1.addressables package not found");
+            Assert.IsNotNull(package, "com.yu5h1.common package not found");
             return Path.Combine(package.resolvedPath, "Tests", "Editor", "UX~", "BackgroundLoad", file);
         }
 

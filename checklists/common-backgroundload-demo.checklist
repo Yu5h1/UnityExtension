@@ -1,0 +1,45 @@
+# Common BackgroundLoad Demo Checklist
+
+Current round: `../../../UX/Documentation/ModuleSpec/Foundation/BackgroundLoad.md#目標-1非阻塞背景資源預備與自主內容準備進行中2026-10-29-開輪次`.
+
+一次只有一輪：在 Yu5h1Lib.UI 的 UxAcceptance 裡，對 BackgroundLoad 案例做人工檢查（第 89 題，一頁一份）。進度是模擬的：左側滑桿決定 B 讀完一次要幾秒，A 是它的 0.3 倍，D 讀到六成就失敗，清單第 5 張讀到一半就失敗。清單「捲進畫面才讀」是 demo 宿主的選擇，不是規範（使用者 2026-10-30）。
+
+- [ ] **1. demo 上的背景讀取**
+  Outcome: 使用者接受 BackgroundLoad 在 uGUI 上的行為與暫代外觀。
+  Checks:
+    - [ ] **開啟即讀** `[manual]`
+      - Action: 開啟 Unity 專案 `W:/UnityProject/Yu5h1LibTest`，載入 `Assets/Samples/Yu5h1Lib.UI/1.0.0/UxAcceptance/UxUiAcceptanceDemo.unity` 並進入 Play（上方應顯示 BackgroundLoad），什麼都不按，看右下角。
+      - Expect: 右下角立刻出現「Loading… N%」，數字只增不減，接著出現「準備中…」，然後 A 出現在中央；之後 B、C、D 依序在背景讀，D 失敗不會顯示提示，全部讀完後指示消失（BGL-PREPARE、BGL-PROGRESS）。
+      - Reason: 指示的外觀與時機由使用者判斷（第 65 題）。
+    - [ ] **不擋操作** `[manual]`
+      - Action: 按「重新啟動」後，馬上點左下的輸入框打字，並捲動右側清單。
+      - Expect: 打字與捲動照常，焦點沒有跳走，沒有遮罩（BGL-NOBLOCK）。
+      - Reason: 焦點與遮罩要在真實介面上看。
+    - [ ] **未就緒的替代畫面** `[manual]`
+      - Action: 按「重新啟動」，在 B 讀完之前按 B。
+      - Expect: 中央立刻換成半透明面板，顯示 B 的百分比，A 不留在畫面上；B 讀完後換上 B（BGL-PLACEHOLDER、BGL-SWAP）。
+      - Reason: 外觀由使用者判斷。
+    - [ ] **比例未知** `[manual]`
+      - Action: 按「重新啟動」，等 A 出現後按 C。
+      - Expect: 替代畫面與右下角都顯示「Loading…」，不出現百分比；最後顯示「準備中…」，然後換上 C（BGL-PROGRESS）。
+      - Reason: 外觀由使用者判斷。
+    - [ ] **失敗與提示** `[manual]`
+      - Action: 按 D，等它失敗後停幾秒；然後按 A；再按 D。
+      - Expect: D 失敗後，中央是不帶文字的替代畫面加上「此內容異常」，提示一直留著；按 A 之後提示消失；再按 D 會重新讀，可以看到百分比（BGL-FALLBACK）。
+      - Reason: 提示的外觀與保留時間由使用者判斷。
+    - [ ] **以最後一次選擇為準** `[manual]`
+      - Action: 把滑桿調到 20 秒以上，按「重新啟動」；A 出現後按 B，在 B 讀完前按 A，然後等 B 讀完。
+      - Expect: 按 A 時 A 立刻出現，替代畫面消失；B 讀完後畫面仍是 A（BGL-SWAP）。
+      - Reason: 需要真實的時間與操作。
+    - [ ] **清單捲進畫面才讀** `[manual]`
+      - Action: 按「重新啟動」，慢慢把右側清單往下捲。
+      - Expect: 畫面外的圖還是空框；圖一捲進畫面，中央就出現「Loading… N%」，讀完換成色塊；捲出畫面的圖仍會讀完。
+      - Reason: demo 宿主的策略要在真實捲動中看。
+    - [ ] **清單裡的失敗** `[manual]`
+      - Action: 捲到第 5 張，等它讀完。
+      - Expect: 第 5 張是替代畫面加上「此內容異常」，其他圖不受影響（BGL-FALLBACK）。
+      - Reason: 外觀由使用者判斷。
+    - [ ] **整體外觀** `[manual]`
+      - Action: 看完上面各項後，整體看一次版面。
+      - Expect: 文字可讀、位置可以接受；顏色是暫代的，等 VisualFoundation 的 uGUI 結果。
+      - Reason: 外觀由使用者判斷（第 65 題）。

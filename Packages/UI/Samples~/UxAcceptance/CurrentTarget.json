@@ -1,5 +1,5 @@
 {
-  "targetId": "button",
-  "displayName": "UX Button (2.0.0)",
-  "moduleSpec": "Yu5h1Lib.UX/Button"
+  "targetId": "backgroundload",
+  "displayName": "UX BackgroundLoad (0.1.2-draft)",
+  "moduleSpec": "Yu5h1Lib.UX/Foundation/BackgroundLoad"
 }

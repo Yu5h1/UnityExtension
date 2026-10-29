@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Yu5h1Lib.AddressableAssets
+namespace Yu5h1Lib
 {
     /// <summary>
     /// One place on screen that shows one of several contents loaded in the background (a character stage, an avatar):
@@ -67,7 +67,7 @@ namespace Yu5h1Lib.AddressableAssets
         /// <summary>The download share as a whole percent, rounded down so 100 appears only when the download is done.</summary>
         public int percent { get; private set; }
 
-        /// <summary>The non-blocking notice that the selected content failed; it stays until the next selection.</summary>
+        /// <summary>The non-blocking notice that the selected content failed; it stays until the next selection or <see cref="DismissNotice"/>.</summary>
         public bool noticeVisible { get; private set; }
 
         /// <summary>The keys whose loads were requested, in order (a reload after a failure appears again).</summary>

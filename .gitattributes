@@ -2,5 +2,4 @@ Packages/UIToolkit/Tests/Editor/UX~/** -text whitespace=cr-at-eol
 Packages/UI/Tests/Editor/UX~/** -text whitespace=cr-at-eol
 Packages/common/Tests/Editor/UX~/** -text whitespace=cr-at-eol
 *.meta text eol=lf
-Packages/Addressables/Tests/Editor/UX~/** -text whitespace=cr-at-eol
 Packages/Animation/Editor/Humanoid/humanoid.bones.json -text
