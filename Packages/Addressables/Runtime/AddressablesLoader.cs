@@ -14,8 +14,12 @@ namespace Yu5h1Lib.AddressableAssets
     /// Addressables profile; this loader is the same for both. Put it in the <see cref="LoaderHandler"/>'s loader field.
     /// <para>
     /// Follows the <see cref="AssetLoader"/> contract: a key with no location for <typeparamref name="T"/> returns null
-    /// without an error, because the locations are looked up first. Progress is the operation's
-    /// <see cref="AsyncOperationHandle.PercentComplete"/> (dependencies included), and 1 when done. Canceling the token
+    /// without an error, because the locations are looked up first. Progress is the download share: the bytes downloaded
+    /// over the bytes the content and its dependencies still need (<see cref="Addressables.GetDownloadSizeAsync(object)"/>),
+    /// so it reaches 1 when the download is done and the request's End still follows the load from the bundle; a
+    /// presenter shows 「準備中」 between them. Content that needs no download (cached, or a local path that is not
+    /// http, as in the Editor and on PC) reports 1 at once. On WebGL a local group is fetched over http from
+    /// StreamingAssets, so it counts as a download. Canceling the token
     /// stops waiting at once and throws <see cref="OperationCanceledException"/>; Addressables cannot stop a started
     /// load, so its handle is released when the load completes. A failed load releases its handle and throws the
     /// operation's exception.
@@ -45,8 +49,17 @@ namespace Yu5h1Lib.AddressableAssets
             if (location == null)
                 return null;
 
+            var size = Addressables.GetDownloadSizeAsync(location);
+            await WaitAsync(size, token);
+            if (size.Status != AsyncOperationStatus.Succeeded)
+                throw Fail(size);
+            var bytes = size.Result;
+            Addressables.Release(size);
+            if (bytes <= 0)
+                progress?.Report(1f);
+
             var load = Addressables.LoadAssetAsync<T>(location);
-            await WaitAsync(load, token, progress);
+            await WaitAsync(load, token, bytes > 0 ? progress : null, bytes);
             if (load.Status != AsyncOperationStatus.Succeeded)
                 throw Fail(load);
             var asset = load.Result;
@@ -75,16 +88,23 @@ namespace Yu5h1Lib.AddressableAssets
         }
 
         /// <summary>
-        /// Waits for <paramref name="handle"/> frame by frame, reporting its progress. On cancellation the handle is
-        /// released (now, or when it completes) before <see cref="OperationCanceledException"/> is thrown.
+        /// Waits for <paramref name="handle"/> frame by frame, reporting its downloaded bytes over the total
+        /// (the handle's own total once it knows it, else <paramref name="expectedBytes"/>). On cancellation the handle
+        /// is released (now, or when it completes) before <see cref="OperationCanceledException"/> is thrown.
         /// </summary>
-        private static async Awaitable WaitAsync(AsyncOperationHandle handle, CancellationToken token, IProgress<float> progress = null)
+        private static async Awaitable WaitAsync(AsyncOperationHandle handle, CancellationToken token, IProgress<float> progress = null, long expectedBytes = 0)
         {
             try
             {
                 while (!handle.IsDone)
                 {
-                    progress?.Report(handle.PercentComplete);
+                    if (progress != null)
+                    {
+                        var status = handle.GetDownloadStatus();
+                        var total = status.TotalBytes > 0 ? status.TotalBytes : expectedBytes;
+                        if (total > 0)
+                            progress.Report((float)((double)status.DownloadedBytes / total));
+                    }
                     await Awaitable.NextFrameAsync(token);
                 }
                 token.ThrowIfCancellationRequested();
