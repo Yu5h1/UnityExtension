@@ -1,0 +1,792 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.1-draft",
+  "cases": [
+    {
+      "id": "nonblocking-during-load",
+      "covers": [
+        "BGL-NOBLOCK"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "a",
+          "b",
+          "c"
+        ],
+        "state": {
+          "slot": null
+        },
+        "prepare": {
+          "first": "b"
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "appStart"
+          },
+          "expect": {
+            "focusMoved": false,
+            "blockingOverlay": false,
+            "hostInputAvailable": true
+          }
+        },
+        {
+          "action": {
+            "op": "progress",
+            "key": "a",
+            "ratio": 0.5
+          },
+          "expect": {
+            "focusMoved": false,
+            "blockingOverlay": false,
+            "hostInputAvailable": true
+          }
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "a"
+          },
+          "expect": {
+            "focusMoved": false,
+            "blockingOverlay": false,
+            "hostInputAvailable": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "prepare-first-then-rest",
+      "covers": [
+        "BGL-PREPARE"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "a",
+          "b",
+          "c"
+        ],
+        "state": {
+          "slot": null
+        },
+        "prepare": {
+          "first": "b"
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "appStart"
+          },
+          "expect": {
+            "loadsStarted": [
+              "b"
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "b"
+          },
+          "expect": {
+            "loadsStarted": [
+              "b",
+              "a"
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "a"
+          },
+          "expect": {
+            "loadsStarted": [
+              "b",
+              "a",
+              "c"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "same-content-shares-load",
+      "covers": [
+        "BGL-PREPARE"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "a",
+          "b",
+          "c"
+        ],
+        "state": {
+          "slot": null
+        },
+        "prepare": {
+          "first": "a"
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "appStart"
+          },
+          "expect": {
+            "loadsStarted": [
+              "a"
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "select",
+            "key": "a"
+          },
+          "expect": {
+            "loadsStarted": [
+              "a"
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "a"
+          },
+          "expect": {
+            "slot": "a",
+            "loadsStarted": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "background-ready-no-swap",
+      "covers": [
+        "BGL-SWAP"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "a",
+          "b",
+          "c"
+        ],
+        "state": {
+          "slot": null
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "select",
+            "key": "a"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "a"
+          },
+          "expect": {
+            "slot": "a"
+          }
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "b"
+          },
+          "expect": {
+            "slot": "a"
+          }
+        }
+      ]
+    },
+    {
+      "id": "latest-selection-wins",
+      "covers": [
+        "BGL-SWAP",
+        "BGL-PLACEHOLDER"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "a",
+          "b",
+          "c"
+        ],
+        "state": {
+          "slot": null
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "select",
+            "key": "b"
+          },
+          "expect": {
+            "slot": "placeholder"
+          }
+        },
+        {
+          "action": {
+            "op": "select",
+            "key": "c"
+          },
+          "expect": {
+            "slot": "placeholder"
+          }
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "b"
+          },
+          "expect": {
+            "slot": "placeholder"
+          }
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "c"
+          },
+          "expect": {
+            "slot": "c"
+          }
+        }
+      ]
+    },
+    {
+      "id": "progress-known-percent",
+      "covers": [
+        "BGL-PROGRESS"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "a",
+          "b",
+          "c"
+        ],
+        "state": {
+          "slot": null
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "select",
+            "key": "a"
+          },
+          "expect": {
+            "indicator": {
+              "visible": true,
+              "text": "indeterminate"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "progress",
+            "key": "a",
+            "ratio": 0.3491207
+          },
+          "expect": {
+            "indicator": {
+              "visible": true,
+              "text": "34%"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "progress",
+            "key": "a",
+            "ratio": 0.999
+          },
+          "expect": {
+            "indicator": {
+              "visible": true,
+              "text": "99%"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "progress-unknown",
+      "covers": [
+        "BGL-PROGRESS"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "a",
+          "b",
+          "c"
+        ],
+        "state": {
+          "slot": null
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "select",
+            "key": "a"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "progress",
+            "key": "a",
+            "ratio": null
+          },
+          "expect": {
+            "indicator": {
+              "visible": true,
+              "text": "indeterminate"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "progress-preparing",
+      "covers": [
+        "BGL-PROGRESS"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "a"
+        ],
+        "state": {
+          "slot": null
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "select",
+            "key": "a"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "progress",
+            "key": "a",
+            "ratio": 1
+          },
+          "expect": {
+            "slot": "placeholder",
+            "indicator": {
+              "visible": true,
+              "text": "preparing"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "a"
+          },
+          "expect": {
+            "slot": "a",
+            "indicator": {
+              "visible": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "indicator-hides-when-done",
+      "covers": [
+        "BGL-PROGRESS"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "a"
+        ],
+        "state": {
+          "slot": null
+        },
+        "prepare": {
+          "first": "a"
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "appStart"
+          },
+          "expect": {
+            "indicator": {
+              "visible": true,
+              "text": "indeterminate"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "a"
+          },
+          "expect": {
+            "indicator": {
+              "visible": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "indicator-follows-selected",
+      "covers": [
+        "BGL-PROGRESS"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "a",
+          "b",
+          "c"
+        ],
+        "state": {
+          "slot": null
+        },
+        "prepare": {
+          "first": "a"
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "appStart"
+          },
+          "expect": {
+            "loadsStarted": [
+              "a"
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "progress",
+            "key": "a",
+            "ratio": 0.5
+          },
+          "expect": {
+            "indicator": {
+              "visible": true,
+              "text": "50%"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "select",
+            "key": "b"
+          },
+          "expect": {
+            "slot": "placeholder",
+            "indicator": {
+              "visible": true,
+              "text": "indeterminate"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "progress",
+            "key": "b",
+            "ratio": 0.25
+          },
+          "expect": {
+            "indicator": {
+              "visible": true,
+              "text": "25%"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "select-not-ready-shows-placeholder",
+      "covers": [
+        "BGL-PLACEHOLDER"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "a",
+          "b",
+          "c"
+        ],
+        "state": {
+          "slot": null
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "select",
+            "key": "a"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "a"
+          },
+          "expect": {
+            "slot": "a"
+          }
+        },
+        {
+          "action": {
+            "op": "select",
+            "key": "b"
+          },
+          "expect": {
+            "slot": "placeholder",
+            "indicator": {
+              "visible": true,
+              "text": "indeterminate"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "placeholder-replaced-when-ready",
+      "covers": [
+        "BGL-PLACEHOLDER"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "b"
+        ],
+        "state": {
+          "slot": null
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "select",
+            "key": "b"
+          },
+          "expect": {
+            "slot": "placeholder"
+          }
+        },
+        {
+          "action": {
+            "op": "progress",
+            "key": "b",
+            "ratio": 0.5
+          },
+          "expect": {
+            "slot": "placeholder",
+            "indicator": {
+              "visible": true,
+              "text": "50%"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "b"
+          },
+          "expect": {
+            "slot": "b",
+            "indicator": {
+              "visible": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "reselect-ready-during-wait",
+      "covers": [
+        "BGL-PLACEHOLDER",
+        "BGL-SWAP"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "a",
+          "b",
+          "c"
+        ],
+        "state": {
+          "slot": null
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "select",
+            "key": "a"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "a"
+          },
+          "expect": {
+            "slot": "a"
+          }
+        },
+        {
+          "action": {
+            "op": "select",
+            "key": "b"
+          },
+          "expect": {
+            "slot": "placeholder"
+          }
+        },
+        {
+          "action": {
+            "op": "select",
+            "key": "a"
+          },
+          "expect": {
+            "slot": "a"
+          }
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "b"
+          },
+          "expect": {
+            "slot": "a"
+          }
+        }
+      ]
+    },
+    {
+      "id": "selected-fail-fallback",
+      "covers": [
+        "BGL-FALLBACK",
+        "BGL-NOBLOCK"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "a",
+          "b",
+          "c"
+        ],
+        "state": {
+          "slot": null
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "select",
+            "key": "b"
+          },
+          "expect": {
+            "slot": "placeholder"
+          }
+        },
+        {
+          "action": {
+            "op": "fail",
+            "key": "b"
+          },
+          "expect": {
+            "slot": "fallback",
+            "fallbackNotice": true,
+            "blockingOverlay": false,
+            "hostInputAvailable": true
+          }
+        },
+        {
+          "action": {
+            "op": "select",
+            "key": "b"
+          },
+          "expect": {
+            "slot": "placeholder",
+            "loadRestarted": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "background-fail-silent",
+      "covers": [
+        "BGL-FALLBACK"
+      ],
+      "initial": {
+        "kind": "backgroundLoad",
+        "contents": [
+          "a",
+          "b",
+          "c"
+        ],
+        "state": {
+          "slot": null
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "select",
+            "key": "a"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "ready",
+            "key": "a"
+          },
+          "expect": {
+            "slot": "a"
+          }
+        },
+        {
+          "action": {
+            "op": "fail",
+            "key": "b"
+          },
+          "expect": {
+            "slot": "a",
+            "fallbackNotice": false
+          }
+        }
+      ]
+    }
+  ]
+}

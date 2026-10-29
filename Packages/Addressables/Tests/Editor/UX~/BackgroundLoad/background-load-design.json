@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "contractVersion": "0.1.1-draft",
+  "status": "規範草案",
+  "tokens": {
+    "preparePolicy": {
+      "first": "host-declared",
+      "rest": "declared-order",
+      "concurrency": 1,
+      "source": [
+        "vcp-character-option"
+      ]
+    },
+    "indicator": {
+      "placement": "bottom-end",
+      "overridable": true,
+      "percent": "floor-integer",
+      "unknown": "indeterminate",
+      "downloadedNotReady": "preparing",
+      "source": [
+        "user-2026-10-29",
+        "unityextension-addressables-loader"
+      ]
+    },
+    "progressRatio": {
+      "min": 0,
+      "max": 1,
+      "unit": "ratio",
+      "monotonic": true,
+      "meaning": "downloaded bytes over bytes to download",
+      "source": [
+        "unityextension-addressables-loader",
+        "yu5h1libtest-remote-load-tests"
+      ]
+    },
+    "placeholder": {
+      "provider": "host",
+      "showsProgress": true
+    },
+    "fallbackNotice": {
+      "blocking": false,
+      "retention": "until-next-operation",
+      "decision": "user-2026-10-29"
+    },
+    "fallbackContent": {
+      "provider": "host",
+      "whenHostHasNone": "placeholder",
+      "decision": "user-2026-10-29"
+    }
+  },
+  "references": {
+    "ux.asyncoperation": {
+      "version": "0.1.0-draft",
+      "behaviors": [
+        "ASYNC-PROGRESS",
+        "ASYNC-STALE"
+      ]
+    }
+  },
+  "sourceEvidence": {
+    "vcp-character-option": {
+      "path": "Virtual-Chat-Partner/Assets/Scripts/CharacterOption.cs",
+      "sha256": "b2b3972d3cbaf7a77d881e11576b964747cd63b0b73b21e92fba37aab3970a5f"
+    },
+    "vcp-character-content": {
+      "path": "Virtual-Chat-Partner/Assets/Scripts/CharacterContent.cs",
+      "sha256": "ea432df540e3e4ec8a38d1054d7d6bede40e9539c0d7086d52acf684afcc23e5"
+    },
+    "unityextension-addressables-loader": {
+      "path": "Unity/UnityExtension/Packages/Addressables/Runtime/AddressablesLoader.cs",
+      "sha256": "61de2a87ed0ac0a01ff39e1fb24d14e97acb8459874baa5bbb5a3111a921b740"
+    },
+    "unityextension-content-agent": {
+      "path": "Unity/UnityExtension/Packages/Addressables/Runtime/ContentAgent.cs",
+      "sha256": "8bb2b0ccec7f2749327ee36974c875a315af02e0e620bf8f5e205b66ac7b425c"
+    },
+    "yu5h1libtest-remote-load-tests": {
+      "path": "Yu5h1LibTest/Assets/AddressablesTest/Tests/RemoteLoadTests.cs",
+      "sha256": "29dc85cdec2b94916f56bf6b8657dc1a8c9eb002b8fdc005eae83e7f130fc964"
+    }
+  },
+  "evidenceScope": "Exact bytes of inspected working-tree files, not an execution or adoption result",
+  "repositoryBaselines": {
+    "Virtual-Chat-Partner": "65ab4ad269925f744ce996bb4d5c12505139bf7e",
+    "Unity/UnityExtension": "5f6b8c08ebff1405a638d796edf4e55bfae40b7b",
+    "UX": "c3d70323f8ef48fb266e4d7661149bdf03a3b6c4"
+  }
+}
