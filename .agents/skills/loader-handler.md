@@ -156,7 +156,8 @@ PlayMode tests `Assets/AddressablesTest/Tests/RemoteLoadTests.cs` (assembly `Yu5
 in batchmode with `-runTests -testPlatform PlayMode -assemblyNames Yu5h1LibTest.AddressablesTest.Tests -testCategory <c>`:
 `RemoteServerUp` with the server running (bytes to download before the load, 0 after: cached), then `RemoteServerDown`
 after stopping it (the cached bundle loads; after clearing the cache the load fails with a Dependency Exception).
-Two things the tests had to learn: a released bundle unloads asynchronously, so `ClearDependencyCacheAsync` right after
+When `RemoteServerUp` fails with "nothing to download" (download size 0 after clearing the cache), the content build
+is stale: run `RemoteTestSetup.Run` first, then the tests (seen 2026-10-29). Two things the tests had to learn: a released bundle unloads asynchronously, so `ClearDependencyCacheAsync` right after
 `Release` fails until it has unloaded (retry over frames); and `Assert.CatchAsync`/`ThrowsAsync` around a pending
 `Awaitable` deadlocks the main thread (async-task-objects, Tests). LocalWebService defaults to
 `Cache-Control: no-store`; the Editor and a PC player cache bundles by hash, while a WebGL player uses browser caching.
