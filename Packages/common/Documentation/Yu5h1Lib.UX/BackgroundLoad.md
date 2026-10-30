@@ -22,7 +22,7 @@ UnityExtension
 
 | 項目 | 內容 |
 |---|---|
-| 實作 | [`ContentSlot.cs`](../../Runtime/Content/ContentSlot.cs)、[`ContentSlotView.cs`](../../Runtime/Content/ContentSlotView.cs)，命名空間 `Yu5h1Lib`，`.meta` 沿用原本的，GUID 不變。可見性元件在 [`Runtime/Visibility`](../../Runtime/Visibility)：`IVisibilityTest`（`ViewportVisibility`、`CameraVisibility`）、`VisibilityTracker`（範圍 Children 或 Scene）、`VisibilityTarget` |
+（含共用橋接 `Run`：替宿主把讀取作業的進度與結果轉成 `Report`／`Complete`）、[`ContentSlotView.cs`](../../Runtime/Content/ContentSlotView.cs)，命名空間 `Yu5h1Lib`，`.meta` 沿用原本的，GUID 不變。可見性元件在 [`Runtime/Visibility`](../../Runtime/Visibility)：`IVisibilityTest`（`ViewportVisibility`；相機版本以 `CullingGroup` 列為未來規劃）、`VisibilityTracker`（範圍 Children 或 Scene）、`VisibilityTarget` |
 | UX 規範 | `UX/Documentation/ModuleSpec/Foundation/BackgroundLoad.md` 0.1.2-draft，UX commit `2b626c7`，SHA-256 `371eb2142d374ecf59ed6f71ea9dd0e6c0b541a56c4b9945d404a0f64f7a29a2`；設計資料 0.1.1-draft `13387901…`；案例 0.1.1-draft（15 個）`b6f4f74f…` |
 | 套件釘選 | 快照 `Packages/common/Tests/Editor/UX~/BackgroundLoad`（`.gitattributes` `-text`），由 `BackgroundLoadCaseTests.SnapshotMatchesThePinnedHashes` 核對 |
 | UI Toolkit | 目前沒有使用端。要用時直接訂閱 `ContentSlot.changed`，讀 `indicator`、`percent`、`shown`、`noticeVisible`，不需要中間層（使用者 2026-10-30） |

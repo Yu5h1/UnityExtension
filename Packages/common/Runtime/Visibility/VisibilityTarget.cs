@@ -16,13 +16,9 @@ namespace Yu5h1Lib
         [SerializeField] private UnityEvent<bool> _visibleChanged = new UnityEvent<bool>();
 
         private readonly HashSet<VisibilityTracker> _seenBy = new HashSet<VisibilityTracker>();
-        private Renderer[] _renderers;
 
         public UnityEvent<bool> visibleChanged => _visibleChanged;
         public bool visible => _seenBy.Count > 0;
-
-        /// <summary>The renderers under this object, found once; for tests that need bounds.</summary>
-        public Renderer[] renderers => _renderers ??= GetComponentsInChildren<Renderer>(true);
 
         private void OnEnable() => all.Add(this);
 

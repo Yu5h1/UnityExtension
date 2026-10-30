@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Yu5h1Lib
 {
@@ -14,6 +15,7 @@ namespace Yu5h1Lib
     /// Start(first)  → loads first; once it is ready (or after the first Select) the rest load one at a time
     /// Select(key)   → shows key when ready, otherwise the placeholder while key loads; the newest selection wins
     /// Complete(key) → a ready selection replaces the placeholder; a failed selection shows the fallback and the notice
+    /// Run(key, …)   → runs a host's load and does the Report/Complete calls for it
     /// </code>
     /// A selected key loads at once even while a background load runs; background loads never overlap each other.
     /// </summary>
@@ -137,6 +139,64 @@ namespace Yu5h1Lib
                 _restStarted = true;
             ContinueRest();
             Refresh();
+        }
+
+        /// <summary>
+        /// Runs one load the slot asked for (call it from <see cref="loadRequested"/>) and reports back for it: every
+        /// value given to the <see cref="IProgress{T}"/> becomes <see cref="Report"/>, the result becomes
+        /// <see cref="Complete"/>, an exception counts as a failure and is logged. A canceled load reports nothing, so
+        /// a host that cancels on teardown leaves no late result.
+        /// </summary>
+        public async Awaitable Run(string key, Func<IProgress<float>, Awaitable<bool>> load)
+        {
+            bool loaded;
+            try
+            {
+                loaded = await load(new SlotProgress(this, key));
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                loaded = false;
+            }
+            Complete(key, loaded);
+        }
+
+        /// <summary>
+        /// <see cref="Run(string, Func{IProgress{float}, Awaitable{bool}})"/> for a load that raises its progress as a
+        /// UnityEvent, such as <see cref="AsyncProgressObject.onProgress"/>; the listener lives only for this load.
+        /// </summary>
+        public Awaitable Run(string key, UnityEvent<float> progress, Func<Awaitable<bool>> load)
+            => Run(key, async reporter =>
+            {
+                UnityAction<float> report = reporter.Report;
+                progress?.AddListener(report);
+                try
+                {
+                    return await load();
+                }
+                finally
+                {
+                    progress?.RemoveListener(report);
+                }
+            });
+
+        private class SlotProgress : IProgress<float>
+        {
+            private readonly ContentSlot _slot;
+            private readonly string _key;
+
+            public SlotProgress(ContentSlot slot, string key)
+            {
+                _slot = slot;
+                _key = key;
+            }
+
+            public void Report(float value) => _slot.Report(_key, value);
         }
 
         private void RequestBackground(string key)

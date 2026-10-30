@@ -1,5 +1,6 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -52,6 +53,14 @@ namespace Yu5h1Lib.UI.Acceptance
         private Image _stageContent;
         private Text _stageLabel;
 
+        private CancellationTokenSource _loads = new CancellationTokenSource();
+
+        private void OnDestroy()
+        {
+            _loads.Cancel();
+            _loads.Dispose();
+        }
+
         private void Awake()
         {
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
@@ -62,7 +71,9 @@ namespace Yu5h1Lib.UI.Acceptance
         private void Restart()
         {
             var seconds = _seconds.value;
-            StopAllCoroutines();
+            _loads.Cancel();
+            _loads.Dispose();
+            _loads = new CancellationTokenSource();
             for (var i = transform.childCount - 1; i >= 0; i--)
                 Destroy(transform.GetChild(i).gameObject);
             Build(seconds);
@@ -76,26 +87,25 @@ namespace Yu5h1Lib.UI.Acceptance
             _stage.Start("A");
         }
 
-        private IEnumerator Simulate(ContentSlot slot, string key, Profile profile)
+        /// <summary>A simulated load: the slot's bridge (<see cref="ContentSlot.Run(string, Func{IProgress{float}, Awaitable{bool}})"/>) turns its progress and result into Report and Complete.</summary>
+        private async Awaitable<bool> Simulate(IProgress<float> progress, Profile profile)
         {
+            var token = _loads.Token;
             var duration = Mathf.Max(0.1f, _seconds.value * profile.share);
             var elapsed = 0f;
             while (elapsed < duration)
             {
-                yield return null;
+                await Awaitable.NextFrameAsync(token);
                 elapsed += Time.deltaTime;
                 var ratio = Mathf.Clamp01(elapsed / duration);
                 if (profile.failAt >= 0f && ratio >= profile.failAt)
-                {
-                    slot.Complete(key, false);
-                    yield break;
-                }
+                    return false;
                 if (profile.knownRatio && ratio < 1f)
-                    slot.Report(key, ratio);
+                    progress.Report(ratio);
             }
-            slot.Report(key, 1f);
-            yield return new WaitForSeconds(PrepareSeconds);
-            slot.Complete(key, true);
+            progress.Report(1f);
+            await Awaitable.WaitForSecondsAsync(PrepareSeconds, token);
+            return true;
         }
 
         private void BuildControls(float seconds)
@@ -154,7 +164,7 @@ namespace Yu5h1Lib.UI.Acceptance
             var indicator = Rect("Indicator", transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-320f, 12f), new Vector2(-16f, 40f));
 
             _stage = new ContentSlot(StageProfiles.Keys);
-            _stage.loadRequested += key => StartCoroutine(Simulate(_stage, key, StageProfiles[key]));
+            _stage.loadRequested += key => _ = _stage.Run(key, progress => Simulate(progress, StageProfiles[key]));
             _stage.changed += () =>
             {
                 var ready = _stage.shown != null && StageProfiles.TryGetValue(_stage.shown, out var shown) ? shown : null;
@@ -220,7 +230,7 @@ namespace Yu5h1Lib.UI.Acceptance
             Place(notice.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 6f), new Vector2(0f, 32f));
 
             var slot = new ContentSlot(new[] { key });
-            slot.loadRequested += k => StartCoroutine(Simulate(slot, k, profile));
+            slot.loadRequested += k => _ = slot.Run(k, progress => Simulate(progress, profile));
             slot.changed += () => image.gameObject.SetActive(slot.shown == key);
             var view = rect.gameObject.AddComponent<ContentSlotView>();
             view.placeholderVisible.AddListener(placeholder.gameObject.SetActive);
