@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.Events;
@@ -9,6 +10,8 @@ namespace Yu5h1Lib.UI
     public class TextAddon : UI_Adapter<ITextOps>, ITextOps, ITextAttribute
     {
         public string CharactersToTrim;
+        [SerializeField, Tooltip("Format for SetValue; {0} is the value, e.g. {0:0%} for a ratio or Loading… {0}% for a whole percent.")]
+        private string _format = "{0:0%}";
         public string text { get => adapter.text.Trim(Regex.Unescape(CharactersToTrim).ToCharArray()); set => adapter.text = value; }
         public Color color { get => adapter.color; set => adapter.color = value; }
         public float alpha { get => adapter.alpha; set => adapter.alpha = value; }
@@ -46,5 +49,11 @@ namespace Yu5h1Lib.UI
 #endif
 
         public void SetText(Object obj) => text = obj?.ToString() ?? string.Empty;
+
+        public string format { get => _format; set => _format = value; }
+
+        /// <summary>Shows <paramref name="value"/> through the format, so the source of a number never builds its text.</summary>
+        public void SetValue(float value) => text = string.Format(CultureInfo.InvariantCulture, _format, value);
+        public void SetValue(int value) => text = string.Format(CultureInfo.InvariantCulture, _format, value);
     }
 }

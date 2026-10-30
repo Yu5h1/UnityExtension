@@ -2,14 +2,14 @@
 
 Current round: `../../../UX/Documentation/ModuleSpec/Foundation/BackgroundLoad.md#目標-1非阻塞背景資源預備與自主內容準備進行中2026-10-29-開輪次`.
 
-一次只有一輪：UX BackgroundLoad 0.1.2-draft 目標 1 在 Yu5h1Lib.Common 的模組輪（使用者 2026-10-30：規則移到 common、推導抽成 ContentSlotPresentation、驗收入口放在 Yu5h1Lib.UI 的 UxAcceptance）。demo 的人工檢查在 common-backgroundload-demo.checklist。
+一次只有一輪：UX BackgroundLoad 0.1.2-draft 目標 1 在 Yu5h1Lib.Common 的模組輪（使用者 2026-10-30：規則移到 common、視圖只發狀態事件、文字交給 TextAddon、看見才讀交給感知元件、驗收入口放在 Yu5h1Lib.UI 的 UxAcceptance）。demo 的人工檢查在 common-backgroundload-demo.checklist。
 
 - [x] **1. 規則與推導在 Yu5h1Lib.Common**
-  Outcome: ContentSlot、ContentSlotPresentation、ContentSlotView 在 common 編譯，釘選的中性案例與推導測試全部通過，Addressables 不再持有它們。
+  Outcome: ContentSlot、ContentSlotView 與感知元件在 common 編譯，釘選的中性案例、視圖事件與感知測試全部通過，Addressables 不再持有它們。
   Checks:
     - [x] **編譯**
       - Action: 在 Yu5h1LibTest 以 unityMCP 強制重新整理並要求編譯，讀 Console 的 Error 與 Warning。
       - Expect: 沒有 Error 或 Warning。
     - [x] **中性案例與推導測試**
-      - Action: 以 unityMCP 執行 EditMode，組件為 Yu5h1Lib.Common.Editor.Tests 和 Yu5h1Lib.Addressables.Editor.Tests。
-      - Expect: 全部通過，其中包含 BackgroundLoadCaseTests 的 15 個案例與雜湊，以及 ContentSlotPresentationTests 的 5 項。
+      - Action: 以 unityMCP 執行 EditMode，組件為 Yu5h1Lib.Common.Editor.Tests、Yu5h1Lib.Addressables.Editor.Tests 和 Yu5h1Lib.UI.Editor.Tests。
+      - Expect: 全部通過，其中包含 BackgroundLoadCaseTests 的 15 個案例與雜湊，ContentSlotViewTests 的 5 項與 PerceptionTests 的 2 項。

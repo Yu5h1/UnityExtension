@@ -10,8 +10,8 @@ namespace Yu5h1Lib.UI.Acceptance
     /// one of four contents (A fast, B slow, C without a known ratio, D always failing), started on A when the page opens,
     /// with its indicator in the bottom-right corner. Right: a list whose images each are a one-content slot.
     /// <para>
-    /// Loading an image when it scrolls into view and letting it finish after it scrolls out are this demo's host
-    /// policy, not BackgroundLoad rules (the spec leaves what to load and when to the host); list loads have no corner
+    /// Loading an image when the list's <see cref="Perceiver"/> first sees it (<see cref="RectViewportSight"/>) and letting
+    /// it finish after it scrolls out are this demo's host policy, not BackgroundLoad rules (the spec leaves what to load and when to the host); list loads have no corner
     /// indicator because the spec does not cover combined progress.
     /// </para>
     /// </summary>
@@ -33,14 +33,6 @@ namespace Yu5h1Lib.UI.Acceptance
             }
         }
 
-        private class Cell
-        {
-            public string key;
-            public RectTransform rect;
-            public ContentSlot slot;
-            public bool requested;
-        }
-
         private const string NoticeText = "此內容異常";
         private const float PrepareSeconds = 1f;
         private const int CellCount = 8;
@@ -59,8 +51,6 @@ namespace Yu5h1Lib.UI.Acceptance
         private ContentSlot _stage;
         private Image _stageContent;
         private Text _stageLabel;
-        private RectTransform _viewport;
-        private readonly List<Cell> _cells = new List<Cell>();
 
         private void Awake()
         {
@@ -75,7 +65,6 @@ namespace Yu5h1Lib.UI.Acceptance
             StopAllCoroutines();
             for (var i = transform.childCount - 1; i >= 0; i--)
                 Destroy(transform.GetChild(i).gameObject);
-            _cells.Clear();
             Build(seconds);
         }
 
@@ -85,31 +74,6 @@ namespace Yu5h1Lib.UI.Acceptance
             BuildStage();
             BuildList();
             _stage.Start("A");
-        }
-
-        private void Update()
-        {
-            if (_viewport == null)
-                return;
-            var view = VerticalRange(_viewport);
-            foreach (var cell in _cells)
-            {
-                if (cell.requested)
-                    continue;
-                var range = VerticalRange(cell.rect);
-                if (range.y > view.x && range.x < view.y)
-                {
-                    cell.requested = true;
-                    cell.slot.Select(cell.key);
-                }
-            }
-        }
-
-        private static Vector2 VerticalRange(RectTransform rect)
-        {
-            var corners = new Vector3[4];
-            rect.GetWorldCorners(corners);
-            return new Vector2(corners[0].y, corners[1].y);
         }
 
         private IEnumerator Simulate(ContentSlot slot, string key, Profile profile)
@@ -183,14 +147,11 @@ namespace Yu5h1Lib.UI.Acceptance
             _stageContent.gameObject.SetActive(false);
 
             var placeholder = Paint(Fill(Rect("Placeholder", stage)), new Color(0f, 0f, 0f, 0.35f));
-            var placeholderText = Label(placeholder.rectTransform, string.Empty, 20, TextAnchor.MiddleCenter);
-            Fill(placeholderText.rectTransform);
             var notice = Label(stage, NoticeText, 18, TextAnchor.MiddleCenter, FontStyle.Bold);
             notice.color = new Color(1f, 0.55f, 0.5f);
             Place(notice.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 8f), new Vector2(0f, 40f));
 
-            var indicator = Label(transform, string.Empty, 16, TextAnchor.LowerRight);
-            Place(indicator.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-320f, 12f), new Vector2(-16f, 40f));
+            var indicator = Rect("Indicator", transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-320f, 12f), new Vector2(-16f, 40f));
 
             _stage = new ContentSlot(StageProfiles.Keys);
             _stage.loadRequested += key => StartCoroutine(Simulate(_stage, key, StageProfiles[key]));
@@ -205,9 +166,9 @@ namespace Yu5h1Lib.UI.Acceptance
             };
             var view = stage.gameObject.AddComponent<ContentSlotView>();
             view.indicatorVisible.AddListener(indicator.gameObject.SetActive);
-            view.progressText.AddListener(text => indicator.text = text);
+            Progress(indicator, view, 16, TextAnchor.LowerRight);
             view.placeholderVisible.AddListener(placeholder.gameObject.SetActive);
-            view.placeholderText.AddListener(text => placeholderText.text = text);
+            view.waitingVisible.AddListener(Progress(placeholder.rectTransform, view, 20, TextAnchor.MiddleCenter).gameObject.SetActive);
             view.noticeVisible.AddListener(notice.gameObject.SetActive);
             view.Bind(_stage);
         }
@@ -220,9 +181,11 @@ namespace Yu5h1Lib.UI.Acceptance
             scrollRect.horizontal = false;
             scrollRect.scrollSensitivity = 20f;
 
-            _viewport = Fill(Rect("Viewport", scroll));
-            _viewport.gameObject.AddComponent<RectMask2D>();
-            var content = Rect("Content", _viewport, new Vector2(0f, 1f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero);
+            var viewport = Fill(Rect("Viewport", scroll));
+            viewport.gameObject.AddComponent<RectMask2D>();
+            viewport.gameObject.AddComponent<RectViewportSight>();
+            viewport.gameObject.AddComponent<Perceiver>();
+            var content = Rect("Content", viewport, new Vector2(0f, 1f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero);
             content.pivot = new Vector2(0.5f, 1f);
             var layout = content.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.padding = new RectOffset(12, 12, 12, 12);
@@ -232,14 +195,14 @@ namespace Yu5h1Lib.UI.Acceptance
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
             content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            scrollRect.viewport = _viewport;
+            scrollRect.viewport = viewport;
             scrollRect.content = content;
 
             for (var i = 1; i <= CellCount; i++)
-                _cells.Add(BuildCell(content, i));
+                BuildCell(content, i);
         }
 
-        private Cell BuildCell(RectTransform parent, int number)
+        private void BuildCell(RectTransform parent, int number)
         {
             var key = "#" + number;
             var profile = new Profile(0.5f, true, number == FailingCell ? 0.5f : -1f,
@@ -252,21 +215,47 @@ namespace Yu5h1Lib.UI.Acceptance
             Fill(Label(image.rectTransform, key, 40, TextAnchor.MiddleCenter, FontStyle.Bold).rectTransform);
             image.gameObject.SetActive(false);
             var placeholder = Paint(Fill(Rect("Placeholder", rect)), new Color(0f, 0f, 0f, 0.35f));
-            var placeholderText = Label(placeholder.rectTransform, string.Empty, 18, TextAnchor.MiddleCenter);
-            Fill(placeholderText.rectTransform);
             var notice = Label(rect, NoticeText, 16, TextAnchor.MiddleCenter, FontStyle.Bold);
             notice.color = new Color(1f, 0.55f, 0.5f);
             Place(notice.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 6f), new Vector2(0f, 32f));
 
-            var cell = new Cell { key = key, rect = rect, slot = new ContentSlot(new[] { key }) };
-            cell.slot.loadRequested += k => StartCoroutine(Simulate(cell.slot, k, profile));
-            cell.slot.changed += () => image.gameObject.SetActive(cell.slot.shown == key);
+            var slot = new ContentSlot(new[] { key });
+            slot.loadRequested += k => StartCoroutine(Simulate(slot, k, profile));
+            slot.changed += () => image.gameObject.SetActive(slot.shown == key);
             var view = rect.gameObject.AddComponent<ContentSlotView>();
             view.placeholderVisible.AddListener(placeholder.gameObject.SetActive);
-            view.placeholderText.AddListener(text => placeholderText.text = text);
+            view.waitingVisible.AddListener(Progress(placeholder.rectTransform, view, 18, TextAnchor.MiddleCenter).gameObject.SetActive);
             view.noticeVisible.AddListener(notice.gameObject.SetActive);
-            view.Bind(cell.slot);
-            return cell;
+            view.Bind(slot);
+
+            // Demo host policy: the first time the list's viewport sees the image, it is selected (and so loads).
+            rect.gameObject.AddComponent<Perceptible>().seenChanged.AddListener(seen =>
+            {
+                if (seen && slot.selected == null)
+                    slot.Select(key);
+            });
+        }
+
+        /// <summary>
+        /// The three indicator states as separate objects switched by the view; the percent goes through TextAddon's
+        /// format, so the slot never builds text.
+        /// </summary>
+        private RectTransform Progress(Transform parent, ContentSlotView view, int size, TextAnchor alignment)
+        {
+            var group = Fill(Rect("Progress", parent));
+            var percent = Label(group, string.Empty, size, alignment);
+            Fill(percent.rectTransform);
+            var percentText = percent.gameObject.AddComponent<TextAddon>();
+            percentText.format = "Loading… {0}%";
+            var indeterminate = Label(group, "Loading…", size, alignment);
+            Fill(indeterminate.rectTransform);
+            var preparing = Label(group, "準備中…", size, alignment);
+            Fill(preparing.rectTransform);
+            view.percentVisible.AddListener(percent.gameObject.SetActive);
+            view.percent.AddListener(percentText.SetValue);
+            view.indeterminateVisible.AddListener(indeterminate.gameObject.SetActive);
+            view.preparingVisible.AddListener(preparing.gameObject.SetActive);
+            return group;
         }
 
         private static RectTransform Rect(string name, Transform parent)

@@ -4,30 +4,43 @@ using UnityEngine.Events;
 namespace Yu5h1Lib
 {
     /// <summary>
-    /// Turns a <see cref="ContentSlot"/> into scene events, so the progress indicator, the placeholder and the failure
-    /// notice are ordinary scene objects wired in the Inspector (for example GameObject.SetActive and TMP_Text.text).
-    /// The owner of the slot calls <see cref="Bind"/>. What each event carries is <see cref="ContentSlotPresentation"/>'s.
+    /// Turns a <see cref="ContentSlot"/>'s state into scene events, so each piece of the indicator and the placeholder is
+    /// an ordinary scene object switched in the Inspector: GameObject.SetActive for the bool events, a text component's
+    /// SetValue for <c>percent</c> (TextAddon formats it, for example "Loading… {0}%"). This component holds no text.
+    /// The owner of the slot calls <see cref="Bind"/>.
+    /// <code>
+    /// indicatorVisible    any of the three below
+    ///   percentVisible + percent(int, rounded down) | indeterminateVisible | preparingVisible
+    /// placeholderVisible  the place shows the placeholder: waiting for the selection, or as the fallback
+    ///   waitingVisible    waiting: the placeholder's progress (the indicator follows the same load then)
+    ///   fallbackVisible   the selection failed and the placeholder stands as the fallback
+    /// noticeVisible       the non-blocking failure notice
+    /// </code>
+    /// A UI Toolkit panel subscribes to <see cref="ContentSlot.changed"/> and reads the slot directly instead.
     /// </summary>
     public class ContentSlotView : MonoBehaviour
     {
-        [SerializeField] private string _percentFormat = ContentSlotPresentation.DefaultPercentFormat;
-        [SerializeField] private string _indeterminateText = ContentSlotPresentation.DefaultIndeterminateText;
-        [SerializeField] private string _preparingText = ContentSlotPresentation.DefaultPreparingText;
-
         [SerializeField] private UnityEvent<bool> _indicatorVisible = new UnityEvent<bool>();
-        [SerializeField] private UnityEvent<string> _progressText = new UnityEvent<string>();
+        [SerializeField] private UnityEvent<bool> _percentVisible = new UnityEvent<bool>();
+        [SerializeField] private UnityEvent<int> _percent = new UnityEvent<int>();
+        [SerializeField] private UnityEvent<bool> _indeterminateVisible = new UnityEvent<bool>();
+        [SerializeField] private UnityEvent<bool> _preparingVisible = new UnityEvent<bool>();
         [SerializeField] private UnityEvent<bool> _placeholderVisible = new UnityEvent<bool>();
-        [SerializeField] private UnityEvent<string> _placeholderText = new UnityEvent<string>();
+        [SerializeField] private UnityEvent<bool> _waitingVisible = new UnityEvent<bool>();
+        [SerializeField] private UnityEvent<bool> _fallbackVisible = new UnityEvent<bool>();
         [SerializeField] private UnityEvent<bool> _noticeVisible = new UnityEvent<bool>();
 
         private ContentSlot _slot;
-        private ContentSlotPresentation _presentation;
 
         /// <summary>The events, for a view built in code; a scene wires them in the Inspector.</summary>
         public UnityEvent<bool> indicatorVisible => _indicatorVisible;
-        public UnityEvent<string> progressText => _progressText;
+        public UnityEvent<bool> percentVisible => _percentVisible;
+        public UnityEvent<int> percent => _percent;
+        public UnityEvent<bool> indeterminateVisible => _indeterminateVisible;
+        public UnityEvent<bool> preparingVisible => _preparingVisible;
         public UnityEvent<bool> placeholderVisible => _placeholderVisible;
-        public UnityEvent<string> placeholderText => _placeholderText;
+        public UnityEvent<bool> waitingVisible => _waitingVisible;
+        public UnityEvent<bool> fallbackVisible => _fallbackVisible;
         public UnityEvent<bool> noticeVisible => _noticeVisible;
 
         public void Bind(ContentSlot slot)
@@ -37,7 +50,6 @@ namespace Yu5h1Lib
             _slot = slot;
             if (_slot == null)
                 return;
-            _presentation = new ContentSlotPresentation(_percentFormat, _indeterminateText, _preparingText);
             _slot.changed += Present;
             Present();
         }
@@ -46,11 +58,19 @@ namespace Yu5h1Lib
 
         private void Present()
         {
-            _indicatorVisible.Invoke(_presentation.IndicatorVisible(_slot));
-            _progressText.Invoke(_presentation.ProgressText(_slot));
-            _placeholderVisible.Invoke(_presentation.PlaceholderVisible(_slot));
-            _placeholderText.Invoke(_presentation.PlaceholderText(_slot));
-            _noticeVisible.Invoke(_presentation.NoticeVisible(_slot));
+            var indicator = _slot.indicator;
+            _indicatorVisible.Invoke(indicator != ContentSlot.Indicator.Hidden);
+            _percentVisible.Invoke(indicator == ContentSlot.Indicator.Percent);
+            if (indicator == ContentSlot.Indicator.Percent)
+                _percent.Invoke(_slot.percent);
+            _indeterminateVisible.Invoke(indicator == ContentSlot.Indicator.Indeterminate);
+            _preparingVisible.Invoke(indicator == ContentSlot.Indicator.Preparing);
+
+            var shown = _slot.shown;
+            _placeholderVisible.Invoke(shown == ContentSlot.Placeholder || shown == ContentSlot.Fallback);
+            _waitingVisible.Invoke(shown == ContentSlot.Placeholder);
+            _fallbackVisible.Invoke(shown == ContentSlot.Fallback);
+            _noticeVisible.Invoke(_slot.noticeVisible);
         }
     }
 }

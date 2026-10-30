@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-29T18:06:50.173738+00:00",
+  "updated_at": "2026-10-30T03:13:19.015038+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -760,7 +760,7 @@
       "completed_items": [
         {
           "id": "common-backgroundload-acceptance",
-          "title": "驗收 Yu5h1Lib.Common 的 BackgroundLoad 目標 1：ContentSlot 從 Addressables 移入 common、抽出 ContentSlotPresentation；模組輪 EditMode 148 項通過",
+          "title": "驗收 Yu5h1Lib.Common 的 BackgroundLoad 目標 1：ContentSlot 從 Addressables 移入 common，ContentSlotView 改為只發狀態事件（文字交給 TextAddon），看見才讀改用感知元件；模組輪 EditMode 157 項通過",
           "status": "done",
           "priority": 1,
           "document_ref": {
@@ -780,6 +780,13 @@
               "event": "done",
               "actor": "claude",
               "at": "2026-10-29T18:06:50.173738+00:00",
+              "session": "Report 顯示",
+              "session_id": "252d4f73-7934-45a8-8ac7-ea2edab2aefb"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-10-30T03:13:19.015038+00:00",
               "session": "Report 顯示",
               "session_id": "252d4f73-7934-45a8-8ac7-ea2edab2aefb"
             }

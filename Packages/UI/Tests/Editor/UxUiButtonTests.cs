@@ -202,7 +202,9 @@ namespace Yu5h1Lib.UI.Tests
         [Test]
         public void AcceptanceHost_ResolvesDefaultButtonTarget_SupportsSecondModuleAndSurfacesBlockedForUnknownId()
         {
-            Assert.AreEqual("button", UxUiAcceptanceTarget.ResolveCurrentTargetId());
+            // CurrentTarget.json names whichever case is under acceptance; the host must mount that one.
+            var target = UxUiAcceptanceTarget.ResolveCurrentTargetId();
+            Assert.IsFalse(string.IsNullOrEmpty(target));
 
             var secondCase = new DummyModuleDemoCase();
             UxUiModuleRegistry.Register(secondCase);
@@ -225,7 +227,7 @@ namespace Yu5h1Lib.UI.Tests
 
                 var activeCase = currentCaseProp?.GetValue(host) as IUxUiModuleDemoCase;
                 Assert.IsNotNull(activeCase);
-                Assert.AreEqual("button", activeCase.Id);
+                Assert.AreEqual(target, activeCase.Id);
                 var contentRect = contentContainerProp?.GetValue(host) as RectTransform;
                 Assert.IsNotNull(contentRect);
                 Assert.AreEqual(1, contentRect.childCount);
