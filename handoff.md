@@ -248,7 +248,7 @@ UnityExtension owns reusable Unity-facing packages and workflows. Application pr
 
 - [Recycler — 後續決策](Documentation/Recycler_Refactor.md#後續決策): failure/reentrancy and retention semantics before the corresponding Core implementation; Unity convenience and migration choices before their slices.
 
-- [非同步工作 — 尚未決定](Documentation/非同步工作.md#尚未決定): 2026-10-30 layering review — a shared bridge from a load to `ContentSlot`, whether `CameraVisibility` stays without a consumer, whether the global loading view adopts UX AsyncOperation, whether streaming performance moves out of `Processing`.
+- [非同步工作 — 尚未決定](Documentation/非同步工作.md#尚未決定): 2026-10-30 layering review — a shared bridge from a load to `ContentSlot`, whether `CameraVisibility` stays without a consumer, whether streaming performance moves out of `Processing`.
 
 - [Web 套件遷移 — 尚未決定](Documentation/Web套件遷移.md#尚未決定): `WebRequestEvent.cs` delete vs move, `IndexHtmlEditor.cs` encoding, common version number.
 
