@@ -10,7 +10,7 @@ namespace Yu5h1Lib.UI.Acceptance
     /// one of four contents (A fast, B slow, C without a known ratio, D always failing), started on A when the page opens,
     /// with its indicator in the bottom-right corner. Right: a list whose images each are a one-content slot.
     /// <para>
-    /// Loading an image when the list's <see cref="Perceiver"/> first sees it (<see cref="RectViewportSight"/>) and letting
+    /// Loading an image when the list's <see cref="VisibilityTracker"/> first sees it (<see cref="ViewportVisibility"/>) and letting
     /// it finish after it scrolls out are this demo's host policy, not BackgroundLoad rules (the spec leaves what to load and when to the host); list loads have no corner
     /// indicator because the spec does not cover combined progress.
     /// </para>
@@ -183,8 +183,8 @@ namespace Yu5h1Lib.UI.Acceptance
 
             var viewport = Fill(Rect("Viewport", scroll));
             viewport.gameObject.AddComponent<RectMask2D>();
-            viewport.gameObject.AddComponent<RectViewportSight>();
-            viewport.gameObject.AddComponent<Perceiver>();
+            viewport.gameObject.AddComponent<ViewportVisibility>();
+            viewport.gameObject.AddComponent<VisibilityTracker>();
             var content = Rect("Content", viewport, new Vector2(0f, 1f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero);
             content.pivot = new Vector2(0.5f, 1f);
             var layout = content.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -229,9 +229,9 @@ namespace Yu5h1Lib.UI.Acceptance
             view.Bind(slot);
 
             // Demo host policy: the first time the list's viewport sees the image, it is selected (and so loads).
-            rect.gameObject.AddComponent<Perceptible>().seenChanged.AddListener(seen =>
+            rect.gameObject.AddComponent<VisibilityTarget>().visibleChanged.AddListener(visible =>
             {
-                if (seen && slot.selected == null)
+                if (visible && slot.selected == null)
                     slot.Select(key);
             });
         }
