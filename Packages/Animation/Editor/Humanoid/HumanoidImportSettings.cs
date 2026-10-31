@@ -62,5 +62,11 @@ namespace Yu5h1Lib.EditorExtension
 
         public Avatar avatar;
         public List<AnimationClip> clips = new List<AnimationClip>();
+
+        /// <summary>
+        ///   Control intervals of the clips whose source animation carries them, one <see cref="MotionIntervals"/>
+        ///   sub-asset per such clip. Generated, like <see cref="clips"/>; empty for a GLB without intervals.
+        /// </summary>
+        public List<MotionIntervals> intervals = new List<MotionIntervals>();
     }
 }

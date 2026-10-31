@@ -68,6 +68,33 @@ How a clip plays:
 Root motion is scaled by the human scale of the character that plays it, which is how Unity retargets humanoid root
 motion: a chibi covers a smaller distance than an adult with the same clip.
 
+### Control intervals
+
+A motion GLB from Character Builder may carry the named control intervals of its animation file
+(ANIMATION-LIMB-8): `animations[i].extras.yu5h1.intervals` = `{ fps, length, duration, items }`, each item
+`{ name, start, end, startTime, endTime, underControl, cancellable }` (frames, and seconds = frame ÷ `fps`).
+Generating a motion GLB that has them also creates one `MotionIntervals` ScriptableObject per clip, named
+`<clip>Intervals`, as a sub-asset of the settings asset, and lists it in the settings' `intervals`. It is
+overwritten in place when you generate again, so references to it survive. A GLB without intervals creates nothing,
+and the clips and Avatar come out exactly as before.
+
+`MotionIntervals` (runtime assembly `Yu5h1Lib.Animation`, namespace `Yu5h1Lib`) is what a game reads:
+
+| Member | Meaning |
+|---|---|
+| `clip`, `frameRate`, `length`, `duration` | The humanoid clip, the file's fps, its last frame and its length in seconds. |
+| `intervals` | `MotionInterval` list in file order: `name`, `startFrame`, `endFrame`, `startTime`, `endTime` (seconds), `underControl`, `cancellable`. |
+| `Normalize(seconds)`, `NormalizedStart(i)`, `NormalizedEnd(i)` | Normalized time 0..1 (seconds ÷ `duration`, equal to frame ÷ `length`). |
+| `TryFind(name, out i)` | The first interval with that name. |
+| `At(seconds)`, `AtNormalized(t)` | The intervals that hold the time; an interval is [start, end), and one ending at the last frame holds the end too. |
+| `IsUnderControl(seconds)`, `IsCancellable(seconds)` | Whether any interval holding the time has the flag. |
+
+Why a separate asset: an `AnimationClip` cannot carry data of its own, and the settings class lives in the Editor
+assembly, which a game does not ship. `MotionIntervals` is a runtime ScriptableObject next to the clip, so a game
+references it from a field and plays the clip and asks it, with no editor code. The importer reads the file's JSON
+itself (`GlbIntervalReader`), because glTFast does not expose animation extras; damaged or missing extras give no
+intervals and never an error.
+
 ### What is not carried over
 
 - Bone translation (arm stretch and the like): a humanoid clip holds muscles only. Stretching is to be added later as
@@ -79,4 +106,5 @@ motion: a chibi covers a smaller distance than an adult with the same clip.
 ### Tests
 
 `Tests/Editor/HumanoidImportTests.cs` builds a skeleton in code and checks the bone map, the Avatar, baked and
-unbaked channels, offsets and regeneration. Run with the EditMode test runner (`Yu5h1Lib.Animation.Editor.Tests`).
+unbaked channels, offsets and regeneration; `Tests/Editor/MotionIntervalTests.cs` checks the interval reader and the
+`MotionIntervals` queries. Run with the EditMode test runner (`Yu5h1Lib.Animation.Editor.Tests`).

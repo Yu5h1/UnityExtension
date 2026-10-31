@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -12,7 +13,9 @@ namespace Yu5h1Lib.EditorExtension
     ///   A source that has a skinned mesh, or no clip at all, is a character: it yields the Avatar. Every clip in the
     ///   source yields one humanoid clip with root motion. Outputs are sub-assets of the settings asset; an output
     ///   that already exists is overwritten in place, so references to it survive, and outputs the source no longer
-    ///   produces are removed. Nothing in glTFast or the source file is touched.
+    ///   produces are removed. A clip whose source animation carries control intervals (see
+    ///   <see cref="GlbIntervalReader"/>) also yields a <see cref="MotionIntervals"/> sub-asset; a source without
+    ///   intervals yields none and imports as before. Nothing in glTFast or the source file is touched.
     /// </summary>
     public static class HumanoidImporter
     {
@@ -32,6 +35,7 @@ namespace Yu5h1Lib.EditorExtension
             public int frames;
             public Vector3 motionEnd;
             public float motionYawEnd;
+            public MotionIntervals intervals;
         }
 
         public static Report Generate(HumanoidImportSettings settings)
@@ -87,6 +91,9 @@ namespace Yu5h1Lib.EditorExtension
             var isCharacter = sourceClips.Count == 0 || settings.source.GetComponentInChildren<SkinnedMeshRenderer>(true) != null;
             var previous = settings.clips.Where(clip => clip != null).ToList();
             var produced = new List<AnimationClip>();
+            var previousIntervals = settings.intervals.Where(item => item != null).ToList();
+            var producedIntervals = new List<MotionIntervals>();
+            var sourceIntervals = ReadIntervals(sourcePath);
             try
             {
                 foreach (var sourceClip in sourceClips)
@@ -103,12 +110,16 @@ namespace Yu5h1Lib.EditorExtension
                     }
                     var stored = Upsert(settings, previous.Find(clip => clip.name == clipResult.clip.name), clipResult.clip);
                     produced.Add(stored);
+                    var storedIntervals = UpsertIntervals(settings, previousIntervals, sourceIntervals, stored, sourceClips.Count);
+                    if (storedIntervals != null)
+                        producedIntervals.Add(storedIntervals);
                     report.clips.Add(new ClipReport
                     {
                         clip = stored,
                         frames = clipResult.frames,
                         motionEnd = clipResult.motionEnd,
-                        motionYawEnd = clipResult.motionYawEnd
+                        motionYawEnd = clipResult.motionYawEnd,
+                        intervals = storedIntervals
                     });
                 }
             }
@@ -135,9 +146,35 @@ namespace Yu5h1Lib.EditorExtension
                 Object.DestroyImmediate(stale, true);
             settings.clips = produced;
 
+            foreach (var stale in previousIntervals.Where(item => !producedIntervals.Contains(item)))
+                Object.DestroyImmediate(stale, true);
+            settings.intervals = producedIntervals;
+
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
             AssetDatabase.ImportAsset(settingsPath, ImportAssetOptions.ForceUpdate);
+        }
+
+        static List<GlbIntervalReader.Animation> ReadIntervals(string sourcePath)
+        {
+            var extension = Path.GetExtension(sourcePath).ToLowerInvariant();
+            if (extension != ".glb" && extension != ".gltf")
+                return new List<GlbIntervalReader.Animation>();
+            return GlbIntervalReader.Read(File.ReadAllBytes(Path.GetFullPath(sourcePath)));
+        }
+
+        static MotionIntervals UpsertIntervals(HumanoidImportSettings settings, List<MotionIntervals> previous,
+            List<GlbIntervalReader.Animation> source, AnimationClip clip, int clipCount)
+        {
+            var animation = source.Find(item => item.name == clip.name);
+            if (animation == null && clipCount == 1 && source.Count == 1)
+                animation = source[0];
+            if (animation == null)
+                return null;
+            var fresh = ScriptableObject.CreateInstance<MotionIntervals>();
+            fresh.name = clip.name + "Intervals";
+            fresh.Set(clip, animation.frameRate, animation.length, animation.duration, animation.intervals);
+            return Upsert(settings, previous.Find(item => item.name == fresh.name), fresh);
         }
 
         static GameObject InstantiateSource(HumanoidImportSettings settings)

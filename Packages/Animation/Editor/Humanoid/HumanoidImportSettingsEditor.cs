@@ -108,6 +108,8 @@ namespace Yu5h1Lib.EditorExtension
                 }
                 foreach (var clip in settings.clips.Where(clip => clip != null))
                     EditorGUILayout.ObjectField(clip.isHumanMotion ? "Humanoid Clip" : "Clip", clip, typeof(AnimationClip), false);
+                foreach (var motionIntervals in settings.intervals.Where(item => item != null))
+                    EditorGUILayout.ObjectField($"Intervals ({motionIntervals.intervals.Count})", motionIntervals, typeof(MotionIntervals), false);
             }
         }
 
@@ -125,7 +127,7 @@ namespace Yu5h1Lib.EditorExtension
             if (report.avatar != null)
                 lines.Add($"Avatar: {report.mappedBones} bones mapped, isValid {report.avatar.isValid}, isHuman {report.avatar.isHuman}.");
             foreach (var clip in report.clips)
-                lines.Add($"Clip '{clip.clip.name}': {clip.frames} samples, humanoid {clip.clip.isHumanMotion}, root motion ends at {clip.motionEnd.ToString("F3")}, heading {clip.motionYawEnd:F1}°.");
+                lines.Add($"Clip '{clip.clip.name}': {clip.frames} samples, humanoid {clip.clip.isHumanMotion}, root motion ends at {clip.motionEnd.ToString("F3")}, heading {clip.motionYawEnd:F1}°{(clip.intervals != null ? $", {clip.intervals.intervals.Count} intervals" : "")}.");
             _message = string.Join("\n", lines);
             _messageType = MessageType.Info;
         }
