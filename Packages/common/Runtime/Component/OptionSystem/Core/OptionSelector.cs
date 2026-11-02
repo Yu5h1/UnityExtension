@@ -16,7 +16,6 @@ namespace Yu5h1Lib
         public OptionSet optionSet { get => _OptionSet; set => _OptionSet = value; }
         public int Count => optionSet.Count;
         [SerializeField] private int _current = -1;
-        [SerializeField] private Object binding;
         [SerializeField, FormerlySerializedAs("skipIndices")] private int[] _excludeIndices;
         public int[] excludeIndices { get => _excludeIndices; private set => _excludeIndices = value; }
 
@@ -51,8 +50,7 @@ namespace Yu5h1Lib
 
                     optionSet.Select(value);
                     _selectionChanged?.Invoke(value);
-                    if (binding is IValuePort port)
-                        port.SetValue(optionSet.GetValue());
+                    InvokeItemTextChanged(value);
                 }
                 finally
                 {
@@ -70,6 +68,19 @@ namespace Yu5h1Lib
         {
             add => _selectionChanged.AddListener(value);
             remove => _selectionChanged.RemoveListener(value);
+        }
+
+        /// <summary>Raised with the selected item's text from <see cref="OptionSet.TryGetItemText"/>, so a label shows the selection without its own copy of the items.</summary>
+        [SerializeField] private UnityEvent<string> _itemTextChanged;
+        public event UnityAction<string> itemTextChanged
+        {
+            add => _itemTextChanged.AddListener(value);
+            remove => _itemTextChanged.RemoveListener(value);
+        }
+        private void InvokeItemTextChanged(int index)
+        {
+            if (index >= 0 && optionSet != null && optionSet.TryGetItemText(index, out string text))
+                _itemTextChanged?.Invoke(text);
         }
 
         #region ValuePort
@@ -107,7 +118,11 @@ namespace Yu5h1Lib
             ChangedCallback -= ReadFromThis;
             ReadFromThis = null;
         }
-        public void NotifyValueChanged() => _selectionChanged?.Invoke(current);
+        public void NotifyValueChanged()
+        {
+            _selectionChanged?.Invoke(current);
+            InvokeItemTextChanged(current);
+        }
 
         protected virtual void OnDestroy() => Unbind();
         #endregion
