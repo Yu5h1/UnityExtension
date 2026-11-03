@@ -61,7 +61,7 @@
   ],
   "unmapped": [
     "root",
-    "fist_l", "fist_r", "prop_l", "prop_r",
+    "fist_l", "fist_r",
     "thumb_tip_l", "thumb_tip_r", "index_tip_l", "index_tip_r", "middle_tip_l", "middle_tip_r", "ring_tip_l", "ring_tip_r", "little_tip_l", "little_tip_r",
     "toe_tip_l", "toe_tip_r", "jaw_tip"
   ]

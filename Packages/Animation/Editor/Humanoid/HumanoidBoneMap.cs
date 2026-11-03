@@ -9,7 +9,7 @@ namespace Yu5h1Lib.EditorExtension
     ///   The fixed table that maps the joint names of the Limb base skeleton to <see cref="HumanBodyBones"/>.
     ///   The table is a byte-identical copy of <c>CharacterBuilder/skeleton/humanoid.bones.json</c> shipped
     ///   beside this file, because the skeleton document owns the joint names; <c>unmapped</c> lists the joints
-    ///   that have no human bone (the ground <c>root</c>, hand-held <c>prop_*</c> anchors and end points).
+    ///   that have no human bone (the ground <c>root</c>, the <c>fist_*</c> nodes and end points).
     /// </summary>
     public sealed class HumanoidBoneMap
     {

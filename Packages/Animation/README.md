@@ -100,7 +100,7 @@ intervals and never an error.
 - Bone translation (arm stretch and the like): a humanoid clip holds muscles only. Stretching is to be added later as
   an additive Animation Job on the humanoid result.
 - Hand and foot IK goal curves; the Animator derives the goals when IK is used.
-- Props (`prop_l`, `prop_r`) and `root` have no human bone; they follow their parents as ordinary children.
+- `root`, the fist nodes (`fist_l`, `fist_r`) and the other joints without a human bone follow their parents as ordinary children. The base skeleton no longer has hand-held `prop_*` anchors.
 - A character is expected to be in the base skeleton's T-pose; the importer does not correct a different rest pose.
 
 ### Tests
