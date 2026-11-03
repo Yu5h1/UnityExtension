@@ -12,7 +12,13 @@ namespace Yu5h1Lib.UI
         public string CharactersToTrim;
         [SerializeField, Tooltip("Format for SetValue; {0} is the value, e.g. {0:0%} for a ratio or Loading… {0}% for a whole percent.")]
         private string _format = "{0:0%}";
-        public string text { get => adapter.text.Trim(Regex.Unescape(CharactersToTrim).ToCharArray()); set => adapter.text = value; }
+
+        public string text 
+        { 
+            get => adapter.text.Trim(Regex.Unescape(CharactersToTrim).ToCharArray()); 
+            set => adapter.text = value; 
+        }
+
         public Color color { get => adapter.color; set => adapter.color = value; }
         public float alpha { get => adapter.alpha; set => adapter.alpha = value; }
         public float fontSize { get => adapter.fontSize; set => adapter.fontSize = value; }
