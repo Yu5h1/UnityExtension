@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-10-30T03:23:20.745868+00:00",
+  "updated_at": "2026-11-04T16:51:41.102839+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -2743,71 +2743,101 @@
     {
       "id": "camera-controller",
       "title": "共用攝影機控制：CameraController／InputSource／Follow／LookDirection",
-      "status": "planned",
+      "status": "in_progress",
       "summary": "集中共用攝影機控制：CameraController 提供控制方法，InputSource 由消費端實作裝置與操作意圖轉換，Follow 與 LookDirection 可獨立組合並支援 2D 固定觀看方向。納入 MotionGen、VCP、CombatAesthetic／WhiteRoom 的既有消費需求。CombatAesthetic 附屬功能由[攝影機拆分卡](/?scope=combat-aesthetic&pin=camera-controller-extraction)追蹤。本輪僅建立任務與項目，實作未開始。",
       "pending_items": [
         {
           "id": "controller-contract",
           "title": "整理 CameraController 控制方法與狀態歸屬：提供程式與 UI 可直接呼叫的入口，統一套用鏡頭結果，隔離裝置輸入與消費專案政策。",
-          "status": "planned",
+          "status": "in_progress",
           "activity": [
             {
               "event": "created",
               "actor": "codex",
               "at": "2026-10-27T19:06:36.463513+00:00",
               "session": "攝影機控制收斂任務建卡"
+            },
+            {
+              "event": "started",
+              "actor": "claude",
+              "at": "2026-11-04T16:51:41.102839+00:00",
+              "session": "共用攝影機控制實作"
             }
           ]
         },
         {
           "id": "input-source",
           "title": "建立 InputSource 操作意圖契約：消費端處理裝置、按鍵、拖曳、雙指與 UI 焦點，傳入旋轉、平移、縮放或重設；定義增量單位與時間語意，裝置讀取沿用 InputHandler。",
-          "status": "planned",
+          "status": "in_progress",
           "activity": [
             {
               "event": "created",
               "actor": "codex",
               "at": "2026-10-27T19:06:36.463513+00:00",
               "session": "攝影機控制收斂任務建卡"
+            },
+            {
+              "event": "started",
+              "actor": "claude",
+              "at": "2026-11-04T16:51:41.102839+00:00",
+              "session": "共用攝影機控制實作"
             }
           ]
         },
         {
           "id": "follow",
           "title": "支援 Follow：設定跟隨目標、位置 offset 與平滑；位置跟隨可獨立運作，停止或未提供裝置輸入時仍持續更新目標。",
-          "status": "planned",
+          "status": "in_progress",
           "activity": [
             {
               "event": "created",
               "actor": "codex",
               "at": "2026-10-27T19:06:36.463513+00:00",
               "session": "攝影機控制收斂任務建卡"
+            },
+            {
+              "event": "started",
+              "actor": "claude",
+              "at": "2026-11-04T16:51:41.102839+00:00",
+              "session": "共用攝影機控制實作"
             }
           ]
         },
         {
           "id": "look-direction",
           "title": "支援 LookDirection：觀看方向與 Follow 分開控制，支援固定方向及受控方向變更，避免位置跟隨強制 LookAt 目標，讓 2D 可維持固定觀看平面。",
-          "status": "planned",
+          "status": "in_progress",
           "activity": [
             {
               "event": "created",
               "actor": "codex",
               "at": "2026-10-27T19:06:36.463513+00:00",
               "session": "攝影機控制收斂任務建卡"
+            },
+            {
+              "event": "started",
+              "actor": "claude",
+              "at": "2026-11-04T16:51:41.102839+00:00",
+              "session": "共用攝影機控制實作"
             }
           ]
         },
         {
           "id": "two-dimensional-composition",
           "title": "以 Follow＋LookDirection 組合 2D 行為：保留固定觀看方向、平面跟隨、正交縮放與既有構圖需求；明確區分 orthographicSize、3D 距離與 FOV 的控制語意。",
-          "status": "planned",
+          "status": "in_progress",
           "activity": [
             {
               "event": "created",
               "actor": "codex",
               "at": "2026-10-27T19:06:36.463513+00:00",
               "session": "攝影機控制收斂任務建卡"
+            },
+            {
+              "event": "started",
+              "actor": "claude",
+              "at": "2026-11-04T16:51:41.102839+00:00",
+              "session": "共用攝影機控制實作"
             }
           ]
         },
