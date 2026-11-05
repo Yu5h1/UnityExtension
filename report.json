@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-11-04T16:51:41.102839+00:00",
+  "updated_at": "2026-11-05T06:48:31.579239+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -2930,10 +2930,21 @@
               "actor": "claude",
               "at": "2026-10-29T13:47:44.332036+00:00",
               "session": "Combat-Aesthetics Viewer／View 決策"
+            },
+            {
+              "event": "updated",
+              "actor": "codex",
+              "at": "2026-11-05T06:48:31.579239+00:00",
+              "session": "TaskProgress plan all",
+              "session_id": "c962c359-110d-4ac0-8661-a140a1a550f9"
             }
           ]
         }
       ]
     }
-  ]
+  ],
+  "next": {
+    "task_id": "view-navigator",
+    "item_id": "view-navigator-core"
+  }
 }
