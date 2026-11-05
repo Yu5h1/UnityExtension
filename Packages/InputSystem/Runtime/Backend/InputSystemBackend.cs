@@ -42,6 +42,7 @@ namespace Yu5h1Lib.Input
         public bool GetMouseButtonUp(int b) => MouseButton(b)?.wasReleasedThisFrame == true;
 
         public Vector2 MousePosition => Mouse.current?.position.ReadValue() ?? Vector2.zero;
+        public Vector2 MouseDelta => Mouse.current?.delta.ReadValue() ?? Vector2.zero;
 
         public float GetAxis(string name)
         {

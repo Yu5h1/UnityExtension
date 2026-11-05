@@ -13,6 +13,7 @@ namespace Yu5h1Lib
             bool GetMouseButton(int b);
             bool GetMouseButtonUp(int b);
             Vector2 MousePosition { get; }
+            Vector2 MouseDelta { get; }
             float GetAxis(string name);
             float GetAxisRaw(string name);
             bool GetButtonDown(string name);
@@ -30,6 +31,12 @@ namespace Yu5h1Lib
         public static bool GetMouseButton(int b) => CurrentBackend?.GetMouseButton(b) == true;
         public static bool GetMouseButtonUp(int b) => CurrentBackend?.GetMouseButtonUp(b) == true;
         public static Vector2 MousePosition => CurrentBackend?.MousePosition ?? Vector2.zero;
+
+        /// <summary>
+        /// How far the mouse moved since the previous frame, in pixels; positive x is right and positive y is up. It
+        /// keeps reporting movement while the cursor is locked, which <see cref="MousePosition"/> does not.
+        /// </summary>
+        public static Vector2 MouseDelta => CurrentBackend?.MouseDelta ?? Vector2.zero;
         public static float GetAxis(string name) => CurrentBackend?.GetAxis(name) ?? 0f;
         public static float GetAxisRaw(string name) => CurrentBackend?.GetAxisRaw(name) ?? 0f;
         public static bool GetButtonDown(string name) => CurrentBackend?.GetButtonDown(name) == true;
