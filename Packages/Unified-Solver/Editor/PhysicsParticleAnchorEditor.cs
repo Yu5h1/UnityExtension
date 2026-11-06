@@ -5,7 +5,7 @@ using Yu5h1Lib.UnifiedSolver;
 using Yu5h1Lib.EditorExtension;
 using Yu5h1Lib.ParticlePhysics;
 
-// Scene-view particle picking for PhysicsParticleAnchor.
+// Scene-view binding navigation and particle picking for PhysicsParticleAnchor.
 //
 // The inspector is not this file's job. `bindings` is a KeyValues, so
 // KeyValuesDrawer draws the whole map -- including its duplicate-key warning --
@@ -435,7 +435,11 @@ public sealed class PhysicsParticleAnchorEditor
 
     void OnSceneGUI()
     {
-        if (!_editMode || Application.isPlaying)
+        if (Application.isPlaying)
+            return;
+
+        DrawBindingHandles();
+        if (!_editMode)
             return;
 
         IPhysicsParticleSource source = Source;
@@ -480,6 +484,42 @@ public sealed class PhysicsParticleAnchorEditor
 
         DrawGrid();
         DrawMarkers();
+    }
+
+    /// <summary>Shows each bound Transform and lets the user jump to it outside binding edit mode.</summary>
+    void DrawBindingHandles()
+    {
+        if (_editMode && Event.current.type != EventType.Repaint)
+            return;
+
+        foreach (var entry in targetObject.Bindings.Entries)
+        {
+            Transform binding = entry.Key;
+            if (binding == null)
+                continue;
+
+            using (new Handles.DrawingScope(
+                _editMode && binding == _editing ? EditingColor : BoundColor))
+            {
+                Vector3 position = binding.position;
+                float size = HandleUtility.GetHandleSize(position) * 0.10f;
+                if (_editMode)
+                {
+                    Handles.DotHandleCap(
+                        0, position, Quaternion.identity, size, EventType.Repaint);
+                    continue;
+                }
+
+                SceneView sceneView = SceneView.currentDrawingSceneView;
+                if (!Handles.Button(position, sceneView.camera.transform.rotation, size, size,
+                    Handles.DotHandleCap))
+                    continue;
+
+                sceneView.LookAt(position);
+                Selection.activeGameObject = binding.gameObject;
+                return;
+            }
+        }
     }
 
     int FindNearest(Vector2 mouse)
