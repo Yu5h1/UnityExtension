@@ -14,29 +14,6 @@ namespace Yu5h1Lib
     public class Broadcaster : SingletonBehaviour<Broadcaster>
     {
         private readonly List<Object> _registeredObjects = new();
-        private static bool _quitting;
-
-        /// <summary>
-        /// Gets or creates the runtime hub, without creating objects in Edit mode or during quit.
-        /// </summary>
-        public new static Broadcaster instance
-        {
-            get
-            {
-                if (_quitting || ApplicationInfo.WantsToQuit)
-                    return null;
-                if (!Application.isPlaying)
-                    return TryGetExisting(out var existing) ? existing : null;
-                return SingletonBehaviour<Broadcaster>.instance;
-            }
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetRuntimeState()
-        {
-            _quitting = false;
-            _instance = null;
-        }
 
         /// <summary>
         /// Finds an existing hub without creating one, including during teardown.
@@ -57,7 +34,7 @@ namespace Yu5h1Lib
         /// </summary>
         public void Register(Object target)
         {
-            if (_quitting || ApplicationInfo.WantsToQuit || !isActiveAndEnabled || !target)
+            if (!isActiveAndEnabled || !target)
                 return;
             _registeredObjects.RemoveAll(item => !item);
             if (!_registeredObjects.Contains(target))
@@ -80,7 +57,7 @@ namespace Yu5h1Lib
 
         private bool DispatchCore(string methodName, Type argumentType, object argument)
         {
-            if (_quitting || ApplicationInfo.WantsToQuit || !isActiveAndEnabled || methodName.IsEmpty())
+            if (!isActiveAndEnabled || methodName.IsEmpty())
                 return false;
 
             _registeredObjects.RemoveAll(target => !target);
@@ -106,17 +83,6 @@ namespace Yu5h1Lib
 
         private void OnDisable() => _registeredObjects.Clear();
 
-        private void OnDestroy()
-        {
-            _registeredObjects.Clear();
-            if (ReferenceEquals(_instance, this))
-                _instance = null;
-        }
-
-        private void OnApplicationQuit()
-        {
-            _quitting = true;
-            _registeredObjects.Clear();
-        }
+        private void OnDestroy() => _registeredObjects.Clear();
     }
 }

@@ -29,7 +29,7 @@ Proxy 的 `methodName` 預設為 `Call`。`Dispatch()` 使用零個參數；`Dis
 
 派送使用當次註冊清單的快照；回呼期間新增對象會在下次派送接收，已解除註冊的對象會跳過。巢狀派送使用自己的快照。已銷毀的物件會移除，停用的 Behaviour 或 inactive GameObject／Component 不接收。
 
-Hub 停用或銷毀時清空註冊，退出應用時阻止取得／建立 Hub 及後續派送；SubsystemRegistration 重設靜態狀態，供關閉 domain reload 的播放環境使用。Proxy 的 `Unregister` 只查既有 Hub，不經可能建立實例的入口。Edit mode 的 instance 查詢也不建立物件。
+Hub 停用或銷毀時只清空自己的註冊清單。`instance`、實例快取與建立限制完全沿用 `SingletonBehaviour<Broadcaster>`，Broadcaster 不遮蔽入口、不保存退出旗標，也不重設基類快取。基類依既有規則處理退出／Edit mode 的建立限制；取得既有實例不等於禁止所有退出期間的方法呼叫。Proxy 的 `Unregister` 仍只查既有 Hub，不經可能建立實例的入口。
 
 ## 相容性與驗證界線
 

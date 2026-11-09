@@ -13,10 +13,8 @@ namespace Yu5h1Lib.Tests
     {
         private static readonly FieldInfo InstanceField = typeof(SingletonBehaviour<Broadcaster>)
             .GetField("_instance", BindingFlags.NonPublic | BindingFlags.Static);
-        private static readonly FieldInfo QuittingField = typeof(Broadcaster)
-            .GetField("_quitting", BindingFlags.NonPublic | BindingFlags.Static);
         private readonly List<Object> _owned = new();
-        private object _previousInstance, _previousQuitting;
+        private object _previousInstance;
         private Broadcaster _hub;
         private BroadcasterProxy _proxy;
 
@@ -24,8 +22,6 @@ namespace Yu5h1Lib.Tests
         public void SetUp()
         {
             _previousInstance = InstanceField.GetValue(null);
-            _previousQuitting = QuittingField.GetValue(null);
-            QuittingField.SetValue(null, false);
             var root = Own(new GameObject("Broadcaster test"));
             _hub = root.AddComponent<Broadcaster>();
             _proxy = root.AddComponent<BroadcasterProxy>();
@@ -39,7 +35,6 @@ namespace Yu5h1Lib.Tests
                 if (_owned[i]) Object.DestroyImmediate(_owned[i]);
             _owned.Clear();
             InstanceField.SetValue(null, _previousInstance);
-            QuittingField.SetValue(null, _previousQuitting);
         }
 
         private T Own<T>(T target) where T : Object
@@ -213,21 +208,22 @@ namespace Yu5h1Lib.Tests
             _hub.Register(target);
             Object.DestroyImmediate(_hub);
             int count = ObjectUtility.FindObjects<Broadcaster>().Length;
+            var cachedInstance = InstanceField.GetValue(null);
             _proxy.Unregister(target);
+            Assert.AreSame(cachedInstance, InstanceField.GetValue(null));
             Assert.AreEqual(count, ObjectUtility.FindObjects<Broadcaster>().Length);
         }
 
         [Test]
-        public void QuitClearsSubscriptionsAndPreventsHubLookupOrDispatch()
+        public void InstanceLookupIsInheritedFromSingletonBehaviour()
         {
-            var target = Probe();
-            _hub.Register(target);
-            typeof(Broadcaster).GetMethod("OnApplicationQuit", BindingFlags.NonPublic | BindingFlags.Instance)
-                .Invoke(_hub, null);
-            Assert.IsNull(Broadcaster.instance);
-            Assert.IsFalse(_hub.Dispatch("Record"));
-            _proxy.Unregister(target);
-            Assert.AreEqual(0, target.calls);
+            var property = typeof(Broadcaster).GetProperty("instance", BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+            Assert.AreEqual(typeof(SingletonBehaviour<Broadcaster>), property.DeclaringType);
+            Assert.AreSame(_hub, Broadcaster.instance);
+            Object.DestroyImmediate(_hub);
+            int count = ObjectUtility.FindObjects<Broadcaster>().Length;
+            _ = Broadcaster.instance;
+            Assert.AreEqual(count, ObjectUtility.FindObjects<Broadcaster>().Length);
         }
     }
 
