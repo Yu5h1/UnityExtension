@@ -1,0 +1,54 @@
+# Animation 套件：裝備零件匯入與骨骼掛接（COMBAT-UNITYEXTENSION-1） Checklist
+
+Current round: `../Combat-Aesthetics/Documentation/Requirements.UnityExtension.md#零件匯入與骨骼掛接combat-unityextension-1`.
+Paths: Packages/Animation/
+Needs: unity-editor
+
+情況：Combat-Aesthetics 的裝備系統第一階段（使用者 2026-11-09）要讓 Unity 角色穿上角色建造器的零件；使用者決定零件匯入與掛接放在本套件，欄位與穿戴規則留在遊戲端。Unity 端目前沒有程式讀 `.part.json`。零件格式與掛接數學照 `W:\Yu5h1Lib\CharacterBuilder\equipment\README.md` 與 `equipment/attach.js`；期望數值用 node 跑 `partWorldMatrix` 取得。測試零件用角色建造器 `parts/weapon/sword.arming.*` 與 `parts/helmet/helmet.kettle.*`，角色用 Combat-Aesthetics `Samples~/WhiteRoom/Art/Handshake/punch-character.glb`（複製成本套件的測試資料）。Unity 步驟用 batchmode；動手前看 `git status`，別人未提交的修改不要動。
+
+不在本輪：欄位、占用與穿戴規則（WhiteRoom `whiteroom-equipment-slots`）、蒙皮零件、身形換算、晃動 `attach.sway`。本檔一次只承載一輪。
+
+- [ ] **1. 零件匯入**
+  Outcome: 一個零件（`.part.json` 與同資料夾的 GLB）在 Editor 成為可在執行時生成的資產；不合法的描述在 Console 回報原因與 JSON 路徑，不產生資產。
+  Checks:
+    - [ ] **合法零件**
+      - Action: 匯入 `sword.arming` 與 `helmet.kettle`，以 EditMode 測試讀出資產。
+      - Expect: 資產帶零件 ID、版本、種類、目標骨骼、offset 與 `attach` 節點的變換。
+    - [ ] **不合法零件**
+      - Action: EditMode 測試匯入缺 `attach.target`、`formatVersion` 不符、GLB 沒有 `attach` 節點的三個樣本。
+      - Expect: 三個都不產生資產，Console 錯誤各帶原因與 JSON 路徑（或缺少的節點名稱）。
+
+- [ ] **2. 掛接與座標換算**
+  Depends on: 1.
+  Outcome: 執行時 API 以骨骼名稱在角色階層找目標骨骼，生成零件並掛在該骨骼下，局部變換固定為 offset × attach 的反矩陣，座標換算與 glTFast 匯入角色 GLB 一致。
+  Checks:
+    - [ ] **綁定姿勢位置**
+      - Action: PlayMode 測試把 `sword.arming` 掛 `wrist_r`、`helmet.kettle` 掛 `head`，量 `attach` 節點的世界位置。
+      - Expect: 與 `partWorldMatrix` 的結果經 glTFast 同一換算後相差 1 mm 以內。
+    - [ ] **跟著骨頭動**
+      - Action: 同一測試旋轉並移動 `wrist_r` 兩次。
+      - Expect: 零件相對 `wrist_r` 的局部矩陣不變。
+
+- [ ] **3. 鏡像、卸下與錯誤**
+  Depends on: 2.
+  Outcome: API 可掛到對側骨骼並對 X 鏡像 offset（位置 x 取反，歐拉角 Y、Z 取反，X 不變，網格不鏡像）；能卸下零件；找不到骨骼時回報名稱、不生成。
+  Checks:
+    - [ ] **左手鏡像**
+      - Action: PlayMode 測試把 `sword.arming` 鏡像掛到 `wrist_l`。
+      - Expect: 握把在左手拳心（右手位置對 X 鏡像，1 mm 以內），刃朝角色前方。
+    - [ ] **卸下與缺骨骼**
+      - Action: 測試卸下已掛零件；再把零件掛到不存在的骨骼 `no_such_bone`。
+      - Expect: 卸下後階層中沒有零件物件；缺骨骼時錯誤訊息含 `no_such_bone`，沒有生成物件。
+    - [ ] **README**
+      - Action: 讀 `Packages/Animation/README.md`。
+      - Expect: 有一節說明零件匯入、掛接、鏡像與卸下的用法與限制，連到角色建造器的零件格式。
+
+- [ ] **4. 獨立驗收**
+  Outcome: 獨立驗收確認實作符合 COMBAT-UNITYEXTENSION-1。
+  Checks:
+    - [ ] **驗收條件未被改動** `[acceptance]`
+      - Action: 以 `git log -p -- checklists/part-import-attach.checklist` 檢查本工作項的文字。
+      - Expect: `[acceptance]` 文字自寫入的 commit（或最近標示「條件修訂」的 commit）以來未變。
+    - [ ] **符合需求驗收** `[acceptance]`
+      - Action: 依 Combat-Aesthetics `Documentation/Requirements.UnityExtension.md` 的 COMBAT-UNITYEXTENSION-1〈Acceptance〉第 1 至 6 條，對照程式、測試結果與 README。
+      - Expect: 六條都成立，測試在 batchmode 全部通過。
