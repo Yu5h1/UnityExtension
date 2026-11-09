@@ -223,6 +223,38 @@ namespace Yu5h1Lib.UI
             scrollRect.ScrollToPosition(v);
         }
 
+        /// <summary>
+        /// TMP 輸入框為了讓游標留在它自己的文字區（viewport）裡，會把文字往上推（文字的 anchoredPosition.y 變正）。
+        /// 換行時文字區還沒長高，新的一行在文字區底下，文字就被推上去；文字區之後依文字長高了，TMP 不會把文字推回來，
+        /// 結果第一行被切、底下多出空隙，直到游標移出範圍、TMP 重算才恢復。
+        /// 輸入框由 ContentSizeFitter 依文字長高，文字區裝得下文字、文字又是靠上對齊時，文字的位移就該是 0，這裡把它拉回來。
+        /// 條件不成立（文字比文字區高、非靠上對齊、沒有自己的文字區）時不動，TMP 照常自己捲。
+        /// </summary>
+        private void RestoreTextOffsetIfFits()
+        {
+            if (!AutoResizeScrollRect || scrollRect == null || textComponent == null || lineType == 0)
+                return;
+            var textRt = textComponent.transform as RectTransform;
+            var viewport = textRt != null ? textRt.parent as RectTransform : null;
+            if (viewport == null || viewport == rectTransform)
+                return;
+            if (textRt.anchoredPosition.y <= 0.01f)   // 只處理被往上推的情況
+                return;
+            if (!textAdapter.alignment.HasFlag(Alignment.Top))
+                return;
+            if (LayoutUtility.GetPreferredHeight(textRt) > viewport.rect.height + 0.5f)
+                return;
+
+            var position = textRt.anchoredPosition;
+            Diag($"restoreTextOffset textY={position.y:0.#} viewportH={viewport.rect.height:0}");
+            position.y = 0f;
+            textRt.anchoredPosition = position;
+            // TMP 的游標物件（文字的同層，名稱 Caret）要跟文字位置一致，TMP 自己用 AssignPositioningIfNeeded 做同樣的事
+            if (viewport.Find("Caret") is RectTransform caret)
+                caret.anchoredPosition = position;
+        }
+        private void LateUpdate() => RestoreTextOffsetIfFits();
+
         #region 暫時的診斷記錄（WebGL 換行後捲動位置問題），確認原因後整段移除
         private Coroutine diagRoutine;
         private static bool DiagEnabled => Application.platform == RuntimePlatform.WebGLPlayer;
