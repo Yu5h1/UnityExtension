@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -99,8 +98,6 @@ namespace Yu5h1Lib.UI
 
         public bool EnableScrollToCaret = true;
 
-        /// <summary>WebGL 換行、移動游標後等幾幀再捲（等行數、輸入框高度、版面都更新）。1 幀實測不夠，先試 5 幀。</summary>
-        private const int WebGLScrollDelayFrames = 5;
         private Vector2Int VisibleLineArea;
         private int lastCaretPosition = -1;
         private int lastSelectionStart = -1;
@@ -122,8 +119,7 @@ namespace Yu5h1Lib.UI
             ((RectTransform)rectTransform.parent).ForceRebuildLayoutImmediate();
             if (AutoResizeScrollRect && scrollRect != null )
                 ResizeScrollRect();
-            if (scrollRect != null)
-                Diag($"config movement={scrollRect.movementType} contentPivot={scrollRect.content.pivot} contentAnchors={scrollRect.content.anchorMin}-{scrollRect.content.anchorMax} viewportAnchors={scrollRect.viewport.anchorMin}-{scrollRect.viewport.anchorMax} {State()}");
+ 
         }
         private void OnEnable()
         {
@@ -192,26 +188,12 @@ namespace Yu5h1Lib.UI
         void OnCaretPositionChanged()
         {
             var caretlineIndex = textAdapter.GetLineIndexByPosition(selectionFocusPosition);
-            var inArea = caretlineIndex.Between(VisibleLineArea.x, VisibleLineArea.y);
-            Diag($"caretChanged caret={caretPosition} line={caretlineIndex} area={VisibleLineArea} inArea={inArea}");
-            if (inArea)
+
+            if (caretlineIndex.Between(VisibleLineArea.x, VisibleLineArea.y))
                 return;
 
             UpdateVisibleLineArea(caretlineIndex);
-            // WebGL：HTML 輸入框的鍵盤事件比 Unity 自己的輸入晚到，游標移動時行數與輸入框高度還沒更新（高度晚一幀才跟上），
-            // 現在捲會捲到舊的版面；晚一幀再捲。其他平台維持立刻捲。
-            if (Application.platform == RuntimePlatform.WebGLPlayer)
-                this.DelayInvoke(ScrollToVisibleLineArea, WebGLScrollDelayFrames);
-            else
-                ScrollToVisibleLineArea();
-        }
-        private void ScrollToVisibleLineArea()
-        {
-            if (scrollRect == null)
-                return;
-            Diag($"scroll BEGIN area={VisibleLineArea} {State()}");
             ScrollToLine(VisibleLineArea.x);
-            Diag($"scroll END {State()}");
         }
         public void ScrollToCaretPosition()
             => ScrollToLine(textAdapter.GetLineIndexByPosition(selectionFocusPosition));
@@ -219,16 +201,19 @@ namespace Yu5h1Lib.UI
         {
             var lineY = textAdapter.GetLineY(lineIndex, true);
             var v = textAdapter.transform.TransformPoint(0, lineY + 10, 0);
-            Diag($"ScrollToLine index={lineIndex} lineY={lineY:0.#}");
             scrollRect.ScrollToPosition(v);
         }
 
         /// <summary>
-        /// TMP 輸入框為了讓游標留在它自己的文字區（viewport）裡，會把文字往上推（文字的 anchoredPosition.y 變正）。
-        /// 換行時文字區還沒長高，新的一行在文字區底下，文字就被推上去；文字區之後依文字長高了，TMP 不會把文字推回來，
-        /// 結果第一行被切、底下多出空隙，直到游標移出範圍、TMP 重算才恢復。
-        /// 輸入框由 ContentSizeFitter 依文字長高，文字區裝得下文字、文字又是靠上對齊時，文字的位移就該是 0，這裡把它拉回來。
-        /// 條件不成立（文字比文字區高、非靠上對齊、沒有自己的文字區）時不動，TMP 照常自己捲。
+        /// TMP input fields shift their text up (the text's anchoredPosition.y) to keep the caret inside their own
+        /// viewport (the Text Area). On a new line the viewport has not grown yet, so TMP computes the offset from the old,
+        /// shorter viewport height: (textHeight - oldViewportHeight) * 0.5, about half a line. When the field then grows to
+        /// fit the text, TMP does not recompute, so the text stays pushed up (first line clipped, a gap at the bottom) until
+        /// the caret leaves the viewport and TMP recomputes. Seen on WebGL, where the HTML input's events reach TMP before the
+        /// layout has grown the field.
+        /// The field is sized to its text by a ContentSizeFitter, so once the viewport height equals the text height the
+        /// correct offset is 0 for any vertical alignment; this puts it back. Not touched while the text is taller or
+        /// shorter than the viewport, where TMP's own offset is meaningful.
         /// </summary>
         private void RestoreTextOffsetIfFits()
         {
@@ -238,58 +223,19 @@ namespace Yu5h1Lib.UI
             var viewport = textRt != null ? textRt.parent as RectTransform : null;
             if (viewport == null || viewport == rectTransform)
                 return;
-            if (textRt.anchoredPosition.y <= 0.01f)   // 只處理被往上推的情況
+            if (textRt.anchoredPosition.y <= 0.01f)
                 return;
-            if (!textAdapter.alignment.HasFlag(Alignment.Top))
-                return;
-            if (LayoutUtility.GetPreferredHeight(textRt) > viewport.rect.height + 0.5f)
+            if (Mathf.Abs(LayoutUtility.GetPreferredHeight(textRt) - viewport.rect.height) > 1f)
                 return;
 
             var position = textRt.anchoredPosition;
-            Diag($"restoreTextOffset textY={position.y:0.#} viewportH={viewport.rect.height:0}");
             position.y = 0f;
             textRt.anchoredPosition = position;
-            // TMP 的游標物件（文字的同層，名稱 Caret）要跟文字位置一致，TMP 自己用 AssignPositioningIfNeeded 做同樣的事
+            // TMP keeps its caret object (a sibling of the text, named "Caret") at the text's position.
             if (viewport.Find("Caret") is RectTransform caret)
                 caret.anchoredPosition = position;
         }
         private void LateUpdate() => RestoreTextOffsetIfFits();
-
-        #region 暫時的診斷記錄（WebGL 換行後捲動位置問題），確認原因後整段移除
-        private Coroutine diagRoutine;
-        private static bool DiagEnabled => Application.platform == RuntimePlatform.WebGLPlayer;
-        private void Diag(string message)
-        {
-            if (DiagEnabled)
-                Debug.Log($"[IFA] f{Time.frameCount} {message}");
-        }
-        private string State()
-        {
-            if (scrollRect == null)
-                return "(no scrollRect)";
-            var srt = (RectTransform)scrollRect.transform;
-            var content = scrollRect.content;
-            var textRt = textComponent != null ? textComponent.transform as RectTransform : null;
-            return $"scrollH={srt.sizeDelta.y:0} viewportH={scrollRect.viewport.rect.height:0} contentH={content.rect.height:0} contentY={content.anchoredPosition.y:0.#} " +
-                   $"fieldH={rectTransform.rect.height:0} textY={(textRt != null ? textRt.anchoredPosition.y : 0f):0.#} lines={lineCount} caret={caretPosition} area={VisibleLineArea}";
-        }
-        private void DiagFrames(string reason)
-        {
-            if (!DiagEnabled || !isActiveAndEnabled)
-                return;
-            if (diagRoutine != null)
-                StopCoroutine(diagRoutine);
-            diagRoutine = StartCoroutine(DiagRoutine(reason));
-        }
-        private IEnumerator DiagRoutine(string reason)
-        {
-            for (int i = 0; i < 12; i++)
-            {
-                Diag($"{reason}+{i} {State()}");
-                yield return null;
-            }
-        }
-        #endregion
 
         void UpdateVisibleLineArea(int caretlineIndex)
         {
@@ -340,8 +286,6 @@ namespace Yu5h1Lib.UI
             if (textComponent == null)
                 return;
 
-            Diag($"textChanged len={txt?.Length}");
-            DiagFrames("afterText");
             if (isActiveAndEnabled)
                 this.DelayInvoke(CheckLineCount, 1);
             else
@@ -371,15 +315,8 @@ namespace Yu5h1Lib.UI
 
             if (!AutoResizeScrollRect)
                 return;
-            Diag($"lineCountChanged count={count} caretLine={caretlineIndex} before {State()}");
             UpdateVisibleLineArea(caretlineIndex);
             ResizeScrollRect();
-            Diag($"lineCountChanged after resize area={VisibleLineArea} {State()}");
-            // WebGL（桌面瀏覽器）：換行後行數與高度晚一幀才更新，上面的 UpdateVisibleLineArea 已把游標那一行算進可見區，
-            // 之後 OnCaretPositionChanged 看到游標在可見區內就不捲，捲動位置會停在改高度之前的狀態，直到游標移出可見區才被修正。
-            // 所以改高度之後在這裡捲一次（等版面更新，晚一幀）。其他平台游標的檢查比行數更新早，已經捲過了。
-            if (Application.platform == RuntimePlatform.WebGLPlayer && !Application.isMobilePlatform)
-                this.DelayInvoke(ScrollToVisibleLineArea, WebGLScrollDelayFrames);
         }
         private void ResizeScrollRect()
         {
@@ -388,30 +325,9 @@ namespace Yu5h1Lib.UI
             {
                 var rt = (RectTransform)scrollRect.transform;
                 var sizeDelta = rt.sizeDelta;
-                // 輸入框會依文字長高（ContentSizeFitter），可見區就取它實際要的高度（含最小高度），最多 visibleLineCount 行。
-                // 不用「行高 × 行數」去估：估的值只要和實際差一點，內容就比可見區高，多出來的那段會被捲動或切掉。
-                var maxHeight = (visibleLineCount * textAdapter.GetBaseLineHeight()) + GetTextAreaVerticalInset();
-                var wanted = LayoutUtility.GetPreferredHeight(rectTransform);
-                var height = wanted > 0f ? Mathf.Min(wanted, maxHeight) : (dynamicLineCount * textAdapter.GetBaseLineHeight()) + GetTextAreaVerticalInset();
-                sizeDelta.y = Mathf.Max(height, LayoutUtility.GetMinHeight(rectTransform));
+                sizeDelta.y = (dynamicLineCount * textAdapter.GetBaseLineHeight()) + 20;
                 rt.sizeDelta = sizeDelta;
             }
-        }
-
-        /// <summary>
-        /// 文字區（輸入框底下那個放文字的 viewport）上下內縮的總和，從它的 RectTransform 讀，不寫死數字。
-        /// 沒有獨立的文字區時（文字直接在輸入框底下）沿用原本的 20。
-        /// </summary>
-        private float GetTextAreaVerticalInset()
-        {
-            const float fallback = 20f;
-            var viewport = textAdapter != null ? textAdapter.transform.parent as RectTransform : null;
-            if (viewport == null || viewport == rectTransform)
-                return fallback;
-            // 上下拉伸（anchorMin.y=0、anchorMax.y=1）時，sizeDelta.y 就是 -(上內縮 + 下內縮)
-            if (!Mathf.Approximately(viewport.anchorMin.y, 0f) || !Mathf.Approximately(viewport.anchorMax.y, 1f))
-                return fallback;
-            return Mathf.Max(0f, -viewport.sizeDelta.y);
         }
         public void Submit() => TriggerEvent(ExecuteEvents.submitHandler);
 
