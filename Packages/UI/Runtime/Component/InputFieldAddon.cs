@@ -193,6 +193,17 @@ namespace Yu5h1Lib.UI
                 return;
 
             UpdateVisibleLineArea(caretlineIndex);
+            // WebGL：HTML 輸入框的鍵盤事件比 Unity 自己的輸入晚到，游標移動時行數與輸入框高度還沒更新（高度晚一幀才跟上），
+            // 現在捲會捲到舊的版面；晚一幀再捲。其他平台維持立刻捲。
+            if (Application.platform == RuntimePlatform.WebGLPlayer)
+                this.DelayInvoke(ScrollToVisibleLineArea, 1);
+            else
+                ScrollToVisibleLineArea();
+        }
+        private void ScrollToVisibleLineArea()
+        {
+            if (scrollRect == null)
+                return;
             ScrollToLine(VisibleLineArea.x);
         }
         public void ScrollToCaretPosition()
