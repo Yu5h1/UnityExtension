@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-11-05T06:48:31.579239+00:00",
+  "updated_at": "2026-11-09T09:26:58.285308+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -918,6 +918,21 @@
               "at": "2026-10-29T18:06:50.173738+00:00",
               "session": "Report 顯示",
               "session_id": "252d4f73-7934-45a8-8ac7-ea2edab2aefb"
+            }
+          ]
+        },
+        {
+          "id": "problem-inputfieldaddon-scroll",
+          "title": "問題：InputFieldAddon 的捲動區高度用「行數×行高+20」算，不含文字區內縮與最小高度，輸入框被切掉一截；行數延一幀讀、滾輪不更新可見區間、區間上限多一行。分析見[VCP 後續發展計畫](/document/?scope=virtual-chat-partner&path=Documentation%2F%E5%BE%8C%E7%BA%8C%E7%99%BC%E5%B1%95%E8%A8%88%E7%95%AB.md)第 1 項",
+          "status": "planned",
+          "priority": 2,
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-11-09T09:26:58.285308+00:00",
+              "session": "後續發展計畫",
+              "session_id": "7bc93186-004a-4e9b-8613-069b04e854b6"
             }
           ]
         }
