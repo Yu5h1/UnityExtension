@@ -78,6 +78,64 @@ namespace Yu5h1Lib.Tests
         }
 
         [Test]
+        public void ImportSheathedSword_MultiAxisEulerRotation_MatchesPartWorldMatrixAndLocalDirection()
+        {
+            string sheathedJsonPath = $"{DataFolder}/sword.sheathed.part.json";
+            var sword = PartImporter.Import(sheathedJsonPath);
+            Assert.IsNotNull(sword, "sword.sheathed asset should be imported");
+            Assert.AreEqual("sword.sheathed", sword.id);
+            Assert.AreEqual("pelvis", sword.targetBone);
+            Assert.AreEqual(-0.2f, sword.offsetPosition.x, 1e-4f);
+            Assert.AreEqual(0.08f, sword.offsetPosition.y, 1e-4f);
+            Assert.AreEqual(0f, sword.offsetPosition.z, 1e-4f);
+            Assert.AreEqual(200f, sword.offsetRotation.x, 1e-4f);
+            Assert.AreEqual(-90f, sword.offsetRotation.y, 1e-4f);
+            Assert.AreEqual(0f, sword.offsetRotation.z, 1e-4f);
+            Assert.AreEqual(0f, sword.attachPosition.x, 1e-4f);
+            Assert.AreEqual(0.091f, sword.attachPosition.y, 1e-4f);
+            Assert.AreEqual(0f, sword.attachPosition.z, 1e-4f);
+
+            // Test local transform calculation (XYZ intrinsic Euler angles)
+            sword.GetLocalTransform(mirror: false, out var localPos, out var localRot);
+            Assert.AreEqual(-0.2f, localPos.x, 1e-4f);
+            Assert.AreEqual(0.165512f, localPos.y, 1e-4f);
+            Assert.AreEqual(0.0311238f, localPos.z, 1e-4f);
+
+            // Character Builder attach.js blade direction (+Y) matches Rx(200)*Ry(-90)*(0,1,0)
+            Vector3 bladeDir = localRot * Vector3.up;
+            Assert.AreEqual(0f, bladeDir.x, 1e-4f);
+            Assert.AreEqual(-0.9396926f, bladeDir.y, 1e-4f);
+            Assert.AreEqual(-0.3420201f, bladeDir.z, 1e-4f);
+
+            // Attach to punch character and verify world coordinates and orientation
+            string charGlbPath = $"{DataFolder}/punch-character.glb";
+            var punchPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(charGlbPath);
+            Assert.IsNotNull(punchPrefab);
+            var character = Object.Instantiate(punchPrefab);
+            try
+            {
+                var inst = PartAttachment.Attach(character, sword);
+                Assert.IsNotNull(inst);
+                var attachNode = inst.transform.Find("attach");
+                Assert.IsNotNull(attachNode);
+
+                // Pelvis bone is at (0, 0.95, 0). attach node in world = pelvis + offset = (-0.2, 1.03, 0)
+                Vector3 expectedAttachWorld = new Vector3(-0.2f, 1.03f, 0f);
+                float dist = Vector3.Distance(attachNode.position, expectedAttachWorld);
+                Assert.LessOrEqual(dist, 0.001f, $"Attach node distance {dist * 1000f:F3} mm exceeds 1 mm");
+
+                Vector3 worldBladeDir = inst.transform.TransformDirection(Vector3.up);
+                Assert.AreEqual(0f, worldBladeDir.x, 1e-4f);
+                Assert.AreEqual(-0.9396926f, worldBladeDir.y, 1e-4f);
+                Assert.AreEqual(-0.3420201f, worldBladeDir.z, 1e-4f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(character);
+            }
+        }
+
+        [Test]
         public void ImportRealModel_AttachedToPunchCharacter_MatchesExpectedPositions()
         {
             string swordJsonPath = $"{DataFolder}/sword.arming.part.json";

@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-11-09T11:01:44.601218+00:00",
+  "updated_at": "2026-11-09T13:22:03.149480+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -2992,7 +2992,7 @@
             {
               "event": "released",
               "actor": "antigravity",
-              "at": "2026-11-09T11:01:44.601218+00:00",
+              "at": "2026-11-09T13:22:03.149480+00:00",
               "session": "part-import-attach",
               "session_id": "86d3ed59-880d-413f-abcc-72a9e8435627"
             }

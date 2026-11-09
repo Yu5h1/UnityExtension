@@ -1,0 +1,56 @@
+{
+  "format": "yu5h1.part.draft",
+  "formatVersion": "0.1.0",
+  "id": "sword.sheathed",
+  "version": "1.0.0",
+  "kind": "weapon.sword",
+  "glb": "sword.sheathed.glb",
+  "attach": {
+    "target": "pelvis",
+    "offset": {
+      "position": [0.2, 0.08, 0],
+      "rotation": [200, 90, 0]
+    },
+    "sway": {
+      "direction": [0, 1, 0],
+      "length": 0.5,
+      "stiffness": 90,
+      "damping": 5,
+      "gravity": [0, -9.8, 0],
+      "iterations": 2,
+      "radius": 0.02
+    }
+  },
+  "source": {
+    "generator": "sword",
+    "preset": "sheathed",
+    "params": {
+      "bladeLength": 0.74,
+      "bladeWidth": 0.05,
+      "bladeThickness": 0.009,
+      "bladeShape": "straight",
+      "bladeTaper": 0.65,
+      "bladeSection": "hex",
+      "bladeCurve": 0,
+      "bladeSegments": 8,
+      "tipLength": 0.075,
+      "gripLength": 0.11,
+      "gripRadius": 0.0155,
+      "pommelRadius": 0.022,
+      "pommelLength": 0.036,
+      "guardWidth": 0.18,
+      "guardHeight": 0.02,
+      "guardDepth": 0.028,
+      "guardCurve": 0,
+      "scabbard": true,
+      "segments": 16,
+      "colors": {
+        "blade": "#c4cad4",
+        "guard": "#b08a3e",
+        "grip": "#3b2a22",
+        "pommel": "#b08a3e",
+        "scabbard": "#3a2e28"
+      }
+    }
+  }
+}

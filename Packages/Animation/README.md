@@ -148,7 +148,7 @@ PartAttachment.Detach(swordInstance);
 
 ### Coordinate conversion, mirroring, and limitations
 
-- **Coordinate conversion**: Character Builder uses glTF coordinates (right-handed, Y-up, Z-forward). glTFast and this package map to Unity (left-handed) by negating the X axis (`x_unity = -x_gltf`). In bind pose, the world position of the `attach` node matches Character Builder `partWorldMatrix` within 1 mm.
+- **Coordinate conversion**: Character Builder uses glTF coordinates (right-handed, Y-up, -Z-forward) and intrinsic XYZ Euler rotations ($R = R_x \cdot R_y \cdot R_z$). glTFast and this package map to Unity (left-handed) by negating the X axis (`x_unity = -x_gltf`, Euler angles `y` and `z` negated). Rotations are evaluated using intrinsic XYZ order (`PartAsset.EulerXYZ`). In bind pose, the world position and orientation match Character Builder `partWorldMatrix` within 1 mm.
 - **Bone following**: The part GameObject is parented under the target bone Transform with fixed local transform $T_{local} = T_{offset} \times T_{attach}^{-1}$. As bones animate, the part follows naturally without per-frame script updates.
 - **Mirroring**: When attaching to the opposite side (`mirror = true`), the offset position X component is negated, and offset rotation Y and Z Euler angles are negated (X angle unchanged). The part mesh itself is not mirrored, ensuring sword blades continue to point forward (+Z).
 - **Missing bone**: If the target bone is not found in the character hierarchy, an error containing the bone name is logged, and no GameObject is instantiated.
@@ -156,6 +156,6 @@ PartAttachment.Detach(swordInstance);
 
 ### Tests
 
-- `Tests/Editor/PartImportTests.cs`: EditMode tests checking valid asset import (`sword.arming`, `helmet.kettle`), real-model attachment against `punch-character.glb`, and error logging / non-generation for invalid parts (missing target, bad version, missing attach node).
-- `Tests/Runtime/PartAttachmentPlayModeTests.cs`: PlayMode tests validating bind-pose world positions within 1 mm, constant local transform across bone movements, left-hand mirroring, clean detachment, and missing bone rejection.
+- `Tests/Editor/PartImportTests.cs`: EditMode tests checking valid asset import (`sword.arming`, `helmet.kettle`, `sword.sheathed`), multi-axis XYZ Euler rotation validation against Character Builder `partWorldMatrix`, real-model attachment against `punch-character.glb`, and error logging / non-generation for invalid parts (missing target, bad version, missing attach node).
+- `Tests/Runtime/PartAttachmentPlayModeTests.cs`: PlayMode tests validating bind-pose world positions within 1 mm, multi-axis XYZ Euler orientation matching `partWorldMatrix`, constant local transform across bone movements, left-hand mirroring, clean detachment, and missing bone rejection.
 

@@ -211,5 +211,53 @@ namespace Yu5h1Lib.Tests
             var failedInst = PartAttachment.Attach(_character, _swordPart, "no_such_bone");
             Assert.IsNull(failedInst);
         }
+
+        [UnityTest]
+        public IEnumerator MultiAxisEuler_SheathedSword_OrientationAndPositionMatchCharacterBuilder()
+        {
+            yield return null;
+
+            var swordPrefab = new GameObject("sword.sheathed");
+            var swordAttach = new GameObject("attach");
+            swordAttach.transform.SetParent(swordPrefab.transform, false);
+            swordAttach.transform.localPosition = new Vector3(0f, 0.091f, 0f);
+            swordAttach.transform.localRotation = Quaternion.identity;
+
+            var sheathedPart = ScriptableObject.CreateInstance<PartAsset>();
+            sheathedPart.id = "sword.sheathed";
+            sheathedPart.version = "1.0.0";
+            sheathedPart.kind = "weapon.sword";
+            sheathedPart.targetBone = "pelvis";
+            sheathedPart.offsetPosition = new Vector3(-0.2f, 0.08f, 0f);
+            sheathedPart.offsetRotation = new Vector3(200f, -90f, 0f);
+            sheathedPart.attachPosition = new Vector3(0f, 0.091f, 0f);
+            sheathedPart.attachRotation = Quaternion.identity;
+            sheathedPart.prefab = swordPrefab;
+
+            try
+            {
+                var inst = PartAttachment.Attach(_character, sheathedPart);
+                Assert.IsNotNull(inst);
+
+                var attachNode = inst.transform.Find("attach");
+                Assert.IsNotNull(attachNode);
+
+                // Pelvis bone is at (0, 0.95, 0). Attach node world pos = (-0.2, 1.03, 0).
+                Vector3 expectedAttachWorld = new Vector3(-0.2f, 1.03f, 0f);
+                float dist = Vector3.Distance(attachNode.position, expectedAttachWorld);
+                Assert.LessOrEqual(dist, 0.001f, $"Attach node distance {dist * 1000f:F3} mm exceeds 1 mm");
+
+                // Blade direction (+Y of part) matches Character Builder intrinsic XYZ rotation
+                Vector3 worldBladeDir = inst.transform.TransformDirection(Vector3.up);
+                Assert.AreEqual(0f, worldBladeDir.x, 1e-4f);
+                Assert.AreEqual(-0.9396926f, worldBladeDir.y, 1e-4f);
+                Assert.AreEqual(-0.3420201f, worldBladeDir.z, 1e-4f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(swordPrefab);
+                Object.DestroyImmediate(sheathedPart);
+            }
+        }
     }
 }

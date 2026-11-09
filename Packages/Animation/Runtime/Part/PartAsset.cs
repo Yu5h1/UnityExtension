@@ -29,7 +29,30 @@ namespace Yu5h1Lib
         public GameObject prefab;
 
         /// <summary>
+        ///   Converts Euler angles in intrinsic XYZ order (R = Rx * Ry * Rz) to a Unity Quaternion.
+        /// </summary>
+        public static Quaternion EulerXYZ(Vector3 euler)
+        {
+            var qx = Quaternion.AngleAxis(euler.x, Vector3.right);
+            var qy = Quaternion.AngleAxis(euler.y, Vector3.up);
+            var qz = Quaternion.AngleAxis(euler.z, Vector3.forward);
+            return qx * qy * qz;
+        }
+
+        /// <summary>
+        ///   Converts Euler angles in intrinsic XYZ order (R = Rx * Ry * Rz) to a Unity Quaternion.
+        /// </summary>
+        public static Quaternion EulerXYZ(float x, float y, float z)
+        {
+            var qx = Quaternion.AngleAxis(x, Vector3.right);
+            var qy = Quaternion.AngleAxis(y, Vector3.up);
+            var qz = Quaternion.AngleAxis(z, Vector3.forward);
+            return qx * qy * qz;
+        }
+
+        /// <summary>
         ///   Computes the local transform of the part relative to its target bone: offset * inverse(attach).
+        ///   Euler rotation uses XYZ intrinsic order (R = Rx * Ry * Rz) matching Character Builder quatFromEuler.
         ///   When <paramref name="mirror"/> is true, mirrors across the X plane (x position negated, Y and Z Euler angles negated).
         /// </summary>
         public void GetLocalTransform(bool mirror, out Vector3 localPosition, out Quaternion localRotation)
@@ -47,7 +70,7 @@ namespace Yu5h1Lib
                 offsetEuler = offsetRotation;
             }
 
-            var rotOffset = Quaternion.Euler(offsetEuler);
+            var rotOffset = EulerXYZ(offsetEuler);
             localRotation = rotOffset * Quaternion.Inverse(attachRotation);
             localPosition = offsetPos - localRotation * attachPosition;
         }
