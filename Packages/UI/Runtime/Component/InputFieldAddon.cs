@@ -292,8 +292,11 @@ namespace Yu5h1Lib.UI
             {
                 var rt = (RectTransform)scrollRect.transform;
                 var sizeDelta = rt.sizeDelta;
-                // 可見區要裝得下輸入框實際的高度：行高 × 行數 + 文字區的上下內縮，且不小於輸入框的最小高度
-                var height = (dynamicLineCount * textAdapter.GetBaseLineHeight()) + GetTextAreaVerticalInset();
+                // 輸入框會依文字長高（ContentSizeFitter），可見區就取它實際要的高度（含最小高度），最多 visibleLineCount 行。
+                // 不用「行高 × 行數」去估：估的值只要和實際差一點，內容就比可見區高，多出來的那段會被捲動或切掉。
+                var maxHeight = (visibleLineCount * textAdapter.GetBaseLineHeight()) + GetTextAreaVerticalInset();
+                var wanted = LayoutUtility.GetPreferredHeight(rectTransform);
+                var height = wanted > 0f ? Mathf.Min(wanted, maxHeight) : (dynamicLineCount * textAdapter.GetBaseLineHeight()) + GetTextAreaVerticalInset();
                 sizeDelta.y = Mathf.Max(height, LayoutUtility.GetMinHeight(rectTransform));
                 rt.sizeDelta = sizeDelta;
             }
