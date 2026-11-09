@@ -292,9 +292,27 @@ namespace Yu5h1Lib.UI
             {
                 var rt = (RectTransform)scrollRect.transform;
                 var sizeDelta = rt.sizeDelta;
-                sizeDelta.y = (dynamicLineCount * textAdapter.GetBaseLineHeight()) + 20;
+                // 可見區要裝得下輸入框實際的高度：行高 × 行數 + 文字區的上下內縮，且不小於輸入框的最小高度
+                var height = (dynamicLineCount * textAdapter.GetBaseLineHeight()) + GetTextAreaVerticalInset();
+                sizeDelta.y = Mathf.Max(height, LayoutUtility.GetMinHeight(rectTransform));
                 rt.sizeDelta = sizeDelta;
             }
+        }
+
+        /// <summary>
+        /// 文字區（輸入框底下那個放文字的 viewport）上下內縮的總和，從它的 RectTransform 讀，不寫死數字。
+        /// 沒有獨立的文字區時（文字直接在輸入框底下）沿用原本的 20。
+        /// </summary>
+        private float GetTextAreaVerticalInset()
+        {
+            const float fallback = 20f;
+            var viewport = textAdapter != null ? textAdapter.transform.parent as RectTransform : null;
+            if (viewport == null || viewport == rectTransform)
+                return fallback;
+            // 上下拉伸（anchorMin.y=0、anchorMax.y=1）時，sizeDelta.y 就是 -(上內縮 + 下內縮)
+            if (!Mathf.Approximately(viewport.anchorMin.y, 0f) || !Mathf.Approximately(viewport.anchorMax.y, 1f))
+                return fallback;
+            return Mathf.Max(0f, -viewport.sizeDelta.y);
         }
         public void Submit() => TriggerEvent(ExecuteEvents.submitHandler);
 
