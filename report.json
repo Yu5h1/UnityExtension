@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-11-09T10:39:40.761208+00:00",
+  "updated_at": "2026-11-09T11:01:44.601218+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -2981,6 +2981,20 @@
               "at": "2026-11-09T10:39:40.761208+00:00",
               "session": "裝備系統任務卡",
               "session_id": "c59af131-a09c-4850-a2ac-11550bfc47c5"
+            },
+            {
+              "event": "started",
+              "actor": "antigravity",
+              "at": "2026-11-09T10:46:16.197045+00:00",
+              "session": "part-import-attach",
+              "session_id": "86d3ed59-880d-413f-abcc-72a9e8435627"
+            },
+            {
+              "event": "released",
+              "actor": "antigravity",
+              "at": "2026-11-09T11:01:44.601218+00:00",
+              "session": "part-import-attach",
+              "session_id": "86d3ed59-880d-413f-abcc-72a9e8435627"
             }
           ]
         }

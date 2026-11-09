@@ -1,0 +1,47 @@
+{
+  "format": "yu5h1.part.draft",
+  "formatVersion": "0.1.0",
+  "id": "sword.arming",
+  "version": "1.0.0",
+  "kind": "weapon.sword",
+  "glb": "sword.arming.glb",
+  "attach": {
+    "target": "wrist_r",
+    "offset": {
+      "position": [-0.102, 0, 0],
+      "rotation": [90, 0, 0]
+    }
+  },
+  "source": {
+    "generator": "sword",
+    "preset": "arming",
+    "params": {
+      "bladeLength": 0.74,
+      "bladeWidth": 0.05,
+      "bladeThickness": 0.009,
+      "bladeShape": "straight",
+      "bladeTaper": 0.65,
+      "bladeSection": "hex",
+      "bladeCurve": 0,
+      "bladeSegments": 8,
+      "tipLength": 0.075,
+      "gripLength": 0.11,
+      "gripRadius": 0.0155,
+      "pommelRadius": 0.022,
+      "pommelLength": 0.036,
+      "guardWidth": 0.18,
+      "guardHeight": 0.02,
+      "guardDepth": 0.028,
+      "guardCurve": 0,
+      "scabbard": false,
+      "segments": 16,
+      "colors": {
+        "blade": "#c4cad4",
+        "guard": "#b08a3e",
+        "grip": "#3b2a22",
+        "pommel": "#b08a3e",
+        "scabbard": "#3a2e28"
+      }
+    }
+  }
+}

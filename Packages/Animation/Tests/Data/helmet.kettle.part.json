@@ -1,0 +1,39 @@
+{
+  "format": "yu5h1.part.draft",
+  "formatVersion": "0.1.0",
+  "id": "helmet.kettle",
+  "version": "1.0.0",
+  "kind": "helmet",
+  "glb": "helmet.kettle.glb",
+  "attach": {
+    "target": "head",
+    "offset": {
+      "position": [0, 0, 0],
+      "rotation": [0, 0, 0]
+    }
+  },
+  "source": {
+    "generator": "helmet",
+    "preset": "kettle",
+    "params": {
+      "headRadius": 0.1105,
+      "clearance": 0.005,
+      "thickness": 0.012,
+      "crown": 0.95,
+      "rimHeight": 0.012,
+      "brimWidth": 0.05,
+      "brimDroop": 0.014,
+      "brimThickness": 0.006,
+      "cheekLength": 0,
+      "cheekWidth": 0.055,
+      "cheekForward": 0.012,
+      "domeRings": 8,
+      "segments": 24,
+      "colors": {
+        "shell": "#8d96a3",
+        "brim": "#7a838f",
+        "cheek": "#7a838f"
+      }
+    }
+  }
+}

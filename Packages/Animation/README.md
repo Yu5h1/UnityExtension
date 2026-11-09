@@ -108,3 +108,54 @@ intervals and never an error.
 `Tests/Editor/HumanoidImportTests.cs` builds a skeleton in code and checks the bone map, the Avatar, baked and
 unbaked channels, offsets and regeneration; `Tests/Editor/MotionIntervalTests.cs` checks the interval reader and the
 `MotionIntervals` queries. Run with the EditMode test runner (`Yu5h1Lib.Animation.Editor.Tests`).
+
+## Equipment part import and bone attachment (COMBAT-UNITYEXTENSION-1)
+
+Imports Character Builder equipment parts (`.part.json` and companion `.glb`) into Unity assets, and attaches them to character bones at runtime with optional opposite-side mirroring across the X axis.
+
+Part format and static attachment mathematics follow Character Builder's [Equipment System](file:///W:/Yu5h1Lib/CharacterBuilder/equipment/README.md#零件描述格式) (`yu5h1.part.draft`, version `0.1.0`).
+
+### Import
+
+In Editor, a part is defined by `<id>.part.json` with `<id>.glb` in the same directory.
+Importing occurs automatically via `PartPostprocessor` when `.part.json` assets are imported or refreshed in the project, or explicitly via `PartImporter.Import(path)`.
+
+Validation rules:
+- Format must be `yu5h1.part.draft`, version `0.1.0`.
+- Required fields: `format`, `formatVersion`, `id`, `version`, `kind`, `glb`, and `attach.target` (bone name).
+- Optional fields: `attach.offset.position` and `attach.offset.rotation` (XYZ Euler degrees).
+- The companion GLB must exist and contain exactly one node named `attach` without mesh or scale.
+- Non-compliant descriptions or GLBs log errors to the Console identifying the cause and JSON pointer path (or missing node), producing no asset.
+
+The importer creates or updates a `PartAsset` ScriptableObject (`<id>.asset`) containing metadata, target bone name, offset transform, GLB `attach` node transform, and the model prefab.
+
+### Attachment API
+
+At runtime, `PartAttachment.Attach` (or `partAsset.AttachTo`) instantiates the part and attaches it under the character's target bone:
+
+```csharp
+// Attach to default target bone (e.g., wrist_r for sword.arming):
+GameObject swordInstance = PartAttachment.Attach(character, swordPart);
+
+// Attach with opposite-side mirroring (e.g., attach sword to left hand wrist_l):
+GameObject leftSwordInstance = PartAttachment.Attach(character, swordPart, boneName: "wrist_l", mirror: true);
+
+// Detach part:
+PartAttachment.Detach(character, swordPart);
+// or directly:
+PartAttachment.Detach(swordInstance);
+```
+
+### Coordinate conversion, mirroring, and limitations
+
+- **Coordinate conversion**: Character Builder uses glTF coordinates (right-handed, Y-up, Z-forward). glTFast and this package map to Unity (left-handed) by negating the X axis (`x_unity = -x_gltf`). In bind pose, the world position of the `attach` node matches Character Builder `partWorldMatrix` within 1 mm.
+- **Bone following**: The part GameObject is parented under the target bone Transform with fixed local transform $T_{local} = T_{offset} \times T_{attach}^{-1}$. As bones animate, the part follows naturally without per-frame script updates.
+- **Mirroring**: When attaching to the opposite side (`mirror = true`), the offset position X component is negated, and offset rotation Y and Z Euler angles are negated (X angle unchanged). The part mesh itself is not mirrored, ensuring sword blades continue to point forward (+Z).
+- **Missing bone**: If the target bone is not found in the character hierarchy, an error containing the bone name is logged, and no GameObject is instantiated.
+- **Limitations (Round 1)**: Covers static rigid attachments only. Skinned parts with internal bone chains (e.g. hair ponytails, pleated skirts), dynamic secondary sway (`attach.sway`), character body-shape scaling, and equipment slot management are deferred to later rounds.
+
+### Tests
+
+- `Tests/Editor/PartImportTests.cs`: EditMode tests checking valid asset import (`sword.arming`, `helmet.kettle`), real-model attachment against `punch-character.glb`, and error logging / non-generation for invalid parts (missing target, bad version, missing attach node).
+- `Tests/Runtime/PartAttachmentPlayModeTests.cs`: PlayMode tests validating bind-pose world positions within 1 mm, constant local transform across bone movements, left-hand mirroring, clean detachment, and missing bone rejection.
+
