@@ -22,4 +22,4 @@ MonoBehaviour:
   offsetRotation: {x: 0, y: -0, z: -0}
   attachPosition: {x: -0, y: 0, z: 0}
   attachRotation: {x: -0, y: 0, z: 0, w: -1}
-  prefab: {fileID: -3202878586904015206, guid: 3ad652e5c4ddfa0478428ee6791812e4, type: 3}
+  prefab: {fileID: 0}

@@ -20,7 +20,7 @@ namespace Yu5h1Lib
     {
         [Tooltip("Material suppliers. Each entry must implement IReadOnlyList<Material>.")]
         [SerializeField, TypeRestriction(typeof(IReadOnlyList<Material>))]
-        private Object[] sources;
+        private List<Object> sources;
 
         [Tooltip("Runs over every source each frame. Swap this asset to change the behavior.")]
         [SerializeField, Inline] private MaterialDriver driver;
@@ -70,6 +70,18 @@ namespace Yu5h1Lib
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public void Reset()
+        {
+            if (sources.IsEmpty())
+            { 
+                if (TryGetComponent(out RendererAddon rendererAddon))
+                    sources.Add(rendererAddon);
+                //else
+                //    sources.Add(gameObject.AddComponent<RendererAddon>());
+            }
+                
+        }
 
         private void Update()
         {
