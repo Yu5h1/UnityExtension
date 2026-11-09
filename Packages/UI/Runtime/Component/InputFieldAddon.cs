@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -121,7 +122,8 @@ namespace Yu5h1Lib.UI
             ((RectTransform)rectTransform.parent).ForceRebuildLayoutImmediate();
             if (AutoResizeScrollRect && scrollRect != null )
                 ResizeScrollRect();
- 
+            if (scrollRect != null)
+                Diag($"config movement={scrollRect.movementType} contentPivot={scrollRect.content.pivot} contentAnchors={scrollRect.content.anchorMin}-{scrollRect.content.anchorMax} viewportAnchors={scrollRect.viewport.anchorMin}-{scrollRect.viewport.anchorMax} {State()}");
         }
         private void OnEnable()
         {
@@ -190,8 +192,9 @@ namespace Yu5h1Lib.UI
         void OnCaretPositionChanged()
         {
             var caretlineIndex = textAdapter.GetLineIndexByPosition(selectionFocusPosition);
-
-            if (caretlineIndex.Between(VisibleLineArea.x, VisibleLineArea.y))
+            var inArea = caretlineIndex.Between(VisibleLineArea.x, VisibleLineArea.y);
+            Diag($"caretChanged caret={caretPosition} line={caretlineIndex} area={VisibleLineArea} inArea={inArea}");
+            if (inArea)
                 return;
 
             UpdateVisibleLineArea(caretlineIndex);
@@ -206,7 +209,9 @@ namespace Yu5h1Lib.UI
         {
             if (scrollRect == null)
                 return;
+            Diag($"scroll BEGIN area={VisibleLineArea} {State()}");
             ScrollToLine(VisibleLineArea.x);
+            Diag($"scroll END {State()}");
         }
         public void ScrollToCaretPosition()
             => ScrollToLine(textAdapter.GetLineIndexByPosition(selectionFocusPosition));
@@ -214,8 +219,45 @@ namespace Yu5h1Lib.UI
         {
             var lineY = textAdapter.GetLineY(lineIndex, true);
             var v = textAdapter.transform.TransformPoint(0, lineY + 10, 0);
+            Diag($"ScrollToLine index={lineIndex} lineY={lineY:0.#}");
             scrollRect.ScrollToPosition(v);
         }
+
+        #region 暫時的診斷記錄（WebGL 換行後捲動位置問題），確認原因後整段移除
+        private Coroutine diagRoutine;
+        private static bool DiagEnabled => Application.platform == RuntimePlatform.WebGLPlayer;
+        private void Diag(string message)
+        {
+            if (DiagEnabled)
+                Debug.Log($"[IFA] f{Time.frameCount} {message}");
+        }
+        private string State()
+        {
+            if (scrollRect == null)
+                return "(no scrollRect)";
+            var srt = (RectTransform)scrollRect.transform;
+            var content = scrollRect.content;
+            var textRt = textComponent != null ? textComponent.transform as RectTransform : null;
+            return $"scrollH={srt.sizeDelta.y:0} viewportH={scrollRect.viewport.rect.height:0} contentH={content.rect.height:0} contentY={content.anchoredPosition.y:0.#} " +
+                   $"fieldH={rectTransform.rect.height:0} textY={(textRt != null ? textRt.anchoredPosition.y : 0f):0.#} lines={lineCount} caret={caretPosition} area={VisibleLineArea}";
+        }
+        private void DiagFrames(string reason)
+        {
+            if (!DiagEnabled || !isActiveAndEnabled)
+                return;
+            if (diagRoutine != null)
+                StopCoroutine(diagRoutine);
+            diagRoutine = StartCoroutine(DiagRoutine(reason));
+        }
+        private IEnumerator DiagRoutine(string reason)
+        {
+            for (int i = 0; i < 12; i++)
+            {
+                Diag($"{reason}+{i} {State()}");
+                yield return null;
+            }
+        }
+        #endregion
 
         void UpdateVisibleLineArea(int caretlineIndex)
         {
@@ -266,6 +308,8 @@ namespace Yu5h1Lib.UI
             if (textComponent == null)
                 return;
 
+            Diag($"textChanged len={txt?.Length}");
+            DiagFrames("afterText");
             if (isActiveAndEnabled)
                 this.DelayInvoke(CheckLineCount, 1);
             else
@@ -295,8 +339,10 @@ namespace Yu5h1Lib.UI
 
             if (!AutoResizeScrollRect)
                 return;
+            Diag($"lineCountChanged count={count} caretLine={caretlineIndex} before {State()}");
             UpdateVisibleLineArea(caretlineIndex);
             ResizeScrollRect();
+            Diag($"lineCountChanged after resize area={VisibleLineArea} {State()}");
             // WebGL（桌面瀏覽器）：換行後行數與高度晚一幀才更新，上面的 UpdateVisibleLineArea 已把游標那一行算進可見區，
             // 之後 OnCaretPositionChanged 看到游標在可見區內就不捲，捲動位置會停在改高度之前的狀態，直到游標移出可見區才被修正。
             // 所以改高度之後在這裡捲一次（等版面更新，晚一幀）。其他平台游標的檢查比行數更新早，已經捲過了。
