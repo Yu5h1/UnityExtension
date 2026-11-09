@@ -295,6 +295,11 @@ namespace Yu5h1Lib.UI
                 return;
             UpdateVisibleLineArea(caretlineIndex);
             ResizeScrollRect();
+            // WebGL（桌面瀏覽器）：換行後行數與高度晚一幀才更新，上面的 UpdateVisibleLineArea 已把游標那一行算進可見區，
+            // 之後 OnCaretPositionChanged 看到游標在可見區內就不捲，捲動位置會停在改高度之前的狀態，直到游標移出可見區才被修正。
+            // 所以改高度之後在這裡捲一次（等版面更新，晚一幀）。其他平台游標的檢查比行數更新早，已經捲過了。
+            if (Application.platform == RuntimePlatform.WebGLPlayer && !Application.isMobilePlatform)
+                this.DelayInvoke(ScrollToVisibleLineArea, 1);
         }
         private void ResizeScrollRect()
         {
