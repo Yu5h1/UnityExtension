@@ -43,15 +43,16 @@ Needs: unity-editor
       - Action: 讀 `Packages/Animation/README.md`。
       - Expect: 有一節說明零件匯入、掛接、鏡像與卸下的用法與限制，連到角色建造器的零件格式。
 
-- [!] **4. 獨立驗收**
+- [x] **4. 獨立驗收**
   Outcome: 獨立驗收確認實作符合 COMBAT-UNITYEXTENSION-1。
   Checks:
     - [x] **驗收條件未被改動** `[acceptance]`
       - Action: 以 `git log -p -- checklists/part-import-attach.checklist` 檢查本工作項的文字。
       - Expect: `[acceptance]` 文字自寫入的 commit（或最近標示「條件修訂」的 commit）以來未變。
-      - Recorded: claude:f317ee1b-4375-4ad7-9d9b-f59bddb1db22; at=2026-11-09T12:49:50Z; fp=852fa40e5181
-    - [!] **符合需求驗收** `[acceptance]`
+      - Recorded: claude:895cad1b-7ade-421b-a512-68017fc1952c; at=2026-11-09T14:29:47Z; fp=852fa40e5181
+    - [x] **符合需求驗收** `[acceptance]`
       - Action: 依 Combat-Aesthetics `Documentation/Requirements.UnityExtension.md` 的 COMBAT-UNITYEXTENSION-1〈Acceptance〉第 1 至 6 條，對照程式、測試結果與 README。
       - Expect: 六條都成立，測試在 batchmode 全部通過。
       - Observed: Acceptance 2 未成立：offset.rotation 依角色建造器 README 與 attach.js（quatFromEuler，three.js XYZ 順序，R=Rx·Ry·Rz）是 XYZ 歐拉角，但 PartAsset.GetLocalTransform 用 Quaternion.Euler（Unity 的 ZXY 順序，R=Ry·Rx·Rz），兩軸以上非零時局部旋轉不等於 offset × attach 的反矩陣。角色建造器 parts/weapon/sword.sheathed（pelvis，rotation [200, 90, 0]）照 glTFast 換算應為 Rx(200)·Ry(-90)，刃（零件 +Y）朝 (0, -0.94, -0.34)；實作得 (0.34, -0.94, 0)，0.8 m 處刃尖差約 0.39 m。sword.arming 與 helmet.kettle 只有單軸或零旋轉，而測試只量 attach 節點的世界位置（等於 bone × offset 的位置，與 offset 旋轉無關），所以測不出。其餘 1、3、4、5 條與 README 對照成立；本 session 未取得 Unity batchmode 執行授權，未重跑測試，提交中也沒有 batchmode 測試結果檔。
-      - Recorded: claude:f317ee1b-4375-4ad7-9d9b-f59bddb1db22; at=2026-11-09T12:49:51Z; fp=831c519a6270; reason=implementation
+      - Resolved: f8e58a7 改用 PartAsset.EulerXYZ（Rx·Ry·Rz，與 quatFromEuler 同序）；sword.sheathed（pelvis，[200, 90, 0]）照 glTFast 換算後的零件世界矩陣與 partWorldMatrix 16 個元素全等，刃朝 (0, -0.940, -0.342)；新增 EditMode／PlayMode 多軸測試，batchmode（Yu5h1LibTest，6000.6.0f1，2026-11-09 21:19）EditMode 107/107、PlayMode 5/5 通過。
+      - Recorded: claude:895cad1b-7ade-421b-a512-68017fc1952c; at=2026-11-09T14:29:57Z; fp=831c519a6270

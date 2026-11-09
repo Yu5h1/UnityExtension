@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-11-09T13:22:03.149480+00:00",
+  "updated_at": "2026-11-09T14:30:49.659011+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -2995,6 +2995,21 @@
               "at": "2026-11-09T13:22:03.149480+00:00",
               "session": "part-import-attach",
               "session_id": "86d3ed59-880d-413f-abcc-72a9e8435627"
+            }
+          ]
+        },
+        {
+          "id": "part-postprocessor-rewrites-package-assets",
+          "title": "問題：PartPostprocessor 在每個引用 Animation 套件的專案匯入 .part.json 時都重寫套件內的 PartAsset；沒有 glTFast 的專案（2026-11-09 開著的 BonghuoVR）讓 Tests/Data 的三個 .asset 被改成 prefab: {fileID: 0}，未提交、不報錯，匯入結果無法生成卻不回報；EditMode 測試也直接寫入套件的 Tests/Data。另 README 寫 glTF「-Z-forward」，實為 +Z 朝前",
+          "status": "planned",
+          "priority": 2,
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-11-09T14:30:49.659011+00:00",
+              "session": "part-import-attach acceptance",
+              "session_id": "895cad1b-7ade-421b-a512-68017fc1952c"
             }
           ]
         }
