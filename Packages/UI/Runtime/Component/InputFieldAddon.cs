@@ -98,6 +98,8 @@ namespace Yu5h1Lib.UI
 
         public bool EnableScrollToCaret = true;
 
+        /// <summary>WebGL 換行、移動游標後等幾幀再捲（等行數、輸入框高度、版面都更新）。1 幀實測不夠，先試 5 幀。</summary>
+        private const int WebGLScrollDelayFrames = 5;
         private Vector2Int VisibleLineArea;
         private int lastCaretPosition = -1;
         private int lastSelectionStart = -1;
@@ -196,7 +198,7 @@ namespace Yu5h1Lib.UI
             // WebGL：HTML 輸入框的鍵盤事件比 Unity 自己的輸入晚到，游標移動時行數與輸入框高度還沒更新（高度晚一幀才跟上），
             // 現在捲會捲到舊的版面；晚一幀再捲。其他平台維持立刻捲。
             if (Application.platform == RuntimePlatform.WebGLPlayer)
-                this.DelayInvoke(ScrollToVisibleLineArea, 1);
+                this.DelayInvoke(ScrollToVisibleLineArea, WebGLScrollDelayFrames);
             else
                 ScrollToVisibleLineArea();
         }
@@ -299,7 +301,7 @@ namespace Yu5h1Lib.UI
             // 之後 OnCaretPositionChanged 看到游標在可見區內就不捲，捲動位置會停在改高度之前的狀態，直到游標移出可見區才被修正。
             // 所以改高度之後在這裡捲一次（等版面更新，晚一幀）。其他平台游標的檢查比行數更新早，已經捲過了。
             if (Application.platform == RuntimePlatform.WebGLPlayer && !Application.isMobilePlatform)
-                this.DelayInvoke(ScrollToVisibleLineArea, 1);
+                this.DelayInvoke(ScrollToVisibleLineArea, WebGLScrollDelayFrames);
         }
         private void ResizeScrollRect()
         {
