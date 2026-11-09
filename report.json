@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-11-09T14:30:49.659011+00:00",
+  "updated_at": "2026-11-09T14:56:23.919651+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -759,6 +759,26 @@
       "summary": "進行中：Yu5h1Lib.UX 是體驗規範的唯一來源，Unity 以套件內快照釘選版本與雜湊，依共用 skill spec-adoption 在實作套件記錄驗收。已驗收：Button 2.0.0（2026-10-19，Yu5h1Lib.UI 與 Yu5h1Lib.UIToolkit，自動檢查加使用者與 Web demo 並排確認）；Configuration 等級 1 直接存（2026-10-20，Yu5h1Lib.Common 的統一 Preferences 入口，UX-UNITYEXTENSION-7）。待排：Theme 色票改讀 UX VisualFoundation（UX-UNITYEXTENSION-2）、宣告 JSON（WEB-7，等 MOTION-2 與消費端）、Configuration 等級 2（等消費端）、WebGL；AppsMenu 暫停（卡片 appsmenu-library-adoption）；VisualFoundation、無障礙名稱與 Icon 的缺口在 Button 紀錄列 blocked。Canonical entry：Documentation/跨平台UI一致性.md。",
       "completed_items": [
         {
+          "id": "problem-inputfieldaddon-scroll",
+          "title": "問題（已解決 2026-11-09）：WebGL 換行後底下多出約半行、第一行被切。原因：換行當下 TMP 用還沒長高的舊文字區高度算文字位移，長高後不重算；RestoreTextOffsetIfFits 在文字區高度等於文字高度時歸零（70b56a1）。見[VCP 計畫第 1 項](/document/?scope=virtual-chat-partner&path=Documentation%2F%E5%BE%8C%E7%BA%8C%E7%99%BC%E5%B1%95%E8%A8%88%E7%95%AB.md)",
+          "status": "done",
+          "priority": 2,
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-11-09T09:26:58.285308+00:00",
+              "session": "後續發展計畫",
+              "session_id": "7bc93186-004a-4e9b-8613-069b04e854b6"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-11-09T14:56:23.919651+00:00"
+            }
+          ]
+        },
+        {
           "id": "common-backgroundload-acceptance",
           "title": "驗收 Yu5h1Lib.Common 的 BackgroundLoad 目標 1：ContentSlot 從 Addressables 移入 common，ContentSlotView 改為只發狀態事件（文字交給 TextAddon），看見才讀改用可見性元件（VisibilityTracker／VisibilityTarget）；模組輪 EditMode 157 項通過",
           "status": "done",
@@ -922,17 +942,15 @@
           ]
         },
         {
-          "id": "problem-inputfieldaddon-scroll",
-          "title": "問題：InputFieldAddon 的捲動區高度用「行數×行高+20」算，不含文字區內縮與最小高度，輸入框被切掉一截；行數延一幀讀、滾輪不更新可見區間、區間上限多一行。分析見[VCP 後續發展計畫](/document/?scope=virtual-chat-partner&path=Documentation%2F%E5%BE%8C%E7%BA%8C%E7%99%BC%E5%B1%95%E8%A8%88%E7%95%AB.md)第 1 項",
+          "id": "problem-inputfieldaddon-minor",
+          "title": "問題：InputFieldAddon 還有未修的小缺陷（目前沒造成可見問題）：捲動區高度「行數×行高+20」比文字區內縮 30 少 10；行數延一幀讀；滾輪不更新可見區間；往上時區間上限多一行。見[VCP 計畫第 1 項](/document/?scope=virtual-chat-partner&path=Documentation%2F%E5%BE%8C%E7%BA%8C%E7%99%BC%E5%B1%95%E8%A8%88%E7%95%AB.md)",
           "status": "planned",
           "priority": 2,
           "activity": [
             {
               "event": "created",
               "actor": "claude",
-              "at": "2026-11-09T09:26:58.285308+00:00",
-              "session": "後續發展計畫",
-              "session_id": "7bc93186-004a-4e9b-8613-069b04e854b6"
+              "at": "2026-11-09T14:56:23.919651+00:00"
             }
           ]
         }
