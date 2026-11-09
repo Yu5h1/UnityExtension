@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+// Maps signal keys to UnityEvents without owning a broadcaster subscription.
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
@@ -7,7 +7,7 @@ using Yu5h1Lib.Serialization;
 namespace Yu5h1Lib
 {
     /// <summary>
-    /// Stores string signal to UnityEvent mappings and registers them with <see cref="Broadcaster"/>.
+    /// Stores signal-to-UnityEvent mappings and invokes them when explicitly called.
     /// </summary>
     [AddComponentMenu("Yu5h1Lib/Message Receiver"), DisallowMultipleComponent]
     public class MessageReceiver : BaseMonoBehaviour
@@ -18,26 +18,6 @@ namespace Yu5h1Lib
         public KeyValues<string, UnityEvent> events => _events;
 
         protected override void OnInitializing() {}
-
-        private void OnEnable()
-        {
-            if (Application.isPlaying)
-                Broadcaster.instance.Register(this);
-        }
-
-        private void OnDisable()
-        {
-            if (!Application.isPlaying || !Broadcaster.Exists() || ApplicationInfo.WantsToQuit)
-                return;
-
-            Broadcaster.instance.Unregister(this);
-        }
-
-        public void RefreshRegistration()
-        {
-            if (Application.isPlaying)
-                Broadcaster.instance.Register(this);
-        }
 
         public void Call(string msg) => TryInvoke(msg, null);
 

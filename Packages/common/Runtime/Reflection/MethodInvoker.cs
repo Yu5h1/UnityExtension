@@ -1,3 +1,4 @@
+// Resolves public instance methods once per signature and isolates invocation failures.
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -7,7 +8,7 @@ using Object = UnityEngine.Object;
 namespace Yu5h1Lib
 {
     /// <summary>
-    /// Resolves and invokes public instance methods using ParameterObject declared types.
+    /// Resolves public instance methods using declared ParameterObject types or an explicit argument type.
     /// Resolved methods, including misses, are cached by target type, method name, and signature.
     /// </summary>
     public static class MethodInvoker
@@ -62,7 +63,7 @@ namespace Yu5h1Lib
         }
 
         /// <summary>
-        /// Invokes a public instance method whose signature exactly matches the declared parameter types.
+        /// Invokes a public instance method whose signature is compatible with the declared parameter types.
         /// A dotted name uses only its final segment.
         /// </summary>
         public static void Invoke(
@@ -72,7 +73,7 @@ namespace Yu5h1Lib
             => TryInvoke(target, methodName, parameters);
 
         /// <summary>
-        /// Tries to invoke a public instance method whose signature exactly matches the declared
+        /// Tries to invoke a public instance method whose signature is compatible with the declared
         /// parameter types. A dotted name uses only its final segment.
         /// </summary>
         public static bool TryInvoke(
@@ -87,18 +88,32 @@ namespace Yu5h1Lib
             if (!TryGetArguments(parameters, out var parameterTypes, out var arguments))
                 return false;
 
-            var method = GetMethod(target.GetType(), methodName, parameterTypes);
-            if (method == null)
-            {
-#if UNITY_EDITOR
-                $"No public method '{FormatSignature(methodName, parameterTypes)}' on {target.GetType().Name}"
-                    .printWarning();
-#endif
-                return false;
-            }
+            return TryInvokeCore(target, methodName, parameterTypes, arguments);
+        }
 
+        /// <summary>
+        /// Invokes one raw argument using the supplied signature type without creating parameter assets.
+        /// </summary>
+        public static bool TryInvoke(Object target, string methodName, Type argumentType, object argument)
+        {
+            if (!target || methodName.IsEmpty() || argumentType == null)
+                return false;
+            return TryInvokeCore(target, GetLastSegment(methodName), new[] { argumentType }, new[] { argument });
+        }
+
+        private static bool TryInvokeCore(Object target, string methodName, Type[] parameterTypes, object[] arguments)
+        {
             try
             {
+                var method = GetMethod(target.GetType(), methodName, parameterTypes);
+                if (method == null)
+                {
+#if UNITY_EDITOR
+                    $"No public method '{FormatSignature(methodName, parameterTypes)}' on {target.GetType().Name}"
+                        .printWarning();
+#endif
+                    return false;
+                }
                 method.Invoke(target, arguments);
                 return true;
             }

@@ -1,94 +1,122 @@
+// Dispatches method calls to explicitly registered Unity objects without owning receiver behavior.
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Yu5h1Lib
 {
     /// <summary>
-    /// Runtime signal hub. Dispatches a string signal to every active <see cref="MessageReceiver"/>
-    /// currently registered for that signal.
+    /// Invokes public instance methods on explicitly registered objects.
+    /// Registrations are runtime-only and are cleared when the hub is disabled or destroyed.
     /// </summary>
     [AddComponentMenu("Yu5h1Lib/Signal Dispatcher")]
     public class Broadcaster : SingletonBehaviour<Broadcaster>
     {
-        private readonly Dictionary<string, List<MessageReceiver>> _events = new();
-        private readonly List<MessageReceiver> _dispatchBuffer = new();
-        private readonly List<string> _emptySignals = new();
+        private readonly List<Object> _registeredObjects = new();
+        private static bool _quitting;
+
+        /// <summary>
+        /// Gets or creates the runtime hub, without creating objects in Edit mode or during quit.
+        /// </summary>
+        public new static Broadcaster instance
+        {
+            get
+            {
+                if (_quitting || ApplicationInfo.WantsToQuit)
+                    return null;
+                if (!Application.isPlaying)
+                    return TryGetExisting(out var existing) ? existing : null;
+                return SingletonBehaviour<Broadcaster>.instance;
+            }
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetRuntimeState()
+        {
+            _quitting = false;
+            _instance = null;
+        }
+
+        /// <summary>
+        /// Finds an existing hub without creating one, including during teardown.
+        /// </summary>
+        public static bool TryGetExisting(out Broadcaster broadcaster)
+        {
+            broadcaster = _instance;
+            if (!broadcaster)
+                ObjectUtility.TryFind(out broadcaster);
+            return broadcaster;
+        }
 
         protected override void OnInitializing() {}
         protected override void OnInstantiated() {}
 
-        public void Register(MessageReceiver events)
+        /// <summary>
+        /// Registers an object once. Subscription lifecycle is supplied by the caller.
+        /// </summary>
+        public void Register(Object target)
         {
-            if (events == null)
+            if (_quitting || ApplicationInfo.WantsToQuit || !isActiveAndEnabled || !target)
                 return;
-
-            Unregister(events);
-
-            foreach (var entry in events.events.Entries)
-            {
-                if (string.IsNullOrEmpty(entry.Key))
-                    continue;
-
-                if (!_events.TryGetValue(entry.Key, out var signalEvents))
-                {
-                    signalEvents = new List<MessageReceiver>();
-                    _events.Add(entry.Key, signalEvents);
-                }
-
-                if (!signalEvents.Contains(events))
-                    signalEvents.Add(events);
-            }
+            _registeredObjects.RemoveAll(item => !item);
+            if (!_registeredObjects.Contains(target))
+                _registeredObjects.Add(target);
         }
 
-        public void Unregister(MessageReceiver events)
+        public void Unregister(Object target)
         {
-            if (events == null)
-                return;
-
-            foreach (var pair in _events)
-                pair.Value.Remove(events);
-
-            RemoveEmptySignals();
+            _registeredObjects.Remove(target);
+            _registeredObjects.RemoveAll(item => !item);
         }
 
-        public bool Dispatch(string signal)
+        public bool Dispatch(string methodName) => DispatchCore(methodName, null, null);
+
+        /// <summary>
+        /// Dispatches one argument using its runtime type, or its declared type when null.
+        /// </summary>
+        public bool Dispatch<T>(string methodName, T argument)
+            => DispatchCore(methodName, argument?.GetType() ?? typeof(T), argument);
+
+        private bool DispatchCore(string methodName, Type argumentType, object argument)
         {
-            if (signal.IsEmpty() || !_events.TryGetValue(signal, out var signalEvents))
+            if (_quitting || ApplicationInfo.WantsToQuit || !isActiveAndEnabled || methodName.IsEmpty())
                 return false;
 
+            _registeredObjects.RemoveAll(target => !target);
+            var snapshot = _registeredObjects.ToArray();
             var invoked = false;
-            _dispatchBuffer.Clear();
-            _dispatchBuffer.AddRange(signalEvents);
-
-            foreach (var events in _dispatchBuffer)
+            foreach (var target in snapshot)
             {
-                if (events == null || !events.isActiveAndEnabled)
+                if (!target || !_registeredObjects.Contains(target))
+                    continue;
+                if (target is Behaviour behaviour && !behaviour.isActiveAndEnabled)
+                    continue;
+                if (target is Component component && !component.gameObject.activeInHierarchy)
+                    continue;
+                if (target is GameObject gameObject && !gameObject.activeInHierarchy)
                     continue;
 
-                invoked |= events.TryInvoke(signal);
+                invoked |= argumentType == null
+                    ? MethodInvoker.TryInvoke(target, methodName, null)
+                    : MethodInvoker.TryInvoke(target, methodName, argumentType, argument);
             }
-
-            _dispatchBuffer.Clear();
             return invoked;
         }
 
-        private void RemoveEmptySignals()
+        private void OnDisable() => _registeredObjects.Clear();
+
+        private void OnDestroy()
         {
-            _emptySignals.Clear();
+            _registeredObjects.Clear();
+            if (ReferenceEquals(_instance, this))
+                _instance = null;
+        }
 
-            foreach (var pair in _events)
-            {
-                if (pair.Value.Count == 0)
-                    _emptySignals.Add(pair.Key);
-            }
-
-            if (_emptySignals.Count == 0)
-                return;
-
-            foreach (var signal in _emptySignals)
-                _events.Remove(signal);
-
-            _emptySignals.Clear();
+        private void OnApplicationQuit()
+        {
+            _quitting = true;
+            _registeredObjects.Clear();
         }
     }
 }
