@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-11-09T14:56:23.919651+00:00",
+  "updated_at": "2026-11-10T04:51:08.102986+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -951,6 +951,26 @@
               "event": "created",
               "actor": "claude",
               "at": "2026-11-09T14:56:23.919651+00:00"
+            }
+          ]
+        },
+        {
+          "id": "cross-platform-ui-parity-closeout",
+          "title": "人工確認（close-out）：在 ChatModuleDemo 確認 ChatPanel 0.2.0-draft 的來源外觀基線（並排與列寬、頭像、時間位置、無框純文字、覆蓋捲軸、輸入膠囊）",
+          "status": "planned",
+          "priority": 1,
+          "document_ref": {
+            "kind": "checklist",
+            "scope_id": "unity-extension",
+            "task": "cross-platform-ui-parity-closeout"
+          },
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-11-10T04:51:08.102986+00:00",
+              "session": "ScrollView 與 ChatPanel 目標",
+              "session_id": "a14575be-285b-4d3b-916a-cf99f53943f7"
             }
           ]
         }

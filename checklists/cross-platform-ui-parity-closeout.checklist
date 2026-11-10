@@ -1,0 +1,33 @@
+# 跨平台 UI 一致性 Close-out Checklist
+
+Current round: `../../../UX/Documentation/ModuleSpec/Modules/ChatPanel.md#目標-1一輪安全送出可閱讀的逐字回覆與角色貼圖`.
+
+本檔是 `cross-platform-ui-parity` 卡片的 close-out：留給使用者的人工確認，一張卡一份。目前只有 ChatPanel 0.2.0-draft 的來源外觀基線：Yu5h1Lib.UIToolkit 的聊天模組是 ChatPanel 規範的來源，外觀的來源基線由使用者在來源上確認（UX 第 65 題），結果只證明規範符合來源。基線紀錄與其他行為的結果見 [ChatPanel 來源基線紀錄](../Packages/UIToolkit/Documentation/Yu5h1Lib.UX/ChatPanel.md)。打開方式：Unity 專案 `W:/UnityProject/Yu5h1LibTest`，場景 `Assets/Samples/Yu5h1Lib.UIToolkit/0.1.0/Chat Module/ChatModuleDemo.unity`（指向套件 `Samples~/ChatModule` 的 junction），先關掉 Device Simulator 再進入 Play。
+
+- [ ] **1. ChatPanel 來源外觀基線（ChatModuleDemo）**
+  Outcome: 使用者確認 UI Toolkit 聊天模組的外觀符合 ChatPanel 0.2.0-draft 的排版、頭像、時間、無框、捲軸與輸入膠囊條文。
+  Checks:
+    - [ ] **自己與對方的並排與列寬** `[manual]`
+      - Action: 在 Unity 專案 `W:/UnityProject/Yu5h1LibTest` 開場景 `Assets/Samples/Yu5h1Lib.UIToolkit/0.1.0/Chat Module/ChatModuleDemo.unity` 並進入 Play，看三則種子訊息，再送出一句自己的訊息。
+      - Expect: 自己的泡泡靠右、對方靠左；長訊息的泡泡寬度不超過訊息區寬度約 85%；列與列之間有約 8px 間距（並排與列寬，CHAT-LAYOUT-ALIGN）。
+      - Reason: 產品偏好：外觀的來源基線由使用者在來源上確認。
+    - [ ] **頭像** `[manual]`
+      - Action: 同一場景，看有頭像的訊息列；找一則沒有頭像圖片的參與者（demo 以程式產生頭像，若都有圖則看預設首字頭像的那一列）。
+      - Expect: 頭像是 32px 圓形，在泡泡外側、與泡泡相距約 8px，對齊泡泡頂端（多行長文時不往下置中）；沒有圖片時是灰藍圓形加顯示名稱的首字大寫（頭像，CHAT-LAYOUT-AVATAR）。
+      - Reason: 產品偏好：外觀的來源基線由使用者在來源上確認。
+    - [ ] **時間與日期分隔的位置** `[manual]`
+      - Action: 同一場景，在 demo 的設定把顯示時間打開（`ShowTimestamps`），看訊息與跨日處。
+      - Expect: 每個泡泡內右下角有較小、較淡的 `HH:mm`；日期改變處在訊息列上方置中顯示 `yyyy/MM/dd`；關掉顯示時間後兩者都消失（時間與日期分隔，CHAT-LAYOUT-TIMESTAMP 的 `inside`）。
+      - Reason: 產品偏好：外觀的來源基線由使用者在來源上確認。
+    - [ ] **無框純文字** `[manual]`
+      - Action: 同一場景，把一方的泡泡底色設為完全透明（demo 的樣式設定），看那一方的訊息。
+      - Expect: 泡泡沒有底色也沒有內距，文字直接貼齊訊息列，像一般 AI 助理的無框回覆（無框純文字，CHAT-STYLE-PLAIN）。
+      - Reason: 產品偏好：外觀的來源基線由使用者在來源上確認。
+    - [ ] **覆蓋捲軸** `[manual]`
+      - Action: 同一場景，送出幾句讓訊息超出畫面，滑鼠移進、移出訊息區。
+      - Expect: 捲軸平時看不見，滑鼠移入時約 180ms 淡入，是窄軌道上的細圓角滑塊，疊在訊息上、不讓訊息變窄；移出時淡出（覆蓋捲軸，CHAT-SCROLL-BAR）。
+      - Reason: 產品偏好：外觀的來源基線由使用者在來源上確認。
+    - [ ] **輸入膠囊** `[manual]`
+      - Action: 同一場景，看底部輸入列；輸入一些字再清空。
+      - Expect: 輸入列是高約 52px 的淺灰圓角膠囊，左邊是輸入框（空白時顯示「想說什麼?」），右邊依序是 34px 麥克風圓鈕與 38px 藍色送出圓鈕；空白時送出鈕變淡且按不下，有字時變實（膠囊，CHAT-COMPOSE-CAPSULE）。
+      - Reason: 產品偏好：外觀的來源基線由使用者在來源上確認。

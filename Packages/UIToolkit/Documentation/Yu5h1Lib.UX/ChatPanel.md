@@ -23,7 +23,7 @@ UnityExtension
 | 設計資料 | `ChatPanel/chat-panel-design.json` 0.2.0-draft，SHA-256 `2b229c6d305b9af43e8f31f2700105be24068d6717ed121d31f0406fef07c90f` |
 | 中性案例 | `ChatPanel/chat-panel-cases.json` 0.2.0-draft，SHA-256 `dd0ef290a2a06319fe8b95eda1e54f309b15fdf5d0a5fca05b3e4dac69454aa1` |
 | UX commit | `50e2657ba263877781fe0dabade39ca0907973b3` |
-| 範圍 | ChatPanel 0.2.0-draft 全部行為。捲動的貼底、跟隨、停止與恢復跟隨屬 [ScrollView](../../../../../../UX/Documentation/ModuleSpec/Collections/ScrollView.md)，基線另記於 `ScrollView.md`（尚未建立） |
+| 範圍 | ChatPanel 0.2.0-draft 全部行為。捲動的貼底、跟隨、停止與恢復跟隨屬 [ScrollView](../../../../../../UX/Documentation/ModuleSpec/Collections/ScrollView.md)，基線另記於 [ScrollView.md](ScrollView.md) |
 | 測試證據 | 開發紀錄 [聊天面板模組.md](../../../../Documentation/聊天面板模組.md)〈驗證總結〉：2026-10-01 EditMode 210/210、PlayMode 13/13 全過（Windows、Unity 6 Editor）。本次沒有重跑 |
 | 中性案例執行 | 沒有：本套件沒有 ChatPanel 案例 adapter，案例未經公開入口執行 |
 | DX | 不適用：本紀錄是來源基線，不是組裝驗收 |
@@ -58,13 +58,13 @@ UnityExtension
 
 ## 待使用者在來源上確認的外觀
 
-在 `Yu5h1LibTest` 開 `ChatModuleDemo`（Device Simulator 關閉），對照 ChatPanel 0.2.0-draft 的條文與設計資料確認：自己靠右、對方靠左、列寬 85%（CHAT-LAYOUT-ALIGN）；頭像 32px、無圖時首字縮寫且對齊泡泡頂端（CHAT-LAYOUT-AVATAR）；泡泡內右下時間與跨日置中日期（CHAT-LAYOUT-TIMESTAMP）；透明底時無框純文字（CHAT-STYLE-PLAIN）；滑鼠進入時 180ms 淡入的覆蓋捲軸（CHAT-SCROLL-BAR）；52px 膠囊與 34px／38px 圓鈕（CHAT-COMPOSE-CAPSULE）。確認結果的落點（UnityExtension 卡片的 close-out 項目）尚未建立。
+在 `Yu5h1LibTest` 開 `ChatModuleDemo`（Device Simulator 關閉），對照 ChatPanel 0.2.0-draft 的條文與設計資料確認：自己靠右、對方靠左、列寬 85%（CHAT-LAYOUT-ALIGN）；頭像 32px、無圖時首字縮寫且對齊泡泡頂端（CHAT-LAYOUT-AVATAR）；泡泡內右下時間與跨日置中日期（CHAT-LAYOUT-TIMESTAMP）；透明底時無框純文字（CHAT-STYLE-PLAIN）；滑鼠進入時 180ms 淡入的覆蓋捲軸（CHAT-SCROLL-BAR）；52px 膠囊與 34px／38px 圓鈕（CHAT-COMPOSE-CAPSULE）。結果記在 `cross-platform-ui-parity` 卡片的 close-out：[cross-platform-ui-parity-closeout.checklist](../../../../checklists/cross-platform-ui-parity-closeout.checklist)，本文不重複勾選狀態。
 
 ## 輪次
 
 | 規範版本 | UX commit | 範圍 | 實作 commit | Checklist commit | 結論 |
 |---|---|---|---|---|---|
-| ChatPanel 0.2.0-draft | `50e2657` | 來源基線（補建） | `ddf5877`（聊天程式最後變更） | 無 | 見下 |
+| ChatPanel 0.2.0-draft | `50e2657` | 來源基線（補建） | `ddf5877`（聊天程式最後變更） | 外觀確認見 close-out checklist | 見下 |
 
 ## 結論
 
