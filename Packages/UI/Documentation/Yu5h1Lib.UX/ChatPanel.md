@@ -109,3 +109,13 @@ Sample 的 `InputFieldAddon` 以原生 uGUI `InputField` 編輯草稿，`InputFi
 ## VCP batchmode 驗證
 
 以 VCP 現有的 `file:` 套件參照載入 Yu5h1Lib.UI。驗證時暫時匯入 sample 與這一輪 EditMode 測試，執行後移除暫用 Assets。EditMode 23/23（`20261112-085728-tests.xml`），PlayMode 1/1（`20261112-090058-tests.xml`）。報告在 VCP 專案旁的 `Virtual-Chat-Partner-Build/logs`。結果與人工確認見 [驗收清單](../../../../checklists/ui-chatpanel.checklist)。EditMode 驗證元件行為，PlayMode 驗證 sample 場景的宿主流程。手機觸控與產品外觀由使用者試用確認。
+
+### 讀取歷史與貼底跟隨
+
+2026-11-12 使用 VCP 的 Unity 6000.6.0f1 以 `-batchmode -nographics` 執行套件的 PlayMode 測試，結果 1／1 通過，0 個編譯錯誤。測試載入已匯入的 UxAcceptance 場景，訊息面板使用 VCP 以 `file:` 引用的 Yu5h1Lib.UI。執行時暫時同步 sample 腳本至套件版本，結束後還原原檔並移除暫用測試資產。報告為 `20261112-222831-tests.xml`。 [PlayMode 測試](../../Tests/Runtime/ChatPanelSampleScrollTests.cs)
+
+| 操作 | 觀測結果 |
+|---|---|
+| 拖離底部後再按「載入歷史」 | 清單重建，首個可見訊息仍為 `history-18`，列頂距視口頂端 −59 個 Canvas 單位。 |
+| 宿主透過 `ReplaceHistory` 加入四則更早的訊息 | `reading-26` 仍是首個可見訊息，列頂保持在 −9。捲動偏移從 1179 增至 1359，跟隨仍暫停。 |
+| 用 uGUI 指標拖回底部，再收到下一則訊息 | 放開後恢復跟隨。底部從 1524 移到 1581.33，視口跟著貼底。 |
