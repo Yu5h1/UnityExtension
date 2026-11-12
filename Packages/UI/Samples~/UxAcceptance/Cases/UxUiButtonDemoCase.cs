@@ -27,10 +27,7 @@ namespace Yu5h1Lib.UI.Acceptance
 
             var prefab = Resources.Load<GameObject>(DemoPrefabPath);
             if (prefab == null)
-            {
-                Debug.LogError($"Button demo Prefab not found at Resources/{DemoPrefabPath}.");
-                return;
-            }
+                throw new System.InvalidOperationException($"找不到按鈕展示 Prefab Resources/{DemoPrefabPath}。");
 
             _rootPanel = Object.Instantiate(prefab, container, false);
             _rootPanel.name = prefab.name;

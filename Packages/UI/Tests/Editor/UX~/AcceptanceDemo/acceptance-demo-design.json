@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "contractVersion": "0.1.0-draft",
+  "status": "規範草案",
+  "tokens": {
+    "preferredCardWidth": {
+      "value": 240,
+      "unit": "logical-px",
+      "hostOverridable": true,
+      "source": "web-demo-home"
+    },
+    "columnGap": {
+      "value": 10,
+      "unit": "logical-px",
+      "hostOverridable": true,
+      "source": "web-demo-home"
+    },
+    "startMode": {
+      "value": "catalog",
+      "options": [
+        "catalog",
+        "current"
+      ],
+      "hostOverridable": true
+    },
+    "query": {
+      "value": "",
+      "lifetime": "catalog-session"
+    }
+  },
+  "references": {
+    "ux.searchfield": {
+      "version": "1.0.1",
+      "behaviors": [
+        "SEARCH-INPUT",
+        "SEARCH-IME",
+        "SEARCH-CLEAR",
+        "SEARCH-FOCUS"
+      ]
+    },
+    "ux.button": {
+      "version": "4.0.0"
+    },
+    "ux.grid": {
+      "version": "0.2.1-draft",
+      "behaviors": [
+        "GRID-SLOT",
+        "GRID-COLUMNS",
+        "GRID-CELL",
+        "GRID-REFLOW"
+      ]
+    },
+    "ux.dx": {
+      "version": "1.1.1"
+    }
+  },
+  "sourceEvidence": {
+    "web-demo-home": {
+      "path": "Web/demo/home.html",
+      "commit": "a922698b3ef706b1e84835d4905551f425d0e7ac",
+      "sha256": "863ebc0a9911575adb6ceaecaec430101a990cba3e76367f6cd41eababeeafe9"
+    },
+    "web-acceptance-host": {
+      "path": "Web/demo/acceptance/demo.js",
+      "commit": "a922698b3ef706b1e84835d4905551f425d0e7ac",
+      "sha256": "471cceae8844b504ef1e78ccb5f6e81eb9e7ea3fc24868c1e431e58865b2a86e"
+    },
+    "web-acceptance-registry": {
+      "path": "Web/demo/acceptance/registry.mjs",
+      "commit": "a922698b3ef706b1e84835d4905551f425d0e7ac",
+      "sha256": "349ff733657efb604e5d64e40124a1c852767b43c179cfee6390849270203c94"
+    },
+    "web-acceptance-catalog": {
+      "path": "Web/demo/acceptance/modules.mjs",
+      "commit": "a922698b3ef706b1e84835d4905551f425d0e7ac",
+      "sha256": "69cd0a66cfe1ebfaec3476ba592b789569932ae54aea9c07f1fd21e31f04e985"
+    },
+    "web-acceptance-current": {
+      "path": "Web/demo/acceptance/current.json",
+      "commit": "a922698b3ef706b1e84835d4905551f425d0e7ac",
+      "sha256": "1789aa817ea45647f7d572fa4a1c25f4fc613051e17e72e806f1873d8d2f746c"
+    }
+  }
+}

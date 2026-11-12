@@ -9,18 +9,23 @@ namespace Yu5h1Lib.UI.Acceptance
     /// </summary>
     public static class UxUiModuleRegistry
     {
-        private static readonly Dictionary<string, IUxUiModuleDemoCase> cases =
-            new Dictionary<string, IUxUiModuleDemoCase>(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, (IUxUiModuleDemoCase DemoCase, string Description)> cases =
+            new(StringComparer.OrdinalIgnoreCase);
+        private static readonly List<string> order = new();
 
         public static event Action OnRegistryChanged;
 
-        public static void Register(IUxUiModuleDemoCase demoCase)
+        public static void Register(IUxUiModuleDemoCase demoCase) => Register(demoCase, null);
+
+        public static void Register(IUxUiModuleDemoCase demoCase, string description)
         {
             if (demoCase == null || string.IsNullOrEmpty(demoCase.Id))
             {
                 return;
             }
-            cases[demoCase.Id] = demoCase;
+            if (!cases.ContainsKey(demoCase.Id))
+                order.Add(demoCase.Id);
+            cases[demoCase.Id] = (demoCase, description);
             OnRegistryChanged?.Invoke();
         }
 
@@ -32,6 +37,7 @@ namespace Yu5h1Lib.UI.Acceptance
             }
             if (cases.Remove(id))
             {
+                order.RemoveAll(entry => string.Equals(entry, id, StringComparison.OrdinalIgnoreCase));
                 OnRegistryChanged?.Invoke();
             }
         }
@@ -39,10 +45,21 @@ namespace Yu5h1Lib.UI.Acceptance
         public static void Clear()
         {
             cases.Clear();
+            order.Clear();
             OnRegistryChanged?.Invoke();
         }
 
-        public static IEnumerable<IUxUiModuleDemoCase> AllCases => cases.Values;
+        public static IEnumerable<IUxUiModuleDemoCase> AllCases
+        {
+            get
+            {
+                foreach (var id in order)
+                    yield return cases[id].DemoCase;
+            }
+        }
+
+        internal static string GetDescription(string id) =>
+            cases.TryGetValue(id, out var entry) ? entry.Description : null;
 
         public static IUxUiModuleDemoCase Get(string id)
         {
@@ -50,8 +67,7 @@ namespace Yu5h1Lib.UI.Acceptance
             {
                 return null;
             }
-            cases.TryGetValue(id, out var demoCase);
-            return demoCase;
+            return cases.TryGetValue(id, out var entry) ? entry.DemoCase : null;
         }
 
         public static bool Contains(string id) => !string.IsNullOrEmpty(id) && cases.ContainsKey(id);

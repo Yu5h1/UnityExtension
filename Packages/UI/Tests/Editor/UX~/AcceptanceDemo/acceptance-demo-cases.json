@@ -1,0 +1,872 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.0-draft",
+  "cases": [
+    {
+      "id": "catalog-open",
+      "covers": [
+        "ACC-CATALOG",
+        "ACC-OPEN"
+      ],
+      "initial": {
+        "entries": [
+          {
+            "id": "button",
+            "title": "Button 按鈕",
+            "description": "外觀與鍵盤操作"
+          },
+          {
+            "id": "chat-panel",
+            "title": "ChatPanel 聊天面板",
+            "description": "逐字回覆與圖片"
+          },
+          {
+            "id": "backgroundload",
+            "title": "BackgroundLoad 背景載入",
+            "description": "圖片與載入進度"
+          },
+          {
+            "id": "grid",
+            "title": "Grid 格線",
+            "description": "依可用寬度重排"
+          }
+        ],
+        "currentEntryId": "chat-panel"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "start"
+          },
+          "expect": {
+            "view": "catalog",
+            "visibleIds": [
+              "button",
+              "chat-panel",
+              "backgroundload",
+              "grid"
+            ],
+            "focusOrderIds": [
+              "button",
+              "chat-panel",
+              "backgroundload",
+              "grid"
+            ],
+            "activeId": null,
+            "events": []
+          }
+        },
+        {
+          "action": {
+            "op": "activateEntry",
+            "id": "button"
+          },
+          "expect": {
+            "view": "case",
+            "activeId": "button",
+            "caseTitle": "Button 按鈕",
+            "events": [
+              "mount:button"
+            ],
+            "configuredCurrentId": "chat-panel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "responsive-grid",
+      "covers": [
+        "ACC-GRID"
+      ],
+      "initial": {
+        "entries": [
+          {
+            "id": "button",
+            "title": "Button 按鈕",
+            "description": "外觀與鍵盤操作"
+          },
+          {
+            "id": "chat-panel",
+            "title": "ChatPanel 聊天面板",
+            "description": "逐字回覆與圖片"
+          },
+          {
+            "id": "backgroundload",
+            "title": "BackgroundLoad 背景載入",
+            "description": "圖片與載入進度"
+          },
+          {
+            "id": "grid",
+            "title": "Grid 格線",
+            "description": "依可用寬度重排"
+          }
+        ],
+        "availableWidth": 220,
+        "preferredCardWidth": 240,
+        "columnGap": 10
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "start"
+          },
+          "expect": {
+            "columns": 1,
+            "cardWidth": 220,
+            "visibleIds": [
+              "button",
+              "chat-panel",
+              "backgroundload",
+              "grid"
+            ],
+            "horizontalOverflow": false
+          }
+        },
+        {
+          "action": {
+            "op": "resize",
+            "availableWidth": 489
+          },
+          "expect": {
+            "columns": 1,
+            "cardWidth": 489,
+            "visibleIds": [
+              "button",
+              "chat-panel",
+              "backgroundload",
+              "grid"
+            ],
+            "horizontalOverflow": false
+          }
+        },
+        {
+          "action": {
+            "op": "resize",
+            "availableWidth": 490
+          },
+          "expect": {
+            "columns": 2,
+            "cardWidth": 240,
+            "visibleIds": [
+              "button",
+              "chat-panel",
+              "backgroundload",
+              "grid"
+            ],
+            "horizontalOverflow": false
+          }
+        },
+        {
+          "action": {
+            "op": "resize",
+            "availableWidth": 740
+          },
+          "expect": {
+            "columns": 3,
+            "cardWidth": 240,
+            "visibleIds": [
+              "button",
+              "chat-panel",
+              "backgroundload",
+              "grid"
+            ],
+            "horizontalOverflow": false
+          }
+        },
+        {
+          "action": {
+            "op": "setQuery",
+            "query": "圖片"
+          },
+          "expect": {
+            "columns": 2,
+            "cardWidth": 365,
+            "visibleIds": [
+              "chat-panel",
+              "backgroundload"
+            ],
+            "horizontalOverflow": false
+          }
+        },
+        {
+          "action": {
+            "op": "setQuery",
+            "query": "不存在"
+          },
+          "expect": {
+            "columns": 0,
+            "visibleIds": [],
+            "horizontalOverflow": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "multi-token-search",
+      "covers": [
+        "ACC-FILTER"
+      ],
+      "initial": {
+        "entries": [
+          {
+            "id": "button",
+            "title": "Button 按鈕",
+            "description": "外觀與鍵盤操作"
+          },
+          {
+            "id": "chat-panel",
+            "title": "ChatPanel 聊天面板",
+            "description": "逐字回覆與圖片"
+          },
+          {
+            "id": "backgroundload",
+            "title": "BackgroundLoad 背景載入",
+            "description": "圖片與載入進度"
+          },
+          {
+            "id": "grid",
+            "title": "Grid 格線",
+            "description": "依可用寬度重排"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "start"
+          },
+          "expect": {
+            "visibleIds": [
+              "button",
+              "chat-panel",
+              "backgroundload",
+              "grid"
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "setQuery",
+            "query": "  CHAT-PANEL    逐字  "
+          },
+          "expect": {
+            "visibleIds": [
+              "chat-panel"
+            ],
+            "focus": "search",
+            "emptyStatus": false,
+            "activeId": null,
+            "events": []
+          }
+        },
+        {
+          "action": {
+            "op": "setQuery",
+            "query": "圖片"
+          },
+          "expect": {
+            "visibleIds": [
+              "chat-panel",
+              "backgroundload"
+            ],
+            "focus": "search",
+            "emptyStatus": false
+          }
+        },
+        {
+          "action": {
+            "op": "setQuery",
+            "query": "圖片 不存在"
+          },
+          "expect": {
+            "visibleIds": [],
+            "focus": "search",
+            "emptyStatus": true,
+            "activeId": null,
+            "events": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "clear-and-restore",
+      "covers": [
+        "ACC-FILTER"
+      ],
+      "initial": {
+        "entries": [
+          {
+            "id": "button",
+            "title": "Button 按鈕",
+            "description": "外觀與鍵盤操作"
+          },
+          {
+            "id": "chat-panel",
+            "title": "ChatPanel 聊天面板",
+            "description": "逐字回覆與圖片"
+          },
+          {
+            "id": "backgroundload",
+            "title": "BackgroundLoad 背景載入",
+            "description": "圖片與載入進度"
+          },
+          {
+            "id": "grid",
+            "title": "Grid 格線",
+            "description": "依可用寬度重排"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "start"
+          },
+          "expect": {
+            "visibleIds": [
+              "button",
+              "chat-panel",
+              "backgroundload",
+              "grid"
+            ],
+            "emptyStatus": false
+          }
+        },
+        {
+          "action": {
+            "op": "setQuery",
+            "query": "不存在"
+          },
+          "expect": {
+            "visibleIds": [],
+            "focus": "search",
+            "emptyStatus": true
+          }
+        },
+        {
+          "action": {
+            "op": "clearQuery"
+          },
+          "expect": {
+            "query": "",
+            "visibleIds": [
+              "button",
+              "chat-panel",
+              "backgroundload",
+              "grid"
+            ],
+            "emptyStatus": false,
+            "focus": "search",
+            "events": []
+          }
+        },
+        {
+          "action": {
+            "op": "setQuery",
+            "query": "   "
+          },
+          "expect": {
+            "visibleIds": [
+              "button",
+              "chat-panel",
+              "backgroundload",
+              "grid"
+            ],
+            "emptyStatus": false,
+            "focus": "search",
+            "events": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "current-target-opt-in",
+      "covers": [
+        "ACC-CURRENT"
+      ],
+      "initial": {
+        "entries": [
+          {
+            "id": "button",
+            "title": "Button 按鈕",
+            "description": "外觀與鍵盤操作"
+          },
+          {
+            "id": "chat-panel",
+            "title": "ChatPanel 聊天面板",
+            "description": "逐字回覆與圖片"
+          },
+          {
+            "id": "backgroundload",
+            "title": "BackgroundLoad 背景載入",
+            "description": "圖片與載入進度"
+          },
+          {
+            "id": "grid",
+            "title": "Grid 格線",
+            "description": "依可用寬度重排"
+          }
+        ],
+        "currentEntryId": "chat-panel",
+        "startMode": "current"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "start"
+          },
+          "expect": {
+            "view": "case",
+            "activeId": "chat-panel",
+            "events": [
+              "mount:chat-panel"
+            ],
+            "configuredCurrentId": "chat-panel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "current-target-shortcut",
+      "covers": [
+        "ACC-CURRENT"
+      ],
+      "initial": {
+        "entries": [
+          {
+            "id": "button",
+            "title": "Button 按鈕",
+            "description": "外觀與鍵盤操作"
+          },
+          {
+            "id": "chat-panel",
+            "title": "ChatPanel 聊天面板",
+            "description": "逐字回覆與圖片"
+          },
+          {
+            "id": "backgroundload",
+            "title": "BackgroundLoad 背景載入",
+            "description": "圖片與載入進度"
+          },
+          {
+            "id": "grid",
+            "title": "Grid 格線",
+            "description": "依可用寬度重排"
+          }
+        ],
+        "currentEntryId": "chat-panel",
+        "startMode": "catalog"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "start"
+          },
+          "expect": {
+            "view": "catalog",
+            "activeId": null,
+            "currentEntryAvailable": true,
+            "configuredCurrentId": "chat-panel",
+            "events": []
+          }
+        },
+        {
+          "action": {
+            "op": "activateCurrent"
+          },
+          "expect": {
+            "view": "case",
+            "activeId": "chat-panel",
+            "configuredCurrentId": "chat-panel",
+            "events": [
+              "mount:chat-panel"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "return-with-search",
+      "covers": [
+        "ACC-RETURN"
+      ],
+      "initial": {
+        "entries": [
+          {
+            "id": "button",
+            "title": "Button 按鈕",
+            "description": "外觀與鍵盤操作"
+          },
+          {
+            "id": "chat-panel",
+            "title": "ChatPanel 聊天面板",
+            "description": "逐字回覆與圖片"
+          },
+          {
+            "id": "backgroundload",
+            "title": "BackgroundLoad 背景載入",
+            "description": "圖片與載入進度"
+          },
+          {
+            "id": "grid",
+            "title": "Grid 格線",
+            "description": "依可用寬度重排"
+          }
+        ],
+        "currentEntryId": "chat-panel"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "start"
+          },
+          "expect": {
+            "view": "catalog",
+            "visibleIds": [
+              "button",
+              "chat-panel",
+              "backgroundload",
+              "grid"
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "setQuery",
+            "query": "圖片"
+          },
+          "expect": {
+            "visibleIds": [
+              "chat-panel",
+              "backgroundload"
+            ],
+            "focus": "search"
+          }
+        },
+        {
+          "action": {
+            "op": "activateEntry",
+            "id": "backgroundload"
+          },
+          "expect": {
+            "view": "case",
+            "activeId": "backgroundload",
+            "events": [
+              "mount:backgroundload"
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "returnToCatalog"
+          },
+          "expect": {
+            "view": "catalog",
+            "query": "圖片",
+            "visibleIds": [
+              "chat-panel",
+              "backgroundload"
+            ],
+            "activeId": null,
+            "focus": "entry:backgroundload",
+            "events": [
+              "dispose:backgroundload"
+            ],
+            "configuredCurrentId": "chat-panel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "return-without-trigger",
+      "covers": [
+        "ACC-RETURN"
+      ],
+      "initial": {
+        "entries": [
+          {
+            "id": "button",
+            "title": "Button 按鈕",
+            "description": "外觀與鍵盤操作"
+          },
+          {
+            "id": "chat-panel",
+            "title": "ChatPanel 聊天面板",
+            "description": "逐字回覆與圖片"
+          },
+          {
+            "id": "backgroundload",
+            "title": "BackgroundLoad 背景載入",
+            "description": "圖片與載入進度"
+          },
+          {
+            "id": "grid",
+            "title": "Grid 格線",
+            "description": "依可用寬度重排"
+          }
+        ],
+        "currentEntryId": "chat-panel",
+        "startMode": "current"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "start"
+          },
+          "expect": {
+            "view": "case",
+            "activeId": "chat-panel"
+          }
+        },
+        {
+          "action": {
+            "op": "returnToCatalog"
+          },
+          "expect": {
+            "view": "catalog",
+            "query": "",
+            "visibleIds": [
+              "button",
+              "chat-panel",
+              "backgroundload",
+              "grid"
+            ],
+            "activeId": null,
+            "focus": "search",
+            "events": [
+              "dispose:chat-panel"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "switch-and-reset",
+      "covers": [
+        "ACC-OPEN",
+        "ACC-RESET"
+      ],
+      "initial": {
+        "entries": [
+          {
+            "id": "button",
+            "title": "Button 按鈕",
+            "description": "外觀與鍵盤操作"
+          },
+          {
+            "id": "chat-panel",
+            "title": "ChatPanel 聊天面板",
+            "description": "逐字回覆與圖片"
+          },
+          {
+            "id": "backgroundload",
+            "title": "BackgroundLoad 背景載入",
+            "description": "圖片與載入進度"
+          },
+          {
+            "id": "grid",
+            "title": "Grid 格線",
+            "description": "依可用寬度重排"
+          }
+        ],
+        "currentEntryId": "chat-panel",
+        "startMode": "current"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "start"
+          },
+          "expect": {
+            "view": "case",
+            "activeId": "chat-panel",
+            "events": [
+              "mount:chat-panel"
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "openExplicit",
+            "id": "button"
+          },
+          "expect": {
+            "view": "case",
+            "activeId": "button",
+            "events": [
+              "dispose:chat-panel",
+              "mount:button"
+            ],
+            "configuredCurrentId": "chat-panel"
+          }
+        },
+        {
+          "action": {
+            "op": "resetCase"
+          },
+          "expect": {
+            "view": "case",
+            "activeId": "button",
+            "events": [
+              "dispose:button",
+              "mount:button"
+            ],
+            "configuredCurrentId": "chat-panel"
+          }
+        },
+        {
+          "action": {
+            "op": "exit"
+          },
+          "expect": {
+            "activeId": null,
+            "events": [
+              "dispose:button"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "invalid-target-recovery",
+      "covers": [
+        "ACC-CURRENT",
+        "ACC-FAIL"
+      ],
+      "initial": {
+        "entries": [
+          {
+            "id": "button",
+            "title": "Button 按鈕",
+            "description": "外觀與鍵盤操作"
+          },
+          {
+            "id": "chat-panel",
+            "title": "ChatPanel 聊天面板",
+            "description": "逐字回覆與圖片"
+          },
+          {
+            "id": "backgroundload",
+            "title": "BackgroundLoad 背景載入",
+            "description": "圖片與載入進度"
+          },
+          {
+            "id": "grid",
+            "title": "Grid 格線",
+            "description": "依可用寬度重排"
+          }
+        ],
+        "currentEntryId": "unknown",
+        "startMode": "current"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "start"
+          },
+          "expect": {
+            "activeId": null,
+            "errorStatus": true,
+            "catalogAccessible": true,
+            "configuredCurrentId": "unknown",
+            "events": []
+          }
+        },
+        {
+          "action": {
+            "op": "activateEntry",
+            "id": "button"
+          },
+          "expect": {
+            "view": "case",
+            "activeId": "button",
+            "errorStatus": false,
+            "events": [
+              "mount:button"
+            ],
+            "configuredCurrentId": "unknown"
+          }
+        }
+      ]
+    },
+    {
+      "id": "failed-case-recovery",
+      "covers": [
+        "ACC-FAIL"
+      ],
+      "initial": {
+        "entries": [
+          {
+            "id": "button",
+            "title": "Button 按鈕",
+            "description": "外觀與鍵盤操作"
+          },
+          {
+            "id": "chat-panel",
+            "title": "ChatPanel 聊天面板",
+            "description": "逐字回覆與圖片"
+          },
+          {
+            "id": "backgroundload",
+            "title": "BackgroundLoad 背景載入",
+            "description": "圖片與載入進度"
+          },
+          {
+            "id": "grid",
+            "title": "Grid 格線",
+            "description": "依可用寬度重排"
+          }
+        ],
+        "failedMountIds": [
+          "backgroundload"
+        ],
+        "currentEntryId": "chat-panel",
+        "startMode": "current"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "start"
+          },
+          "expect": {
+            "view": "case",
+            "activeId": "chat-panel",
+            "events": [
+              "mount:chat-panel"
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "openExplicit",
+            "id": "backgroundload"
+          },
+          "expect": {
+            "activeId": null,
+            "errorStatus": true,
+            "catalogAccessible": true,
+            "caseContentCount": 0,
+            "events": [
+              "dispose:chat-panel",
+              "mount:backgroundload"
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "activateEntry",
+            "id": "button"
+          },
+          "expect": {
+            "view": "case",
+            "activeId": "button",
+            "errorStatus": false,
+            "events": [
+              "mount:button"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

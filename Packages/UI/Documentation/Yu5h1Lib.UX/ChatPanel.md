@@ -39,6 +39,8 @@ VCP 宿主／UxAcceptance sample
 
 ## 試用範圍
 
+使用者在 VCP 直向試用發現訊息區遭工具列與輸入列擠壓，外觀尚待確認。成因、共用元件取捨與可分派的改善見 [uGUI ChatPanel 示範版對齊計畫](../../../../Documentation/ChatPanelDemoParityPlan.md)。
+
 VCP → Package Manager → Yu5h1Lib.UI → Samples → UxAcceptance → Import。開啟 `UxUiAcceptanceDemo.unity` → Play → 選 **ChatPanel (0.4.0-draft)**。
 
 - 短對話 → 送出一句 → 觀察貼底、等待 6 秒與逐字完成通知。
