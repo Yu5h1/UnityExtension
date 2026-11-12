@@ -133,6 +133,21 @@ assemblies compile with 0 warnings against 6000.3.9f1 and the `fxc` compile of
   `SolverVolumeEffectProfile.actOutside` moved to `SolverMediumProfile` (same
   serialized name) and the base exposes `ActsOutside`.
 
+- **Enable／disable drives reuse (`BonghuoVR-UnifiedSolver-4`, same date).**
+  Disabling a GameObject carrying an emitter, `SolverClothParticles` or
+  `SolverRopeParticles` parks it at once (releasing any `ClothGrabber` hold);
+  enabling it again respawns or resets it on the next physics step, never on the
+  first activation. `SolverParticleSource` now owns `ResetToRest`／`Park` for
+  both cloth and rope. An object authored inactive is switched on when its scene
+  loads, held until Start has allocated, then parked and switched off
+  (`SolverClothGuardBootstrap` + `Runtime/Compatibility/SolverReuseDriver.cs`);
+  it is moved far away while held. Warns, naming the object, when it cannot
+  (inactive parent, solver already stepped, switched off before Start ran).
+  Design: `plan.md` §11, last subsection. Known edge: an object authored inactive
+  that something activates in the very first frame is switched off again by the
+  allocation pass if its Start has run; if that is a Timeline clip starting at
+  t=0, the clip's next evaluation switches it back on.
+
 Not yet seen in Unity: the migration of existing bounds assets; that a newly
 created bounds asset reads `Contain` (relies on `Reset()` running for a
 ScriptableObject created from the inspector — if not, it reads `Exclude`); parked
@@ -505,7 +520,11 @@ Standing constraints on all of the above:
   snapshot over every live particle (warned once, `plan.md` §11). A parked body
   keeps its particle and constraint capacity and its share of every dispatch.
 - The cloth capacity guard cannot cover a `ClothGenerator` instantiated after
-  scene load from a prefab that lacks `SolverClothParticles`.
+  scene load from a prefab that lacks `SolverClothParticles`, and nothing can make
+  an object instantiated after the first step allocate in advance: its particles
+  are added late and that is warned.
+- An object authored inactive under an inactive parent cannot be allocated in
+  advance (warned). Pool objects created after `sceneLoaded` likewise.
 - Cross-emitter capacity reservation is not globally atomic at the final capacity edge.
 - Modifier dispatch is batched per emitter, not globally across emitters sharing a
   modifier type.

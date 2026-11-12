@@ -457,6 +457,8 @@ knowing it is small saves hunting for an API that was never going to exist.
 | take the bodies out of play | `SolverParticleEmitter.Park()` (undo with `Respawn()`) |
 | put a net back and reuse it | `SolverClothParticles.ResetToRest()` |
 | take a net out of play | `SolverClothParticles.Park()` (undo with `ResetToRest()`) |
+| the same for a rope | `SolverRopeParticles.ResetToRest()` / `.Park()` |
+| let a Timeline or pool drive all of the above | enable / disable the GameObject |
 
 Two consequences of that table worth stating outright.
 
@@ -493,6 +495,20 @@ before the first step, then rewrite.
   holding the parked net. Do not move the `ClothGenerator` Transform to move a net;
   move the anchor Transforms and call `ResetToRest()` when the net should start
   over.
+- **Enable and disable are the same thing.** Disable the GameObject and the body
+  is parked; enable it again and it respawns (emitter) or goes back to its rest
+  pose under the current anchors (net, rope), a physics step later so a follower
+  or a pool has placed it first. A grabbed net is let go on disable. So a
+  Timeline Activation Track or a pool needs no script. The first activation does
+  nothing: Start has just made the body.
+- **Authored inactive is fine.** An object that is inactive in the scene is
+  switched on when its scene loads, kept just long enough for its Start to
+  allocate, then parked and switched off, all before the solver's first step.
+  This only works for an object whose parents are active, so keep the parent
+  active and switch the object itself off. A net and its anchors are one object:
+  put the generator and the anchors' Transforms on it.
+- Not covered: anything instantiated after the scene has loaded. Its particles are
+  added after the first step and it warns; keep it in the scene instead.
 - A call made before the solver's first step is held and applied one step after it.
 - Anything that still adds after the first step is warned about once, naming the
   component. Treat that warning as a bug in the scene, not as noise.

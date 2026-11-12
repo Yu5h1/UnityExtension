@@ -18,7 +18,9 @@ namespace Yu5h1Lib.UnifiedSolver
     // Companions are created here, hidden here, and removed here. Nothing about
     // them is a decision.
     [DefaultExecutionOrder(-100)]
-    public sealed class SolverParticleEmitter : MonoBehaviour
+    public sealed class SolverParticleEmitter :
+        MonoBehaviour,
+        ISolverReuseTarget
     {
         [Inline]
         public SolverParticleProfile profile;
@@ -94,6 +96,9 @@ namespace Yu5h1Lib.UnifiedSolver
 
         ReuseOp _pendingOp;
         bool _parked;
+        bool _startRan;
+        bool _wasDisabled;
+        bool _allocationHold;
         bool _reportedLateAdd;
         SolverParticleModifierRunner _runner;
 
@@ -115,6 +120,13 @@ namespace Yu5h1Lib.UnifiedSolver
         /// </summary>
         public bool IsReusePending =>
             _pendingOp != ReuseOp.None;
+
+        /// <summary>
+        ///   True while an object authored inactive is being brought to life
+        ///   just long enough to allocate. The transform is somewhere else then,
+        ///   so anything that judges the spawn box must not.
+        /// </summary>
+        public bool IsAllocationHold => _allocationHold;
 
         public SolverManager Solver => _solver;
         public ComputeBuffer InstanceBuffer =>
@@ -217,6 +229,35 @@ namespace Yu5h1Lib.UnifiedSolver
                 QueueInitialRequests();
                 FlushQueued();
             }
+
+            _startRan = true;
+        }
+
+        // Enabling again after a disable is a new round: the bodies are put back
+        // in the spawn box. Never the first time, when Start has just made them,
+        // and never while an object authored inactive is being allocated.
+        //
+        // Applied on the next physics step rather than now, because whatever
+        // places this object -- a pool, a follower -- usually runs after the
+        // activation that got us here, and the spawn box is taken from the
+        // Transform.
+        void OnEnable()
+        {
+            if (_wasDisabled && _startRan && !_allocationHold)
+                RequestReuse(ReuseOp.Respawn, false);
+        }
+
+        // Disabling takes the bodies out of play, so a GameObject switched off
+        // by a Timeline track or a pool leaves nothing invisible and solid
+        // behind.
+        void OnDisable()
+        {
+            if (_allocationHold)
+                return;
+
+            _wasDisabled = true;
+            if (_startRan)
+                Park();
         }
 
         void FixedUpdate()
@@ -256,21 +297,26 @@ namespace Yu5h1Lib.UnifiedSolver
             return RequestReuse(ReuseOp.Park);
         }
 
-        bool RequestReuse(ReuseOp op)
+        bool RequestReuse(ReuseOp op, bool immediate = true)
         {
+            if (!Application.isPlaying || SolverReuse.IsQuitting)
+                return false;
+
             ResolveDependencies();
             if (!IsReady)
                 return false;
 
             _pendingOp = op;
-            TryApplyPending();
+            if (!immediate || !TryApplyPending())
+                SolverReuseDriver.Defer(this);
             return true;
         }
 
-        void TryApplyPending()
+        // True when nothing is left pending.
+        bool TryApplyPending()
         {
             if (_pendingOp == ReuseOp.None)
-                return;
+                return true;
 
             // Anything queued but not yet spawned belongs to the same round.
             FlushQueued();
@@ -280,16 +326,47 @@ namespace Yu5h1Lib.UnifiedSolver
             {
                 _pendingOp = ReuseOp.None;
                 _parked = op == ReuseOp.Park;
-                return;
+                return true;
             }
 
-            if (!SolverReuse.HasStepped(_solver))
-                return;
+            if (!SolverReuse.HasStepped(_solver) ||
+                !SolverReuse.CanWrite(_solver, this))
+            {
+                return false;
+            }
 
             _pendingOp = ReuseOp.None;
             WriteBodies(op == ReuseOp.Park);
             ClearLifecycleAndSleep();
             _parked = op == ReuseOp.Park;
+            return true;
+        }
+
+        UnityEngine.Object ISolverReuseTarget.Owner => this;
+
+        bool ISolverReuseTarget.TryApplyReuse()
+        {
+            return TryApplyPending();
+        }
+
+        bool ISolverReuseTarget.IsAllocated => _startRan;
+
+        bool ISolverReuseTarget.IsSettled => true;
+
+        bool ISolverReuseTarget.AllocationHold
+        {
+            get => _allocationHold;
+            set
+            {
+                _allocationHold = value;
+                if (value)
+                    _parked = true;
+            }
+        }
+
+        void ISolverReuseTarget.RequestPark()
+        {
+            Park();
         }
 
         // Rewrites this emitter's own particle runs in the solver's buffer.

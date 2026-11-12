@@ -477,6 +477,24 @@ SolverParticleInstance Buffer
 - **容量守門（網子容量不足時清楚停下）。** `AddParticle` 滿了回傳 −1，`ClothGenerator.Start` 不檢查就拿去建約束而丟 `ArgumentOutOfRangeException`，此時半張網已存在。`SolverClothParticles` 的 Start 執行順序（−50）早於 `ClothGenerator`（0），在那裡檢查剩餘粒子與約束容量；不足就停用 generator、報一則錯誤（物件、需要量、剩餘量），不建半張網。同一個 frame 內多張布料啟動時，先通過者會先佔用容量，否則兩張各自放得下的網都會通過、第二張仍然溢出。守門要涵蓋每一張 `ClothGenerator`，所以不能依賴錨點：編輯器在加入 `ClothGenerator` 時自動補上元件，runtime 在每次場景載入後替沒有元件的 `ClothGenerator` 補上。
 - **未涵蓋的情況：** 場景載入之後才 Instantiate、而且 prefab 本身沒有 `SolverClothParticles` 的布料。在 Instantiate 與 generator 的 Start 之間沒有任何不在 prefab 上的東西能執行。處理方式是把元件放進 prefab，或 Instantiate 後立刻呼叫 `EnsureOn`。
 
+#### 用 GameObject 啟用與停用控制重生和收起（BonghuoVR-UnifiedSolver-4）
+
+上面的 `Respawn`／`Park`／`ResetToRest` 要有人呼叫。Timeline 的 Activation Track 與物件池只會 `SetActive`，所以讓啟用與停用本身就是那兩個動作，專案不必另寫腳本。三種身體（emitter、`ClothGenerator`、`RopeGenerator`）一致：
+
+- **停用 → 收起，立即寫入。** `OnDisable` 呼叫 `Park()`。停用的元件沒有 FixedUpdate，所以不能等下一步；若求解器還沒步進，交給 `SolverReuseDriver` 在第一步之後的那個 tick 寫入。抓著網子時先放開：`ClothGrabber` 的放開要等它自己的 FixedUpdate，那時粒子已被覆寫，它會把質量還原到不屬於那些粒子的值，所以收起前先 `ClothGrabber.ReleaseAllOn`。
+- **再次啟用 → 重生或回到靜止姿勢，下一個物理步驟才寫。** 不是 `OnEnable` 當下，因為讓這個物件對齊漁具的 `TransformFollower`、或物件池擺放位置的程式，通常在啟用之後才執行；`OnEnable` 當下的 Transform 是移動前的位置。第一次啟用不做（Start 剛建好，已在靜止姿勢）。
+- **繩子**與布料共用同一套實作，放在 `SolverParticleSource`（兩者的共同基底）：`ResetToRest()`／`Park()`、讀回一次 phase 與顏色、寫入自己那一段。差別只有 `RestInverseMass`（`fixStart`／`fixEnd`），以及繩子的彎曲約束在第一個 FixedUpdate 才加入，所以配置期間要等它加完。
+
+**預設停用的物件。** GameObject 在場景或 prefab 裡是停用的，它所有元件的 Start 都不會跑，粒子要到第一次啟用才建立，也就是求解器第一步之後，會把場上所有粒子拉回出生狀態。`SolverClothGuardBootstrap` 在場景載入時（`sceneLoaded` 在所有 Awake／OnEnable 之後、所有 Start 之前）把這類物件臨時啟用，讓 Start 配置粒子，然後在同一個 frame 的 Start 階段結束後停用並收起（`SolverReuseDriver`，執行順序 1000，晚於所有 Start）。
+
+- 啟用期間物件被搬到遠處（`SolverReuse.AllocationSite`），所以粒子是在遠處建立的，而不是在它的場景位置。搬回的條件是 Transform 還沒被別人動過；若 follower 已經對齊它，就不動。
+- 啟用期間視為已收起：emitter 不繪製，錨點不拉粒子（`IsParked` 為真），bounds 不拿遠處的 Transform 去判斷 spawn box 中心。
+- 沒有彎曲約束的布料與 emitter 在同一個 frame 就收起；帶彎曲約束的繩子要等第一個 FixedUpdate 把約束加完。求解器步進了仍沒配置完（例如 Timeline 在第一個 frame 就把它關掉，Start 沒機會跑），警告並指出物件。
+- 這一步由 `SolverReuseDriver` 的 Start 與 FixedUpdate 推進，它也負責所有「求解器還沒步進、沒法立刻寫」的請求，包括已停用物件的收起。
+- 不能做的情況都警告並指出物件：它的父物件也是停用的（只開自己無法讓 Start 執行，又不該去啟用其他東西）；場景載入時求解器已經步進過。
+
+**這項工作沒有關閉**上面「未涵蓋的情況」：場景載入之後才 Instantiate 的物件，它的粒子必然是第一步之後才加入的。物件池若在場景載入時（Awake）就預先建好池中物件，這些物件在 `sceneLoaded` 時已存在，會被一併配置；在 Start 之後才建立的不會，第一次啟用會警告。
+
 仍開放：剛體路徑的重用（`SolverRigidBody` 沿用上一輪的四元數當迭代初值，理論上 20 次迭代內收斂，未在 Unity 實測）；收起的身體仍佔用粒子容量與求解器的 `_particleCount` 工作量（它們被各 kernel 提早返回，但仍被分派）。
 
 ### Profile 多型方式

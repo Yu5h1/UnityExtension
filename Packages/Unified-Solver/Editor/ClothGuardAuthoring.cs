@@ -2,7 +2,8 @@ using UnityEditor;
 using UnityEngine;
 using Yu5h1Lib.UnifiedSolver;
 
-// Adds the capacity guard to every ClothGenerator the moment it is added.
+// Adds the solver glue to every ClothGenerator and RopeGenerator the moment it
+// is added.
 //
 // SolverClothParticles is what stops a cloth the solver has no room for before
 // the vendored generator throws halfway through building it, and it can only do
@@ -26,20 +27,29 @@ static class ClothGuardAuthoring
     // Deferred because the callback runs inside the add that raised it.
     static void OnComponentAdded(Component component)
     {
-        if (!(component is ClothGenerator))
+        if (!(component is ClothGenerator ||
+              component is RopeGenerator))
+        {
             return;
+        }
 
         GameObject owner = component.gameObject;
         EditorApplication.delayCall += () =>
         {
-            if (owner == null ||
-                owner.GetComponent<ClothGenerator>() == null ||
-                owner.GetComponent<SolverClothParticles>() != null)
-            {
+            if (owner == null)
                 return;
+
+            if (owner.GetComponent<ClothGenerator>() != null &&
+                owner.GetComponent<SolverClothParticles>() == null)
+            {
+                Undo.AddComponent<SolverClothParticles>(owner);
             }
 
-            Undo.AddComponent<SolverClothParticles>(owner);
+            if (owner.GetComponent<RopeGenerator>() != null &&
+                owner.GetComponent<SolverRopeParticles>() == null)
+            {
+                Undo.AddComponent<SolverRopeParticles>(owner);
+            }
         };
     }
 }

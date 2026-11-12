@@ -370,6 +370,12 @@ namespace Yu5h1Lib.UnifiedSolver
             IReadOnlyList<SolverVolume> volumes,
             Vector3 spawnCenter)
         {
+            // The emitter is being allocated somewhere nothing is, so the box is
+            // not where it will spawn and any verdict would be about the wrong
+            // place.
+            if (_emitter.IsAllocationHold)
+                return false;
+
             int contains = 0;
             for (int i = 0; i < volumes.Count; i++)
             {
@@ -420,6 +426,9 @@ namespace Yu5h1Lib.UnifiedSolver
             Vector3 spawnCenter,
             bool ignoreContain)
         {
+            if (_emitter.IsAllocationHold)
+                return true;
+
             if (bounds.Mode == SolverBoundsMode.Contain)
                 return !ignoreContain;
 

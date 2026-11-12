@@ -29,13 +29,6 @@ namespace Yu5h1Lib.UnifiedSolver
     public sealed class SolverClothParticles :
         SolverParticleSource
     {
-        enum ReuseOp
-        {
-            None,
-            Rest,
-            Park
-        }
-
         // What every cloth starting this frame has already claimed. All the
         // guards run their Start before any ClothGenerator runs its own, so
         // without this two nets that fit separately would both be passed and
@@ -62,14 +55,6 @@ namespace Yu5h1Lib.UnifiedSolver
         bool _refusedForCapacity;
         bool _reportedLateAdd;
 
-        ReuseOp _pendingOp;
-        bool _parked;
-        // phase, colour and visibility as the generator created them. Read back
-        // once, on first reuse, because the generator never reports the phase it
-        // allocated and a rewrite has to put it back.
-        ParticleGPU[] _template;
-        ParticleGPU[] _scratch;
-
         ClothGenerator Cloth
         {
             get
@@ -80,14 +65,6 @@ namespace Yu5h1Lib.UnifiedSolver
                 return _cloth;
             }
         }
-
-        public override bool IsParked => _parked;
-
-        /// <summary>
-        ///   Whether a ResetToRest or Park has been asked for and is waiting for
-        ///   the solver's first step before it can be written.
-        /// </summary>
-        public bool IsReusePending => _pendingOp != ReuseOp.None;
 
         /// <summary>
         ///   Particles and constraints the generator will add when it starts.
@@ -234,132 +211,20 @@ namespace Yu5h1Lib.UnifiedSolver
             base.OnDestroy();
         }
 
-        /// <summary>
-        ///   Puts the cloth back to its rest pose at the generator's current
-        ///   Transform, with no velocity, in the simulation and drawn again.
-        ///   Particles an anchor holds go straight to their Transforms.
-        /// </summary>
-        /// <remarks>
-        ///   Rewrites only this cloth's own slice of the solver's particle
-        ///   buffer, so no particle or constraint is added and the counts do not
-        ///   move. If the solver has not stepped yet the request is held and
-        ///   applied on the first step after it has, because until then the
-        ///   solver's own first upload would overwrite it. Returns false only
-        ///   when there is no solver to write to.
-        /// </remarks>
-        public bool ResetToRest()
+        protected override bool ReuseBlocked => _refusedForCapacity;
+
+        // A grabbed net holds particles at the hand with their mass zeroed.
+        // Parking or resetting under it would leave the grabber believing it
+        // still held them and restoring a mass the write has just replaced, so
+        // the grab is let go first.
+        protected override void BeforeReuseWrite(bool park)
         {
-            return RequestReuse(ReuseOp.Rest);
+            ClothGrabber.ReleaseAllOn(Cloth);
         }
 
-        /// <summary>
-        ///   Takes the cloth out of play: not drawn, not colliding, not pushed
-        ///   by any volume and not held by an anchor. ResetToRest brings it
-        ///   back.
-        /// </summary>
-        public bool Park()
-        {
-            return RequestReuse(ReuseOp.Park);
-        }
-
-        bool RequestReuse(ReuseOp op)
-        {
-            SolverManager manager = Manager;
-            if (manager == null || manager.ParticleBuffer == null)
-                return false;
-
-            _pendingOp = op;
-            TryApplyPending(manager);
-            return true;
-        }
-
-        protected override void OnPhysicsStep()
-        {
-            if (_pendingOp == ReuseOp.None)
-                return;
-
-            SolverManager manager = Manager;
-            if (manager != null)
-                TryApplyPending(manager);
-        }
-
-        void TryApplyPending(SolverManager manager)
-        {
-            if (!SolverReuse.HasStepped(manager))
-                return;
-            if (!TryGetParticleRange(
-                    manager,
-                    out int offset,
-                    out int count))
-            {
-                return;
-            }
-
-            EnsureTemplate(manager, offset, count);
-            if (_scratch == null || _scratch.Length != count)
-                _scratch = new ParticleGPU[count];
-
-            ReuseOp op = _pendingOp;
-            _pendingOp = ReuseOp.None;
-            for (int i = 0; i < count; i++)
-            {
-                ParticleGPU particle = _template[i];
-                if (op == ReuseOp.Park)
-                {
-                    Vector3 slot =
-                        SolverReuse.ParkPosition(offset + i);
-                    particle.position = slot;
-                    particle.prevPosition = slot;
-                    particle.invMass = 0f;
-                    particle.visible = 0u;
-                }
-                else
-                {
-                    TryGetRestPosition(i, out Vector3 rest);
-                    particle.position = rest;
-                    particle.prevPosition = rest;
-                    particle.invMass = RestInverseMass(i);
-                }
-                particle.velocity = Vector3.zero;
-                _scratch[i] = particle;
-            }
-
-            manager.ParticleBuffer.SetData(
-                _scratch, 0, offset, count);
-
-            _parked = op == ReuseOp.Park;
-            MeshRenderer drawn = GetComponent<MeshRenderer>();
-            if (drawn != null)
-                drawn.enabled = !_parked;
-
-            if (!_parked)
-            {
-                // After the write, so the pinned particles are at their
-                // Transforms for the first step instead of at the rest pose.
-                var anchor = GetComponent<PhysicsParticleAnchor>();
-                if (anchor != null)
-                    anchor.ApplyNow();
-            }
-        }
-
-        void EnsureTemplate(
-            SolverManager manager,
-            int offset,
-            int count)
-        {
-            if (_template != null && _template.Length == count)
-                return;
-
-            _template = new ParticleGPU[count];
-            manager.ParticleBuffer.GetData(
-                _template, 0, offset, count);
-        }
-
-        // What the generator gave each particle: nothing for a pinned edge,
-        // 1 / particleMass for the rest. Authored rather than read back, so a
-        // particle a grabber had released or an anchor had pinned at the moment
-        // of the readback does not change what rest means.
-        float RestInverseMass(int index)
+        // Nothing is read back: this is what the generator itself would have
+        // given the particle.
+        protected override float RestInverseMass(int index)
         {
             ClothGenerator cloth = Cloth;
             int x = index % cloth.resolutionX;

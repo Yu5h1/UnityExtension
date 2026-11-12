@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
 using Yu5h1Lib.UnifiedSolver;
@@ -32,6 +33,9 @@ public sealed class ClothGrabber : MonoBehaviour
         public uint grabbed;
     }
 
+    static readonly List<ClothGrabber> Enabled =
+        new List<ClothGrabber>();
+
     SolverManager _manager;
     ComputeShader _compute;
     ComputeBuffer _grabStateBuffer;
@@ -55,6 +59,8 @@ public sealed class ClothGrabber : MonoBehaviour
     Vector3 _handLinearVelocity;
     Vector3 _handAngularVelocity;
 
+    public ClothGenerator Cloth => cloth;
+
     public bool IsGrabbing { get; private set; }
     public bool IsGrabRequested { get; private set; }
     public int GrabbedCount { get; private set; }
@@ -68,7 +74,38 @@ public sealed class ClothGrabber : MonoBehaviour
 
     void OnEnable()
     {
+        Enabled.Add(this);
         ResetHandMotion();
+    }
+
+    // Lets go of every grabber holding this cloth, now rather than on the next
+    // physics step.
+    //
+    // For when the cloth is about to be parked or put back to rest: the
+    // grabber's own release waits for its FixedUpdate, by which time the cloth's
+    // particles have already been overwritten, and what it would then restore
+    // is a mass that no longer belongs to them.
+    internal static void ReleaseAllOn(ClothGenerator target)
+    {
+        for (int i = 0; i < Enabled.Count; i++)
+        {
+            ClothGrabber grabber = Enabled[i];
+            if (grabber != null && grabber.cloth == target)
+                grabber.ReleaseNow();
+        }
+    }
+
+    void ReleaseNow()
+    {
+        _grabRequested = false;
+        _releaseRequested = false;
+        IsGrabRequested = false;
+
+        if (IsGrabbing && CanDispatch())
+            DispatchRelease(false);
+
+        IsGrabbing = false;
+        GrabbedCount = 0;
     }
 
     void FixedUpdate()
@@ -128,6 +165,7 @@ public sealed class ClothGrabber : MonoBehaviour
 
     void OnDisable()
     {
+        Enabled.Remove(this);
         _grabRequested = false;
         _releaseRequested = false;
         IsGrabRequested = false;

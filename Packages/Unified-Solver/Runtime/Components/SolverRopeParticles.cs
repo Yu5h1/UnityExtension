@@ -72,6 +72,24 @@ namespace Yu5h1Lib.UnifiedSolver
             }
         }
 
+        // The bend constraints are added from the settings pass, a step after
+        // the particles exist, so an object that is being allocated has to stay
+        // alive until that pass has run.
+        protected override bool NeedsSettings => bendStiffness > 0f;
+
+        // The generator pins the first particle with fixStart and the last with
+        // fixEnd and gives every other particle 1 / particleMass.
+        protected override float RestInverseMass(int index)
+        {
+            RopeGenerator rope = Rope;
+            bool pinned =
+                (rope.fixStart && index == 0) ||
+                (rope.fixEnd && index == rope.segments - 1);
+            return pinned || rope.particleMass <= 0f
+                ? 0f
+                : 1f / rope.particleMass;
+        }
+
         public override int ParticleCount
         {
             get
