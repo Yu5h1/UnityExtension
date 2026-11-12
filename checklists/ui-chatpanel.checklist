@@ -1,0 +1,44 @@
+
+# uGUI ChatPanel 訊息區 Checklist
+
+Current round: `../../../UX/Documentation/ModuleSpec/Modules/ChatPanel.md#適配表vcp-ugui-聊天面板`.
+Paths: Packages/UI, Packages/UIToolkit/Runtime/Chat/ChatReplyPerformance.cs, Packages/common/Runtime/Data/GraphemeBoundaries.cs
+Needs: unity-editor
+
+範圍是 VCP 一對一訊息區和共用驗收 sample。VCP 現有輸入列、快捷提問與正式場景繼續使用原接線。圖片與跟隨的暫記值見套件 [採用紀錄](../Packages/UI/Documentation/Yu5h1Lib.UX/ChatPanel.md)。
+
+- [x] **1. 釘選 ChatPanel 與 ScrollView**
+  Outcome: 套件快照可追溯到兩份 UX 交付。
+  Checks:
+    - [x] **來源、版本及參數**
+      - Action: 在 VCP 執行 EditMode 的 PinnedUxInputsMatchManifestAndRuntimeDesign。
+      - Expect: 六份 SHA-256 與 UX manifest 一致，實際套件解析指向 UnityExtension 的 Packages/UI。 VCP 6000.6.0f1 batchmode 20261112-085728 通過。
+
+- [x] **2. 驗證訊息區與 ScrollView**
+  Depends on: 1.
+  Outcome: 可用共用套件呈現歷史、逐字回覆和圖片。
+  Checks:
+    - [x] **貼底、保留閱讀位置及恢復跟隨（SCROLL-OVERFLOW、SCROLL-BOTTOM-ANCHOR、SCROLL-FOLLOW、SCROLL-FOLLOW-STOP、SCROLL-KEEP-POSITION、SCROLL-FOLLOW-RESUME、CHAT-SCROLL-REENGAGE）**
+      - Action: 在 VCP 執行 FollowingScrollViewTests 與 UxUiChatPanelTests 的捲動測試。
+      - Expect: 範圍夾限、短內容貼底、拖曳與滾輪、捲軸、重建及內容長高，均以實際 uGUI 位置判定。 20261112-085728 通過，含一格滾輪、拖曳中宿主恢復跟隨、保留重載錨點。
+    - [x] **訊息排版與逐字回覆（CHAT-LAYOUT-ALIGN、CHAT-LAYOUT-TEXT-WIDTH、CHAT-LAYOUT-TIMESTAMP、CHAT-TIMER-THINKING、CHAT-STREAM-DONE）**
+      - Action: 在 VCP 執行 UxUiChatPanelTests 的訊息與串流測試。
+      - Expect: 左右列寬、日期時間、直向換行、思考秒數、字素邊界、宿主字速、減少動態及揭露完成。 20261112-085728 通過。
+    - [x] **圖片與大圖（CHAT-IMAGE-LOADING、CHAT-IMAGE-OPEN、CHAT-VIEWER-SWITCH、CHAT-VIEWER-DISMISS）**
+      - Action: 在 VCP 執行 ThumbnailLoadingFailureAndModalInteraction。
+      - Expect: 載入前及失敗時停用，成功後可開啟。預覽與滿版遵守安全區，關閉可否決，焦點回縮圖。 20261112-085728 通過。雙指事件由測試注入。
+    - [x] **共用驗收場景**
+      - Action: 在 VCP 執行 DeliveredSceneMountsChatPanelFromTheSharedSample。
+      - Expect: UxUiAcceptanceDemo 場景可載入並掛載 ChatPanel，預設短歷史有兩則訊息和兩個日期。 20261112-085728 通過。整輪 EditMode 23/23，0 個編譯錯誤。
+    - [x] **Sample PlayMode 流程**
+      - Action: 以 VCP batchmode 開啟 sample，透過宿主控制觸發歷史、送出、回覆及角色貼文。
+      - Expect: 場景以 ChatPanel 啟動，可貼底、送出、看見思考與完整回覆、載入角色圖片並開關大圖。20261112-090058 通過，PlayMode 1/1。
+
+- [ ] **3. 實機試用**
+  Depends on: 2.
+  Outcome: 使用者確認 VCP 預計採用的訊息區體驗。
+  Checks:
+    - [ ] **聊天、捲動與圖片手勢** `[manual]`
+      - Action: 在 VCP 匯入 UxAcceptance，開啟 UxUiAcceptanceDemo，選 ChatPanel。載入歷史、向上捲並再載入。送出訊息後試減少動態。由角色貼文開啟縮圖，在手機直橫向測試捲動及雙指縮放。
+      - Expect: 短對話貼底，往回看時不跳回最新，送出可恢復貼底，訊息只向下換行，圖片可進出預覽和滿版。
+      - Reason: 實機觸控手感與產品外觀由使用者確認。

@@ -1,0 +1,380 @@
+{
+  "schemaVersion": 1,
+  "contractVersion": "0.3.0-draft",
+  "status": "規範草案",
+  "tokens": {
+    "appMaxWidth": {
+      "value": 430,
+      "unit": "px",
+      "source": "ChatModuleDemo.cs AppMaxWidth; HealthAI .app max-width"
+    },
+    "rowGap": {
+      "value": 8,
+      "unit": "px",
+      "source": "ChatPresenter.cs row.style.marginBottom = 8"
+    },
+    "rowMaxWidthPercent": {
+      "value": 85,
+      "unit": "%",
+      "source": "ChatPresenter.cs MaxWidthPercent",
+      "hostOverridable": true
+    },
+    "avatarSize": {
+      "value": 32,
+      "unit": "px",
+      "source": "ChatPresenter.cs AvatarSize"
+    },
+    "avatarGap": {
+      "value": 8,
+      "unit": "px",
+      "source": "ChatPresenter.cs AvatarGap"
+    },
+    "avatarFallbackColor": {
+      "value": "rgba(102, 115, 128, 1)",
+      "hex": "#667380",
+      "source": "ChatPresenter.cs FallbackAvatarColor = new Color(.4f, .45f, .5f)"
+    },
+    "avatarInitialFontScale": {
+      "value": 0.45,
+      "unit": "ratio",
+      "source": "ChatPresenter.cs AvatarSize * .45f = 14.4px"
+    },
+    "bubbleCornerRadius": {
+      "value": 12,
+      "unit": "px",
+      "source": "BubbleStyle.cs CornerRadius default 12; ChatModuleDemo uses 14",
+      "hostOverridable": true
+    },
+    "bubblePadding": {
+      "value": 8,
+      "unit": "px",
+      "source": "ChatPresenter.cs ApplyStyle padding 8"
+    },
+    "bubblePadHPlain": {
+      "value": 0,
+      "unit": "px",
+      "source": "ChatPresenter.cs plain text fallback padding 0"
+    },
+    "bubblePadVPlain": {
+      "value": 0,
+      "unit": "px",
+      "source": "ChatPresenter.cs plain text fallback padding 0"
+    },
+    "nameFontSize": {
+      "value": 11,
+      "unit": "px",
+      "source": "ChatPresenter.cs name.style.fontSize = 11, bold, marginBottom 2"
+    },
+    "timestampFontSize": {
+      "value": 10,
+      "unit": "px",
+      "source": "ChatPresenter.cs time.style.fontSize = 10, opacity .65f, marginTop 2"
+    },
+    "timestampPlacement": {
+      "value": "inside",
+      "options": [
+        "inside",
+        "beside"
+      ],
+      "source": "ChatPresenter.cs bubble lower-right (inside); VCP VCP_ChatElement.cs time label beside the bubble (beside)"
+    },
+    "dateDividerFontSize": {
+      "value": 11,
+      "unit": "px",
+      "source": "ChatPresenter.cs dateDivider.style.fontSize = 11, opacity .65f, margin 8"
+    },
+    "minRowOpacity": {
+      "value": 0.35,
+      "unit": "ratio",
+      "source": "ChatPresenter.cs MinRowOpacity = .35f"
+    },
+    "scrollbarWidth": {
+      "value": 12,
+      "unit": "px",
+      "source": "ChatPresenter.cs scroller.style.width = 12"
+    },
+    "scrollbarDraggerWidth": {
+      "value": 4,
+      "unit": "px",
+      "source": "ChatPresenter.cs dragger.style.width = 4"
+    },
+    "scrollbarDraggerMinHeight": {
+      "value": 24,
+      "unit": "px",
+      "source": "ChatPresenter.cs dragger.style.minHeight = 24"
+    },
+    "scrollbarDraggerRadius": {
+      "value": 2,
+      "unit": "px",
+      "source": "ChatPresenter.cs dragger border radius = 2"
+    },
+    "scrollbarFadeDuration": {
+      "value": 180,
+      "unit": "ms",
+      "source": "ChatPresenter.cs scroller transitionDuration = 180ms"
+    },
+    "thinkingSecondsThreshold": {
+      "value": 5,
+      "unit": "s",
+      "source": "ChatReplyPerformance.cs Waiting() seconds >= 5"
+    },
+    "thinkingDotCyclePeriod": {
+      "value": 1,
+      "unit": "s",
+      "source": "ChatReplyPerformance.cs Waiting() seconds % 3 + 1"
+    },
+    "showThinkingSeconds": {
+      "value": true,
+      "source": "ChatReplyPerformance.cs always shows seconds; VCP ChatScene UseThinkingLabel = 0"
+    },
+    "streamingCharsPerSecond": {
+      "value": 30,
+      "unit": "grapheme/s",
+      "source": "ChatReplyPerformance.cs dt * 30 * pace",
+      "hostOverridable": true,
+      "note": "VCP reveals one character per 0.05 s"
+    },
+    "streamingMaxCredit": {
+      "value": 8,
+      "unit": "grapheme",
+      "source": "ChatReplyPerformance.cs Math.Min(8, credit + ...)"
+    },
+    "composerHeight": {
+      "value": 52,
+      "unit": "px",
+      "source": "ChatComposer.cs Height = 52"
+    },
+    "composerRadius": {
+      "value": 26,
+      "unit": "px",
+      "source": "ChatComposer.cs Radius = Height / 2 = 26",
+      "hostOverridable": true
+    },
+    "composerBackground": {
+      "value": "rgba(242, 242, 242, 1)",
+      "hex": "#F2F2F2",
+      "source": "ChatComposer.cs PillBackground = new Color(.95f, .95f, .95f)",
+      "hostOverridable": true
+    },
+    "micButtonSize": {
+      "value": 34,
+      "unit": "px",
+      "source": "ChatComposer.cs MicSize = 34"
+    },
+    "showMic": {
+      "value": true,
+      "source": "ChatComposer.cs always shows the mic; VCP chat has no mic"
+    },
+    "sendButtonSize": {
+      "value": 38,
+      "unit": "px",
+      "source": "ChatComposer.cs SendSize = 38"
+    },
+    "sendButtonAccentColor": {
+      "value": "rgba(79, 140, 255, 1)",
+      "hex": "#4F8CFF",
+      "source": "ChatComposer.cs AccentColor = new Color32(79, 140, 255, 255)"
+    },
+    "micRecordingColor": {
+      "value": "rgba(217, 64, 64, 1)",
+      "hex": "#D94040",
+      "source": "ChatComposer.cs RecordingColor = new Color(.85f, .25f, .25f)"
+    },
+    "composerIconColor": {
+      "value": "rgba(69, 74, 79, 1)",
+      "hex": "#454A4F",
+      "source": "ChatComposer.cs IconColor = new Color(.27f, .29f, .31f)"
+    },
+    "composerTextColor": {
+      "value": "rgba(38, 41, 46, 1)",
+      "hex": "#26292E",
+      "source": "ChatComposer.cs TextColor = new Color(.15f, .16f, .18f)",
+      "hostOverridable": true
+    },
+    "composerPlaceholderColor": {
+      "value": "rgba(0, 0, 0, 0.666)",
+      "source": "ChatComposer.cs PlaceholderColor = new Color(0, 0, 0, .666f)",
+      "hostOverridable": true
+    },
+    "imageMaxHeight": {
+      "value": 240,
+      "unit": "px",
+      "status": "provisional",
+      "source": "No source implementation; settled in the Web demo (ux-chat-panel decisions 2026-11-10)"
+    },
+    "imagePlaceholderSize": {
+      "value": 160,
+      "unit": "px",
+      "status": "provisional",
+      "source": "No source implementation; settled in the Web demo (ux-chat-panel decisions 2026-11-10)"
+    },
+    "viewerPreviewInset": {
+      "value": 16,
+      "unit": "px",
+      "status": "provisional",
+      "source": "No source implementation; settled in the Web demo (ux-chat-panel decisions 2026-11-10)"
+    },
+    "viewerZoomGestureThreshold": {
+      "value": 0.1,
+      "unit": "ratio",
+      "status": "provisional",
+      "source": "No source implementation; a pinch counts as zoom in/out when its scale changes by more than this ratio; settled in the Web demo"
+    },
+    "demoPageBackground": {
+      "value": "rgba(28, 31, 36, 1)",
+      "hex": "#1C1F24",
+      "source": "ChatModuleDemo.cs PageBackground = new Color(.11f, .12f, .14f)"
+    },
+    "demoFramePadding": {
+      "value": 16,
+      "unit": "px",
+      "source": "ChatModuleDemo.cs frame padding = 16"
+    },
+    "composerMaxVisibleLines": {
+      "value": 5,
+      "unit": "line",
+      "source": "Web 73f6d0e; user-confirmed ChatPanel consolidation 2026-11-11"
+    },
+    "messageAreaMinHeight": {
+      "value": 80,
+      "unit": "px",
+      "source": "Web 73f6d0e; user-confirmed ChatPanel consolidation 2026-11-11"
+    },
+    "messageFadeTransparentEnd": {
+      "value": 20,
+      "unit": "px",
+      "source": "Web 73f6d0e; user-confirmed ChatPanel consolidation 2026-11-11"
+    },
+    "messageFadeOpaqueStart": {
+      "value": 100,
+      "unit": "px",
+      "source": "Web 73f6d0e; user-confirmed ChatPanel consolidation 2026-11-11"
+    },
+    "textDisplayMode": {
+      "value": "typewriter",
+      "unit": "option",
+      "source": "Web 73f6d0e; user-confirmed ChatPanel consolidation 2026-11-11"
+    },
+    "textEffects": {
+      "value": 0,
+      "unit": "flags",
+      "source": "Web 73f6d0e; user-confirmed ChatPanel consolidation 2026-11-11"
+    },
+    "fadeInSequential": {
+      "value": false,
+      "unit": "boolean",
+      "source": "Web 73f6d0e; user-confirmed ChatPanel consolidation 2026-11-11"
+    },
+    "moveInSequential": {
+      "value": false,
+      "unit": "boolean",
+      "source": "Web 73f6d0e; user-confirmed ChatPanel consolidation 2026-11-11"
+    },
+    "effectPercentage": {
+      "value": 100,
+      "unit": "%",
+      "source": "Web 73f6d0e; user-confirmed ChatPanel consolidation 2026-11-11"
+    },
+    "effectDurationMin": {
+      "value": 0.45,
+      "unit": "s",
+      "source": "Web 73f6d0e; user-confirmed ChatPanel consolidation 2026-11-11"
+    },
+    "effectDurationMax": {
+      "value": 0.75,
+      "unit": "s",
+      "source": "Web 73f6d0e; user-confirmed ChatPanel consolidation 2026-11-11"
+    },
+    "effectDistanceMin": {
+      "value": 0,
+      "unit": "px",
+      "source": "Web 73f6d0e; user-confirmed ChatPanel consolidation 2026-11-11"
+    },
+    "effectDistanceMax": {
+      "value": 16,
+      "unit": "px",
+      "source": "Web 73f6d0e; user-confirmed ChatPanel consolidation 2026-11-11"
+    }
+  },
+  "sourceEvidence": {
+    "unity-chat-demo": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Samples~/ChatModule/ChatModuleDemo.cs",
+      "sha256": "32f6b605e47aa2587916ff871caf4aecb54433881bd40add12fe1483563a512e"
+    },
+    "unity-chat-avatar-gen": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Samples~/ChatModule/ProceduralAvatarGenerator.cs",
+      "sha256": "008342215a07ad8fba424130fd280d58d820cc8b076eb35751aad736bf590944"
+    },
+    "unity-chat-theme": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Samples~/ChatModule/Resources/ChatModuleTheme.tss",
+      "sha256": "682e2b1c6cc1d6e332c15f56c840f7d8282cb1e5bc627eb6664580352a752fda"
+    },
+    "unity-chat-presenter": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Runtime/Chat/ChatPresenter.cs",
+      "sha256": "e3591271936f775a921251264a7555bbdd8bd33c30198c05a0e3af14b0056b14"
+    },
+    "unity-chat-composer": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Runtime/Chat/ChatComposer.cs",
+      "sha256": "9d2c220137ddbba9cc6c2efc9dee533975a88a245f28d64dcbc3ad932ead767e"
+    },
+    "unity-chat-reply-performance": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Runtime/Chat/ChatReplyPerformance.cs",
+      "sha256": "3d984f25a89843af07a5061fad79491a6e9875df4ebd9ee93cf426839b646bf0"
+    },
+    "unity-chat-config": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Runtime/Chat/ChatModuleConfig.cs",
+      "sha256": "c5ddf471def049bbe4bbbea9834319a59f58675ce1ef6e79a31db3ecc645e4ac"
+    },
+    "unity-bubble-style": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Runtime/Chat/BubbleStyle.cs",
+      "sha256": "584666a0a9406f5d9027369ec22f9fe97e270956bddb36b96741e62032658448"
+    },
+    "unity-chat-message": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Runtime/Chat/ChatMessage.cs",
+      "sha256": "47344c52353b070dbf81627b6868f0306bc1042334f3fa798b80030546343534"
+    },
+    "unity-chat-participant": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Runtime/Chat/ChatParticipant.cs",
+      "sha256": "0edfba1b87ad89013408bb0b1cb753549510156c11cfe10a23a1a508d46d187c"
+    },
+    "unity-chat-name-display": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Runtime/Chat/ChatNameDisplay.cs",
+      "sha256": "ece40ed8101edd719714df40e8adec0e6d44c73a5b4c131904029b5f1e095bf7"
+    },
+    "unity-chat-style-mode": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Runtime/Chat/ChatStyleMode.cs",
+      "sha256": "3ff423d0aab702f412ac949001e651b8a3926d515d243826f3cf78d6210cafe1"
+    },
+    "unity-chat-module-doc": {
+      "path": "Unity/UnityExtension/Documentation/聊天面板模組.md",
+      "sha256": "726208d55fb539a3c6fd318fc49fefc93a81e10d24a29ab2bf545f9cd390509a"
+    },
+    "unity-test-reply-performance": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Tests/Editor/ChatReplyPerformanceTests.cs",
+      "sha256": "0cf48ef85606c8381e8cc7d48d9fef5d1cd91a965d1b79c96850664caa946801"
+    },
+    "unity-test-composer": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Tests/Editor/ChatComposerTests.cs",
+      "sha256": "64ed59e521a952a6c790414636719d887836105743887034c19f18bf607df249"
+    },
+    "unity-test-presenter-scroll": {
+      "path": "Unity/UnityExtension/Packages/UIToolkit/Tests/Runtime/ChatPresenterScrollTests.cs",
+      "sha256": "9b64632f12f6151a10d52b77f3a9eefcefa5dd865caf19d3585fd9983167f07f"
+    },
+    "web-text-performance": {
+      "path": "Web/src/ui/text-performance.ts",
+      "commit": "73f6d0eb101ebdf3a6be0ed701f1b4f6cffdad50",
+      "sha256": "56782015f33760de282f495f4d9c95a79cde7657cc5fdfeaa0b2c5e8ef75aac5"
+    },
+    "web-chat-panel": {
+      "path": "Web/src/ui/chat-panel.ts",
+      "commit": "73f6d0eb101ebdf3a6be0ed701f1b4f6cffdad50",
+      "sha256": "a92685d3598451580610a78bde37ec5b03a0a17c63664816b84499a970452b29"
+    },
+    "web-text-performance-settings": {
+      "path": "Web/src/ui/text-performance-settings.ts",
+      "commit": "73f6d0eb101ebdf3a6be0ed701f1b4f6cffdad50",
+      "sha256": "58d251053b1ef66e6e2eb7e2f0fd7eef5962c44d17d80a2beed4c6a0e18748f2"
+    }
+  }
+}

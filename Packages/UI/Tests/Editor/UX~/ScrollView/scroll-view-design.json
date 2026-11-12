@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "contractVersion": "0.2.0-draft",
+  "status": "規範草案",
+  "tokens": {
+    "scrollDragThreshold": {
+      "value": 4,
+      "unit": "px",
+      "source": "UnityExtension Packages/UIToolkit/Runtime/Chat/ChatPresenter.cs ScrollDragThreshold = 4f"
+    },
+    "followResumeTolerance": {
+      "value": 8,
+      "unit": "px",
+      "status": "provisional",
+      "source": "No source implementation; user decision 2026-11-10 (ux-chat-panel scrollview-follow-resume). Value carried from the 0.1.0-draft followSnapTolerance; settled in the Web demo."
+    }
+  },
+  "options": {
+    "followBottom": {
+      "default": false,
+      "note": "ChatPanel enables it"
+    },
+    "bottomAnchor": {
+      "default": false,
+      "note": "ChatPanel enables it"
+    }
+  }
+}

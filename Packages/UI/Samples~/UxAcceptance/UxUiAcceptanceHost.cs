@@ -61,6 +61,10 @@ namespace Yu5h1Lib.UI.Acceptance
             {
                 UxUiModuleRegistry.Register(new UxUiBackgroundLoadDemoCase());
             }
+            if (!UxUiModuleRegistry.Contains("chatpanel"))
+            {
+                UxUiModuleRegistry.Register(new UxUiChatPanelDemoCase());
+            }
         }
 
         public void SelectCase(string targetId)
@@ -160,8 +164,17 @@ namespace Yu5h1Lib.UI.Acceptance
             var es = EventSystem.current != null ? EventSystem.current : ObjectUtility.FindObject<EventSystem>(false);
             if (es == null)
             {
-                var go = new GameObject("EventSystem", typeof(EventSystem), typeof(UIInputHandler), typeof(StandaloneInputModule));
-                go.GetComponent<StandaloneInputModule>().inputOverride = go.GetComponent<UIInputHandler>();
+                var go = new GameObject("EventSystem", typeof(EventSystem));
+#if ENABLE_INPUT_SYSTEM
+                var inputSystemModule = System.Type.GetType(
+                    "UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem");
+                if (inputSystemModule != null)
+                {
+                    go.AddComponent(inputSystemModule);
+                    return;
+                }
+#endif
+                go.AddComponent<StandaloneInputModule>().inputOverride = go.AddComponent<UIInputHandler>();
             }
             else
             {

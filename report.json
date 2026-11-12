@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-11-10T04:51:08.102986+00:00",
+  "updated_at": "2026-11-12T01:02:52.765725+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -971,6 +971,25 @@
               "at": "2026-11-10T04:51:08.102986+00:00",
               "session": "ScrollView 與 ChatPanel 目標",
               "session_id": "a14575be-285b-4d3b-916a-cf99f53943f7"
+            }
+          ]
+        },
+        {
+          "priority": 1,
+          "status": "planned",
+          "document_ref": {
+            "task": "ui-chatpanel",
+            "kind": "checklist",
+            "scope_id": "unity-extension"
+          },
+          "title": "試用 uGUI ChatPanel 的 VCP 訊息區 sample",
+          "id": "ui-chatpanel",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-11-12T01:02:52.765725+00:00",
+              "session": "uGUI ChatPanel VCP sample"
             }
           ]
         }

@@ -1,0 +1,2626 @@
+{
+  "schemaVersion": 1,
+  "version": "0.4.0-draft",
+  "cases": [
+    {
+      "id": "chat-layout-align",
+      "covers": [
+        "CHAT-LAYOUT-ALIGN"
+      ],
+      "initial": {
+        "selfId": "me",
+        "selfAlignRight": true,
+        "maxWidthPercent": 85
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "renderMessage",
+            "participantId": "me",
+            "text": "Self message"
+          },
+          "expect": {
+            "row": {
+              "alignSelf": "flex-end",
+              "flexDirection": "row-reverse",
+              "maxWidthPercent": 85
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "renderMessage",
+            "participantId": "other",
+            "text": "Other message"
+          },
+          "expect": {
+            "row": {
+              "alignSelf": "flex-start",
+              "flexDirection": "row",
+              "maxWidthPercent": 85
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "setConfig",
+            "selfAlignRight": false
+          },
+          "expect": {
+            "selfRow": {
+              "alignSelf": "flex-start",
+              "flexDirection": "row"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-layout-avatar",
+      "covers": [
+        "CHAT-LAYOUT-AVATAR"
+      ],
+      "initial": {
+        "showAvatars": true,
+        "avatarSize": 32,
+        "avatarGap": 8
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "renderParticipantWithImage",
+            "participantId": "assistant",
+            "hasImage": true
+          },
+          "expect": {
+            "avatar": {
+              "rendered": true,
+              "width": 32,
+              "height": 32,
+              "borderRadius": 16,
+              "align": "flex-start"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "renderParticipantWithoutImage",
+            "participantId": "user",
+            "name": "Bob"
+          },
+          "expect": {
+            "avatar": {
+              "rendered": true,
+              "backgroundColor": "#667380",
+              "initialText": "B",
+              "fontSize": 14.4
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "setConfig",
+            "showAvatars": false
+          },
+          "expect": {
+            "avatars": {
+              "rendered": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-layout-name",
+      "covers": [
+        "CHAT-LAYOUT-NAME"
+      ],
+      "initial": {
+        "participantCount": 2,
+        "nameDisplay": "adaptive"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "renderConversation"
+          },
+          "expect": {
+            "namesVisible": false
+          }
+        },
+        {
+          "action": {
+            "op": "setParticipantCount",
+            "count": 3
+          },
+          "expect": {
+            "selfNameVisible": false,
+            "othersNameVisible": true,
+            "nameStyle": {
+              "fontSize": 11,
+              "fontWeight": "bold",
+              "marginBottom": 2
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "setConfig",
+            "nameDisplay": "alwaysShow"
+          },
+          "expect": {
+            "selfNameVisible": true,
+            "othersNameVisible": true
+          }
+        },
+        {
+          "action": {
+            "op": "setConfig",
+            "nameDisplay": "hideSelf"
+          },
+          "expect": {
+            "selfNameVisible": false,
+            "othersNameVisible": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-layout-timestamp",
+      "covers": [
+        "CHAT-LAYOUT-TIMESTAMP"
+      ],
+      "initial": {
+        "showTimestamps": true
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "appendMessage",
+            "timestamp": "2026-10-24T10:00:00+08:00"
+          },
+          "expect": {
+            "dateDivider": {
+              "text": "2026/10/24",
+              "fontSize": 11,
+              "alignSelf": "center"
+            },
+            "bubbleTime": {
+              "text": "10:00",
+              "fontSize": 10,
+              "alignSelf": "flex-end",
+              "opacity": 0.65
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "appendMessage",
+            "timestamp": "2026-10-24T10:05:00+08:00"
+          },
+          "expect": {
+            "newDateDividerEmitted": false,
+            "bubbleTime": {
+              "text": "10:05"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "appendMessage",
+            "timestamp": "2026-10-25T09:00:00+08:00"
+          },
+          "expect": {
+            "dateDivider": {
+              "text": "2026/10/25"
+            },
+            "bubbleTime": {
+              "text": "09:00"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "setConfig",
+            "showTimestamps": false
+          },
+          "expect": {
+            "timestampsVisible": false,
+            "dateDividersVisible": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-style-plain",
+      "covers": [
+        "CHAT-STYLE-PLAIN"
+      ],
+      "initial": {
+        "bubbleStyle": {
+          "backgroundColor": "rgba(0,0,0,0)",
+          "backgroundImage": null
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "applyStyle"
+          },
+          "expect": {
+            "bubble": {
+              "paddingLeft": 0,
+              "paddingRight": 0,
+              "paddingTop": 0,
+              "paddingBottom": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-scroll-fade",
+      "covers": [
+        "CHAT-SCROLL-FADE"
+      ],
+      "initial": {
+        "fadeMessages": true,
+        "viewportHeight": 600
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "evaluateRowOpacity",
+            "rowBottomRelativeToViewport": 600
+          },
+          "expect": {
+            "rowOpacity": 1
+          }
+        },
+        {
+          "action": {
+            "op": "evaluateRowOpacity",
+            "rowBottomRelativeToViewport": 0
+          },
+          "expect": {
+            "rowOpacity": 0.35
+          }
+        },
+        {
+          "action": {
+            "op": "setConfig",
+            "fadeMessages": false
+          },
+          "expect": {
+            "allRowsOpacity": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-scroll-overlay-bar",
+      "covers": [
+        "CHAT-SCROLL-BAR"
+      ],
+      "initial": {
+        "scrollerWidth": 12,
+        "draggerWidth": 4,
+        "draggerMinHeight": 24,
+        "opacity": 0
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "mouseEnter"
+          },
+          "expect": {
+            "scrollerOpacity": 1,
+            "contentShift": 0
+          }
+        },
+        {
+          "action": {
+            "op": "mouseLeave"
+          },
+          "expect": {
+            "scrollerOpacity": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-timer-thinking",
+      "covers": [
+        "CHAT-TIMER-THINKING"
+      ],
+      "initial": {
+        "state": "waiting",
+        "elapsed": 0
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.5
+          },
+          "expect": {
+            "text": "思考中."
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 1
+          },
+          "expect": {
+            "text": "思考中.."
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 1
+          },
+          "expect": {
+            "text": "思考中..."
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 3
+          },
+          "expect": {
+            "text": "思考中...5s"
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 1
+          },
+          "expect": {
+            "text": "思考中...6s"
+          }
+        },
+        {
+          "action": {
+            "op": "pushImmediateNonEmpty",
+            "text": "Instant answer"
+          },
+          "expect": {
+            "thinkingDuration": 0,
+            "textDisplayed": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-stream-snapshot",
+      "covers": [
+        "CHAT-STREAM-SNAPSHOT"
+      ],
+      "initial": {
+        "target": "",
+        "shown": 0
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "push",
+            "snapshot": "Hello"
+          },
+          "expect": {
+            "target": "Hello"
+          }
+        },
+        {
+          "action": {
+            "op": "push",
+            "snapshot": "Hello world"
+          },
+          "expect": {
+            "target": "Hello world",
+            "shownPreserved": true
+          }
+        },
+        {
+          "action": {
+            "op": "push",
+            "snapshot": "Different prefix"
+          },
+          "expect": {
+            "shown": 0
+          }
+        },
+        {
+          "action": {
+            "op": "complete",
+            "final": "Different prefix finished!"
+          },
+          "expect": {
+            "complete": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-stream-grapheme",
+      "covers": [
+        "CHAT-STREAM-GRAPHEME"
+      ],
+      "initial": {
+        "complete": false
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "push",
+            "snapshot": "國旗🇹🇼與連字👨‍👩‍👧‍👦"
+          },
+          "expect": {
+            "clustersIntact": true,
+            "noSplitSurrogate": true
+          }
+        },
+        {
+          "action": {
+            "op": "checkPendingOpenCluster"
+          },
+          "expect": {
+            "lastOpenClusterHeld": true
+          }
+        },
+        {
+          "action": {
+            "op": "complete",
+            "final": null
+          },
+          "expect": {
+            "allClustersReleased": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-stream-pacing",
+      "covers": [
+        "CHAT-STREAM-PACING"
+      ],
+      "initial": {
+        "rate": 30,
+        "maxCredit": 8,
+        "pace": 1
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.1
+          },
+          "expect": {
+            "credit": 3,
+            "shownIncrement": 3
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 1
+          },
+          "expect": {
+            "creditClamped": 8
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-stream-reducemotion",
+      "covers": [
+        "CHAT-STREAM-REDUCEMOTION"
+      ],
+      "initial": {
+        "reduceMotion": true
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "pushAndTick",
+            "snapshot": "Immediate text reveal",
+            "dt": 0.016
+          },
+          "expect": {
+            "shown": "Immediate text revea"
+          }
+        },
+        {
+          "action": {
+            "op": "complete",
+            "final": null
+          },
+          "expect": {
+            "complete": true
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0
+          },
+          "expect": {
+            "shown": "Immediate text reveal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-compose-capsule",
+      "covers": [
+        "CHAT-COMPOSE-CAPSULE"
+      ],
+      "initial": {
+        "height": 52,
+        "radius": 26,
+        "background": "#F2F2F2"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "renderComposer"
+          },
+          "expect": {
+            "root": {
+              "minHeight": 52,
+              "borderRadius": 26,
+              "backgroundColor": "#F2F2F2",
+              "flexDirection": "row",
+              "alignItems": "center"
+            },
+            "children": [
+              "chat-composer-draft",
+              "chat-composer-mic",
+              "chat-composer-send"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-compose-draft",
+      "covers": [
+        "CHAT-COMPOSE-DRAFT"
+      ],
+      "initial": {
+        "draft": ""
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "renderInitial"
+          },
+          "expect": {
+            "placeholder": {
+              "text": "想說什麼?",
+              "visible": true
+            },
+            "sendButton": {
+              "enabled": false
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "setDraft",
+            "value": "   "
+          },
+          "expect": {
+            "sendButton": {
+              "enabled": false
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "setDraft",
+            "value": "Hello"
+          },
+          "expect": {
+            "placeholder": {
+              "visible": false
+            },
+            "sendButton": {
+              "enabled": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-compose-submit",
+      "covers": [
+        "CHAT-COMPOSE-SUBMIT"
+      ],
+      "initial": {
+        "draft": "Valid message"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "clickSendButton"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "event": "Sent",
+                "text": "Valid message"
+              }
+            ],
+            "draftRetained": "Valid message"
+          }
+        },
+        {
+          "action": {
+            "op": "clearDraft"
+          },
+          "expect": {
+            "draft": "",
+            "sendButton": {
+              "enabled": false
+            },
+            "placeholder": {
+              "visible": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-compose-ime-guard",
+      "covers": [
+        "CHAT-COMPOSE-SUBMIT"
+      ],
+      "initial": {
+        "draft": "ceshi",
+        "isComposing": true
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "pressEnter"
+          },
+          "expect": {
+            "eventPassedToIME": true,
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "imeCommit",
+            "committedText": "測試",
+            "isComposing": false
+          },
+          "expect": {
+            "draft": "測試"
+          }
+        },
+        {
+          "action": {
+            "op": "pressEnter"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "event": "Sent",
+                "text": "測試"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-compose-mic",
+      "covers": [
+        "CHAT-COMPOSE-MIC"
+      ],
+      "initial": {
+        "recording": false
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "clickMicButton"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "event": "MicClicked"
+              }
+            ],
+            "recording": false
+          }
+        },
+        {
+          "action": {
+            "op": "hostSetRecording",
+            "value": true
+          },
+          "expect": {
+            "recording": true,
+            "iconDrawn": "recordingDot",
+            "color": "#D94040"
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-scroll-reengage",
+      "covers": [
+        "CHAT-SCROLL-REENGAGE"
+      ],
+      "initial": {
+        "scroll": {
+          "viewportSize": 600,
+          "contentSize": 1000,
+          "following": false,
+          "offset": 200
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "appendMessage",
+            "participant": "self",
+            "text": "My new question"
+          },
+          "expect": {
+            "scroll": {
+              "following": true,
+              "atBottom": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "userScroll",
+            "deltaY": -100
+          },
+          "expect": {
+            "scroll": {
+              "following": false
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "beginReply",
+            "participant": "assistant"
+          },
+          "expect": {
+            "scroll": {
+              "following": true,
+              "atBottom": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "userScroll",
+            "deltaY": -100
+          },
+          "expect": {
+            "scroll": {
+              "following": false
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "appendMessage",
+            "participant": "assistant",
+            "text": "Another line"
+          },
+          "expect": {
+            "scroll": {
+              "following": false
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "setMessages",
+            "messages": "history-with-self-messages"
+          },
+          "expect": {
+            "scroll": {
+              "following": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-layout-timestamp-beside",
+      "covers": [
+        "CHAT-LAYOUT-TIMESTAMP"
+      ],
+      "initial": {
+        "showTimestamps": true,
+        "timestampPlacement": "beside"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "appendMessage",
+            "participant": "assistant",
+            "timestamp": "2026-11-10T10:00:00+08:00"
+          },
+          "expect": {
+            "dateDivider": {
+              "text": "2026/11/10",
+              "position": "aboveRow"
+            },
+            "messageTime": {
+              "text": "10:00",
+              "placement": "outsideBubble",
+              "side": "rowInner",
+              "alignedTo": "bubbleBottom",
+              "fontSize": 10,
+              "opacity": 0.65
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-timer-no-seconds",
+      "covers": [
+        "CHAT-TIMER-THINKING"
+      ],
+      "initial": {
+        "state": "waiting",
+        "elapsed": 0,
+        "showThinkingSeconds": false
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "tick",
+            "dt": 4.5
+          },
+          "expect": {
+            "text": "思考中.."
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 1
+          },
+          "expect": {
+            "text": "思考中..."
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 1
+          },
+          "expect": {
+            "text": "思考中."
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-stream-rate-override",
+      "covers": [
+        "CHAT-STREAM-PACING"
+      ],
+      "initial": {
+        "streamingCharsPerSecond": 20,
+        "pace": 1,
+        "reduceMotion": false
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "push",
+            "snapshot": "一二三四五六七八九十"
+          },
+          "expect": {
+            "shown": 0
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.25
+          },
+          "expect": {
+            "shown": 5
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.1
+          },
+          "expect": {
+            "shown": 7
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-stream-done",
+      "covers": [
+        "CHAT-STREAM-DONE"
+      ],
+      "initial": {
+        "streamingCharsPerSecond": 30,
+        "pace": 1,
+        "reduceMotion": false
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "beginReply",
+            "participant": "assistant"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "你好"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.1
+          },
+          "expect": {
+            "shown": 2,
+            "emitted": [
+              {
+                "event": "RevealCompleted"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.1
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "setConfig",
+            "reduceMotion": true
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "beginReply",
+            "participant": "assistant"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "再見"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.016
+          },
+          "expect": {
+            "shown": 2,
+            "emitted": [
+              {
+                "event": "RevealCompleted"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "beginReply",
+            "participant": "assistant"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "push",
+            "snapshot": "還沒說完"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "clearConversation"
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-compose-mic-hidden",
+      "covers": [
+        "CHAT-COMPOSE-MIC",
+        "CHAT-COMPOSE-CAPSULE"
+      ],
+      "initial": {
+        "showMic": false
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "layout"
+          },
+          "expect": {
+            "micButtonVisible": false,
+            "order": [
+              "TextField",
+              "SendButton"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-image-bubble-size",
+      "covers": [
+        "CHAT-IMAGE-BUBBLE"
+      ],
+      "initial": {
+        "thumbMaxWidth": 340,
+        "imageMaxHeight": 240,
+        "bubbleCornerRadius": 12
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "appendImageMessage",
+            "width": 1000,
+            "height": 500,
+            "loaded": true
+          },
+          "expect": {
+            "thumb": {
+              "width": 340,
+              "height": 170,
+              "cornerRadius": 12,
+              "padding": 0
+            },
+            "accessibleName": "圖片"
+          }
+        },
+        {
+          "action": {
+            "op": "appendImageMessage",
+            "width": 500,
+            "height": 1000,
+            "loaded": true
+          },
+          "expect": {
+            "thumb": {
+              "width": 120,
+              "height": 240
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "appendImageMessage",
+            "width": 100,
+            "height": 50,
+            "loaded": true,
+            "description": "晚餐"
+          },
+          "expect": {
+            "thumb": {
+              "width": 100,
+              "height": 50
+            },
+            "accessibleName": "晚餐"
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-image-loading-and-failure",
+      "covers": [
+        "CHAT-IMAGE-LOADING"
+      ],
+      "initial": {
+        "thumbMaxWidth": 340,
+        "imageMaxHeight": 240,
+        "imagePlaceholderSize": 160
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "appendImageMessage",
+            "id": "a",
+            "width": 800,
+            "height": 600,
+            "loaded": false
+          },
+          "expect": {
+            "thumb": {
+              "width": 320,
+              "height": 240
+            },
+            "state": "loading",
+            "openable": false
+          }
+        },
+        {
+          "action": {
+            "op": "imageLoadFailed",
+            "id": "a"
+          },
+          "expect": {
+            "thumb": {
+              "width": 320,
+              "height": 240
+            },
+            "state": "failed",
+            "openable": false,
+            "accessibleNameIncludes": "無法載入"
+          }
+        },
+        {
+          "action": {
+            "op": "appendImageMessage",
+            "id": "b",
+            "loaded": false
+          },
+          "expect": {
+            "thumb": {
+              "width": 160,
+              "height": 160
+            },
+            "state": "loading"
+          }
+        },
+        {
+          "action": {
+            "op": "imageLoaded",
+            "id": "b",
+            "width": 1000,
+            "height": 500
+          },
+          "expect": {
+            "thumb": {
+              "width": 340,
+              "height": 170
+            },
+            "state": "loaded",
+            "openable": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-image-open",
+      "covers": [
+        "CHAT-IMAGE-OPEN"
+      ],
+      "initial": {
+        "images": [
+          {
+            "id": "a",
+            "state": "loaded"
+          },
+          {
+            "id": "b",
+            "state": "loading"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "tap",
+            "target": "thumb:b"
+          },
+          "expect": {
+            "viewerOpen": false,
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "tap",
+            "target": "thumb:a"
+          },
+          "expect": {
+            "viewerOpen": true,
+            "viewerState": "preview",
+            "emitted": [
+              {
+                "event": "open",
+                "opener": "thumb:a"
+              }
+            ],
+            "focusInsideViewer": true
+          }
+        },
+        {
+          "action": {
+            "op": "pressEscape"
+          },
+          "expect": {
+            "viewerOpen": false
+          }
+        },
+        {
+          "action": {
+            "op": "focus",
+            "target": "thumb:a"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "keyActivate",
+            "key": "Enter"
+          },
+          "expect": {
+            "viewerOpen": true,
+            "viewerState": "preview"
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-viewer-states",
+      "covers": [
+        "CHAT-VIEWER-PREVIEW",
+        "CHAT-VIEWER-FULL",
+        "CHAT-VIEWER-SWITCH"
+      ],
+      "initial": {
+        "availableArea": {
+          "width": 400,
+          "height": 800
+        },
+        "viewerPreviewInset": 16,
+        "viewerZoomGestureThreshold": 0.1,
+        "image": {
+          "width": 1000,
+          "height": 500
+        },
+        "viewerOpen": true,
+        "viewerState": "preview"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "layout"
+          },
+          "expect": {
+            "image": {
+              "width": 368,
+              "height": 184,
+              "centered": true
+            },
+            "chatInteractive": false
+          }
+        },
+        {
+          "action": {
+            "op": "tap",
+            "target": "image"
+          },
+          "expect": {
+            "viewerState": "full",
+            "insetToAvailableArea": 0
+          }
+        },
+        {
+          "action": {
+            "op": "tap",
+            "target": "image"
+          },
+          "expect": {
+            "viewerState": "preview"
+          }
+        },
+        {
+          "action": {
+            "op": "pinch",
+            "scaleRatio": 1.05
+          },
+          "expect": {
+            "viewerState": "preview"
+          }
+        },
+        {
+          "action": {
+            "op": "pinch",
+            "scaleRatio": 1.5
+          },
+          "expect": {
+            "viewerState": "full"
+          }
+        },
+        {
+          "action": {
+            "op": "pinch",
+            "scaleRatio": 0.95
+          },
+          "expect": {
+            "viewerState": "full"
+          }
+        },
+        {
+          "action": {
+            "op": "pinch",
+            "scaleRatio": 0.6
+          },
+          "expect": {
+            "viewerState": "preview",
+            "viewerOpen": true
+          }
+        },
+        {
+          "action": {
+            "op": "wheel",
+            "notches": 1,
+            "direction": "zoomIn"
+          },
+          "expect": {
+            "viewerState": "full"
+          }
+        },
+        {
+          "action": {
+            "op": "wheel",
+            "notches": 1,
+            "direction": "zoomOut"
+          },
+          "expect": {
+            "viewerState": "preview"
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-viewer-dismiss",
+      "covers": [
+        "CHAT-VIEWER-DISMISS"
+      ],
+      "initial": {
+        "viewerOpen": true,
+        "viewerState": "preview",
+        "opener": "thumb:a"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "tap",
+            "target": "outsideImage"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "event": "cancel",
+                "source": "backdrop"
+              },
+              {
+                "event": "close",
+                "reason": "cancel"
+              }
+            ],
+            "viewerOpen": false,
+            "focus": "thumb:a"
+          }
+        },
+        {
+          "action": {
+            "op": "openViewer",
+            "target": "thumb:a"
+          },
+          "expect": {
+            "viewerState": "preview"
+          }
+        },
+        {
+          "action": {
+            "op": "pinch",
+            "scaleRatio": 0.6
+          },
+          "expect": {
+            "emitted": [
+              {
+                "event": "close",
+                "reason": "cancel"
+              }
+            ],
+            "viewerOpen": false,
+            "focus": "thumb:a"
+          }
+        },
+        {
+          "action": {
+            "op": "openViewer",
+            "target": "thumb:a"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tap",
+            "target": "image"
+          },
+          "expect": {
+            "viewerState": "full"
+          }
+        },
+        {
+          "action": {
+            "op": "pressEscape"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "event": "cancel",
+                "source": "escape"
+              },
+              {
+                "event": "close",
+                "reason": "cancel"
+              }
+            ],
+            "viewerOpen": false,
+            "focus": "thumb:a"
+          }
+        },
+        {
+          "action": {
+            "op": "openViewer",
+            "target": "thumb:a"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "appLosesForeground"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "event": "close",
+                "reason": "programmatic"
+              }
+            ],
+            "viewerOpen": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-effect-instant-sequence",
+      "covers": [
+        "CHAT-EFFECT-COMPOSE",
+        "CHAT-EFFECT-SEQUENCE"
+      ],
+      "initial": {
+        "textDisplayMode": "instant",
+        "textEffects": 3,
+        "fadeInSequential": true,
+        "moveInSequential": true,
+        "streamingCharsPerSecond": 2,
+        "floatingWords": {
+          "direction": {
+            "mode": "directed",
+            "x": 20,
+            "y": 0,
+            "minDistance": 20
+          },
+          "durationMin": 1,
+          "durationMax": 1
+        },
+        "randomValue": 0.5
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "beginReply"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "A🇹🇼Z"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0
+          },
+          "expect": {
+            "text": "A🇹🇼Z",
+            "presentation": {
+              "segments": [
+                "A",
+                "🇹🇼",
+                "Z"
+              ],
+              "firstStarted": false,
+              "secondPending": true
+            },
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.25
+          },
+          "expect": {
+            "presentation": {
+              "allStarted": true
+            },
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 3
+          },
+          "expect": {
+            "presentation": {
+              "allAtRest": true
+            },
+            "emitted": [
+              {
+                "event": "RevealCompleted"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 1
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-effect-random-start",
+      "covers": [
+        "CHAT-EFFECT-RANDOM"
+      ],
+      "initial": {
+        "textDisplayMode": "instant",
+        "textEffects": 1,
+        "fadeInSequential": false,
+        "moveInSequential": true,
+        "streamingCharsPerSecond": 10,
+        "floatingWords": {
+          "direction": {
+            "mode": "directed",
+            "x": 20,
+            "y": 0,
+            "minDistance": 20
+          },
+          "durationMin": 1,
+          "durationMax": 1
+        },
+        "randomValue": 0.5
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "beginReply"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "one two"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0
+          },
+          "expect": {
+            "presentation": {
+              "allAtRest": false
+            },
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.1
+          },
+          "expect": {
+            "presentation": {
+              "firstStarted": true,
+              "lastStarted": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 2
+          },
+          "expect": {
+            "presentation": {
+              "allAtRest": true
+            },
+            "emitted": [
+              {
+                "event": "RevealCompleted"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-effect-mixed-fade",
+      "covers": [
+        "CHAT-EFFECT-SEQUENCE",
+        "CHAT-EFFECT-COMPOSE"
+      ],
+      "initial": {
+        "textDisplayMode": "typewriter",
+        "textEffects": 3,
+        "fadeInSequential": true,
+        "moveInSequential": false,
+        "streamingCharsPerSecond": 2,
+        "floatingWords": {
+          "direction": {
+            "mode": "directed",
+            "x": 20,
+            "y": 0,
+            "minDistance": 20
+          },
+          "durationMin": 1,
+          "durationMax": 1
+        },
+        "randomValue": 0.5
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "beginReply"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "ABC"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.5
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.5
+          },
+          "expect": {
+            "shown": "AB",
+            "presentation": {
+              "firstStarted": true,
+              "secondPending": true,
+              "sameOffsets": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-effect-mixed-move",
+      "covers": [
+        "CHAT-EFFECT-SEQUENCE",
+        "CHAT-EFFECT-COMPOSE"
+      ],
+      "initial": {
+        "textDisplayMode": "typewriter",
+        "textEffects": 3,
+        "fadeInSequential": false,
+        "moveInSequential": true,
+        "streamingCharsPerSecond": 2,
+        "floatingWords": {
+          "direction": {
+            "mode": "directed",
+            "x": 20,
+            "y": 0,
+            "minDistance": 20
+          },
+          "durationMin": 1,
+          "durationMax": 1
+        },
+        "randomValue": 0.5
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "beginReply"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "ABC"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.5
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.5
+          },
+          "expect": {
+            "shown": "AB",
+            "presentation": {
+              "firstOffsetChanged": true,
+              "lastOffsetUnchanged": true,
+              "sameOpacity": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-effect-zero-ratio",
+      "covers": [
+        "CHAT-EFFECT-RANGE",
+        "CHAT-STREAM-DONE"
+      ],
+      "initial": {
+        "textDisplayMode": "instant",
+        "textEffects": 3,
+        "fadeInSequential": true,
+        "moveInSequential": true,
+        "streamingCharsPerSecond": 2,
+        "floatingWords": {
+          "direction": {
+            "mode": "directed",
+            "x": 20,
+            "y": 0,
+            "minDistance": 20
+          },
+          "durationMin": 1,
+          "durationMax": 1,
+          "wordPercentage": 0
+        },
+        "randomValue": 0.5
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "beginReply"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "ABC"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0
+          },
+          "expect": {
+            "presentation": {
+              "allAtRest": true
+            },
+            "emitted": [
+              {
+                "event": "RevealCompleted"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-effect-zero-duration",
+      "covers": [
+        "CHAT-EFFECT-RANGE",
+        "CHAT-STREAM-DONE"
+      ],
+      "initial": {
+        "textDisplayMode": "instant",
+        "textEffects": 3,
+        "fadeInSequential": true,
+        "moveInSequential": true,
+        "streamingCharsPerSecond": 2,
+        "floatingWords": {
+          "direction": {
+            "mode": "directed",
+            "x": 20,
+            "y": 0,
+            "minDistance": 20
+          },
+          "durationMin": 0,
+          "durationMax": 0
+        },
+        "randomValue": 0.5
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "beginReply"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "ABC"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0
+          },
+          "expect": {
+            "presentation": {
+              "allAtRest": true
+            },
+            "emitted": [
+              {
+                "event": "RevealCompleted"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-effect-reduce-pending",
+      "covers": [
+        "CHAT-EFFECT-LIFECYCLE",
+        "CHAT-STREAM-REDUCEMOTION"
+      ],
+      "initial": {
+        "textDisplayMode": "instant",
+        "textEffects": 3,
+        "fadeInSequential": true,
+        "moveInSequential": true,
+        "streamingCharsPerSecond": 2,
+        "floatingWords": {
+          "direction": {
+            "mode": "directed",
+            "x": 20,
+            "y": 0,
+            "minDistance": 20
+          },
+          "durationMin": 1,
+          "durationMax": 1
+        },
+        "randomValue": 0.5
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "beginReply"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "ABC"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "setConfig",
+            "reduceMotion": true
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0
+          },
+          "expect": {
+            "presentation": {
+              "allAtRest": true
+            },
+            "emitted": [
+              {
+                "event": "RevealCompleted"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-effect-remove-pending",
+      "covers": [
+        "CHAT-EFFECT-LIFECYCLE",
+        "CHAT-STREAM-DONE"
+      ],
+      "initial": {
+        "textDisplayMode": "instant",
+        "textEffects": 3,
+        "fadeInSequential": true,
+        "moveInSequential": true,
+        "streamingCharsPerSecond": 2,
+        "floatingWords": {
+          "direction": {
+            "mode": "directed",
+            "x": 20,
+            "y": 0,
+            "minDistance": 20
+          },
+          "durationMin": 1,
+          "durationMax": 1
+        },
+        "randomValue": 0.5
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "beginReply"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "ABC"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "clearConversation"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 10
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-effect-direction-range",
+      "covers": [
+        "CHAT-EFFECT-RANGE"
+      ],
+      "initial": {
+        "textDisplayMode": "instant",
+        "textEffects": 2,
+        "fadeInSequential": true,
+        "moveInSequential": true,
+        "streamingCharsPerSecond": 2,
+        "floatingWords": {
+          "direction": {
+            "mode": "directed",
+            "x": 0,
+            "y": -40,
+            "minDistance": 20
+          },
+          "durationMin": 1,
+          "durationMax": 1
+        },
+        "randomValue": 0.25
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "beginReply"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "A"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0
+          },
+          "expect": {
+            "presentation": {
+              "firstX": 0,
+              "firstDistanceInRange": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 2
+          },
+          "expect": {
+            "presentation": {
+              "allAtRest": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-compose-multiline",
+      "covers": [
+        "CHAT-COMPOSE-MULTILINE"
+      ],
+      "initial": {},
+      "steps": [
+        {
+          "action": {
+            "op": "setDraft",
+            "value": "1\n2\n3\n4\n5"
+          },
+          "expect": {
+            "composerLayout": {
+              "visibleLines": 5,
+              "overflow": false,
+              "buttonsAtBottom": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "setDraft",
+            "value": "1\n2\n3\n4\n5\n6\n7"
+          },
+          "expect": {
+            "composerLayout": {
+              "visibleLines": 5,
+              "overflow": true,
+              "buttonsAtBottom": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "setDraft",
+            "value": "one"
+          },
+          "expect": {
+            "composerLayout": {
+              "visibleLines": 1,
+              "overflow": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-compose-focus",
+      "covers": [
+        "CHAT-COMPOSE-FOCUS"
+      ],
+      "initial": {
+        "draft": "caret"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "focusDraft"
+          },
+          "expect": {
+            "draftFocus": {
+              "focused": true,
+              "innerFrameHidden": true,
+              "caretVisible": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-compose-host-style",
+      "covers": [
+        "CHAT-STYLE-HOST"
+      ],
+      "initial": {
+        "bubbleStyle": {
+          "backgroundColor": "#e8e8e8",
+          "textColor": "#112233",
+          "cornerRadius": 0
+        },
+        "composerAppearance": {
+          "radius": 0,
+          "backgroundColor": "#e8e8e8",
+          "textColor": "#112233"
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "renderMessage",
+            "participantId": "other",
+            "text": "host style"
+          },
+          "expect": {
+            "root": {
+              "borderRadius": 0,
+              "backgroundColor": "#e8e8e8",
+              "textColor": "#112233"
+            },
+            "bubble": {
+              "cornerRadius": 0,
+              "backgroundColor": "#e8e8e8",
+              "textColor": "#112233"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-resize-messages",
+      "covers": [
+        "CHAT-RESIZE-MESSAGES"
+      ],
+      "initial": {},
+      "steps": [
+        {
+          "action": {
+            "op": "resizeMessages",
+            "key": "ArrowDown"
+          },
+          "expect": {
+            "messageLayout": {
+              "shrank": true,
+              "composerAnchored": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "resizeMessages",
+            "key": "End"
+          },
+          "expect": {
+            "messageLayout": {
+              "expanded": true,
+              "composerAnchored": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-layout-adapt",
+      "covers": [
+        "CHAT-LAYOUT-ADAPT"
+      ],
+      "initial": {
+        "draft": "保留草稿"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "beginReply"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "pushAndTick",
+            "snapshot": "ABCD",
+            "dt": 0.1
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "resizeViewport",
+            "width": 300,
+            "height": 500
+          },
+          "expect": {
+            "draftRetained": "保留草稿",
+            "shown": "ABC"
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-layout-text-width",
+      "covers": [
+        "CHAT-LAYOUT-TEXT-WIDTH"
+      ],
+      "initial": {
+        "maxWidthPercent": 80,
+        "showAvatars": true,
+        "textDisplayMode": "typewriter",
+        "textEffects": 0,
+        "streamingCharsPerSecond": 20
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "renderMessage",
+            "participantId": "self",
+            "text": "收到"
+          },
+          "expect": {
+            "textLayout": {
+              "usesAvailableWidth": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "beginReply"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "這段回覆會逐字顯示並自然換行。文字越長，訊息框的高度才會增加。只要可用寬度相同，文字方塊的水平位置也不會改變。"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.05
+          },
+          "expect": {
+            "shown": 1,
+            "textLayout": {
+              "usesAvailableWidth": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.4
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.4
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.4
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.4
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.4
+          },
+          "expect": {
+            "textLayout": {
+              "usesAvailableWidth": true,
+              "widthStable": true,
+              "horizontalPositionStable": true,
+              "heightGrew": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-effect-follow-reveal",
+      "covers": [
+        "CHAT-EFFECT-SEQUENCE"
+      ],
+      "initial": {
+        "textDisplayMode": "typewriter",
+        "textEffects": 3,
+        "fadeInSequential": true,
+        "moveInSequential": true,
+        "streamingCharsPerSecond": 2,
+        "floatingWords": {
+          "direction": {
+            "mode": "directed",
+            "x": 20,
+            "y": 0,
+            "minDistance": 20
+          },
+          "durationMin": 1,
+          "durationMax": 1
+        },
+        "randomValue": 0.5
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "beginReply"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "A🇹🇼Z"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.5
+          },
+          "expect": {
+            "shown": "A",
+            "presentation": {
+              "firstPending": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.5
+          },
+          "expect": {
+            "shown": "A🇹🇼",
+            "presentation": {
+              "segments": [
+                "A",
+                "🇹🇼"
+              ],
+              "firstStarted": true,
+              "secondPending": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-effect-layout-stability",
+      "covers": [
+        "CHAT-EFFECT-LAYOUT"
+      ],
+      "initial": {
+        "textDisplayMode": "instant",
+        "textEffects": 2,
+        "floatingWords": {
+          "direction": {
+            "mode": "directed",
+            "x": 0,
+            "y": 60,
+            "minDistance": 60
+          },
+          "durationMin": 1,
+          "durationMax": 1
+        },
+        "randomValue": 0.5
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "beginReply"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "固定全文，不應因位移改變泡泡大小或可捲範圍。 固定全文，不應因位移改變泡泡大小或可捲範圍。 固定全文，不應因位移改變泡泡大小或可捲範圍。 固定全文，不應因位移改變泡泡大小或可捲範圍。 固定全文，不應因位移改變泡泡大小或可捲範圍。 "
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.5
+          },
+          "expect": {
+            "presentationLayout": {
+              "sizeStable": true,
+              "scrollRangeStable": true,
+              "scrollPositionStable": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 1
+          },
+          "expect": {
+            "presentationLayout": {
+              "sizeStable": true,
+              "scrollRangeStable": true,
+              "scrollPositionStable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "chat-effect-inactive-settings",
+      "covers": [
+        "CHAT-EFFECT-SEQUENCE"
+      ],
+      "initial": {
+        "textDisplayMode": "instant",
+        "textEffects": 1,
+        "streamingCharsPerSecond": 2,
+        "floatingWords": {
+          "durationMin": 1,
+          "durationMax": 1
+        },
+        "randomValue": 0.5
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "beginReply"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "complete",
+            "finalSnapshot": "one two"
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.5
+          },
+          "expect": {
+            "presentation": {
+              "firstStarted": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "setConfig",
+            "fadeInSequential": true,
+            "moveInSequential": true,
+            "streamingCharsPerSecond": 100
+          },
+          "expect": {}
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0
+          },
+          "expect": {
+            "presentation": {
+              "firstOpacityUnchanged": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "tick",
+            "dt": 0.5
+          },
+          "expect": {
+            "emitted": [
+              {
+                "event": "RevealCompleted"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

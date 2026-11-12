@@ -1,0 +1,379 @@
+{
+  "schemaVersion": 1,
+  "version": "0.2.1-draft",
+  "cases": [
+    {
+      "id": "scroll-overflow-clamp",
+      "covers": [
+        "SCROLL-OVERFLOW"
+      ],
+      "initial": {
+        "viewportSize": 600,
+        "contentSize": 400,
+        "followBottom": false
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "tickLayout"
+          },
+          "expect": {
+            "maxScroll": 0,
+            "offset": 0,
+            "scrollbarVisible": false
+          }
+        },
+        {
+          "action": {
+            "op": "wheel",
+            "deltaY": 100
+          },
+          "expect": {
+            "offset": 0
+          }
+        },
+        {
+          "action": {
+            "op": "setContentSize",
+            "value": 1000
+          },
+          "expect": {
+            "maxScroll": 400,
+            "offset": 0,
+            "scrollbarVisible": true
+          }
+        },
+        {
+          "action": {
+            "op": "userScrollTo",
+            "offset": 400
+          },
+          "expect": {
+            "offset": 400
+          }
+        },
+        {
+          "action": {
+            "op": "setViewportSize",
+            "value": 800
+          },
+          "expect": {
+            "maxScroll": 200,
+            "offset": 200
+          }
+        },
+        {
+          "action": {
+            "op": "userScrollTo",
+            "offset": 500
+          },
+          "expect": {
+            "offset": 200
+          }
+        }
+      ]
+    },
+    {
+      "id": "scroll-bottom-anchor-and-follow",
+      "covers": [
+        "SCROLL-BOTTOM-ANCHOR",
+        "SCROLL-FOLLOW"
+      ],
+      "initial": {
+        "viewportSize": 600,
+        "contentSize": 200,
+        "bottomAnchor": true,
+        "followBottom": true
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "tickLayout"
+          },
+          "expect": {
+            "leadingSpace": 400,
+            "following": true
+          }
+        },
+        {
+          "action": {
+            "op": "growContent",
+            "newContentSize": 800
+          },
+          "expect": {
+            "leadingSpace": 0,
+            "offset": 200,
+            "atBottom": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "scroll-follow-stop-and-resume",
+      "covers": [
+        "SCROLL-FOLLOW-STOP",
+        "SCROLL-FOLLOW-RESUME"
+      ],
+      "initial": {
+        "viewportSize": 600,
+        "contentSize": 1000,
+        "followBottom": true,
+        "offset": 400
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "pointerDrag",
+            "deltaY": 5
+          },
+          "expect": {
+            "following": false,
+            "offset": 395
+          }
+        },
+        {
+          "action": {
+            "op": "growContent",
+            "newContentSize": 1100
+          },
+          "expect": {
+            "offset": 395,
+            "atBottom": false
+          }
+        },
+        {
+          "action": {
+            "op": "requestFollow"
+          },
+          "expect": {
+            "following": true,
+            "offset": 500,
+            "atBottom": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "scroll-drag-below-threshold",
+      "covers": [
+        "SCROLL-FOLLOW-STOP"
+      ],
+      "initial": {
+        "viewportSize": 600,
+        "contentSize": 1000,
+        "followBottom": true,
+        "offset": 400
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "pointerPressMoveRelease",
+            "distance": 3
+          },
+          "expect": {
+            "following": true
+          }
+        },
+        {
+          "action": {
+            "op": "pointerPressMove",
+            "distance": 4
+          },
+          "expect": {
+            "following": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "scroll-wheel-stops-follow",
+      "covers": [
+        "SCROLL-FOLLOW-STOP",
+        "SCROLL-OVERFLOW"
+      ],
+      "initial": {
+        "viewportSize": 600,
+        "contentSize": 400,
+        "followBottom": true
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "wheel",
+            "deltaY": -40
+          },
+          "expect": {
+            "following": true,
+            "offset": 0
+          }
+        },
+        {
+          "action": {
+            "op": "growContent",
+            "newContentSize": 1000
+          },
+          "expect": {
+            "offset": 400,
+            "atBottom": true
+          }
+        },
+        {
+          "action": {
+            "op": "wheel",
+            "deltaY": -40
+          },
+          "expect": {
+            "following": false,
+            "offset": 360
+          }
+        }
+      ]
+    },
+    {
+      "id": "scroll-keep-position",
+      "covers": [
+        "SCROLL-KEEP-POSITION"
+      ],
+      "initial": {
+        "viewportSize": 500,
+        "items": [
+          {
+            "id": "m1",
+            "size": 200
+          },
+          {
+            "id": "m2",
+            "size": 150
+          },
+          {
+            "id": "m3",
+            "size": 150
+          },
+          {
+            "id": "m4",
+            "size": 250
+          },
+          {
+            "id": "m5",
+            "size": 250
+          }
+        ],
+        "followBottom": true,
+        "following": false,
+        "offset": 500
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "tickLayout"
+          },
+          "expect": {
+            "contentSize": 1000,
+            "topVisibleItem": "m4",
+            "topVisibleItemScreenY": 0
+          }
+        },
+        {
+          "action": {
+            "op": "appendItem",
+            "id": "m6",
+            "size": 120
+          },
+          "expect": {
+            "offset": 500,
+            "topVisibleItem": "m4",
+            "topVisibleItemScreenY": 0,
+            "atBottom": false
+          }
+        },
+        {
+          "action": {
+            "op": "rebuildSameContent"
+          },
+          "expect": {
+            "offset": 500,
+            "topVisibleItem": "m4",
+            "topVisibleItemScreenY": 0
+          }
+        },
+        {
+          "action": {
+            "op": "resizeItem",
+            "id": "m2",
+            "size": 200
+          },
+          "expect": {
+            "offset": 550,
+            "topVisibleItem": "m4",
+            "topVisibleItemScreenY": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "scroll-follow-resume-at-bottom",
+      "covers": [
+        "SCROLL-FOLLOW-RESUME",
+        "SCROLL-FOLLOW",
+        "SCROLL-FOLLOW-STOP"
+      ],
+      "initial": {
+        "viewportSize": 600,
+        "contentSize": 1000,
+        "followBottom": true,
+        "following": false,
+        "offset": 300
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "pointerDragToAndRelease",
+            "offset": 390
+          },
+          "expect": {
+            "following": false
+          }
+        },
+        {
+          "action": {
+            "op": "pointerDragToAndRelease",
+            "offset": 395
+          },
+          "expect": {
+            "following": true
+          }
+        },
+        {
+          "action": {
+            "op": "growContent",
+            "newContentSize": 1050
+          },
+          "expect": {
+            "offset": 450,
+            "atBottom": true
+          }
+        },
+        {
+          "action": {
+            "op": "wheel",
+            "deltaY": -20
+          },
+          "expect": {
+            "following": false,
+            "offset": 430
+          }
+        },
+        {
+          "action": {
+            "op": "wheel",
+            "deltaY": 12
+          },
+          "expect": {
+            "following": true,
+            "offset": 442
+          }
+        }
+      ]
+    }
+  ]
+}

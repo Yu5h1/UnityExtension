@@ -48,7 +48,7 @@ namespace Yu5h1Lib.UI.Acceptance
                 Debug.LogWarning($"[UxUiAcceptanceTarget] Failed reading disk file: {ex.Message}");
             }
 
-            return "button";
+            return "chatpanel";
         }
     }
 }

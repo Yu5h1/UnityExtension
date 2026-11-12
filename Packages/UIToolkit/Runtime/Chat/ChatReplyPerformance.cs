@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
 
@@ -57,29 +56,7 @@ namespace Yu5h1Lib.UIToolkit
             if (!snapshot.StartsWith(target.Substring(0, shown), StringComparison.Ordinal)) shown = 0;
             target = snapshot;
 
-            var starts = StringInfo.ParseCombiningCharacters(target);
-            var ends = new List<int>();
-            for (int i = 1; i < starts.Length; i++)
-            {
-                int at = starts[i];
-                int code = char.ConvertToUtf32(target, at);
-                bool regional = code >= 0x1f1e6 && code <= 0x1f1ff;
-                int regionalRun = 0;
-                for (int prior = at - 2; regional && prior >= 0; prior -= 2)
-                {
-                    if (!char.IsHighSurrogate(target[prior]) || !char.IsLowSurrogate(target[prior + 1])) break;
-                    int previous = char.ConvertToUtf32(target, prior);
-                    if (previous < 0x1f1e6 || previous > 0x1f1ff) break;
-                    regionalRun++;
-                }
-                // An odd run means `at` completes a flag pair rather than starting a new one - not a
-                // boundary. A base joined by ZWJ, or followed by a skin-tone modifier, is the same unit too.
-                if (regional && regionalRun % 2 == 1) continue;
-                if (target[at - 1] == '‍' || code == 0x200d || code >= 0x1f3fb && code <= 0x1f3ff) continue;
-                ends.Add(at);
-            }
-            if (target.Length > 0) ends.Add(target.Length);
-            boundaries = ends.ToArray();
+            boundaries = GraphemeBoundaries.GetEnds(target);
         }
 
         /// <summary>The final text. Still reveals at the normal pace - <see cref="Done"/> tells the caller

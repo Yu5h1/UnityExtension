@@ -39,3 +39,9 @@
 ## 結論
 
 2026-11-10 來源基線（補建）：`ScrollRectEx` 只對應程式捲動時的位置夾限，且沒有測試；目標 1 的其他五條在本套件沒有實作。VCP 現有的 uGUI 聊天清單（`LoopScrollRect`）不屬本套件，它的捲動問題由 ChatPanel 目標 1 的 uGUI 實作取代。這些結果只證明規範與來源的對應。
+
+## uGUI 訊息區採用
+
+2026-11-12 的 ChatPanel sample 使用 `FollowingScrollView` 採用 ScrollView 0.2.2-draft。原生 `ScrollRect` 擁有拖曳、滾輪、夾限及慣性；元件補足短內容貼底、跟隨狀態及重排閱讀錨點。直接子項使用穩定名稱，變更資料後呼叫 `RefreshContent`。綁定 `FollowingScrollViewScrollbar` 可識別捲軸操作。
+
+[ChatPanel 採用紀錄](ChatPanel.md#釘選版本)保存本輪釘選版本與 VCP batchmode 證據。[驗收清單](../../../../checklists/ui-chatpanel.checklist#2-驗證訊息區與-scrollview)記錄目標 1 的自動與人工檢查。

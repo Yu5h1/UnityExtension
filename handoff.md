@@ -4,6 +4,8 @@
 
 ## Current Direction
 
+- uGUI ChatPanel 訊息區（VCP sample）：由 [採用紀錄](Packages/UI/Documentation/Yu5h1Lib.UX/ChatPanel.md) 進入。使用者先在 [UxAcceptance 試用](Packages/UI/Documentation/Yu5h1Lib.UX/ChatPanel.md#試用範圍)，再決定正式場景如何採用及舊版退役。人工檢查見 [ui-chatpanel](checklists/ui-chatpanel.checklist)。
+
 Yu5h1's UnityExtension is a Unity application-extension solution from Yu5h1's development perspective. It collects reusable systems, tools, packages, and workflows so Unity projects can be built in a more efficient, low-waste, user-friendly way.
 
 The root `plan.md` should stay concise and solution-level. Detailed architecture, internal systems, application domains, and developer operation guides should live under `Documentation` instead of bloating the root plan.

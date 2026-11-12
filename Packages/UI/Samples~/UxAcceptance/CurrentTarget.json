@@ -1,5 +1,5 @@
 {
-  "targetId": "backgroundload",
-  "displayName": "UX BackgroundLoad (0.1.2-draft)",
-  "moduleSpec": "Yu5h1Lib.UX/Foundation/BackgroundLoad"
+  "targetId": "chatpanel",
+  "displayName": "UX ChatPanel (0.4.0-draft)",
+  "moduleSpec": "Yu5h1Lib.UX/Modules/ChatPanel"
 }
