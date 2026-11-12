@@ -43,7 +43,7 @@ VCP 宿主／UxAcceptance sample
 
 展示 prefab 以 Inspector 的 `chatPanelPrefab` 欄位直接引用套件資產。示範宿主將訊息區與自己的 `InputFieldAddon` 輸入列放在同一個版面下。輸入列的 `Submitted` 和送出按鈕共用宿主的送出流程，透過 `AddMessage` 更新訊息區。宿主以 `ReplaceHistory` 提供歷史，以 `BeginReply`、`Push` 和 `Complete` 提供模擬回覆，並由宿主將載入的 Sprite 交給圖片訊息。 [ChatPanelDemo.prefab](../../Samples~/UxAcceptance/Resources/UxAcceptance/ChatPanelDemo.prefab) · [示範宿主](../../Samples~/UxAcceptance/Cases/UxUiChatPanelDemo.cs)
 
-2026-11-12 在 Yu5h1LibTest 以無畫面 PlayMode 驗證同一個訊息區實例接收宿主歷史、輸入、模擬回覆和延遲圖片，重設案例會建立新實例。PlayMode 1/1（`20261112-155258-tests.xml`），EditMode 40/40（`20261112-155325-tests.xml`）。
+2026-11-12 在 Yu5h1LibTest 以無畫面 PlayMode 驗證同一個訊息區實例接收宿主歷史、輸入、模擬回覆和延遲圖片，重設案例會建立新實例。PlayMode 1/1（`20261112-155515-tests.xml`），EditMode 40/40（`20261112-155544-tests.xml`）。
 
 ## 試用範圍
 

@@ -17,8 +17,8 @@ namespace Yu5h1Lib.UI.Acceptance
         public void Mount(RectTransform container)
         {
             Unmount();
-            var prefab = Resources.Load<GameObject>(DemoPrefabPath);
-            if (prefab == null || !prefab.TryGetComponent<UxUiChatPanelDemo>(out var demoPrefab))
+            if (!ResourcesUtility.TryLoad(DemoPrefabPath, out GameObject prefab) ||
+                !prefab.TryGetComponent<UxUiChatPanelDemo>(out var demoPrefab))
                 throw new System.InvalidOperationException($"找不到聊天展示 Prefab Resources/{DemoPrefabPath}。");
 
             var demo = Object.Instantiate(demoPrefab, container, false);

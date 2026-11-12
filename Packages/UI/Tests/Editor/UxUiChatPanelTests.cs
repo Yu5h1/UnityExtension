@@ -566,8 +566,7 @@ namespace Yu5h1Lib.UI.Tests
 
         private UxUiChatPanelDemo CreateChatSample(float width, float height)
         {
-            var prefab = Resources.Load<GameObject>("UxAcceptance/ChatPanelDemo");
-            Assert.That(prefab, Is.Not.Null);
+            Assert.That(ResourcesUtility.TryLoad("UxAcceptance/ChatPanelDemo", out GameObject prefab), Is.True);
             var demo = Object.Instantiate(prefab, root.transform).GetComponent<UxUiChatPanelDemo>();
             var frame = (RectTransform)demo.transform;
             frame.anchorMin = frame.anchorMax = new Vector2(.5f, .5f);
