@@ -10,6 +10,7 @@ namespace Yu5h1Lib.UI.Acceptance
     public sealed class UxUiChatPanelDemo : MonoBehaviour
     {
         private const int HorizontalInset = 16;
+        private const int EarlierHistoryBatchSize = 4;
         private const float ControlGap = 6f;
         private const float ToolbarButtonWidth = 60f;
         private const float ToolbarButtonHeight = 36f;
@@ -33,6 +34,7 @@ namespace Yu5h1Lib.UI.Acceptance
         private Button send;
         private CanvasGroup sendAppearance;
         private Button quickQuestion;
+        private int earlierHistoryCount;
         private bool answering;
 
         public ChatPanel Panel => panel;
@@ -61,6 +63,7 @@ namespace Yu5h1Lib.UI.Acceptance
             toolbar.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             AddButton(controls, "短對話", ToolbarButtonHeight, () => ResetHistory(false));
             AddButton(controls, "載入歷史", ToolbarButtonHeight, () => ResetHistory(true));
+            AddButton(controls, "加入更早歷史", ToolbarButtonHeight, PrependEarlierHistory);
             AddButton(controls, "回到最新", ToolbarButtonHeight, () => panel.ScrollView.RequestFollow());
             var motion = AddButton(controls, "減少動態", ToolbarButtonHeight, () => panel.ReduceMotion = !panel.ReduceMotion);
             quickQuestion = AddButton(controls, "角色貼文", ToolbarButtonHeight, () => StartCoroutine(AskForPost()));
@@ -137,6 +140,7 @@ namespace Yu5h1Lib.UI.Acceptance
         {
             StopAllCoroutines();
             answering = false;
+            earlierHistoryCount = 0;
             DateTime start = DateTime.Today.AddDays(-1).AddHours(21);
             if (longHistory)
             {
@@ -152,7 +156,7 @@ namespace Yu5h1Lib.UI.Acceptance
                         history.AddMessage($"載入中的圖片下方 · {i + 1}", id: $"after-image-{i}", fromHistory: true);
                 });
                 StartCoroutine(FinishImage(delayed, 2f, false));
-                hostStatus.text = "載入歷史後可往上捲，再操作「回到最新」。";
+                hostStatus.text = "往上捲後按「加入更早歷史」，可檢查閱讀位置。";
             }
             else
             {
@@ -161,6 +165,23 @@ namespace Yu5h1Lib.UI.Acceptance
                 hostStatus.text = "短對話貼底。送出訊息可試逐字回覆。";
             }
             UpdateActions();
+        }
+
+        private void PrependEarlierHistory()
+        {
+            var content = panel.MessageContent;
+            int firstNewRow = content.childCount;
+            for (int i = 0; i < EarlierHistoryBatchSize; i++)
+            {
+                int number = ++earlierHistoryCount;
+                panel.AddMessage($"更早的聊天紀錄 · {number}", self: number % 2 == 0,
+                    id: $"earlier-history-{number}", fromHistory: true);
+            }
+            for (int i = 0; i < EarlierHistoryBatchSize; i++)
+                content.GetChild(firstNewRow + i).SetAsFirstSibling();
+
+            panel.ScrollView.RefreshContent();
+            hostStatus.text = $"已在前方加入 {EarlierHistoryBatchSize} 則歷史訊息。";
         }
 
         private static void AddIntro(ChatPanel chat, DateTime start)

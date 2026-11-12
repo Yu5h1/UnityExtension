@@ -73,25 +73,31 @@ namespace Yu5h1Lib.UI.Tests
             Assert.That(scroll.Following, Is.False);
             TestContext.WriteLine($"Sample history reload: {reloaded.name}, row top {originalTop:0.##} → {RowTop(scroll, reloaded):0.##}");
 
-            panel.ClearMessages();
-            panel.ReplaceHistory(chat => AddHistory(chat, 0));
-            Drag(scroll, -165f);
-            Assert.That(scroll.Following, Is.False);
-            var reading = FirstVisible(panel);
-            string readingId = reading.name;
-            float readingTop = RowTop(scroll, reading);
+            var prependHistory = demo.transform.Find("Demo controls/加入更早歷史")?.GetComponent<Button>();
+            Assert.That(prependHistory, Is.Not.Null);
+            var content = panel.MessageContent;
+            var originalRows = content.Cast<Transform>().ToArray();
             float readingOffset = scroll.Offset;
             float contentBefore = scroll.ContentSize;
 
-            panel.ReplaceHistory(chat => AddHistory(chat, 4));
-            yield return null;
-            var retained = FirstVisible(panel);
-            Assert.That(retained.name, Is.EqualTo(readingId));
-            Assert.That(RowTop(scroll, retained), Is.EqualTo(readingTop).Within(Tolerance));
-            Assert.That(scroll.Following, Is.False);
-            Assert.That(scroll.ContentSize, Is.GreaterThan(contentBefore));
-            Assert.That(scroll.Offset, Is.GreaterThan(readingOffset));
-            TestContext.WriteLine($"Four older messages prepended: {retained.name}, row top {readingTop:0.##} → {RowTop(scroll, retained):0.##}, scroll offset {readingOffset:0.##} → {scroll.Offset:0.##}");
+            for (int batch = 1; batch <= 2; batch++)
+            {
+                prependHistory.onClick.Invoke();
+                yield return null;
+                int added = batch * 4;
+                var retained = FirstVisible(panel);
+                Assert.That(retained, Is.SameAs(reloaded));
+                Assert.That(RowTop(scroll, retained), Is.EqualTo(originalTop).Within(Tolerance));
+                Assert.That(scroll.Following, Is.False);
+                Assert.That(scroll.ContentSize, Is.GreaterThan(contentBefore));
+                Assert.That(scroll.Offset, Is.GreaterThan(readingOffset));
+                Assert.That(content.Cast<Transform>().Take(added).Select(row => row.name),
+                    Is.EqualTo(Enumerable.Range(1, added).Reverse().Select(i => $"earlier-history-{i}")));
+                Assert.That(content.Cast<Transform>().Skip(added), Is.EqualTo(originalRows));
+                TestContext.WriteLine($"Older history button, batch {batch}: {retained.name}, row top {RowTop(scroll, retained):0.##}, scroll offset {scroll.Offset:0.##}");
+                readingOffset = scroll.Offset;
+                contentBefore = scroll.ContentSize;
+            }
 
             Drag(scroll, scroll.MaxOffset - scroll.Offset);
             Assert.That(scroll.Following, Is.True);
@@ -110,14 +116,6 @@ namespace Yu5h1Lib.UI.Tests
         {
             if (sampleScene.IsValid() && sampleScene.isLoaded)
                 yield return SceneManager.UnloadSceneAsync(sampleScene);
-        }
-
-        private static void AddHistory(ChatPanel panel, int olderCount)
-        {
-            for (int i = 0; i < olderCount; i++)
-                panel.AddMessage($"Older message {i + 1}", id: $"older-{i}", fromHistory: true);
-            for (int i = 0; i < 40; i++)
-                panel.AddMessage($"History message {i + 1}", id: $"reading-{i}", fromHistory: true);
         }
 
         private static RectTransform FirstVisible(ChatPanel panel)

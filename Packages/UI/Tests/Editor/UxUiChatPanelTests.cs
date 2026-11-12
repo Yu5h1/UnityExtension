@@ -430,7 +430,7 @@ namespace Yu5h1Lib.UI.Tests
         }
 
         [TestCase(1280f, 720f, 36f, TestName = "SampleLayout_Desktop")]
-        [TestCase(360f, 600f, 36f, TestName = "SampleLayout_PhonePortrait")]
+        [TestCase(360f, 600f, 78f, TestName = "SampleLayout_PhonePortrait")]
         [TestCase(640f, 360f, 36f, TestName = "SampleLayout_PhoneLandscape")]
         [TestCase(280f, 500f, 78f, TestName = "SampleLayout_NarrowToolbarWraps")]
         public void SampleRowsKeepOnlyMessageViewportFlexible(float width, float height, float toolbarHeight)
