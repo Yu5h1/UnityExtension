@@ -10,7 +10,7 @@ namespace Yu5h1Lib.UI
     [DisallowMultipleComponent]
     public sealed class MultilineInputField : UIBehaviour, ILayoutElement
     {
-        private const float ScrollbarWidth = 16f;
+        private const float DefaultScrollbarWidth = 16f;
 
         private TextGenerator measurement;
         private InputField field;
@@ -45,7 +45,11 @@ namespace Yu5h1Lib.UI
         /// Configures a direct child input whose Text is stretched across the input rectangle.
         /// The viewport supplies clipping and a vertical scrollbar, while the input retains its native editing behavior.
         /// </summary>
-        public void Configure(InputField input, float minHeight = 44f, int maxVisibleLines = 5)
+        public void Configure(InputField input, float minHeight = 44f, int maxVisibleLines = 5) =>
+            Configure(input, minHeight, maxVisibleLines, DefaultScrollbarWidth);
+
+        /// <summary>Configures the field with a host-selected scrollbar width.</summary>
+        public void Configure(InputField input, float minHeight, int maxVisibleLines, float scrollbarWidth)
         {
             if (input == null)
                 throw new ArgumentNullException(nameof(input));
@@ -58,6 +62,7 @@ namespace Yu5h1Lib.UI
             if (field != null && field != input)
                 throw new InvalidOperationException("This viewport is already configured for another input.");
 
+            scrollbarWidth = Mathf.Max(1f, scrollbarWidth);
             minHeightValue = Mathf.Max(1f, minHeight);
             this.maxVisibleLines = Mathf.Max(1, maxVisibleLines);
             previousText = null;
@@ -72,8 +77,7 @@ namespace Yu5h1Lib.UI
                 content.anchorMin = Vector2.up;
                 content.anchorMax = Vector2.one;
                 content.pivot = new Vector2(.5f, 1f);
-                content.anchoredPosition = new Vector2(-ScrollbarWidth * .5f, 0f);
-                content.sizeDelta = new Vector2(-ScrollbarWidth, minHeightValue);
+                content.sizeDelta = new Vector2(0f, minHeightValue);
 
                 if (!TryGetComponent<RectMask2D>(out _))
                     gameObject.AddComponent<RectMask2D>();
@@ -96,6 +100,13 @@ namespace Yu5h1Lib.UI
                     field.onValueChanged.AddListener(OnValueChanged);
             }
 
+            var bar = ScrollView.verticalScrollbar;
+            ((RectTransform)bar.transform).SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, scrollbarWidth);
+            float inset = scrollbarWidth * .25f;
+            bar.handleRect.offsetMin = new Vector2(inset, 2f);
+            bar.handleRect.offsetMax = new Vector2(-inset, -2f);
+            content.sizeDelta = new Vector2(-scrollbarWidth, content.sizeDelta.y);
+            content.anchoredPosition = new Vector2(-scrollbarWidth * .5f, content.anchoredPosition.y);
             RefreshLayout();
         }
 
@@ -269,7 +280,7 @@ namespace Yu5h1Lib.UI
             trackRect.anchorMin = Vector2.right;
             trackRect.anchorMax = Vector2.one;
             trackRect.pivot = new Vector2(1f, .5f);
-            trackRect.sizeDelta = new Vector2(ScrollbarWidth, 0f);
+            trackRect.sizeDelta = Vector2.zero;
             trackRect.anchoredPosition = Vector2.zero;
             track.GetComponent<Image>().color = new Color(1f, 1f, 1f, .10f);
 
@@ -278,8 +289,6 @@ namespace Yu5h1Lib.UI
             handleRect.SetParent(trackRect, false);
             handleRect.anchorMin = Vector2.zero;
             handleRect.anchorMax = Vector2.one;
-            handleRect.offsetMin = new Vector2(4f, 2f);
-            handleRect.offsetMax = new Vector2(-4f, -2f);
             var graphic = handle.GetComponent<Image>();
             graphic.color = new Color(1f, 1f, 1f, .68f);
 

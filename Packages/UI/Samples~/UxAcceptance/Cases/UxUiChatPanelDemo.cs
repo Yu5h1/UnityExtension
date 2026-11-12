@@ -11,9 +11,13 @@ namespace Yu5h1Lib.UI.Acceptance
     {
         private const int HorizontalInset = 16;
         private const float ControlGap = 6f;
-        private const float ToolbarButtonWidth = 72f;
+        private const float ToolbarButtonWidth = 60f;
         private const float ToolbarButtonHeight = 36f;
         private const float ComposerMinHeight = 44f;
+        private const float SendSize = 38f;
+        private const int BodyFontSize = 14;
+        private const float BodyLineSpacing = 1.3125f;
+        private const string ArtPath = "UxAcceptance/ChatPanel/";
 
         private static readonly UguiControlPalette Palette = UguiControlPalette.Dark;
 
@@ -23,9 +27,9 @@ namespace Yu5h1Lib.UI.Acceptance
         private InputFieldState draftState;
         private Text hostStatus;
         private Font font;
-        private Texture2D texture;
         private Sprite image;
         private Button send;
+        private CanvasGroup sendAppearance;
         private Button quickQuestion;
         private bool answering;
 
@@ -54,11 +58,24 @@ namespace Yu5h1Lib.UI.Acceptance
             AddButton(controls, "載入歷史", ToolbarButtonHeight, () => ResetHistory(true));
             AddButton(controls, "回到最新", ToolbarButtonHeight, () => panel.ScrollView.RequestFollow());
             var motion = AddButton(controls, "減少動態", ToolbarButtonHeight, () => panel.ReduceMotion = !panel.ReduceMotion);
+            quickQuestion = AddButton(controls, "角色貼文", ToolbarButtonHeight, () => StartCoroutine(AskForPost()));
             ReflowToolbar();
             motion.onClick.AddListener(() =>
                 motion.GetComponentInChildren<Text>().text = panel.ReduceMotion ? "減少動態 ✓" : "減少動態");
 
-            var scrollArea = AddRect("ChatPanel", transform);
+            hostStatus = AddLabel(transform, "選擇一個操作以開始", 12, TextAnchor.MiddleLeft);
+            hostStatus.color = Palette.SecondaryText;
+            hostStatus.gameObject.AddComponent<LayoutElement>().preferredHeight = 18f;
+
+            var conversation = AddRect("Conversation", transform);
+            conversation.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1f;
+            var conversationLayout = conversation.gameObject.AddComponent<VerticalLayoutGroup>();
+            conversationLayout.spacing = ControlGap;
+            conversationLayout.childControlHeight = conversationLayout.childControlWidth = true;
+            conversationLayout.childForceExpandHeight = false;
+            conversationLayout.childForceExpandWidth = true;
+
+            var scrollArea = AddRect("ChatPanel", conversation);
             scrollArea.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1f;
             panel = scrollArea.gameObject.AddComponent<ChatPanel>();
             panel.Configure(new ChatPanel.Options
@@ -67,18 +84,24 @@ namespace Yu5h1Lib.UI.Acceptance
                 RowMaxWidthPercent = 70f,
                 GraphemesPerSecond = 20f,
                 ShowThinkingSeconds = true,
-                ShowTimestamps = true
+                ShowTimestamps = true,
+                MessageFontSize = BodyFontSize,
+                MessageLineSpacing = BodyLineSpacing,
+                MessageMinLineHeight = 21f,
+                MessageBottomInset = 8,
+                TimestampWidth = 24f,
+                MetadataColor = new Color(Palette.ItemText.r, Palette.ItemText.g, Palette.ItemText.b, .65f),
+                Self = new ChatPanel.BubbleStyle { Background = Palette.Accent, Text = Palette.OnAccent },
+                Other = new ChatPanel.BubbleStyle { Background = Palette.PanelBackground, Text = Palette.ItemText },
+                ViewerSafeArea = conversation,
+                ViewerBackdropOpacity = .84f,
+                ViewerCloseSprite = Resources.Load<Sprite>(ArtPath + "Disc"),
+                ViewerPalette = Palette
             });
 
-            hostStatus = AddLabel(transform, "選擇一個操作以開始", 12, TextAnchor.MiddleLeft);
-            hostStatus.color = Palette.SecondaryText;
-            hostStatus.gameObject.AddComponent<LayoutElement>().preferredHeight = 18f;
-
-            var composer = AddComposerRow();
-            quickQuestion = AddButton(composer, "角色貼文", ComposerMinHeight, () => StartCoroutine(AskForPost()));
+            var composer = AddComposerRow(conversation);
             var viewport = AddRect("Draft viewport", composer);
             viewport.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-            viewport.gameObject.AddComponent<Image>().color = Palette.PanelBackground;
 
             var field = AddRect("Sample input", viewport);
             field.anchorMin = Vector2.zero;
@@ -86,10 +109,11 @@ namespace Yu5h1Lib.UI.Acceptance
             field.offsetMin = field.offsetMax = Vector2.zero;
             var hitArea = field.gameObject.AddComponent<Image>();
             hitArea.color = Color.clear;
-            var draft = AddLabel(field, "", 15, TextAnchor.UpperLeft);
-            var hint = AddLabel(field, "輸入訊息", 15, TextAnchor.UpperLeft);
-            PlaceLabel(draft.rectTransform, 8f);
-            PlaceLabel(hint.rectTransform, 8f);
+            var draft = AddLabel(field, "", BodyFontSize, TextAnchor.MiddleLeft);
+            var hint = AddLabel(field, "想說什麼?", BodyFontSize, TextAnchor.MiddleLeft);
+            draft.lineSpacing = BodyLineSpacing;
+            PlaceLabel(draft.rectTransform);
+            PlaceLabel(hint.rectTransform);
             draft.horizontalOverflow = HorizontalWrapMode.Wrap;
             draft.verticalOverflow = VerticalWrapMode.Truncate;
             draft.supportRichText = false;
@@ -100,9 +124,9 @@ namespace Yu5h1Lib.UI.Acceptance
             input.lineType = InputField.LineType.MultiLineNewline;
             Palette.ApplyField(input, border: false);
             draftState = field.gameObject.AddComponent<InputFieldState>();
-            viewport.gameObject.AddComponent<MultilineInputField>().Configure(input, minHeight: ComposerMinHeight, maxVisibleLines: 5);
+            viewport.gameObject.AddComponent<MultilineInputField>().Configure(input, ComposerMinHeight - 6f, 5, 8f);
 
-            send = AddButton(composer, "送出", ComposerMinHeight, Send, accent: true);
+            send = AddSendButton(composer);
             draftState.Changed += _ => UpdateActions();
             ResetHistory(false);
         }
@@ -146,6 +170,7 @@ namespace Yu5h1Lib.UI.Acceptance
         private void UpdateActions()
         {
             send.interactable = !answering && draftState.IsInteractable && draftState.HasNonWhitespace;
+            sendAppearance.alpha = send.interactable ? 1f : .5f;
             quickQuestion.interactable = !answering;
         }
 
@@ -182,7 +207,8 @@ namespace Yu5h1Lib.UI.Acceptance
             UpdateActions();
             panel.AddMessage("看看角色貼文", true, DateTime.Now);
             panel.AddMessage("這裡有一張照片。", timestamp: DateTime.Now);
-            var post = panel.AddImage(new Vector2(480f, 300f), "角色貼文圖片", DateTime.Now);
+            var picture = GetPicture();
+            var post = panel.AddImage(picture != null ? picture.rect.size : default, "角色貼文圖片", DateTime.Now);
             hostStatus.text = "載入兩張圖片，第二張模擬失敗。";
             yield return FinishImage(post, 1.25f, false);
             yield return FinishImage(panel.AddImage(description: "無法載入的圖片"), 1.25f, true);
@@ -194,41 +220,18 @@ namespace Yu5h1Lib.UI.Acceptance
         private IEnumerator FinishImage(ChatPanel.ImageMessage message, float delay, bool fail)
         {
             yield return new WaitForSecondsRealtime(delay);
-            if (fail)
-                message.SetFailed();
+            var picture = fail ? null : GetPicture();
+            if (picture != null)
+                message.SetLoaded(picture);
             else
-                message.SetLoaded(GetPicture());
+                message.SetFailed();
         }
 
         private Sprite GetPicture()
         {
-            if (image != null)
-                return image;
-            const int width = 480;
-            const int height = 300;
-            texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-            var colors = new Color32[width * height];
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    float ridge = 75f + 50f * Mathf.Sin(x * .011f) + x * .06f;
-                    colors[y * width + x] = y < ridge ? new Color32(31, 74, 82, 255)
-                        : Color32.Lerp(new Color32(250, 186, 117, 255), new Color32(76, 103, 160, 255), y / (float)height);
-                }
-            }
-            texture.SetPixels32(colors);
-            texture.Apply(false, true);
-            image = Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(.5f, .5f));
+            if (image == null)
+                image = Resources.Load<Sprite>(ArtPath + "Scene");
             return image;
-        }
-
-        private void OnDestroy()
-        {
-            if (image != null)
-                Destroy(image);
-            if (texture != null)
-                Destroy(texture);
         }
 
         private void OnRectTransformDimensionsChange() => ReflowToolbar();
@@ -246,21 +249,55 @@ namespace Yu5h1Lib.UI.Acceptance
                 ToolbarButtonHeight);
         }
 
-        private RectTransform AddComposerRow()
+        private RectTransform AddComposerRow(Transform conversation)
         {
-            var rect = AddRect("Sample host composer", transform);
+            var slot = AddRect("Composer slot", conversation);
+            var inset = slot.gameObject.AddComponent<HorizontalLayoutGroup>();
+            inset.padding = new RectOffset(6, 6, 0, 0);
+            inset.childControlWidth = inset.childControlHeight = true;
+            inset.childForceExpandWidth = true;
+            inset.childForceExpandHeight = false;
+
+            var rect = AddRect("Sample host composer", slot);
+            rect.gameObject.AddComponent<Image>().color = Palette.PanelBackground;
             var size = rect.gameObject.AddComponent<LayoutElement>();
             size.minHeight = ComposerMinHeight;
             size.flexibleHeight = 0f;
             var row = rect.gameObject.AddComponent<HorizontalLayoutGroup>();
-            row.spacing = ControlGap;
+            row.padding = new RectOffset(14, 4, 3, 3);
+            row.spacing = 4f;
             row.childAlignment = TextAnchor.LowerLeft;
             row.childControlWidth = row.childControlHeight = true;
             row.childForceExpandWidth = row.childForceExpandHeight = false;
             return rect;
         }
 
-        private Button AddButton(Transform parent, string text, float height, Action click, bool accent = false)
+        private Button AddSendButton(Transform composer)
+        {
+            var rect = AddRect("送出", composer);
+            var size = rect.gameObject.AddComponent<LayoutElement>();
+            size.minWidth = size.preferredWidth = SendSize;
+            size.minHeight = size.preferredHeight = SendSize;
+            var disc = rect.gameObject.AddComponent<Image>();
+            disc.sprite = Resources.Load<Sprite>(ArtPath + "SendDisc");
+            var button = rect.gameObject.AddComponent<Button>();
+            button.targetGraphic = disc;
+            button.onClick.AddListener(Send);
+            Palette.ApplyButton(button, accent: true, border: false);
+            var colors = button.colors;
+            colors.disabledColor = colors.normalColor;
+            button.colors = colors;
+
+            var glyph = AddRect("Envelope", rect);
+            glyph.sizeDelta = Vector2.one * 26f;
+            var icon = glyph.gameObject.AddComponent<Image>();
+            icon.sprite = Resources.Load<Sprite>(ArtPath + "Envelope");
+            icon.raycastTarget = false;
+            sendAppearance = rect.gameObject.AddComponent<CanvasGroup>();
+            return button;
+        }
+
+        private Button AddButton(Transform parent, string text, float height, Action click)
         {
             var addon = ButtonAddon.Create(parent, label: text, showIcon: false, size: height);
             addon.name = text;
@@ -270,7 +307,7 @@ namespace Yu5h1Lib.UI.Acceptance
             addon.labelText.resizeTextForBestFit = true;
             addon.labelText.resizeTextMinSize = 11;
             addon.labelText.resizeTextMaxSize = 13;
-            Palette.ApplyButton(addon.ui, addon.labelText, accent: accent);
+            Palette.ApplyButton(addon.ui, addon.labelText);
             addon.ui.onClick.AddListener(() => click());
             return addon.ui;
         }
@@ -294,12 +331,12 @@ namespace Yu5h1Lib.UI.Acceptance
             return rect;
         }
 
-        private static void PlaceLabel(RectTransform rect, float inset)
+        private static void PlaceLabel(RectTransform rect)
         {
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
-            rect.offsetMin = new Vector2(inset, 1f);
-            rect.offsetMax = new Vector2(-inset, -1f);
+            rect.offsetMin = new Vector2(0f, 2f);
+            rect.offsetMax = new Vector2(0f, -3f);
         }
     }
 }

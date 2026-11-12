@@ -16,6 +16,9 @@ namespace Yu5h1Lib.UI
         private readonly HashSet<int> suppressClick = new();
         private RectTransform pictureRect;
         private Image picture;
+        private Image backdrop;
+        private Image closeBackground;
+        private UguiControlDecoration pictureFocus;
         private Selectable focusTarget;
         private Button closeButton;
         private Button opener;
@@ -43,8 +46,7 @@ namespace Yu5h1Lib.UI
             sorting.sortingOrder = short.MaxValue;
             root.gameObject.AddComponent<GraphicRaycaster>();
 
-            var backdrop = root.gameObject.AddComponent<Image>();
-            backdrop.color = new Color(0f, 0f, 0f, .8f);
+            viewer.backdrop = root.gameObject.AddComponent<Image>();
             viewer.AddEvents(root, false);
             viewer.pictureRect = ChatPanel.AddRect("Picture", root);
             viewer.picture = viewer.pictureRect.gameObject.AddComponent<Image>();
@@ -59,10 +61,9 @@ namespace Yu5h1Lib.UI
             closeRect.pivot = Vector2.one;
             closeRect.anchoredPosition = new Vector2(-12f, -12f);
             closeRect.sizeDelta = new Vector2(44f, 44f);
-            var closeBackground = closeRect.gameObject.AddComponent<Image>();
-            closeBackground.color = new Color(.14f, .16f, .20f, .9f);
+            viewer.closeBackground = closeRect.gameObject.AddComponent<Image>();
             viewer.closeButton = closeRect.gameObject.AddComponent<Button>();
-            viewer.closeButton.targetGraphic = closeBackground;
+            viewer.closeButton.targetGraphic = viewer.closeBackground;
             viewer.closeButton.navigation = new Navigation { mode = Navigation.Mode.None };
             viewer.closeButton.onClick.AddListener(() => viewer.TryDismiss(DismissSource.CloseButton));
             var label = ChatPanel.AddRect("Label", closeRect).gameObject.AddComponent<Text>();
@@ -76,16 +77,21 @@ namespace Yu5h1Lib.UI
             return viewer;
         }
 
-        internal void Open(Sprite sprite, Button thumbnail, string description, RectTransform area, float inset,
-            float gestureThreshold, Func<DismissSource, bool> allowDismiss, Action<CloseReason> onClosed)
+        internal void Open(Sprite sprite, Button thumbnail, string description, ChatPanel.Options options,
+            Func<DismissSource, bool> allowDismiss, Action<CloseReason> onClosed)
         {
             openId++;
             opener = thumbnail;
-            safeArea = area;
+            safeArea = options.ViewerSafeArea;
             canDismiss = allowDismiss;
             closed = onClosed;
-            previewInset = Mathf.Max(0f, inset);
-            threshold = Mathf.Max(0f, gestureThreshold);
+            previewInset = Mathf.Max(0f, options.ViewerPreviewInset);
+            threshold = Mathf.Max(0f, options.ViewerZoomGestureThreshold);
+            backdrop.color = new Color(0f, 0f, 0f, Mathf.Clamp01(options.ViewerBackdropOpacity));
+            closeBackground.sprite = options.ViewerCloseSprite;
+            closeBackground.color = options.ViewerPalette != null
+                ? new Color(0f, 0f, 0f, .6f) : new Color(.14f, .16f, .20f, .9f);
+            SetPictureFocus(options.ViewerPalette);
             picture.sprite = sprite;
             picture.name = description;
             Full = false;
@@ -93,6 +99,18 @@ namespace Yu5h1Lib.UI
             gameObject.SetActive(true);
             ResizePicture();
             focusTarget.Select();
+        }
+
+        private void SetPictureFocus(UguiControlPalette palette)
+        {
+            if (palette == null && pictureFocus == null)
+                return;
+
+            pictureFocus ??= UguiControlDecoration.GetOrCreate(focusTarget);
+            pictureFocus.Configure(focusTarget, palette, null, default, null, default,
+                border: false, focus: palette != null, onAccent: false);
+            pictureFocus.rectTransform.offsetMin = -Vector2.one * 4f;
+            pictureFocus.rectTransform.offsetMax = Vector2.one * 4f;
         }
 
         internal void Close(CloseReason reason)

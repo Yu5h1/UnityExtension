@@ -31,10 +31,19 @@ namespace Yu5h1Lib.UI
             public bool SelfAlignRight = true;
             public bool ShowTimestamps;
             public bool ShowThinkingSeconds = true;
+            [Min(1)] public int MessageFontSize = 16;
+            [Min(.1f)] public float MessageLineSpacing = 1f;
+            [Min(0)] public float MessageMinLineHeight;
+            [Min(0)] public int MessageBottomInset;
+            [Min(0)] public float TimestampWidth = 38f;
+            public Color MetadataColor = new(1f, 1f, 1f, .65f);
             [Min(.01f)] public float GraphemesPerSecond = ChatReplyReveal.DefaultRate;
             [Min(1)] public float ImageMaxHeight = 240f;
             [Min(1)] public float ImagePlaceholderSize = 160f;
             public RectTransform ViewerSafeArea;
+            [Range(0, 1)] public float ViewerBackdropOpacity = .8f;
+            public Sprite ViewerCloseSprite;
+            [NonSerialized] public UguiControlPalette ViewerPalette;
             [Min(0)] public float ViewerPreviewInset = 16f;
             [Min(0)] public float ViewerZoomGestureThreshold = .1f;
             [Min(0)] public float FollowResumeTolerance = FollowingScrollView.DefaultResumeTolerance;
@@ -163,7 +172,6 @@ namespace Yu5h1Lib.UI
 
         internal const float RowGap = 8f;
         internal const float BubblePadding = 8f;
-        private const float TimestampWidth = 38f;
         private const float TimestampGap = 4f;
 
         private readonly List<(LayoutElement Bubble, bool HasTime)> textRows = new();
@@ -177,6 +185,7 @@ namespace Yu5h1Lib.UI
         private RectTransform content;
         private CanvasGroup scrollbarVisibility;
         private ChatImageViewer viewer;
+        private VerticalLayoutGroup messageStack;
         private float lastWidth = -1f;
         private float lastScrollOffset;
         private float scrollbarIdle;
@@ -198,6 +207,8 @@ namespace Yu5h1Lib.UI
             options = value ?? throw new ArgumentNullException(nameof(value));
             EnsureView();
             scroll.ResumeTolerance = Mathf.Max(0f, options.FollowResumeTolerance);
+            messageStack.padding.bottom = Mathf.Max(0, options.MessageBottomInset);
+            scroll.RefreshContent();
         }
 
         public void AddMessage(string text, bool self = false, DateTime? timestamp = null, string id = null,
@@ -321,8 +332,7 @@ namespace Yu5h1Lib.UI
                 viewer = ChatImageViewer.Create(canvas.rootCanvas.transform, ResolveFont());
             }
             viewer.Open(message.Thumbnail.sprite, message.Button, message.Description,
-                options.ViewerSafeArea, options.ViewerPreviewInset, options.ViewerZoomGestureThreshold,
-                source => CanDismissImage?.Invoke(source) ?? true, NotifyViewerClosed);
+                options, source => CanDismissImage?.Invoke(source) ?? true, NotifyViewerClosed);
             ImageViewerOpened?.Invoke();
             return true;
         }
@@ -413,11 +423,11 @@ namespace Yu5h1Lib.UI
             content.sizeDelta = Vector2.zero;
             content.anchoredPosition = Vector2.zero;
 
-            var stack = content.gameObject.AddComponent<VerticalLayoutGroup>();
-            stack.spacing = RowGap;
-            stack.childControlHeight = stack.childControlWidth = true;
-            stack.childForceExpandHeight = false;
-            stack.childForceExpandWidth = true;
+            messageStack = content.gameObject.AddComponent<VerticalLayoutGroup>();
+            messageStack.spacing = RowGap;
+            messageStack.childControlHeight = messageStack.childControlWidth = true;
+            messageStack.childForceExpandHeight = false;
+            messageStack.childForceExpandWidth = true;
             scroll.viewport = viewport;
             scroll.content = content;
             scroll.ResumeTolerance = Mathf.Max(0f, options.FollowResumeTolerance);
@@ -464,7 +474,7 @@ namespace Yu5h1Lib.UI
             {
                 lastDate = timestamp.Value.Date;
                 string date = lastDate.Value.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture);
-                var divider = AddLabel("Date " + date, content, 11, new Color(1f, 1f, 1f, .65f), TextAnchor.MiddleCenter);
+                var divider = AddLabel("Date " + date, content, 11, options.MetadataColor, TextAnchor.MiddleCenter);
                 divider.text = date;
                 divider.gameObject.AddComponent<LayoutElement>().preferredHeight = 27f;
             }
@@ -493,7 +503,10 @@ namespace Yu5h1Lib.UI
             layout.childControlWidth = layout.childControlHeight = true;
             layout.childForceExpandHeight = false;
             layout.childForceExpandWidth = true;
-            var label = AddLabel("Text", bubble, 16, style.Text, TextAnchor.UpperLeft);
+            var label = AddLabel("Text", bubble, Mathf.Max(1, options.MessageFontSize), style.Text, TextAnchor.UpperLeft);
+            label.lineSpacing = Mathf.Max(.1f, options.MessageLineSpacing);
+            if (options.MessageMinLineHeight > 0f)
+                label.gameObject.AddComponent<LayoutElement>().minHeight = options.MessageMinLineHeight;
             label.horizontalOverflow = HorizontalWrapMode.Wrap;
             label.verticalOverflow = VerticalWrapMode.Overflow;
             var size = bubble.gameObject.AddComponent<LayoutElement>();
@@ -508,10 +521,11 @@ namespace Yu5h1Lib.UI
             if (!row.HasTime)
                 return;
             bool right = row.Self && options.SelfAlignRight;
-            var label = AddLabel("Timestamp", row.Rect, 10, new Color(1f, 1f, 1f, .65f),
+            var label = AddLabel("Timestamp", row.Rect, 10, options.MetadataColor,
                 right ? TextAnchor.LowerRight : TextAnchor.LowerLeft);
+            label.horizontalOverflow = HorizontalWrapMode.Overflow;
             label.text = timestamp.Value.ToString("HH:mm", CultureInfo.InvariantCulture);
-            label.gameObject.AddComponent<LayoutElement>().preferredWidth = TimestampWidth;
+            label.gameObject.AddComponent<LayoutElement>().preferredWidth = Mathf.Max(0f, options.TimestampWidth);
             if (right)
                 label.transform.SetAsFirstSibling();
         }
@@ -540,8 +554,8 @@ namespace Yu5h1Lib.UI
             scroll.RefreshContent();
         }
 
-        private static float BubbleWidth(float width, bool hasTime) =>
-            Mathf.Max(0f, width - (hasTime ? TimestampWidth + TimestampGap : 0f));
+        private float BubbleWidth(float width, bool hasTime) =>
+            Mathf.Max(0f, width - (hasTime ? Mathf.Max(0f, options.TimestampWidth) + TimestampGap : 0f));
 
         private Font ResolveFont() => options.Font != null
             ? options.Font : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");

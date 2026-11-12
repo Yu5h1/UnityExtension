@@ -42,4 +42,4 @@ Yu5h1Lib.UI／UxAcceptance
 
 A 已在 sample 完成。工具列依寬度換行，輸入列由可見草稿行數決定高度，訊息區取得其餘空間。B 交付 `UguiControlPalette`、`InputFieldState` 和 `MultilineInputField`，共用入口和聊天 sample 都採用同一組配色、焦點與原生欄位狀態。聊天輸入列沿用無框 caret 的顯示方式，五行後在欄位右側捲動。三種視口的數字及驗證限制見 [ChatPanel 採用紀錄](../Packages/UI/Documentation/Yu5h1Lib.UX/ChatPanel.md#示範版高度與共用控件)。
 
-C 的 VCP 自動驗證涵蓋本輪版面與共用控件。Web 並排外觀、手機實體觸控與中文 IME 留在後續試用。
+C 已用同一組訊息、圖片和聊天框尺寸完成 Web 與 VCP sample 的並排驗收。修正輸入列、泡泡與圖片預覽，並在 VCP 重新執行聊天、捲動及共用控件回歸。尺寸、證據及剩餘差異見 [並排驗收紀錄](../Packages/UI/Documentation/Yu5h1Lib.UX/ChatPanel.md#web-與-ugui-並排驗收)。實體手機觸控、中文 IME 與產品場景採用留待試用。

@@ -398,7 +398,7 @@ namespace Yu5h1Lib.UI.Tests
             var demo = frame.gameObject.AddComponent<UxUiChatPanelDemo>();
             demo.Build();
             var toolbar = (RectTransform)frame.Find("Demo controls");
-            var composer = (RectTransform)frame.Find("Sample host composer");
+            var composer = (RectTransform)frame.Find("Conversation/Composer slot/Sample host composer");
             var viewport = demo.Panel.ScrollView.viewport;
             var send = (RectTransform)composer.Find("送出");
             var field = composer.GetComponentInChildren<InputField>();
@@ -409,7 +409,7 @@ namespace Yu5h1Lib.UI.Tests
             LayoutRebuilder.ForceRebuildLayoutImmediate(frame);
             Assert.That(toolbar.rect.height, Is.EqualTo(toolbarHeight).Within(.05f));
             Assert.That(composer.rect.height, Is.EqualTo(44f).Within(.05f));
-            Assert.That(viewport.rect.height, Is.EqualTo(height - toolbarHeight - 110f).Within(.05f));
+            Assert.That(viewport.rect.height, Is.EqualTo(height - toolbarHeight - 108f).Within(.05f));
             foreach (RectTransform button in toolbar)
             {
                 var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(toolbar, button);
@@ -424,15 +424,15 @@ namespace Yu5h1Lib.UI.Tests
             Assert.That(multiline.VisibleLineCount, Is.EqualTo(5));
             Assert.That(multiline.HasOverflow, Is.False);
             float expanded = composer.rect.height;
-            Assert.That(expanded, Is.GreaterThan(44f));
-            Assert.That(viewport.rect.height, Is.EqualTo(height - toolbarHeight - 66f - expanded).Within(.05f));
+            Assert.That(expanded, Is.EqualTo(111f).Within(.05f));
+            Assert.That(viewport.rect.height, Is.EqualTo(height - toolbarHeight - 64f - expanded).Within(.05f));
 
             field.text += "\n6\n7";
             multiline.RefreshLayout();
             LayoutRebuilder.ForceRebuildLayoutImmediate(frame);
             Assert.That(multiline.HasOverflow, Is.True);
             Assert.That(composer.rect.height, Is.EqualTo(expanded).Within(.05f));
-            Assert.That(send.rect.height, Is.EqualTo(44f).Within(.05f));
+            Assert.That(send.rect.height, Is.EqualTo(38f).Within(.05f));
             Assert.That(RectTransformUtility.CalculateRelativeRectTransformBounds(frame, send).min.y,
                 Is.EqualTo(sendBottom).Within(.05f));
 
@@ -440,7 +440,7 @@ namespace Yu5h1Lib.UI.Tests
             multiline.RefreshLayout();
             LayoutRebuilder.ForceRebuildLayoutImmediate(frame);
             Assert.That(composer.rect.height, Is.EqualTo(44f).Within(.05f));
-            Assert.That(viewport.rect.height, Is.EqualTo(height - toolbarHeight - 110f).Within(.05f));
+            Assert.That(viewport.rect.height, Is.EqualTo(height - toolbarHeight - 108f).Within(.05f));
             TestContext.WriteLine($"{width}×{height} logical: toolbar {toolbarHeight:0.#}, composer 44→{expanded:0.#}→44, message viewport {viewport.rect.height:0.#}");
         }
 
