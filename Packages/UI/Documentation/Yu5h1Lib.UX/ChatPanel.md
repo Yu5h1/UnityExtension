@@ -100,6 +100,12 @@ Sample 的 `InputFieldAddon` 以原生 uGUI `InputField` 編輯草稿，`InputFi
 
 2026-11-12 在 Yu5h1LibTest 使用與 VCP 相同的 Unity 6000.6.0f1、uGUI 2.6.0 和 Input System 1.20.0。無畫面 PlayMode 1/1（`20261112-144759-tests.xml`），涵蓋空白草稿、換行、選取取代、模擬組字、送出和焦點。直向與橫向外框的輸入列均從單行 44 增至五行 111，七行時高度仍為 111 並顯示右側捲軸。送出鍵維持 38 × 38，距右緣 4、底緣 3。EditMode 32/32（`20261112-144819-tests.xml`），包含套件 prefab 實例化和各尺寸排版回歸。畫面與手機中文 IME 由人工驗收。
 
+### 可選多行
+
+`InputFieldAddon.Multiline` 是 `TextField` 的多行開關。以 `InputFieldAddon.Create` 建立的 uGUI 欄位預設單行，聊天 sample 以屬性啟用多行。既有原生 `InputField` 可掛上 addon 並設定同一屬性，透過原生提交回呼補上換行與選取位置。呼叫端切換模式時保留草稿，關閉後排版回到單行並隱藏內部捲軸。原有 `CreateMultiline` 仍可直接建立多行欄位。 [TextField 1.1.0](../../../../../../UX/Documentation/ModuleSpec/Controls/TextField.md#目標-2可選多行)
+
+2026-11-12 以 UX `f8d90be` 的 TextField 多行案例（TF-C07、TF-C08）驗證開關、選取取代、送出、草稿保留及模擬組字。Yu5h1LibTest 無畫面 PlayMode 5/5（`20261112-162035-tests.xml`），包含既有原生欄位的提交回呼、按住 Enter 防重送及 ChatPanel sample 回歸。EditMode 42/42（`20261112-162058-tests.xml`）。手機原生鍵盤與中文 IME 由實機驗收。
+
 ## VCP batchmode 驗證
 
 以 VCP 現有的 `file:` 套件參照載入 Yu5h1Lib.UI。驗證時暫時匯入 sample 與這一輪 EditMode 測試，執行後移除暫用 Assets。EditMode 23/23（`20261112-085728-tests.xml`），PlayMode 1/1（`20261112-090058-tests.xml`）。報告在 VCP 專案旁的 `Virtual-Chat-Partner-Build/logs`。結果與人工確認見 [驗收清單](../../../../checklists/ui-chatpanel.checklist)。EditMode 驗證元件行為，PlayMode 驗證 sample 場景的宿主流程。手機觸控與產品外觀由使用者試用確認。

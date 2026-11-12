@@ -5,11 +5,12 @@ using UnityEngine.UI;
 
 namespace Yu5h1Lib.UI
 {
-    /// <summary>Handles keyboard submission for the multiline uGUI input created by InputFieldAddon.</summary>
+    /// <summary>Handles keyboard submission and optional line breaks for the uGUI input created by InputFieldAddon.</summary>
     internal sealed class MultilineSubmitInputField : InputField
     {
         private readonly Event keyboardEvent = new();
         private bool previousComposition;
+        private int heldEnterKeys;
 
         internal event Action SubmitRequested;
 
@@ -24,30 +25,60 @@ namespace Yu5h1Lib.UI
                 return;
             }
 
-            var input = EventSystem.current?.currentInputModule?.input;
-            string composition = input is UIInputHandler ? Input.compositionString : input?.compositionString ?? Input.compositionString;
-            bool composing = !string.IsNullOrEmpty(composition);
+            bool composing = HasComposition();
             bool suppressSubmit = composing || previousComposition;
             previousComposition = composing;
 
-            while (Event.PopEvent(keyboardEvent))
+            if (InputHandler.CurrentBackend != null)
             {
-                if (keyboardEvent.rawType == EventType.KeyDown)
-                    ProcessKeyDown(keyboardEvent, suppressSubmit);
-                else if (isFocused && (keyboardEvent.type is EventType.ValidateCommand or EventType.ExecuteCommand) &&
-                    keyboardEvent.commandName == "SelectAll")
-                {
-                    SelectAll();
-                    UpdateLabel();
-                }
+                if (!InputHandler.GetKey(KeyCode.Return))
+                    heldEnterKeys &= ~1;
+                if (!InputHandler.GetKey(KeyCode.KeypadEnter))
+                    heldEnterKeys &= ~2;
             }
 
+            while (Event.PopEvent(keyboardEvent))
+                ProcessKeyboardEvent(keyboardEvent, suppressSubmit);
+
             eventData.Use();
+        }
+
+        internal void ProcessKeyboardEvent(Event key, bool composing)
+        {
+            int enterMask = key.keyCode switch
+            {
+                KeyCode.Return => 1,
+                KeyCode.KeypadEnter => 2,
+                _ => 0
+            };
+            if (key.rawType == EventType.KeyUp)
+                heldEnterKeys &= ~enterMask;
+            else if (key.rawType == EventType.KeyDown)
+            {
+                if ((heldEnterKeys & enterMask) != 0)
+                    return;
+                heldEnterKeys |= enterMask;
+                ProcessKeyDown(key, composing);
+            }
+            else if (isFocused && (key.type is EventType.ValidateCommand or EventType.ExecuteCommand) &&
+                key.commandName == "SelectAll")
+            {
+                SelectAll();
+                UpdateLabel();
+            }
+        }
+
+        internal static bool HasComposition()
+        {
+            var input = EventSystem.current?.currentInputModule?.input;
+            string composition = input is UIInputHandler ? Input.compositionString : input?.compositionString ?? Input.compositionString;
+            return !string.IsNullOrEmpty(composition);
         }
 
         public override void OnDeselect(BaseEventData eventData)
         {
             previousComposition = false;
+            heldEnterKeys = 0;
             base.OnDeselect(eventData);
         }
 
@@ -65,7 +96,10 @@ namespace Yu5h1Lib.UI
                 if (!composing && (key.modifiers & otherModifiers) == 0 && !readOnly && IsInteractable())
                 {
                     if (key.shift)
-                        Append('\n');
+                    {
+                        if (multiLine)
+                            Append('\n');
+                    }
                     else
                     {
                         string draft = text;

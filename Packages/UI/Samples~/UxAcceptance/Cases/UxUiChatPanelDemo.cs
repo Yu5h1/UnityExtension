@@ -122,7 +122,8 @@ namespace Yu5h1Lib.UI.Acceptance
             draft.horizontalOverflow = HorizontalWrapMode.Wrap;
             draft.verticalOverflow = VerticalWrapMode.Truncate;
             draft.supportRichText = false;
-            input = InputFieldAddon.CreateMultiline(field, draft, hint, hitArea, ComposerMinHeight - 6f, 5, 8f);
+            input = InputFieldAddon.Create(field, draft, hint, hitArea, ComposerMinHeight - 6f, 5, 8f);
+            input.Multiline = true;
             Palette.ApplyField((InputField)input.Raw, border: false);
             draftState = field.gameObject.AddComponent<InputFieldState>();
 

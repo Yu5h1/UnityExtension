@@ -20,6 +20,8 @@ namespace Yu5h1Lib.UI
         private TextGenerationSettings previousSettings;
         private string previousText;
         private int maxVisibleLines;
+        private bool? multilineMode;
+        private float scrollbarWidth;
         private float minHeightValue;
         private float measuredFullHeight;
         private float measuredVisibleHeight;
@@ -62,10 +64,10 @@ namespace Yu5h1Lib.UI
             if (field != null && field != input)
                 throw new InvalidOperationException("This viewport is already configured for another input.");
 
-            scrollbarWidth = Mathf.Max(1f, scrollbarWidth);
+            this.scrollbarWidth = Mathf.Max(1f, scrollbarWidth);
             minHeightValue = Mathf.Max(1f, minHeight);
             this.maxVisibleLines = Mathf.Max(1, maxVisibleLines);
-            previousText = null;
+            multilineMode = null;
 
             if (field == null)
             {
@@ -94,19 +96,15 @@ namespace Yu5h1Lib.UI
                 ScrollView.verticalScrollbar = CreateScrollbar();
                 ScrollView.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
 
-                label.horizontalOverflow = HorizontalWrapMode.Wrap;
-                label.verticalOverflow = VerticalWrapMode.Overflow;
                 if (isActiveAndEnabled)
                     field.onValueChanged.AddListener(OnValueChanged);
             }
 
             var bar = ScrollView.verticalScrollbar;
-            ((RectTransform)bar.transform).SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, scrollbarWidth);
-            float inset = scrollbarWidth * .25f;
+            ((RectTransform)bar.transform).SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, this.scrollbarWidth);
+            float inset = this.scrollbarWidth * .25f;
             bar.handleRect.offsetMin = new Vector2(inset, 2f);
             bar.handleRect.offsetMax = new Vector2(-inset, -2f);
-            content.sizeDelta = new Vector2(-scrollbarWidth, content.sizeDelta.y);
-            content.anchoredPosition = new Vector2(-scrollbarWidth * .5f, content.anchoredPosition.y);
             RefreshLayout();
         }
 
@@ -146,7 +144,7 @@ namespace Yu5h1Lib.UI
                 return;
 
             RefreshLayout();
-            int caret = field.isFocused ? field.selectionFocusPosition : -1;
+            int caret = field.multiLine && field.isFocused ? field.selectionFocusPosition : -1;
             if (caret >= 0 && (caret != lastCaret || revealAfterLayout))
                 RevealCaret(caret);
 
@@ -158,7 +156,7 @@ namespace Yu5h1Lib.UI
         public void ScrollToCaret()
         {
             RefreshLayout();
-            if (field != null)
+            if (field != null && field.multiLine)
                 RevealCaret(field.selectionFocusPosition);
         }
 
@@ -166,6 +164,16 @@ namespace Yu5h1Lib.UI
         {
             if (field == null)
                 return false;
+
+            bool multiline = field.multiLine;
+            if (multilineMode != multiline)
+                SetLayoutMode(multiline);
+            if (!multiline)
+            {
+                VisibleLineCount = 1;
+                HasOverflow = false;
+                return ApplyHeight(minHeightValue, viewport.rect.height);
+            }
 
             string text = GetDisplayedValue();
             var settings = label.GetGenerationSettings(new Vector2(Mathf.Max(1f, label.rectTransform.rect.width), 0f));
@@ -191,14 +199,36 @@ namespace Yu5h1Lib.UI
 
             float padding = Mathf.Max(0f, label.rectTransform.offsetMin.y - label.rectTransform.offsetMax.y);
             float preferred = Mathf.Max(minHeightValue, Mathf.Ceil(measuredVisibleHeight + padding));
-            float contentHeight = Mathf.Max(preferred, Mathf.Ceil(measuredFullHeight + padding), viewport.rect.height);
+            revealAfterLayout |= remeasure;
+            return ApplyHeight(preferred, Mathf.Max(Mathf.Ceil(measuredFullHeight + padding), viewport.rect.height));
+        }
+
+        private void SetLayoutMode(bool multiline)
+        {
+            multilineMode = multiline;
+            previousText = null;
+            label.horizontalOverflow = multiline ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
+            label.verticalOverflow = multiline ? VerticalWrapMode.Overflow : VerticalWrapMode.Truncate;
+            ScrollView.StopMovement();
+            ScrollView.vertical = multiline;
+            if (!multiline)
+                ScrollView.verticalScrollbar.gameObject.SetActive(false);
+
+            float reservedWidth = multiline ? scrollbarWidth : 0f;
+            content.sizeDelta = new Vector2(-reservedWidth, content.sizeDelta.y);
+            content.anchoredPosition = new Vector2(-reservedWidth * .5f, multiline ? content.anchoredPosition.y : 0f);
+        }
+
+        private bool ApplyHeight(float preferred, float fullHeight)
+        {
+            float contentHeight = Mathf.Max(preferred, fullHeight);
             bool preferredChanged = !Mathf.Approximately(PreferredHeight, preferred);
             bool contentChanged = !Mathf.Approximately(content.rect.height, contentHeight);
             PreferredHeight = preferred;
             if (contentChanged)
                 content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, contentHeight);
 
-            revealAfterLayout |= remeasure || contentChanged || preferredChanged;
+            revealAfterLayout |= contentChanged || preferredChanged;
             return preferredChanged;
         }
 

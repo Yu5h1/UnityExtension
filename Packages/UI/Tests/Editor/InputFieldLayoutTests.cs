@@ -112,11 +112,74 @@ namespace Yu5h1Lib.UI.Tests
             Assert.That(layout.PreferredHeight, Is.GreaterThan(wideHeight));
         }
 
+        [Test]
+        public void AddonMultilineSwitchKeepsTheDraftAndControlsViewportOverflow()
+        {
+            var viewport = CreateRect("Viewport", canvas);
+            viewport.sizeDelta = new Vector2(280f, 44f);
+            var field = CreateRect("Input", viewport);
+            var label = CreateLabel(field);
+            var addon = InputFieldAddon.Create(field, label, null, null);
+            var input = (InputField)addon.Raw;
+            var layout = viewport.GetComponent<MultilineInputField>();
+            Assert.That(addon.Multiline, Is.False);
+            Assert.That(input.lineType, Is.EqualTo(InputField.LineType.SingleLine));
+            Assert.That(layout.PreferredHeight, Is.EqualTo(44f));
+
+            addon.Multiline = true;
+            addon.text = "One\nTwo\nThree\nFour\nFive\nSix";
+            Canvas.ForceUpdateCanvases();
+            float expanded = layout.PreferredHeight;
+            Assert.That(addon.Multiline, Is.True);
+            Assert.That(layout.VisibleLineCount, Is.EqualTo(5));
+            Assert.That(layout.HasOverflow, Is.True);
+            Assert.That(layout.ScrollView.vertical, Is.True);
+            Assert.That(expanded, Is.GreaterThan(44f));
+
+            int edits = 0;
+            addon.textChanged += _ => edits++;
+            addon.Multiline = false;
+            Assert.That(addon.text, Is.EqualTo("One\nTwo\nThree\nFour\nFive\nSix"));
+            Assert.That(layout.PreferredHeight, Is.EqualTo(44f));
+            Assert.That(layout.VisibleLineCount, Is.EqualTo(1));
+            Assert.That(layout.HasOverflow, Is.False);
+            Assert.That(layout.ScrollView.vertical, Is.False);
+            Assert.That(layout.ScrollView.verticalScrollbar.gameObject.activeSelf, Is.False);
+
+            addon.Multiline = true;
+            Assert.That(layout.PreferredHeight, Is.EqualTo(expanded));
+            Assert.That(layout.HasOverflow, Is.True);
+            Assert.That(edits, Is.Zero);
+        }
+
+        [Test]
+        public void AddonExtendsAnExistingNativeFieldAndPreservesItsConfiguredMode()
+        {
+            var input = CreateInput(canvas);
+            input.lineType = InputField.LineType.MultiLineNewline;
+            var addon = input.gameObject.AddComponent<InputFieldAddon>();
+            addon.Init(false);
+
+            Assert.That(addon.Raw, Is.SameAs(input));
+            Assert.That(addon.Multiline, Is.True);
+            Assert.That(input.lineType, Is.EqualTo(InputField.LineType.MultiLineNewline));
+            addon.Multiline = false;
+            Assert.That(input.lineType, Is.EqualTo(InputField.LineType.SingleLine));
+            addon.Multiline = true;
+            Assert.That(input.lineType, Is.EqualTo(InputField.LineType.MultiLineSubmit));
+        }
+
         private static InputField CreateInput(RectTransform parent)
         {
             var rect = CreateRect("Input", parent);
             var input = rect.gameObject.AddComponent<InputField>();
-            var label = CreateRect("Text", rect).gameObject.AddComponent<Text>();
+            input.textComponent = CreateLabel(rect);
+            return input;
+        }
+
+        private static Text CreateLabel(RectTransform field)
+        {
+            var label = CreateRect("Text", field).gameObject.AddComponent<Text>();
             label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             label.fontSize = 18;
             label.alignment = TextAnchor.UpperLeft;
@@ -125,8 +188,7 @@ namespace Yu5h1Lib.UI.Tests
             label.rectTransform.anchorMax = Vector2.one;
             label.rectTransform.offsetMin = new Vector2(6f, 4f);
             label.rectTransform.offsetMax = new Vector2(-6f, -4f);
-            input.textComponent = label;
-            return input;
+            return label;
         }
 
         private static RectTransform CreateRect(string name, Transform parent)

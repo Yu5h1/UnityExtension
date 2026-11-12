@@ -39,7 +39,32 @@ namespace Yu5h1Lib.UI
         public Component textComponent => adapter.textComponent;
         public TextAddon textAdapter => adapter.textAdapter;
         public int lineCount => adapter.lineCount;
-        public int lineType { get => adapter.lineType; set => adapter.lineType = value; } 
+        public int lineType
+        {
+            get => adapter.lineType;
+            set
+            {
+                adapter.lineType = value;
+                useNativeMultilineSwitch = false;
+                if (multilineInput != null)
+                    GetComponentInParent<MultilineInputField>()?.RefreshLayout();
+            }
+        }
+
+        /// <summary>Switches between single-line and multiline editing without changing the draft.</summary>
+        public bool Multiline
+        {
+            get => lineType != (int)InputField.LineType.SingleLine;
+            set
+            {
+                bool nativeField = multilineInput == null && Raw is InputField;
+                if (!nativeField && Multiline == value)
+                    return;
+                var multilineMode = multilineInput != null ? InputField.LineType.MultiLineNewline : InputField.LineType.MultiLineSubmit;
+                lineType = (int)(value ? multilineMode : InputField.LineType.SingleLine);
+                useNativeMultilineSwitch = nativeField;
+            }
+        }
         public bool MaskPassword { get => adapter.MaskPassword; set => adapter.MaskPassword = value; }
         public bool isFocused => adapter.isFocused;
         public int characterLimit { get => adapter.characterLimit; set => adapter.characterLimit = value; }
@@ -111,12 +136,23 @@ namespace Yu5h1Lib.UI
         private int lastSelectionEnd = -1;
         private int lastLineCount = -1;
         private MultilineSubmitInputField multilineInput;
+        private bool useNativeMultilineSwitch;
+        private Vector2Int? pendingNativeSelection;
+
+        /// <summary>Creates a uGUI field with multiline editing enabled.</summary>
+        public static InputFieldAddon CreateMultiline(RectTransform field, Text text, Graphic placeholder,
+            Graphic targetGraphic, float minHeight = 44f, int maxVisibleLines = 5, float scrollbarWidth = 16f)
+        {
+            var addon = Create(field, text, placeholder, targetGraphic, minHeight, maxVisibleLines, scrollbarWidth);
+            addon.Multiline = true;
+            return addon;
+        }
 
         /// <summary>
-        /// Creates a multiline uGUI field in a dedicated parent viewport.
+        /// Creates a single-line uGUI field with optional multiline editing in a dedicated parent viewport.
         /// The text must stretch across the field. The viewport supplies layout height and scrolling.
         /// </summary>
-        public static InputFieldAddon CreateMultiline(RectTransform field, Text text, Graphic placeholder,
+        public static InputFieldAddon Create(RectTransform field, Text text, Graphic placeholder,
             Graphic targetGraphic, float minHeight = 44f, int maxVisibleLines = 5, float scrollbarWidth = 16f)
         {
             if (field == null || field.parent is not RectTransform viewport)
@@ -132,7 +168,7 @@ namespace Yu5h1Lib.UI
             input.targetGraphic = targetGraphic;
             input.textComponent = text;
             input.placeholder = placeholder;
-            input.lineType = InputField.LineType.MultiLineNewline;
+            input.lineType = InputField.LineType.SingleLine;
             viewport.gameObject.AddComponent<MultilineInputField>()
                 .Configure(input, minHeight, maxVisibleLines, scrollbarWidth);
 
@@ -294,7 +330,21 @@ namespace Yu5h1Lib.UI
             if (viewport.Find("Caret") is RectTransform caret)
                 caret.anchoredPosition = position;
         }
-        private void LateUpdate() => RestoreTextOffsetIfFits();
+        private void LateUpdate()
+        {
+            if (pendingNativeSelection is Vector2Int selection)
+            {
+                if (EventSystem.current?.currentSelectedGameObject != gameObject)
+                    pendingNativeSelection = null;
+                else if (isFocused)
+                {
+                    selectionAnchorPosition = selection.x;
+                    selectionFocusPosition = selection.y;
+                    pendingNativeSelection = null;
+                }
+            }
+            RestoreTextOffsetIfFits();
+        }
 
         void UpdateVisibleLineArea(int caretlineIndex)
         {
@@ -324,6 +374,12 @@ namespace Yu5h1Lib.UI
 
         private void OnSubmit(string txt)
         {
+            if (useNativeMultilineSwitch && Raw is InputField input)
+            {
+                OnNativeSubmit(input, txt);
+                return;
+            }
+
             // multiline submit
             if (lineType == 1 && IsShiftPressed())
             {
@@ -340,6 +396,43 @@ namespace Yu5h1Lib.UI
                 return;
             _submit?.Invoke(txt);
         }
+        private void OnNativeSubmit(InputField input, string draft)
+        {
+            if (!input.IsInteractable())
+                return;
+
+            bool composing = MultilineSubmitInputField.HasComposition();
+            bool shift = IsShiftPressed();
+            bool modified = InputHandler.GetKey(KeyCode.LeftControl) || InputHandler.GetKey(KeyCode.RightControl) ||
+                InputHandler.GetKey(KeyCode.LeftAlt) || InputHandler.GetKey(KeyCode.RightAlt) ||
+                InputHandler.GetKey(KeyCode.LeftCommand) || InputHandler.GetKey(KeyCode.RightCommand);
+            if (!composing && !shift && !modified && !input.readOnly)
+            {
+                InvokeSubmitEvent();
+                return;
+            }
+
+            int anchor = Mathf.Clamp(input.selectionAnchorPosition, 0, draft.Length);
+            int focus = Mathf.Clamp(input.selectionFocusPosition, 0, draft.Length);
+            if (shift && !modified && !composing && !input.readOnly && Multiline)
+            {
+                int start = Mathf.Min(anchor, focus);
+                int length = Mathf.Abs(anchor - focus);
+                if (input.characterLimit == 0 || draft.Length - length < input.characterLimit)
+                {
+                    input.text = draft.Remove(start, length).Insert(start, "\n");
+                    anchor = focus = start + 1;
+                }
+            }
+
+            if (input != null && input.IsActive() && input.IsInteractable() &&
+                EventSystem.current?.currentSelectedGameObject == input.gameObject)
+            {
+                pendingNativeSelection = new Vector2Int(anchor, focus);
+                input.ActivateInputField();
+            }
+        }
+
         private void TextChanged(string txt)
         {
             if (textComponent == null)
@@ -392,8 +485,10 @@ namespace Yu5h1Lib.UI
 
         public void InvokeSubmitEvent() 
         {
-            if (!allowSubmit || !IsAvailable() ||
-                (multilineInput != null && string.IsNullOrWhiteSpace(text)))
+            if (!allowSubmit || !IsAvailable())
+                return;
+            if ((multilineInput != null || useNativeMultilineSwitch) && Raw is InputField input &&
+                (input.readOnly || !input.IsInteractable() || string.IsNullOrWhiteSpace(input.text)))
                 return;
             _submit?.Invoke(text);        
         }
