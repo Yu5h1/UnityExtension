@@ -15,7 +15,7 @@ Yu5h1Lib.UI／UxAcceptance
 使用者提供的 VCP 直向截圖中，頂列的模組名稱與狀態文字被截斷，聊天工具列和輸入列的按鈕拉成高矩形，擠壓訊息區。Web 的聊天框把測試操作放在聊天框之外，框內讓訊息區吃剩餘高度，底部輸入列維持內容高度。這些差異直接影響使用者能否找到 ChatPanel、讀到足夠訊息，以及在手機上輸入和送出。[Unity 驗收宿主](../Packages/UI/Samples~/UxAcceptance/UxUiAcceptanceHost.cs) · [Unity 聊天示範](../Packages/UI/Samples~/UxAcceptance/Cases/UxUiChatPanelDemo.cs) · [Web 版面](../../../Web/demo/chat-panel/demo.css) · [Web 示範資料](../../../Web/demo/chat-panel/fixture.mjs)
 
 - **聊天區高度。** `UxUiChatPanelDemo.AddRow` 將工具列與輸入列設為 36／44 的 preferred height，但沒有明訂 flexible height；原生 `HorizontalLayoutGroup.childForceExpandHeight` 預設開啟，列本身因子控件獲得 flexible height。外層 `VerticalLayoutGroup` 因此會將剩餘高度分給兩列與訊息區。 VCP 6000.6.0f1 EditMode 在 360 × 600 的 sample 框量得工具列 187.3、輸入列 195.3、訊息區 151.3（Canvas 邏輯單位，`20261112-122115-tests.xml`）。修正時先讓工具列依內容收合，輸入列高度由可見行數與控件決定，僅訊息區吸收剩餘空間。
-- **宿主窄版。** `UxUiAcceptanceHost` 把標題、全部模組及重設放進同一條不換行的 48 高度列，狀態橫幅固定 28，內容最小高度 520。窄版易截斷標籤，矮版還可能超出可視範圍。入口的搜尋與格線由 AcceptanceDemo 規範處理，聊天室只接收實際可用寬高。
+- **宿主窄版。** 舊版 `UxUiAcceptanceHost` 的單列選擇器和固定 520 內容高度造成截斷。搜尋格線和獨立案例頁已由 [AcceptanceDemo](../Packages/UI/Documentation/Yu5h1Lib.UX/AcceptanceDemo.md) 交付，聊天室接收實際可用寬高。
 - **比較基線。** uGUI 示範採 VCP 的 70% 泡泡寬、外側時間與一對一隱藏頭像。Web 示範另有頭像、桌面／手機直橫預覽、設定入口與表演選項。並排比較需先統一資料與呈現選項，才能分辨版面差異與已選定的產品差異。[VCP 適配表](../../../UX/Documentation/ModuleSpec/Modules/ChatPanel.md#適配表vcp-ugui-聊天面板) · [uGUI 採用紀錄](../Packages/UI/Documentation/Yu5h1Lib.UX/ChatPanel.md)
 
 ## 共用基礎的取捨
@@ -37,3 +37,9 @@ Yu5h1Lib.UI／UxAcceptance
 | C．以同一基線驗收 | 整合 A、B 與 AcceptanceDemo 入口後更新套件採用紀錄及驗收證據 | 在固定有效聊天框尺寸，以同一短對話、長歷史、等待回覆、長草稿和圖片資料比對 Web 與 Unity。使用相同泡泡寬度、頭像開關、時間位置與主題。擷取兩端版面、控件狀態與實際矩形。另跑捲動與串流回歸，實機檢查觸控、鍵盤與中文 IME。 |
 
 畫面驗收以實際輸出為準。以桌面、直向及橫向各一個可重現視口比對可讀區、按鈕及輸入列高度，並核對新增長訊息時泡泡寬度穩定、只有文字換行增加高度。使用者試用的是 VCP 已匯入的獨立 sample；產品採用仍以訊息區為範圍，正式場景的遷移及舊版退役留待視覺和實機驗收後決定。
+
+## 本輪交付
+
+A 已在 sample 完成。工具列依寬度換行，輸入列由可見草稿行數決定高度，訊息區取得其餘空間。B 交付 `UguiControlPalette`、`InputFieldState` 和 `MultilineInputField`，共用入口和聊天 sample 都採用同一組配色、焦點與原生欄位狀態。聊天輸入列沿用無框 caret 的顯示方式，五行後在欄位右側捲動。三種視口的數字及驗證限制見 [ChatPanel 採用紀錄](../Packages/UI/Documentation/Yu5h1Lib.UX/ChatPanel.md#示範版高度與共用控件)。
+
+C 的 VCP 自動驗證涵蓋本輪版面與共用控件。Web 並排外觀、手機實體觸控與中文 IME 留在後續試用。

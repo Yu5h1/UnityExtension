@@ -7,8 +7,7 @@ namespace Yu5h1Lib.UI.Acceptance
     /// <summary>Hosts the acceptance catalog and mounts one registered demo at a time.</summary>
     public class UxUiAcceptanceHost : MonoBehaviour
     {
-        private static readonly Color PanelColor = new Color32(27, 34, 45, 255);
-        private static readonly Color TextColor = new Color32(233, 239, 249, 255);
+        internal static readonly UguiControlPalette Palette = UguiControlPalette.Dark;
 
         [SerializeField, Min(1f)] private float preferredCardWidth = 240f;
         [SerializeField, Min(0f)] private float columnGap = 10f;
@@ -149,7 +148,7 @@ namespace Yu5h1Lib.UI.Acceptance
         {
             StatusText = message;
             caseTitle.text = "展示無法開啟";
-            var label = CreateText(ContentContainer, "BlockedView", message, 18, TextColor, TextAnchor.MiddleCenter);
+            var label = CreateText(ContentContainer, "BlockedView", message, 18, Palette.ItemText, TextAnchor.MiddleCenter);
             Stretch(label.rectTransform, 16f);
         }
 
@@ -182,7 +181,7 @@ namespace Yu5h1Lib.UI.Acceptance
 
             root = CreateRect(transform, "HostRoot");
             Stretch(root);
-            root.gameObject.AddComponent<Image>().color = new Color32(18, 23, 31, 255);
+            root.gameObject.AddComponent<Image>().color = Palette.PageBackground;
             catalog = new UxUiAcceptanceCatalog(root, id => OpenCase(id, id),
                 Mathf.Max(1f, preferredCardWidth), Mathf.Max(0f, columnGap));
             BuildCasePage();
@@ -253,7 +252,7 @@ namespace Yu5h1Lib.UI.Acceptance
             pageLayout.childForceExpandHeight = false;
 
             var bar = CreateRect(casePage, "CaseBar");
-            bar.gameObject.AddComponent<Image>().color = PanelColor;
+            bar.gameObject.AddComponent<Image>().color = Palette.PanelBackground;
             bar.gameObject.AddComponent<LayoutElement>().preferredHeight = 54f;
             var barLayout = bar.gameObject.AddComponent<HorizontalLayoutGroup>();
             barLayout.padding = new RectOffset(10, 10, 4, 4);
@@ -265,7 +264,7 @@ namespace Yu5h1Lib.UI.Acceptance
             barLayout.childForceExpandHeight = false;
 
             backButton = AddBarButton(bar, "返回", ShowCatalog);
-            caseTitle = CreateText(bar, "CaseTitle", "", 18, TextColor, TextAnchor.MiddleLeft);
+            caseTitle = CreateText(bar, "CaseTitle", "", 18, Palette.ItemText, TextAnchor.MiddleLeft);
             caseTitle.fontStyle = FontStyle.Bold;
             caseTitle.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
             resetButton = AddBarButton(bar, "重設", ResetCurrentCase);
@@ -278,8 +277,8 @@ namespace Yu5h1Lib.UI.Acceptance
         private static Button AddBarButton(RectTransform bar, string label, UnityEngine.Events.UnityAction action)
         {
             var addon = ButtonAddon.Create(bar, label: label, showIcon: false, size: 44f);
-            addon.labelText.color = new Color32(23, 31, 43, 255);
             addon.labelText.fontSize = 16;
+            Palette.ApplyButton(addon.ui, addon.labelText);
             addon.ui.onClick.AddListener(action);
             return addon.ui;
         }

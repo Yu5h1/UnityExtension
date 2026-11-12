@@ -52,6 +52,20 @@ VCP → Package Manager → Yu5h1Lib.UI → Samples → UxAcceptance → Import�
 
 共用元件此次驗證 VCP 的 Input System 滾輪步距與草案列出的字素。其他宿主的精細滾輪需依輸入模組設定 `ScrollRect.scrollSensitivity`，舊 Mono 的少數 ZWJ 字素和長按捲軸軌道時的跟隨交接仍待擴充驗證。
 
+## 示範版高度與共用控件
+
+工具列使用 uGUI 格線，每列高 36，窄版按可用寬度換行。輸入列的單行高度是 44。草稿逐行增加，最多顯示五行，超出時右側出現捲軸。送出及角色貼文按鈕維持底緣定位。訊息區取得工具列、狀態文字及輸入列以外的高度。
+
+`UguiControlPalette` 提供明暗色彩角色、鍵盤焦點與停用外觀。驗收入口及聊天 sample 使用暗色配色。入口搜尋採可見焦點框，聊天的內嵌欄位用無框 caret。`InputFieldState` 回報原生欄位狀態，`MultilineInputField` 負責高度、可見行數及捲動，編輯與選取由原生 InputField 處理。
+
+| 直接量測的 sample 視口 | 工具列 | 輸入列，單行 → 五行 → 單行 | 訊息區，單行 → 五行 → 單行 |
+|---|---:|---:|---:|
+| 桌面 1280 × 720 | 36 | 44 → 87 → 44 | 574 → 531 → 574 |
+| 手機直向 360 × 600 | 36 | 44 → 87 → 44 | 454 → 411 → 454 |
+| 手機橫向 640 × 360 | 36 | 44 → 87 → 44 | 214 → 171 → 214 |
+
+尺寸為 Canvas 邏輯單位。VCP 6000.6.0f1 的 batchmode EditMode 42/42（`20261112-131032-tests.xml`），包含色彩與焦點、欄位狀態、捲動、聊天和入口回歸。PlayMode 1/1（`20261112-131050-tests.xml`）載入 VCP 實際匯入的場景，在三種視口測得上表並確認右側捲軸顯示和隱藏。手機實體觸控、中文 IME 與 Web 並排外觀待試用。
+
 ## VCP batchmode 驗證
 
 以 VCP 現有的 `file:` 套件參照載入 Yu5h1Lib.UI。驗證時暫時匯入 sample 與這一輪 EditMode 測試，執行後移除暫用 Assets。EditMode 23/23（`20261112-085728-tests.xml`），PlayMode 1/1（`20261112-090058-tests.xml`）。報告在 VCP 專案旁的 `Virtual-Chat-Partner-Build/logs`。結果與人工確認見 [驗收清單](../../../../checklists/ui-chatpanel.checklist)。EditMode 驗證元件行為，PlayMode 驗證 sample 場景的宿主流程。手機觸控與產品外觀由使用者試用確認。

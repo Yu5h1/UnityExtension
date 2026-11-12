@@ -9,8 +9,18 @@ namespace Yu5h1Lib.UI.Acceptance
     /// <summary>Exercises the public ChatPanel from a mock host using local replies and a local picture.</summary>
     public sealed class UxUiChatPanelDemo : MonoBehaviour
     {
+        private const int HorizontalInset = 16;
+        private const float ControlGap = 6f;
+        private const float ToolbarButtonWidth = 72f;
+        private const float ToolbarButtonHeight = 36f;
+        private const float ComposerMinHeight = 44f;
+
+        private static readonly UguiControlPalette Palette = UguiControlPalette.Dark;
+
         private ChatPanel panel;
+        private GridLayoutGroup toolbar;
         private InputField input;
+        private InputFieldState draftState;
         private Text hostStatus;
         private Font font;
         private Texture2D texture;
@@ -27,19 +37,24 @@ namespace Yu5h1Lib.UI.Acceptance
                 return;
             font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             var background = gameObject.AddComponent<Image>();
-            background.color = new Color32(28, 31, 36, 255);
+            background.color = Palette.PageBackground;
             var stack = gameObject.AddComponent<VerticalLayoutGroup>();
-            stack.padding = new RectOffset(16, 16, 12, 12);
+            stack.padding = new RectOffset(HorizontalInset, HorizontalInset, 12, 12);
             stack.spacing = 8f;
             stack.childControlHeight = stack.childControlWidth = true;
             stack.childForceExpandHeight = false;
             stack.childForceExpandWidth = true;
 
-            var controls = AddRow("Demo controls", 36f);
-            AddButton(controls, "短對話", () => ResetHistory(false));
-            AddButton(controls, "載入歷史", () => ResetHistory(true));
-            AddButton(controls, "回到最新", () => panel.ScrollView.RequestFollow());
-            var motion = AddButton(controls, "減少動態", () => panel.ReduceMotion = !panel.ReduceMotion);
+            var controls = AddRect("Demo controls", transform);
+            controls.gameObject.AddComponent<LayoutElement>().flexibleHeight = 0f;
+            toolbar = controls.gameObject.AddComponent<GridLayoutGroup>();
+            toolbar.spacing = Vector2.one * ControlGap;
+            toolbar.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            AddButton(controls, "短對話", ToolbarButtonHeight, () => ResetHistory(false));
+            AddButton(controls, "載入歷史", ToolbarButtonHeight, () => ResetHistory(true));
+            AddButton(controls, "回到最新", ToolbarButtonHeight, () => panel.ScrollView.RequestFollow());
+            var motion = AddButton(controls, "減少動態", ToolbarButtonHeight, () => panel.ReduceMotion = !panel.ReduceMotion);
+            ReflowToolbar();
             motion.onClick.AddListener(() =>
                 motion.GetComponentInChildren<Text>().text = panel.ReduceMotion ? "減少動態 ✓" : "減少動態");
 
@@ -56,28 +71,39 @@ namespace Yu5h1Lib.UI.Acceptance
             });
 
             hostStatus = AddLabel(transform, "選擇一個操作以開始", 12, TextAnchor.MiddleLeft);
+            hostStatus.color = Palette.SecondaryText;
             hostStatus.gameObject.AddComponent<LayoutElement>().preferredHeight = 18f;
 
-            var composer = AddRow("Sample host composer", 44f);
-            quickQuestion = AddButton(composer, "角色貼文", () => StartCoroutine(AskForPost()));
-            var field = AddRect("Sample input", composer);
-            field.gameObject.AddComponent<LayoutElement>().flexibleWidth = 2f;
-            var surface = field.gameObject.AddComponent<Image>();
-            surface.color = new Color32(38, 42, 52, 255);
-            var draft = AddLabel(field, "", 15, TextAnchor.MiddleLeft);
-            var hint = AddLabel(field, "輸入訊息", 15, TextAnchor.MiddleLeft);
-            hint.color = new Color(1f, 1f, 1f, .5f);
+            var composer = AddComposerRow();
+            quickQuestion = AddButton(composer, "角色貼文", ComposerMinHeight, () => StartCoroutine(AskForPost()));
+            var viewport = AddRect("Draft viewport", composer);
+            viewport.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            viewport.gameObject.AddComponent<Image>().color = Palette.PanelBackground;
+
+            var field = AddRect("Sample input", viewport);
+            field.anchorMin = Vector2.zero;
+            field.anchorMax = Vector2.one;
+            field.offsetMin = field.offsetMax = Vector2.zero;
+            var hitArea = field.gameObject.AddComponent<Image>();
+            hitArea.color = Color.clear;
+            var draft = AddLabel(field, "", 15, TextAnchor.UpperLeft);
+            var hint = AddLabel(field, "輸入訊息", 15, TextAnchor.UpperLeft);
             PlaceLabel(draft.rectTransform, 8f);
             PlaceLabel(hint.rectTransform, 8f);
             draft.horizontalOverflow = HorizontalWrapMode.Wrap;
             draft.verticalOverflow = VerticalWrapMode.Truncate;
+            draft.supportRichText = false;
             input = field.gameObject.AddComponent<InputField>();
-            input.targetGraphic = surface;
+            input.targetGraphic = hitArea;
             input.textComponent = draft;
             input.placeholder = hint;
             input.lineType = InputField.LineType.MultiLineNewline;
-            send = AddButton(composer, "送出", Send);
-            input.onValueChanged.AddListener(_ => UpdateActions());
+            Palette.ApplyField(input, border: false);
+            draftState = field.gameObject.AddComponent<InputFieldState>();
+            viewport.gameObject.AddComponent<MultilineInputField>().Configure(input, minHeight: ComposerMinHeight, maxVisibleLines: 5);
+
+            send = AddButton(composer, "送出", ComposerMinHeight, Send, accent: true);
+            draftState.Changed += _ => UpdateActions();
             ResetHistory(false);
         }
 
@@ -119,15 +145,15 @@ namespace Yu5h1Lib.UI.Acceptance
 
         private void UpdateActions()
         {
-            send.interactable = !answering && !string.IsNullOrWhiteSpace(input.text);
+            send.interactable = !answering && draftState.IsInteractable && draftState.HasNonWhitespace;
             quickQuestion.interactable = !answering;
         }
 
         private void Send()
         {
-            if (answering || string.IsNullOrWhiteSpace(input.text))
+            if (answering || !draftState.IsInteractable || !draftState.HasNonWhitespace)
                 return;
-            panel.AddMessage(input.text, true, DateTime.Now);
+            panel.AddMessage(draftState.Value, true, DateTime.Now);
             input.text = "";
             StartCoroutine(Answer());
         }
@@ -205,28 +231,48 @@ namespace Yu5h1Lib.UI.Acceptance
                 Destroy(texture);
         }
 
-        private RectTransform AddRow(string name, float height)
+        private void OnRectTransformDimensionsChange() => ReflowToolbar();
+
+        private void ReflowToolbar()
         {
-            var rect = AddRect(name, transform);
-            rect.gameObject.AddComponent<LayoutElement>().preferredHeight = height;
+            if (toolbar == null)
+                return;
+            float width = Mathf.Max(0f, ((RectTransform)transform).rect.width - 2f * HorizontalInset);
+            int count = toolbar.transform.childCount;
+            int columns = Mathf.Clamp(Mathf.FloorToInt((width + ControlGap) / (ToolbarButtonWidth + ControlGap)),
+                1, Mathf.Max(1, count));
+            toolbar.constraintCount = columns;
+            toolbar.cellSize = new Vector2(Mathf.Max(0f, (width - (columns - 1) * ControlGap) / columns),
+                ToolbarButtonHeight);
+        }
+
+        private RectTransform AddComposerRow()
+        {
+            var rect = AddRect("Sample host composer", transform);
+            var size = rect.gameObject.AddComponent<LayoutElement>();
+            size.minHeight = ComposerMinHeight;
+            size.flexibleHeight = 0f;
             var row = rect.gameObject.AddComponent<HorizontalLayoutGroup>();
-            row.spacing = 6f;
+            row.spacing = ControlGap;
+            row.childAlignment = TextAnchor.LowerLeft;
             row.childControlWidth = row.childControlHeight = true;
-            row.childForceExpandWidth = false;
+            row.childForceExpandWidth = row.childForceExpandHeight = false;
             return rect;
         }
 
-        private Button AddButton(Transform parent, string text, Action click)
+        private Button AddButton(Transform parent, string text, float height, Action click, bool accent = false)
         {
-            var rect = AddRect(text, parent);
-            var graphic = rect.gameObject.AddComponent<Image>();
-            graphic.color = new Color32(53, 64, 82, 255);
-            var button = rect.gameObject.AddComponent<Button>();
-            button.targetGraphic = graphic;
-            button.onClick.AddListener(() => click());
-            rect.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-            PlaceLabel(AddLabel(rect, text, 14, TextAnchor.MiddleCenter).rectTransform, 2f);
-            return button;
+            var addon = ButtonAddon.Create(parent, label: text, showIcon: false, size: height);
+            addon.name = text;
+            addon.GetComponent<HorizontalLayoutGroup>().padding = new RectOffset(4, 4, 0, 0);
+            addon.labelText.fontSize = 13;
+            addon.labelText.alignment = TextAnchor.MiddleCenter;
+            addon.labelText.resizeTextForBestFit = true;
+            addon.labelText.resizeTextMinSize = 11;
+            addon.labelText.resizeTextMaxSize = 13;
+            Palette.ApplyButton(addon.ui, addon.labelText, accent: accent);
+            addon.ui.onClick.AddListener(() => click());
+            return addon.ui;
         }
 
         private Text AddLabel(Transform parent, string value, int size, TextAnchor alignment)

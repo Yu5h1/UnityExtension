@@ -13,10 +13,6 @@ namespace Yu5h1Lib.UI.Acceptance
         private const float CardHeight = 100f;
         private const float ScrollInset = 3f;
 
-        private static readonly Color TextColor = new Color32(233, 239, 249, 255);
-        private static readonly Color MutedColor = new Color32(178, 193, 215, 255);
-        private static readonly Color AccentColor = new Color32(147, 198, 255, 255);
-
         private readonly Action<string> openCase;
         private readonly float preferredCardWidth;
         private readonly float columnGap;
@@ -46,7 +42,7 @@ namespace Yu5h1Lib.UI.Acceptance
             layout.childControlHeight = true;
             layout.childForceExpandHeight = false;
 
-            var title = CreateText(Root, "CatalogTitle", "展示案例", 22, TextColor, TextAnchor.MiddleLeft);
+            var title = CreateText(Root, "CatalogTitle", "展示案例", 22, Palette.ItemText, TextAnchor.MiddleLeft);
             title.fontStyle = FontStyle.Bold;
             title.gameObject.AddComponent<LayoutElement>().preferredHeight = 32f;
             search = CreateSearch();
@@ -78,7 +74,7 @@ namespace Yu5h1Lib.UI.Acceptance
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.childAlignment = TextAnchor.UpperLeft;
 
-            noResults = CreateText(scrollRect, "NoResults", "", 17, MutedColor, TextAnchor.UpperLeft);
+            noResults = CreateText(scrollRect, "NoResults", "", 17, Palette.SecondaryText, TextAnchor.UpperLeft);
             Stretch(noResults.rectTransform, ScrollInset);
             search.onValueChanged.AddListener(value => Filter(value, resetScroll: true));
         }
@@ -172,13 +168,12 @@ namespace Yu5h1Lib.UI.Acceptance
             var rect = CreateRect(Root, "Search demos");
             rect.gameObject.AddComponent<LayoutElement>().preferredHeight = 46f;
             var background = rect.gameObject.AddComponent<Image>();
-            background.color = new Color32(31, 42, 57, 255);
             var input = rect.gameObject.AddComponent<InputField>();
             input.targetGraphic = background;
             input.lineType = InputField.LineType.SingleLine;
 
-            var value = CreateText(rect, "SearchText", "", 18, TextColor, TextAnchor.MiddleLeft);
-            var placeholder = CreateText(rect, "Placeholder", "搜尋展示案例…", 18, MutedColor, TextAnchor.MiddleLeft);
+            var value = CreateText(rect, "SearchText", "", 18, Palette.ItemText, TextAnchor.MiddleLeft);
+            var placeholder = CreateText(rect, "Placeholder", "搜尋展示案例…", 18, Palette.SecondaryText, TextAnchor.MiddleLeft);
             foreach (var label in new[] { value, placeholder })
             {
                 Stretch(label.rectTransform);
@@ -190,20 +185,17 @@ namespace Yu5h1Lib.UI.Acceptance
 
             input.textComponent = value;
             input.placeholder = placeholder;
-            var colors = input.colors;
-            colors.highlightedColor = new Color32(209, 228, 255, 255);
-            colors.selectedColor = new Color32(209, 228, 255, 255);
-            input.colors = colors;
+            var state = rect.gameObject.AddComponent<InputFieldState>();
 
             var clear = ButtonAddon.Create(rect, label: "×", showIcon: false, size: 44f);
             clear.gameObject.name = "Clear search";
-            clear.labelText.color = new Color32(23, 31, 43, 255);
             clear.labelText.fontSize = 18;
+            Palette.ApplyButton(clear.ui, clear.labelText);
             var clearRect = (RectTransform)clear.transform;
             clearRect.anchorMin = new Vector2(1f, .5f);
             clearRect.anchorMax = clearRect.anchorMin;
             clearRect.pivot = new Vector2(1f, .5f);
-            clearRect.anchoredPosition = new Vector2(-1f, 0f);
+            clearRect.anchoredPosition = new Vector2(-2f, 0f);
             clearRect.sizeDelta = new Vector2(44f, 44f);
             clear.ui.onClick.AddListener(() =>
             {
@@ -211,7 +203,8 @@ namespace Yu5h1Lib.UI.Acceptance
                 input.Select();
             });
             clear.gameObject.SetActive(false);
-            input.onValueChanged.AddListener(valueText => clear.gameObject.SetActive(!string.IsNullOrEmpty(valueText)));
+            state.Changed += current => clear.gameObject.SetActive(!current.IsEmpty);
+            Palette.ApplyField(input);
             return input;
         }
 
@@ -221,39 +214,31 @@ namespace Yu5h1Lib.UI.Acceptance
             var background = card.gameObject.AddComponent<Image>();
             var button = card.gameObject.AddComponent<Button>();
             button.targetGraphic = background;
-            button.colors = new ColorBlock
-            {
-                normalColor = current ? new Color32(35, 64, 97, 255) : new Color32(30, 40, 55, 255),
-                highlightedColor = new Color32(52, 71, 97, 255),
-                selectedColor = new Color32(55, 83, 119, 255),
-                pressedColor = new Color32(64, 99, 142, 255),
-                disabledColor = new Color32(32, 38, 50, 255),
-                colorMultiplier = 1f,
-                fadeDuration = .08f
-            };
             button.onClick.AddListener(() => openCase(demoCase.Id));
 
             var subtitle = current && string.IsNullOrEmpty(description) ? "本輪驗收目標" : description;
             if (current && !string.IsNullOrEmpty(description))
                 subtitle = $"本輪驗收目標 · {description}";
 
-            var title = CreateText(card, "Title", demoCase.DisplayName, 19, TextColor, TextAnchor.MiddleLeft);
+            var title = CreateText(card, "Title", demoCase.DisplayName, 19, Palette.ItemText, TextAnchor.MiddleLeft);
             Stretch(title.rectTransform, 12f);
             title.resizeTextForBestFit = true;
             title.resizeTextMinSize = 14;
             title.resizeTextMaxSize = 19;
+            Text detail = null;
             if (!string.IsNullOrEmpty(subtitle))
             {
                 title.rectTransform.anchorMin = new Vector2(0f, .38f);
                 title.rectTransform.offsetMin = new Vector2(12f, 0f);
                 title.rectTransform.offsetMax = new Vector2(-12f, -7f);
-                var detail = CreateText(card, "Description", subtitle, 14, current ? AccentColor : MutedColor, TextAnchor.UpperLeft);
+                detail = CreateText(card, "Description", subtitle, 14, Palette.SecondaryText, TextAnchor.UpperLeft);
                 Stretch(detail.rectTransform);
                 detail.rectTransform.anchorMax = new Vector2(1f, .38f);
                 detail.rectTransform.offsetMin = new Vector2(12f, 6f);
                 detail.rectTransform.offsetMax = new Vector2(-12f, 0f);
             }
 
+            Palette.ApplyButton(button, title, accent: current, secondary: detail);
             return button;
         }
 

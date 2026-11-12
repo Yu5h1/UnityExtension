@@ -388,6 +388,62 @@ namespace Yu5h1Lib.UI.Tests
             }
         }
 
+        [TestCase(1280f, 720f, 36f, TestName = "SampleLayout_Desktop")]
+        [TestCase(360f, 600f, 36f, TestName = "SampleLayout_PhonePortrait")]
+        [TestCase(640f, 360f, 36f, TestName = "SampleLayout_PhoneLandscape")]
+        [TestCase(280f, 500f, 78f, TestName = "SampleLayout_NarrowToolbarWraps")]
+        public void SampleRowsKeepOnlyMessageViewportFlexible(float width, float height, float toolbarHeight)
+        {
+            var frame = NewRect("Sample", root.transform, width, height);
+            var demo = frame.gameObject.AddComponent<UxUiChatPanelDemo>();
+            demo.Build();
+            var toolbar = (RectTransform)frame.Find("Demo controls");
+            var composer = (RectTransform)frame.Find("Sample host composer");
+            var viewport = demo.Panel.ScrollView.viewport;
+            var send = (RectTransform)composer.Find("送出");
+            var field = composer.GetComponentInChildren<InputField>();
+            var multiline = composer.GetComponentInChildren<MultilineInputField>();
+
+            LayoutRebuilder.ForceRebuildLayoutImmediate(frame);
+            multiline.RefreshLayout();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(frame);
+            Assert.That(toolbar.rect.height, Is.EqualTo(toolbarHeight).Within(.05f));
+            Assert.That(composer.rect.height, Is.EqualTo(44f).Within(.05f));
+            Assert.That(viewport.rect.height, Is.EqualTo(height - toolbarHeight - 110f).Within(.05f));
+            foreach (RectTransform button in toolbar)
+            {
+                var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(toolbar, button);
+                Assert.That(bounds.min.x, Is.GreaterThanOrEqualTo(toolbar.rect.xMin - .05f));
+                Assert.That(bounds.max.x, Is.LessThanOrEqualTo(toolbar.rect.xMax + .05f));
+            }
+
+            float sendBottom = RectTransformUtility.CalculateRelativeRectTransformBounds(frame, send).min.y;
+            field.text = "1\n2\n3\n4\n5";
+            multiline.RefreshLayout();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(frame);
+            Assert.That(multiline.VisibleLineCount, Is.EqualTo(5));
+            Assert.That(multiline.HasOverflow, Is.False);
+            float expanded = composer.rect.height;
+            Assert.That(expanded, Is.GreaterThan(44f));
+            Assert.That(viewport.rect.height, Is.EqualTo(height - toolbarHeight - 66f - expanded).Within(.05f));
+
+            field.text += "\n6\n7";
+            multiline.RefreshLayout();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(frame);
+            Assert.That(multiline.HasOverflow, Is.True);
+            Assert.That(composer.rect.height, Is.EqualTo(expanded).Within(.05f));
+            Assert.That(send.rect.height, Is.EqualTo(44f).Within(.05f));
+            Assert.That(RectTransformUtility.CalculateRelativeRectTransformBounds(frame, send).min.y,
+                Is.EqualTo(sendBottom).Within(.05f));
+
+            field.text = "1";
+            multiline.RefreshLayout();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(frame);
+            Assert.That(composer.rect.height, Is.EqualTo(44f).Within(.05f));
+            Assert.That(viewport.rect.height, Is.EqualTo(height - toolbarHeight - 110f).Within(.05f));
+            TestContext.WriteLine($"{width}×{height} logical: toolbar {toolbarHeight:0.#}, composer 44→{expanded:0.#}→44, message viewport {viewport.rect.height:0.#}");
+        }
+
         private void InvokeEventSystemLifecycle(string method) =>
             InvokeLifecycle(events, method);
 
