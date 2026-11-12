@@ -100,7 +100,7 @@ Pool 是跨平台的資源重用概念。Core 保留一致的借還契約；平�
 
 | 版本 | 檔案 | 年代 | 狀態 |
 |------|------|------|------|
-| V1 | `Yu5h1Lib/Unity/Core/Runtime/Unorganized/Singleton/Recycler.cs` | 2017 | 仍存在，包含 `Recyclable` / `RecyclableByEnumerator` / `RecyclableParticleSystems` / `RecyclableBySeconds` |
+| V1 | `Yu5h1Lib/Unity/Core/Runtime/Unorganized/Singleton/Recycler.cs` | 2017 | 2026-11-12 移除，重建與驗證見 [UnityExtension Recycler 紀錄](Pattern/Recycler.md#2026-11-12-移除-v1-後重跑)。 |
 | V2 | `Yu5h1Lib/Unity/Combat-Aesthetics/Runtime/Pattern/Pool/PooL.cs` | 2024 | **整檔註解掉** — V2 的廢棄前身 |
 | V2 | `Yu5h1Lib/Unity/Combat-Aesthetics/Runtime/Pattern/Pool/ComponentPooL.cs` | 2024 | 主實作 (`ComponentPool` + `Pool<T>`) |
 | V2 | `Yu5h1Lib/Unity/Combat-Aesthetics/Runtime/Pattern/Pool/PoolManager.cs` | 2024 | Singleton + 三套靜態字典 |
