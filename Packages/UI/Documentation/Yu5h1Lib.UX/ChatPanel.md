@@ -86,6 +86,12 @@ Web `verify-web` 通過 15/15，擷取與量測存於 Web 的 `.verify/chat-pane
 
 EditMode 31/31（`20261112-140417-tests.xml`），包含套件新增的單指標拖曳與直橫向重排回歸。自動測試以 uGUI 指標事件和尺寸變更驗證閱讀位置與跟隨，量測時關閉慣性。Device Simulator 的畫面與觸控手感，以及手機中文 IME，留待手動驗收。
 
+## 輸入列鍵盤操作
+
+Sample 的草稿欄位沿用原生 uGUI `InputField`，由 `InputFieldState` 回報欄位狀態、`MultilineInputField` 管理五行高度與捲動。實體鍵盤的 Enter 或數字鍵盤 Enter 與送出按鈕共用宿主的送出流程。Shift+Enter 會在游標處換行，有選取範圍時以一個換行取代選取文字。組字期間保留草稿。
+
+2026-11-12 以與 VCP 相同的 Unity 6000.6.0f1、uGUI 2.6.0、Input System 1.20.0，在 Yu5h1LibTest 執行 sample 的無畫面 PlayMode 1/1（`20261112-143602-tests.xml`）。涵蓋空白草稿、換行、選取取代、模擬組字、送出與焦點。手機原生鍵盤和中文 IME 需實機確認。
+
 ## VCP batchmode 驗證
 
 以 VCP 現有的 `file:` 套件參照載入 Yu5h1Lib.UI。驗證時暫時匯入 sample 與這一輪 EditMode 測試，執行後移除暫用 Assets。EditMode 23/23（`20261112-085728-tests.xml`），PlayMode 1/1（`20261112-090058-tests.xml`）。報告在 VCP 專案旁的 `Virtual-Chat-Partner-Build/logs`。結果與人工確認見 [驗收清單](../../../../checklists/ui-chatpanel.checklist)。EditMode 驗證元件行為，PlayMode 驗證 sample 場景的宿主流程。手機觸控與產品外觀由使用者試用確認。

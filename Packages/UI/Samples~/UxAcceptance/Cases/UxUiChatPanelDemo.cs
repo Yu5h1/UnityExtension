@@ -23,7 +23,7 @@ namespace Yu5h1Lib.UI.Acceptance
 
         private ChatPanel panel;
         private GridLayoutGroup toolbar;
-        private InputField input;
+        private UxUiChatDraftField input;
         private InputFieldState draftState;
         private Text hostStatus;
         private Font font;
@@ -117,7 +117,7 @@ namespace Yu5h1Lib.UI.Acceptance
             draft.horizontalOverflow = HorizontalWrapMode.Wrap;
             draft.verticalOverflow = VerticalWrapMode.Truncate;
             draft.supportRichText = false;
-            input = field.gameObject.AddComponent<InputField>();
+            input = field.gameObject.AddComponent<UxUiChatDraftField>();
             input.targetGraphic = hitArea;
             input.textComponent = draft;
             input.placeholder = hint;
@@ -127,6 +127,7 @@ namespace Yu5h1Lib.UI.Acceptance
             viewport.gameObject.AddComponent<MultilineInputField>().Configure(input, ComposerMinHeight - 6f, 5, 8f);
 
             send = AddSendButton(composer);
+            input.SubmitRequested += Send;
             draftState.Changed += _ => UpdateActions();
             ResetHistory(false);
         }
