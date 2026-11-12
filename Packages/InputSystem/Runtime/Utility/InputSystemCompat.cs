@@ -94,7 +94,7 @@ public static class InputSystemCompat
             "Tab" => "Tab",
             "Escape" => "Escape",
             "CapsLock" => "CapsLock",
-            "NumLock" => "NumLock",
+            "Numlock" => "NumLock",
             "ScrollLock" => "ScrollLock",
             "PrintScreen" => "PrintScreen",
             "Pause" => "Pause",
