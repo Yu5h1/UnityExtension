@@ -80,6 +80,12 @@ VCP → Package Manager → Yu5h1Lib.UI → Samples → UxAcceptance → Import�
 
 Web `verify-web` 通過 15/15，擷取與量測存於 Web 的 `.verify/chat-panel-parity-probe/2026-11-12T05-32-01-221Z/`，`side-by-side.html` 收錄全部 15 組畫面。比對腳本核對兩端的訊息文字、聊天框、訊息區、輸入列、送出按鈕、泡泡寬度及大圖矩形。VCP 6000.6.0f1 的 EditMode 42/42（`20261112-133340-tests.xml`），PlayMode 1/1（`20261112-133401-tests.xml`），0 個編譯錯誤。PlayMode 從 VCP 實際匯入的 sample 場景擷取畫面，並檢查草稿捲動、訊息貼底和角色圖片的載入與失敗。實體手機觸控與中文 IME 待試用。VCP 正式場景仍使用既有聊天實作。
 
+## 直橫向捲動回歸
+
+2026-11-12 在 VCP 6000.6.0f1 以 `-batchmode -nographics` 載入已匯入的 UxAcceptance sample。PlayMode 1/1（`20261112-140041-tests.xml`）。在直向以單一指標拖離底部，將外框從 360 × 600 切至 640 × 360，再切回 360 × 600。文字重排後，第一則可見訊息仍是 `history-19`，三次量測的列頂均距視口頂端 −20.76 個 Canvas 單位。用同一指標捲到底後恢復跟隨，再切橫向仍貼底。
+
+EditMode 31/31（`20261112-140417-tests.xml`），包含套件新增的單指標拖曳與直橫向重排回歸。自動測試以 uGUI 指標事件和尺寸變更驗證閱讀位置與跟隨，量測時關閉慣性。Device Simulator 的畫面與觸控手感，以及手機中文 IME，留待手動驗收。
+
 ## VCP batchmode 驗證
 
 以 VCP 現有的 `file:` 套件參照載入 Yu5h1Lib.UI。驗證時暫時匯入 sample 與這一輪 EditMode 測試，執行後移除暫用 Assets。EditMode 23/23（`20261112-085728-tests.xml`），PlayMode 1/1（`20261112-090058-tests.xml`）。報告在 VCP 專案旁的 `Virtual-Chat-Partner-Build/logs`。結果與人工確認見 [驗收清單](../../../../checklists/ui-chatpanel.checklist)。EditMode 驗證元件行為，PlayMode 驗證 sample 場景的宿主流程。手機觸控與產品外觀由使用者試用確認。

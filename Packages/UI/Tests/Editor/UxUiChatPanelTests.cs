@@ -444,6 +444,80 @@ namespace Yu5h1Lib.UI.Tests
             TestContext.WriteLine($"{width}×{height} logical: toolbar {toolbarHeight:0.#}, composer 44→{expanded:0.#}→44, message viewport {viewport.rect.height:0.#}");
         }
 
+        [Test]
+        public void SampleDragKeepsReadingPositionAcrossPortraitAndLandscapeReflow()
+        {
+            var frame = NewRect("Sample", root.transform, 360f, 600f);
+            var demo = frame.gameObject.AddComponent<UxUiChatPanelDemo>();
+            demo.Build();
+            var view = demo.Panel;
+            var scroll = view.ScrollView;
+            scroll.inertia = false;
+
+            void Resize(float width, float height)
+            {
+                frame.sizeDelta = new Vector2(width, height);
+                LayoutRebuilder.ForceRebuildLayoutImmediate(frame);
+                InvokeLifecycle(view, "LateUpdate");
+                InvokeLifecycle(scroll, "LateUpdate");
+            }
+
+            void Drag(float distance)
+            {
+                var start = RectTransformUtility.WorldToScreenPoint(null,
+                    scroll.viewport.TransformPoint(scroll.viewport.rect.center));
+                var pointer = new PointerEventData(events) { pointerId = 1, position = start, pressPosition = start };
+                ExecuteEvents.ExecuteHierarchy(scroll.viewport.gameObject, pointer, ExecuteEvents.initializePotentialDrag);
+                ExecuteEvents.ExecuteHierarchy(scroll.viewport.gameObject, pointer, ExecuteEvents.beginDragHandler);
+                pointer.delta = Vector2.up * distance;
+                pointer.position += pointer.delta;
+                ExecuteEvents.ExecuteHierarchy(scroll.viewport.gameObject, pointer, ExecuteEvents.dragHandler);
+                ExecuteEvents.ExecuteHierarchy(scroll.viewport.gameObject, pointer, ExecuteEvents.endDragHandler);
+            }
+
+            float RowTop(RectTransform row) => scroll.viewport.rect.yMax -
+                scroll.viewport.InverseTransformPoint(row.TransformPoint(new Vector3(0f, row.rect.yMax))).y;
+
+            RectTransform FirstVisible()
+            {
+                foreach (RectTransform row in view.MessageContent)
+                    if (RowTop(row) + row.rect.height > .001f)
+                        return row;
+                throw new InvalidOperationException("No visible message.");
+            }
+
+            Resize(360f, 600f);
+            view.ReplaceHistory(chat =>
+            {
+                for (int i = 0; i < 40; i++)
+                    chat.AddMessage($"第 {i + 1} 則歷史訊息。可以向上捲動，觀察畫面是否保留閱讀位置。",
+                        id: $"history-{i}", fromHistory: true);
+            });
+            Drag(-165f);
+            Assert.That(scroll.Following, Is.False);
+            Assert.That(scroll.MaxOffset - scroll.Offset, Is.EqualTo(165f).Within(.05f));
+            var row = FirstVisible();
+            float top = RowTop(row);
+            float portraitHeight = scroll.ContentSize;
+
+            Resize(640f, 360f);
+            Assert.That(scroll.ContentSize, Is.LessThan(portraitHeight));
+            Assert.That(scroll.Following, Is.False);
+            Assert.That(FirstVisible(), Is.SameAs(row));
+            Assert.That(RowTop(row), Is.EqualTo(top).Within(.05f));
+
+            Resize(360f, 600f);
+            Assert.That(FirstVisible(), Is.SameAs(row));
+            Assert.That(RowTop(row), Is.EqualTo(top).Within(.05f));
+            Assert.That(scroll.Following, Is.False);
+
+            Drag(scroll.MaxOffset - scroll.Offset);
+            Assert.That(scroll.Offset, Is.EqualTo(scroll.MaxOffset).Within(.05f));
+            Assert.That(scroll.Following, Is.True);
+            Resize(640f, 360f);
+            Assert.That(scroll.Offset, Is.EqualTo(scroll.MaxOffset).Within(.05f));
+        }
+
         private void InvokeEventSystemLifecycle(string method) =>
             InvokeLifecycle(events, method);
 
