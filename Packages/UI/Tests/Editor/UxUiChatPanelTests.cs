@@ -379,6 +379,16 @@ namespace Yu5h1Lib.UI.Tests
                 Canvas.ForceUpdateCanvases();
                 Assert.That(host.CurrentCase.Id, Is.EqualTo("chatpanel"));
                 var demo = host.GetComponentInChildren<UxUiChatPanelDemo>();
+                Assert.That(demo, Is.Not.Null);
+                var packagePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.yu5h1.ui/Runtime/Prefabs/ChatPanel.prefab");
+                Assert.That(packagePrefab, Is.Not.Null);
+                using (var serialized = new SerializedObject(demo))
+                    Assert.That(serialized.FindProperty("chatPanelPrefab").objectReferenceValue,
+                        Is.SameAs(packagePrefab.GetComponent<ChatPanel>()));
+                Assert.That(demo.Panel.gameObject, Is.Not.SameAs(packagePrefab));
+                var input = demo.GetComponentInChildren<InputFieldAddon>();
+                Assert.That(input, Is.Not.Null);
+                Assert.That(input.transform.IsChildOf(demo.Panel.transform), Is.False);
                 Assert.That(demo.Panel.MessageContent.childCount, Is.EqualTo(4));
                 Assert.That(demo.Panel.ScrollView.Following, Is.True);
             }
@@ -425,9 +435,8 @@ namespace Yu5h1Lib.UI.Tests
         [TestCase(280f, 500f, 78f, TestName = "SampleLayout_NarrowToolbarWraps")]
         public void SampleRowsKeepOnlyMessageViewportFlexible(float width, float height, float toolbarHeight)
         {
-            var frame = NewRect("Sample", root.transform, width, height);
-            var demo = frame.gameObject.AddComponent<UxUiChatPanelDemo>();
-            demo.Build();
+            var demo = CreateChatSample(width, height);
+            var frame = (RectTransform)demo.transform;
             var toolbar = (RectTransform)frame.Find("Demo controls");
             var composer = (RectTransform)frame.Find("Conversation/Composer slot/Sample host composer");
             var viewport = demo.Panel.ScrollView.viewport;
@@ -485,9 +494,8 @@ namespace Yu5h1Lib.UI.Tests
         [Test]
         public void SampleDragKeepsReadingPositionAcrossPortraitAndLandscapeReflow()
         {
-            var frame = NewRect("Sample", root.transform, 360f, 600f);
-            var demo = frame.gameObject.AddComponent<UxUiChatPanelDemo>();
-            demo.Build();
+            var demo = CreateChatSample(360f, 600f);
+            var frame = (RectTransform)demo.transform;
             var view = demo.Panel;
             var scroll = view.ScrollView;
             scroll.inertia = false;
@@ -554,6 +562,18 @@ namespace Yu5h1Lib.UI.Tests
             Assert.That(scroll.Following, Is.True);
             Resize(640f, 360f);
             Assert.That(scroll.Offset, Is.EqualTo(scroll.MaxOffset).Within(.05f));
+        }
+
+        private UxUiChatPanelDemo CreateChatSample(float width, float height)
+        {
+            var prefab = Resources.Load<GameObject>("UxAcceptance/ChatPanelDemo");
+            Assert.That(prefab, Is.Not.Null);
+            var demo = Object.Instantiate(prefab, root.transform).GetComponent<UxUiChatPanelDemo>();
+            var frame = (RectTransform)demo.transform;
+            frame.anchorMin = frame.anchorMax = new Vector2(.5f, .5f);
+            frame.sizeDelta = new Vector2(width, height);
+            demo.Build();
+            return demo;
         }
 
         private void InvokeEventSystemLifecycle(string method) =>

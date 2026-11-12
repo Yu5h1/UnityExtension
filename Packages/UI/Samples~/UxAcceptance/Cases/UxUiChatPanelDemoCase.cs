@@ -6,6 +6,8 @@ namespace Yu5h1Lib.UI.Acceptance
     /// <summary>Mounts a self-contained chat message-area demo in the shared uGUI acceptance scene.</summary>
     public sealed class UxUiChatPanelDemoCase : IUxUiModuleDemoCase
     {
+        private const string DemoPrefabPath = "UxAcceptance/ChatPanelDemo";
+
         public string Id => "chatpanel";
         public string DisplayName => "ChatPanel (0.4.0-draft)";
         public string ModuleSpec => "Yu5h1Lib.UX/Modules/ChatPanel";
@@ -15,13 +17,14 @@ namespace Yu5h1Lib.UI.Acceptance
         public void Mount(RectTransform container)
         {
             Unmount();
-            root = new GameObject("ChatPanelDemo", typeof(RectTransform));
-            root.transform.SetParent(container, false);
-            var rect = (RectTransform)root.transform;
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = rect.offsetMax = Vector2.zero;
-            root.AddComponent<UxUiChatPanelDemo>().Build();
+            var prefab = Resources.Load<GameObject>(DemoPrefabPath);
+            if (prefab == null || !prefab.TryGetComponent<UxUiChatPanelDemo>(out var demoPrefab))
+                throw new System.InvalidOperationException($"找不到聊天展示 Prefab Resources/{DemoPrefabPath}。");
+
+            var demo = Object.Instantiate(demoPrefab, container, false);
+            root = demo.gameObject;
+            root.name = prefab.name;
+            demo.Build();
         }
 
         public void Unmount()

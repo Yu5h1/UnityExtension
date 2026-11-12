@@ -41,6 +41,10 @@ VCP 宿主／UxAcceptance sample
 
 [ChatPanel.prefab](../../Runtime/Prefabs/ChatPanel.prefab) 隨 Yu5h1Lib.UI 套件交付。它是可拉伸至父容器的 uGUI 訊息區。消費端可在 Canvas 下引用 prefab，在 Inspector 設定 `Options`，或在加入訊息前透過 `ChatPanel.Configure` 提供設定。訊息、回覆、圖片和輸入列由宿主接到既有公開 API。Prefab 的 Editor 測試在獨立 Canvas 下驗證實例化、Inspector 設定與新增訊息。
 
+展示 prefab 以 Inspector 的 `chatPanelPrefab` 欄位直接引用套件資產。示範宿主將訊息區與自己的 `InputFieldAddon` 輸入列放在同一個版面下。輸入列的 `Submitted` 和送出按鈕共用宿主的送出流程，透過 `AddMessage` 更新訊息區。宿主以 `ReplaceHistory` 提供歷史，以 `BeginReply`、`Push` 和 `Complete` 提供模擬回覆，並由宿主將載入的 Sprite 交給圖片訊息。 [ChatPanelDemo.prefab](../../Samples~/UxAcceptance/Resources/UxAcceptance/ChatPanelDemo.prefab) · [示範宿主](../../Samples~/UxAcceptance/Cases/UxUiChatPanelDemo.cs)
+
+2026-11-12 在 Yu5h1LibTest 以無畫面 PlayMode 驗證同一個訊息區實例接收宿主歷史、輸入、模擬回覆和延遲圖片，重設案例會建立新實例。PlayMode 1/1（`20261112-155258-tests.xml`），EditMode 40/40（`20261112-155325-tests.xml`）。
+
 ## 試用範圍
 
 使用者在 VCP 直向試用發現訊息區遭工具列與輸入列擠壓。成因與共用元件取捨見 [uGUI ChatPanel 示範版對齊計畫](../../../../Documentation/ChatPanelDemoParityPlan.md)。

@@ -21,6 +21,8 @@ namespace Yu5h1Lib.UI.Acceptance
 
         private static readonly UguiControlPalette Palette = UguiControlPalette.Dark;
 
+        [SerializeField] private ChatPanel chatPanelPrefab;
+
         private ChatPanel panel;
         private GridLayoutGroup toolbar;
         private InputFieldAddon input;
@@ -39,6 +41,9 @@ namespace Yu5h1Lib.UI.Acceptance
         {
             if (panel != null)
                 return;
+            if (chatPanelPrefab == null)
+                throw new InvalidOperationException("請在聊天展示 prefab 指定 Yu5h1Lib.UI 的 ChatPanel prefab。");
+
             font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             var background = gameObject.AddComponent<Image>();
             background.color = Palette.PageBackground;
@@ -75,9 +80,9 @@ namespace Yu5h1Lib.UI.Acceptance
             conversationLayout.childForceExpandHeight = false;
             conversationLayout.childForceExpandWidth = true;
 
-            var scrollArea = AddRect("ChatPanel", conversation);
-            scrollArea.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1f;
-            panel = scrollArea.gameObject.AddComponent<ChatPanel>();
+            panel = Instantiate(chatPanelPrefab, conversation, false);
+            panel.name = chatPanelPrefab.name;
+            panel.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1f;
             panel.Configure(new ChatPanel.Options
             {
                 Font = font,
