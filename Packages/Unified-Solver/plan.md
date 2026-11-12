@@ -463,16 +463,21 @@ SolverParticleInstance Buffer
 
 若採用每粒子半徑，Hash Cell Size 必須以場景最大半徑計算。
 
-### 回收與刪除
+### 回收與刪除：先配置、再重用
 
-第一版採 append-only，適合有限捕撈流程。
+求解器沒有移除粒子或約束的 API，而且任何一次 `AddParticle` 都會讓下一步把整份 CPU 端清單（各粒子**建立當下**的值）覆蓋回 GPU。所以模擬開始後再新增，會把場上所有既有粒子拉回出生狀態。每輪生成再刪除因此不可行，也不值得為此加 Free List；採用「先配置、再重用」，只在擴充層實作，vendored 求解器不動。
 
-只有壓力測試證明遊戲需要長時間循環生成時，才加入：
+- **一次配置。** emitter 與 `ClothGenerator` 在求解器第一步之前建好全部粒子與約束，之後粒子數與約束數不再增加，不論玩幾輪。
+- **只改寫自己那一段。** 重用時寫入公開的 `ParticleBuffer` 中自己的區段，位置與 `prevPosition` 一起寫、速度歸零，理由與 §17 的傳送相同（求解器以兩者之差重建速度）。寫法同 `SolverRopeParticles` 改寫 `ConstraintBuffer`。
+- **emitter** 為每個粒子記下建立時的樣子：位置存成相對 spawn 原點的偏移，連同 invMass、phase、顏色、visible。`Respawn()` 因此能把每個身體放回 spawn box 內的新點，保留原本的形狀與朝向，並清掉生命週期與 sleep 狀態（睡著的身體會被拉回睡著前記錄的姿勢）。
+- **布料**沒有這份紀錄，因為 generator 不回報它配了哪個 phase。`SolverClothParticles` 在第一次重用時讀回一次 phase、顏色與 visible，之後 `ResetToRest()` 以目前 Transform 的靜止姿勢重寫，被釘住的粒子立即回到錨點 Transform。
+- **收起**是把粒子搬到遠處各自不同的固定點、invMass 設 0、visible 設 0，並且不繪製。invMass 0 的粒子不被 Predict 與接觸處理，各 modifier 也多以 `invMass > 0` 為條件，加上遠離所有 volume，所以不受 volume 影響；距離約束的 `wSum == 0` 與剛體的 `totalMass < 1e-9` 都會跳過，所以被收起的身體不會產生 NaN。身體在別人看不到也碰不到的地方，不是被刪除。
+- **第一步之前的請求要等。** 求解器第一次上傳會覆蓋任何此前寫入 GPU 的內容，所以 `Respawn`／`Park`／`ResetToRest` 在求解器尚未步進時先記下，第一步之後的下一個 FixedUpdate 才寫入。「已步進」由公開的 `LastFrameTotalMs > 0` 判斷，不需要反射。
+- **模擬開始後仍有 `AddParticle`，警告一次。** emitter 在 `TrySpawnImmediate`、`SolverClothParticles` 在 `ClothGenerator` 啟動前各自檢查，訊息指出是哪個元件並指向重用 API。只警告、不阻擋：阻擋會把看得見的錯誤變成靜默的錯誤。
+- **容量守門（網子容量不足時清楚停下）。** `AddParticle` 滿了回傳 −1，`ClothGenerator.Start` 不檢查就拿去建約束而丟 `ArgumentOutOfRangeException`，此時半張網已存在。`SolverClothParticles` 的 Start 執行順序（−50）早於 `ClothGenerator`（0），在那裡檢查剩餘粒子與約束容量；不足就停用 generator、報一則錯誤（物件、需要量、剩餘量），不建半張網。同一個 frame 內多張布料啟動時，先通過者會先佔用容量，否則兩張各自放得下的網都會通過、第二張仍然溢出。守門要涵蓋每一張 `ClothGenerator`，所以不能依賴錨點：編輯器在加入 `ClothGenerator` 時自動補上元件，runtime 在每次場景載入後替沒有元件的 `ClothGenerator` 補上。
+- **未涵蓋的情況：** 場景載入之後才 Instantiate、而且 prefab 本身沒有 `SolverClothParticles` 的布料。在 Instantiate 與 generator 的 Start 之間沒有任何不在 prefab 上的東西能執行。處理方式是把元件放進 prefab，或 Instantiate 後立刻呼叫 `EnsureOn`。
 
-- Alive flag。
-- Free List。
-- Instance generation/version。
-- Constraint 與 Rigid Body 回收策略。
+仍開放：剛體路徑的重用（`SolverRigidBody` 沿用上一輪的四元數當迭代初值，理論上 20 次迭代內收斂，未在 Unity 實測）；收起的身體仍佔用粒子容量與求解器的 `_particleCount` 工作量（它們被各 kernel 提早返回，但仍被分派）。
 
 ### Profile 多型方式
 
@@ -1201,7 +1206,7 @@ tailPeak = 2 × peakHalfAngle × bias
 
 - **一個 (volume, effect) 配對一筆，攤平放進同一個 buffer。** 一個箱子掛兩個效果就上傳兩筆相同幾何，代價是 inside test 每個效果重做一次。在場景的體積數量級下，這比另一個選項（GPU struct 內放變長清單）便宜。
 - **Payload 是無型別的。** `SolverVolumeGPU` 帶 `payloadVector` 加 `payloadX/Y/Z`，只有效果的 `Write` 與對應的 kernel 分支知道映射。這正是「一個 buffer、一次上傳、一次幾何測試服務所有效果」的代價與收益。介質原本的三個 padding float 剛好就是效果標籤、側邊旗標與額外純量需要的空間，所以 stride 仍是 96 bytes。
-- **`actOutside` 屬於效果，不屬於體積。** 催生整個設計的案例就是一個箱子同時作用於兩側 —— 內部是水、外部回收 —— 那是體積層級的旗標表達不出來的。
+- **`actOutside` 屬於效果，不屬於體積。** 催生整個設計的案例就是一個箱子同時作用於兩側 —— 內部是水、外部回收 —— 那是體積層級的旗標表達不出來的。現在只有介質還使用它；bounds 改以 Contain／Exclude 宣告（§17），因為多個旗標相同的 bounds 會變成交集。
 - **`Granularity` 是宣告出來的，而且不是效能註記。** 介質是逐粒子，那是「沒有任何東西模擬水面，物體卻停在吃水線」的原因。回收判定是逐實體，因為半條魚無法被回收。宣告錯的效果不是稍微錯，是在回答另一個問題。只存在於 C# 側；kernel 本身**就是**那個迴圈，所以它已經知道自己的粒度。
 - runner 的 `UploadVolumes()` 不知道任何效果的存在。新增一個效果是一個 enum 值、一個子類別、一段 kernel 分支，不碰體積也不碰上傳路徑。
 - 刻意鏡射 `SolverParticleProfile.modifiers`：「一串被編寫的行為」只有一種模式要學，不是兩種。
@@ -1242,7 +1247,17 @@ tailPeak = 2 × peakHalfAngle × bias
 
 `SolverBoundsProfile`，第二個效果。
 
-- **觸發與包絡是分開的。** 觸發是 bounds 效果落在某個實體上；包絡是掩護傳送的淡出淡入。兩個時長都設 0 是合法設定，而 `actOutside` 關掉就把同一個效果從邊界變成殺傷區。這一對不需要額外成本，是組合式設計在第一次使用就回本。
+- **觸發與包絡是分開的。** 觸發是 bounds 效果判定某個實體該被回收；包絡是掩護傳送的淡出淡入。兩個時長都設 0 是合法設定。
+- **Contain／Exclude 取代 `actOutside`（2026-11-12，使用者定案）。** 每個 bounds 明確宣告 `Mode`，場上所有 bounds 以固定規則合併，對象是每條魚的魚身中心（其粒子中心的平均）：
+  1. 碰到任一啟用中的 Exclude → 回收。Exclude 優先。
+  2. 否則，場上有啟用中的 Contain，而魚不在任何一個 Contain 內 → 回收。多個 Contain 是聯集：在任一個之內就活著。
+  3. 其他都活著；沒有任何 Contain 時只看 Exclude。
+
+  舊旗標的毛病是「碰到」在勾選時意味著「在範圍外」，於是兩個勾選的 bounds 變成交集，魚必須同時在兩個範圍內；solver test 裡相距約 300 m 的兩個範圍讓兩群魚一出生就全部被回收。Contain 與 Exclude 是兩種不同的問題，不是同一個設定的兩個值。
+
+  實作上 kernel 永遠只問「中心在不在這個體積內」，`invert` 對 bounds 恆為 0，Contain／Exclude 放在 payload 的 Z 槽（1／0），所以 `SolverVolumeGPU` 的 96 bytes 不變。回收時淡出時長取決定它的那個體積：先看碰到的 Exclude，沒有就取第一個身體不在其內的 Contain。
+- **舊資產自動遷移。** `SolverBoundsProfile` 帶一個結構版本號：版本 0 是 `Mode` 出現之前寫成的資產，載入時由 `actOutside` 決定（勾選 → Contain、未勾 → Exclude），所以單一 bounds 的場景行為不變，只有堆疊了多個勾選 bounds 的場景會改變，而那正是缺陷。遷移在載入時進行，而不是靠編輯器掃描，因此開了沒存的場景、以及建置出來的播放器都正確。`actOutside` 欄位保留但不再顯示、不再被求解器使用，並維持等於 `Mode == Contain`，讓依舊旗標寫的程式碼（BonghuoVR 的設定腳本）仍能編譯。其他效果（介質）保留 `actOutside`，它現在只宣告在 `SolverMediumProfile` 上，序列化名稱不變。
+- **spawn box 的缺口已補上。** 回收是把魚放回 emitter 的 spawn box；若 box 中心本身在某個 Contain 之外，或在某個 Exclude 之內，魚會不斷淡出、搬動、淡入又立刻被回收，永遠閃爍。現在 runner 上傳體積時以 CPU 端的 `SolverVolume.ContainsPoint`（與 kernel 的 `VolumeReaches` 逐分支相同）檢查 spawn box 中心：中心在所有 Contain 之外時，這個 emitter 不套用任何 Contain；中心在某個 Exclude 之內時，這個 emitter 不套用那一個 Exclude。兩種情況各警告一次，指出是哪個 emitter。其餘的 bounds 仍然作用於它。檢查的是中心，不是整個 box。中心在範圍內、邊緣超出範圍時，放在範圍外的魚會被回收並重新抽點，直到落進範圍內；這是一般的回收，不會永遠重複，但 box 越超出範圍，重抽越多。
 - **傳送要與 `position` 一起寫 `prevPosition`，這就是全部關鍵。** Solver 以 `(position − prevPosition) / subDt` 重建速度，所以只寫位置的跳躍會回傳成「整段距離除以一個 substep」—— 跨越場景就是數百 m/s，抵達出生點的瞬間已經在離開。速度歸零是同一個道理的鏡像：被甩得夠用力而越界的實體，會立刻再越界一次。
 - **淡出用縮小，不用混色。** Alpha 意味著透明佇列，隨之而來的是排序、失去 depth prepass 與另一條陰影路徑 —— 一個玩法功能夾帶進來的渲染決策；而在剛體路徑上它會吐回「任何 URP material 都能用」這個刪掉 `SolverRigidMesh.shader` 才贏得的性質。把身體收縮到中段 frame 的中心維持不透明、不需要改材質，而且歸零時三角形退化所以什麼都不畫。樞紐**必須**是中段 frame 的中心；收縮到各自 frame 的中心只會把身體變細而不變短，最後留下一條線。
 - **生命週期狀態由 emitter 擁有**，因為 runner 寫它、renderer 讀它，兩者互不擁有 —— 與它們已經共用 `InstanceBuffer` 的關係完全相同。`float4(state, phase, hidden, rate)`，而儲存 *hidden* 而非 visible，正是讓一個從未被觸碰的全零 buffer 就代表「活著且完全繪製」的原因。沒有 bounds 效果的場景永遠不寫它。
@@ -1251,11 +1266,10 @@ tailPeak = 2 × peakHalfAngle × bias
 - 決定只做一次：淡出途中又飄回界內的實體仍然回家。半途取消需要第四個狀態而且沒有好處，因為那時實體已經半消失了。
 - 重生是實體的**剛性平移**到 emitter spawn box 內的新點，不是從拓樸 rest pose 重建。形狀與朝向延續，而淡入淡出的存在就是為了讓這件事不引人注意；同時 spawn 佈局留在一個地方，不必在 GPU 上複製一份。
 
-已知缺口，兩個都是真的：
+已知缺口，兩個都是真的（spawn box 落在邊界之外的第三個缺口已由上面補上）：
 
 - **剛體路徑沒有淡出。** `Graphics.RenderMeshInstanced` 吃 CPU 端建好的矩陣，而生命週期活在 GPU 上，所以碎片會正確回收但是用瞬間跳的而不是縮小。要補需要 `AsyncGPUReadback` 鏡像（對視覺包絡而言延遲無害），或把剛體實體的 bounds 測試移到 CPU 側。
 - **淡出中的實體仍以完整粒子半徑碰撞。** Solver 完全不知道 renderer 在縮放任何東西，所以長時間淡出讀起來像一個還會推人的鬼魂。把時長保持得短。
-- 若 emitter 的 spawn box 落在邊界之外，實體會永遠回收下去。目前沒有東西檢查這件事。
 
 ## 18. Locomotion 與轉向
 

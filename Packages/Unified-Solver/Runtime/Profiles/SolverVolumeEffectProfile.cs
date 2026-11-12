@@ -25,15 +25,20 @@ namespace Yu5h1Lib.UnifiedSolver
         [Tooltip("Off silences it without losing its slot or settings.")]
         public bool enabled = true;
 
-        // Which side of the surface this acts on.
+        // Whether this effect acts everywhere except inside the volume.
         //
         // Belongs to the effect and not to the volume, because the case that
         // motivates volumes carrying several effects is exactly one box that
         // acts on both sides at once: water within, recycle without. A
         // volume-level flag could not express that, and two volumes with
         // opposite flags would have to be kept aligned by hand.
-        [Tooltip("On acts everywhere except inside the volume.")]
-        public bool actOutside;
+        //
+        // A property and not a shared field: only an effect for which "outside"
+        // is a meaningful side authors it. Bounds does not -- it states Contain
+        // or Exclude, which combine across volumes in a way a per-volume side
+        // flag cannot -- so it reports false here and the kernel never inverts
+        // its inside test.
+        public virtual bool ActsOutside => false;
 
         public abstract SolverVolumeEffectType EffectType { get; }
 

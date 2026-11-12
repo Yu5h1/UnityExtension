@@ -52,6 +52,8 @@ namespace Yu5h1Lib.UnifiedSolver
         bool _reportedMissingCompute;
         bool _reportedModifiers;
         bool _reportedNeutralDensity;
+        bool _reportedSpawnOutsideContain;
+        bool _reportedSpawnInsideExclude;
 
         void Awake()
         {
@@ -273,6 +275,14 @@ namespace Yu5h1Lib.UnifiedSolver
             _volumeCount = 0;
             _mediumEffectCount = 0;
             _boundsEffectCount = 0;
+
+            // Decided once per upload and not per effect: whether this emitter
+            // can be asked to live inside the Contain volumes at all depends on
+            // all of them together.
+            Vector3 spawnCenter = _emitter.transform.position;
+            bool ignoreContain =
+                SpawnOutsideEveryContain(volumes, spawnCenter);
+
             for (int i = 0; i < volumes.Count; i++)
             {
                 SolverVolume volume = volumes[i];
@@ -287,6 +297,16 @@ namespace Yu5h1Lib.UnifiedSolver
                     if (effect == null || !effect.enabled)
                         continue;
 
+                    if (effect is SolverBoundsProfile bounds &&
+                        !AdmitBounds(
+                            volume,
+                            bounds,
+                            spawnCenter,
+                            ignoreContain))
+                    {
+                        continue;
+                    }
+
                     var entry = new SolverVolumeGPU
                     {
                         center = volume.Center,
@@ -296,7 +316,7 @@ namespace Yu5h1Lib.UnifiedSolver
                             (float)effect.EffectType,
                         axisX = volume.AxisX,
                         invert =
-                            effect.actOutside ? 1f : 0f,
+                            effect.ActsOutside ? 1f : 0f,
                         axisY = volume.AxisY,
                         axisZ = volume.AxisZ
                     };
@@ -333,6 +353,93 @@ namespace Yu5h1Lib.UnifiedSolver
                 _volumeBuffer.SetData(
                     _volumeData, 0, 0, _volumeCount);
             }
+        }
+
+        // A spawn box is where a recycled body is put back. If its centre is
+        // somewhere the bounds rule would recycle the body again, every lap ends
+        // in another lap: the body fades, is moved, fades back in, and is
+        // recycled at once, for ever. Nothing in the scene says why, so the
+        // emitter's own bounds are dropped instead and the cause is named once.
+        //
+        // Contain first: with Contain volumes present, a centre inside none of
+        // them has no valid answer to "where does it live", so Contain is
+        // ignored for this emitter. Exclude is handled per volume in
+        // AdmitBounds because it names a specific place that can be dropped on
+        // its own.
+        bool SpawnOutsideEveryContain(
+            IReadOnlyList<SolverVolume> volumes,
+            Vector3 spawnCenter)
+        {
+            int contains = 0;
+            for (int i = 0; i < volumes.Count; i++)
+            {
+                SolverVolume volume = volumes[i];
+                if (volume == null || !volume.IsUsable)
+                    continue;
+
+                int effects = volume.EffectCount;
+                for (int e = 0; e < effects; e++)
+                {
+                    if (!(volume.GetEffect(e) is
+                            SolverBoundsProfile bounds) ||
+                        !bounds.enabled ||
+                        bounds.Mode != SolverBoundsMode.Contain)
+                    {
+                        continue;
+                    }
+
+                    contains++;
+                    if (volume.ContainsPoint(spawnCenter))
+                        return false;
+                }
+            }
+
+            if (contains == 0)
+                return false;
+
+            if (!_reportedSpawnOutsideContain)
+            {
+                _reportedSpawnOutsideContain = true;
+                Debug.LogWarning(
+                    $"SolverParticleEmitter '{_emitter.name}': its " +
+                    $"spawn box centre {spawnCenter} is outside all " +
+                    $"{contains} Contain bounds volume(s), so Contain " +
+                    "is not applied to this emitter's bodies. Recycling " +
+                    "them would place them back outside and they would " +
+                    "fade and respawn for ever. Move the emitter inside " +
+                    "a Contain volume, or the volume over the emitter.",
+                    _emitter);
+            }
+            return true;
+        }
+
+        // Whether a bounds effect is uploaded for this emitter at all.
+        bool AdmitBounds(
+            SolverVolume volume,
+            SolverBoundsProfile bounds,
+            Vector3 spawnCenter,
+            bool ignoreContain)
+        {
+            if (bounds.Mode == SolverBoundsMode.Contain)
+                return !ignoreContain;
+
+            if (!volume.ContainsPoint(spawnCenter))
+                return true;
+
+            if (!_reportedSpawnInsideExclude)
+            {
+                _reportedSpawnInsideExclude = true;
+                Debug.LogWarning(
+                    $"SolverParticleEmitter '{_emitter.name}': its " +
+                    $"spawn box centre {spawnCenter} is inside the " +
+                    $"Exclude bounds volume '{volume.name}', so that " +
+                    "volume is not applied to this emitter's bodies. " +
+                    "Recycling them would place them back inside it " +
+                    "and they would fade and respawn for ever. Move " +
+                    "the emitter or the volume.",
+                    _emitter);
+            }
+            return false;
         }
 
         // Applies whatever the uploaded volumes declare, and writes the medium
@@ -685,6 +792,29 @@ namespace Yu5h1Lib.UnifiedSolver
                 _emitter.LifecycleBuffer);
             BindBuffers(_sleepKernel);
             Dispatch(_sleepKernel);
+        }
+
+        /// <summary>
+        ///   Forgets what the kernels remember per instance: sleep state and the
+        ///   medium reading.
+        /// </summary>
+        /// <remarks>
+        ///   For when the emitter has rewritten its bodies. A sleeping body is
+        ///   held at the pose recorded before the rewrite, so without this it
+        ///   would be pulled straight back to where it was.
+        /// </remarks>
+        public void ResetInstanceState()
+        {
+            if (_sleepState != null)
+            {
+                _sleepState.SetData(
+                    new Vector2[_sleepState.count]);
+            }
+            if (_mediumStateBuffer != null)
+            {
+                _mediumStateBuffer.SetData(
+                    new Vector4[_mediumStateBuffer.count]);
+            }
         }
 
         // Allocated against maxInstances rather than the current count, so the

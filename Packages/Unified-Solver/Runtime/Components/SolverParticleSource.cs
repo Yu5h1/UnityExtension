@@ -49,6 +49,13 @@ namespace Yu5h1Lib.UnifiedSolver
         bool _reportedMissingCompute;
         bool _reportedMissingRange;
 
+        /// <summary>
+        ///   True while the body is parked: out of the simulation, not drawn,
+        ///   and not held by an anchor. Always false for a source that cannot
+        ///   park.
+        /// </summary>
+        public virtual bool IsParked => false;
+
         public abstract int ParticleCount { get; }
 
         public abstract Vector3Int LayoutSize { get; }
@@ -91,6 +98,12 @@ namespace Yu5h1Lib.UnifiedSolver
             int count)
         {
             if (targets == null || count <= 0)
+                return false;
+
+            // A parked body is somewhere nothing can touch it, and an anchor
+            // writing its pinned particles back to their Transforms would
+            // drag them out of there and into the scene.
+            if (IsParked)
                 return false;
 
             SolverManager manager = Manager;
@@ -247,8 +260,16 @@ namespace Yu5h1Lib.UnifiedSolver
         // blocking exactly once after that. Every one of these was a silent
         // return before, which is what made a missing effect impossible to tell
         // apart from a wrong value.
+        // Where a subclass does work that belongs on the physics clock ahead of
+        // the solver step. Called every step, before the settings pass.
+        protected virtual void OnPhysicsStep()
+        {
+        }
+
         void FixedUpdate()
         {
+            OnPhysicsStep();
+
             if (!_settingsDirty)
                 return;
 

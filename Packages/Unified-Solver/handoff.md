@@ -32,7 +32,8 @@ it.
 | Bend drive, bounce, performance axes, tail bias | 15.1–15.12 |
 | Mirrored body (open) · hairpin (fixed) | 15.10 · 15.11 |
 | Volume/effect split, migration, medium wake channel | 16 |
-| Bounds effect | 17 |
+| Bounds effect, Contain／Exclude | 17 |
+| Reuse (`Respawn`／`Park`／`ResetToRest`), cloth capacity guard | 11 (recycling) |
 | Locomotion and steering | 18 |
 | speedLimit | 19 |
 | Jet as a medium, `flowIsLocal` | 20 |
@@ -107,9 +108,41 @@ Density here is in profile-mass units and never will be kg/m³, so the question 
 "denser or thinner than this body, and roughly by how much" — still water dense,
 spray thin, air far thinner. Recorded in `.agents/skills/unified-solver.md`.
 
+**Written 2026-11-12, compiled offline, NOT verified in Unity** — the three
+requirements raised by BonghuoVR (`BonghuoVR-UnifiedSolver-1`, `-2`, `-3`, in that
+project's `Documentation/Requirements.Unified-Solver.md`, which owns their
+status and acceptance lists). Design: `plan.md` §11 and §17. Runtime and Editor
+assemblies compile with 0 warnings against 6000.3.9f1 and the `fxc` compile of
+`ApplyBounds` passes; nothing has run, and the package has no test assembly.
+
+- **Reuse.** `SolverParticleEmitter.Respawn()` / `Park()` and
+  `SolverClothParticles.ResetToRest()` / `Park()`: pre-allocate once, then rewrite
+  only the body's own slice of `ParticleBuffer`. A request made before the
+  solver's first step is held and written one step after it. New:
+  `Runtime/Compatibility/SolverReuse.cs`.
+- **Late-add warning.** Emitter spawn, and `ClothGenerator` start, after the
+  solver's first step warn once naming the component.
+- **Cloth capacity guard.** `SolverClothParticles.Start` (order −50) refuses a
+  cloth the solver has no room for and disables the `ClothGenerator`. Presence on
+  every cloth: `Editor/ClothGuardAuthoring.cs` (on add) and
+  `Runtime/Components/SolverClothGuardBootstrap.cs` (on scene load). A cloth
+  instantiated after load from a prefab lacking the component is not covered.
+- **Bounds Contain／Exclude.** `SolverBoundsProfile.Mode` replaces `actOutside`;
+  the field stays, hidden, for source compatibility with BonghuoVR scripts that
+  still assign it (`FishingPerformanceSetup.cs`, `FishingSolverRig.cs`).
+  `SolverVolumeEffectProfile.actOutside` moved to `SolverMediumProfile` (same
+  serialized name) and the base exposes `ActsOutside`.
+
+Not yet seen in Unity: the migration of existing bounds assets; that a newly
+created bounds asset reads `Contain` (relies on `Reset()` running for a
+ScriptableObject created from the inspector — if not, it reads `Exclude`); parked
+fish and net really invisible and inert; rigid-path respawn (shape matching reuses
+the previous quaternion as its iteration seed); the cloth guard message.
+
 **Written, NOT compiled, NOT verified:**
 
-- `SolverBoundsProfile`, its lifecycle buffer and shrink fade
+- `SolverBoundsProfile`'s lifecycle buffer and shrink fade (the Contain／Exclude
+  rule above compiles; the fade is the part still not seen)
 - `tailBias`, the `_MediumState` buffer widening, the medium wake source
 - `SolverClothParticles.FindExistingTransformAnchors` — compiled, not run
 - `ShapeKind.Cylinder` — the kernel branch exists, nothing has used it
@@ -368,8 +401,14 @@ never have been carried at all.
 
 ## Contract guarantees
 
-- Original `SolverManager.cs` SHA-256 remains
+- Original `SolverManager.cs` SHA-256 is recorded as
   `4E902F723AF3B6C6D2640683A517340F24D12651BC328EBE49C5C24A27992483`.
+  **On disk on 2026-11-12 it was `09B425BD2633B7D24AD66A869F20397DEB46714107550CB9218738959F216353`** (file
+  modified 2026-11-07, before the reuse work, and untouched by it — the hash was
+  identical before and after). The recorded value therefore no longer certifies
+  the file Unity compiles. Whoever changed it, and whether the recorded hash or
+  the file is the intended one, is undecided; `Runtime/Dependencies` is
+  git-ignored, so git cannot say. Resolve before relying on this line.
 - Original `ClothGenerator.cs` SHA-256 remains
   `EF927603C0D7A9A9B7A118FA7C0EBC4420AC02B6EB178548615F8142E744566B`.
 - The reflection contract is **three** private fields:
@@ -403,8 +442,8 @@ never have been carried at all.
    position in the same substep. Untested; most likely place the medium design
    disappoints. The lift term at least wakes such a body.
 4. **Bounds gaps:** no fade on the rigid path (CPU matrices, GPU lifecycle); a
-   fading body still collides at full particle radius; an emitter spawn box outside
-   the boundary recycles forever with nothing checking it.
+   fading body still collides at full particle radius. (The spawn box outside the
+   boundary is closed: the emitter warns once and is exempted, `plan.md` §17.)
 5. **Three longitudinal controls cannot produce an S-curve.** Every topology
    carries exactly three spine controls. Adding particles without adding spine
    controls will not change this.
@@ -460,7 +499,13 @@ Standing constraints on all of the above:
 
 ## Known limitations
 
-- Instances are append-only; no free list or recycling.
+- Instances are still append-only: no free list, no removal. Reuse is by rewriting
+  existing bodies (`Respawn`／`Park`), so everything a scene will ever use must be
+  created before the solver's first step; an add after it re-uploads the CPU
+  snapshot over every live particle (warned once, `plan.md` §11). A parked body
+  keeps its particle and constraint capacity and its share of every dispatch.
+- The cloth capacity guard cannot cover a `ClothGenerator` instantiated after
+  scene load from a prefab that lacks `SolverClothParticles`.
 - Cross-emitter capacity reservation is not globally atomic at the final capacity edge.
 - Modifier dispatch is batched per emitter, not globally across emitters sharing a
   modifier type.

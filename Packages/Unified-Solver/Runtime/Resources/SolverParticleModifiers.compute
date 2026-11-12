@@ -2114,27 +2114,71 @@ void ApplySurfaceImpulse(
     }
 }
 
-// The first bounds effect that reaches a point, with its two durations.
+// Whether the bounds in the scene say a point is somewhere a body must not be,
+// with the two fade durations of the volume that said it.
 //
-// First rather than nearest: every boundary that reaches a body is saying the
-// same thing, which is "not here", so there is nothing to choose between them.
-bool BoundsReaching(
+// Three rules, in this order, against the body's centre:
+//   1. Any Exclude that contains the point recycles it. Exclude wins.
+//   2. Otherwise, if any Contain exists and the point is inside none of them, it
+//      is recycled. Several Contain volumes are a union, so a body inside any
+//      one of them is where it belongs.
+//   3. Otherwise it lives. With no Contain at all only Exclude is looked at.
+//
+// The side an entry stands on is payloadZ: 1 is Contain, 0 is Exclude. `invert`
+// stays 0 for a bounds entry, so VolumeReaches is a plain inside test here. The
+// previous rule read invert, which made "reaches" mean "is outside" for a
+// flagged bounds and turned several of them into an intersection.
+//
+// The fade belongs to the first volume that decided: the first Exclude reached,
+// else the first Contain, because every Contain a body is outside of is saying
+// the same thing and there is nothing to choose between them.
+bool BoundsRecycle(
     float3 position,
     out float fadeOut,
     out float fadeIn)
 {
     fadeOut = 0.0;
     fadeIn = 0.0;
+
+    bool anyContain = false;
+    bool inContain = false;
+    bool haveContainFade = false;
+    float containFadeOut = 0.0;
+    float containFadeIn = 0.0;
+
     for (uint v = 0u; v < _VolumeCount; v++)
     {
         SolverVolume volume = _Volumes[v];
         if (volume.effectType != EFFECT_BOUNDS)
             continue;
-        if (!VolumeReaches(volume, position))
-            continue;
 
-        fadeOut = volume.payloadX;
-        fadeIn = volume.payloadY;
+        bool inside = VolumeReaches(volume, position);
+        if (volume.payloadZ > 0.5)
+        {
+            anyContain = true;
+            if (inside)
+            {
+                inContain = true;
+            }
+            else if (!haveContainFade)
+            {
+                haveContainFade = true;
+                containFadeOut = volume.payloadX;
+                containFadeIn = volume.payloadY;
+            }
+        }
+        else if (inside)
+        {
+            fadeOut = volume.payloadX;
+            fadeIn = volume.payloadY;
+            return true;
+        }
+    }
+
+    if (anyContain && !inContain)
+    {
+        fadeOut = containFadeOut;
+        fadeIn = containFadeIn;
         return true;
     }
     return false;
@@ -2220,7 +2264,7 @@ void ApplyBounds(
 
     if (life.x == LIFE_ALIVE)
     {
-        if (!BoundsReaching(center, fadeOut, fadeIn))
+        if (!BoundsRecycle(center, fadeOut, fadeIn))
         {
             _Lifecycle[instanceIndex] =
                 float4(LIFE_ALIVE, 0.0, 0.0, 0.0);
@@ -2244,7 +2288,7 @@ void ApplyBounds(
             // Read the fade-in duration now, while the body is still where the
             // boundary can reach it. A step later it is at its birthplace, well
             // inside, and there would be nothing left to ask.
-            if (!BoundsReaching(
+            if (!BoundsRecycle(
                     center, fadeOut, fadeIn))
             {
                 fadeIn = 0.0;

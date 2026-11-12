@@ -71,11 +71,50 @@ namespace Yu5h1Lib.UnifiedSolver
         readonly List<List<int>> _templateBodies =
             new List<List<int>>();
 
+        enum ReuseOp
+        {
+            None,
+            Respawn,
+            Park
+        }
+
+        // What each particle was created as, with `position` holding its offset
+        // from the body's spawn origin rather than a place. Everything reuse
+        // needs to put a body back: the solver keeps its own record of creation
+        // but cannot be asked for it, and the GPU copy is not a record at all.
+        // One entry per particle in spawn order; `_restStart[i]` is where
+        // instance i's run begins.
+        readonly List<ParticleGPU> _restParticles =
+            new List<ParticleGPU>();
+        readonly List<int> _restStart = new List<int>();
+        readonly ParticleGPU[] _restScratch =
+            new ParticleGPU[12];
+        ParticleGPU[] _writeScratch;
+        Vector4[] _zeroLifecycle;
+
+        ReuseOp _pendingOp;
+        bool _parked;
+        bool _reportedLateAdd;
+        SolverParticleModifierRunner _runner;
+
         SolverManager _solver;
         ComputeBuffer _instanceBuffer;
         ComputeBuffer _lifecycleBuffer;
         int _sharedPhase;
         bool _reportedCapacity;
+
+        /// <summary>
+        ///   True while the bodies are parked: not drawn, not colliding and out
+        ///   of reach of every volume. Respawn brings them back.
+        /// </summary>
+        public bool IsParked => _parked;
+
+        /// <summary>
+        ///   Whether a Respawn or Park has been asked for and is waiting for the
+        ///   solver's first step before it can be written.
+        /// </summary>
+        public bool IsReusePending =>
+            _pendingOp != ReuseOp.None;
 
         public SolverManager Solver => _solver;
         public ComputeBuffer InstanceBuffer =>
@@ -183,6 +222,181 @@ namespace Yu5h1Lib.UnifiedSolver
         void FixedUpdate()
         {
             FlushQueued();
+            if (_pendingOp != ReuseOp.None)
+                TryApplyPending();
+        }
+
+        /// <summary>
+        ///   Puts every body back inside the spawn box, at rest, with its
+        ///   lifecycle and sleep state cleared, and draws it again.
+        /// </summary>
+        /// <remarks>
+        ///   Reuses the bodies this emitter already created: no particle and no
+        ///   constraint is added, so the solver's counts do not move however
+        ///   many rounds are played. Each body keeps the shape and orientation
+        ///   it was created with and gets a fresh random point in the spawn box.
+        ///   Velocity is zero.
+        ///
+        ///   If the solver has not stepped yet the request is held and applied
+        ///   on the first step after it has, because until then the solver's
+        ///   own first upload would overwrite it. Returns false only when the
+        ///   emitter has nothing to write to (no solver or profile).
+        /// </remarks>
+        public bool Respawn()
+        {
+            return RequestReuse(ReuseOp.Respawn);
+        }
+
+        /// <summary>
+        ///   Takes every body out of play: not drawn, not colliding with
+        ///   anything, not pushed by any volume. Respawn brings them back.
+        /// </summary>
+        public bool Park()
+        {
+            return RequestReuse(ReuseOp.Park);
+        }
+
+        bool RequestReuse(ReuseOp op)
+        {
+            ResolveDependencies();
+            if (!IsReady)
+                return false;
+
+            _pendingOp = op;
+            TryApplyPending();
+            return true;
+        }
+
+        void TryApplyPending()
+        {
+            if (_pendingOp == ReuseOp.None)
+                return;
+
+            // Anything queued but not yet spawned belongs to the same round.
+            FlushQueued();
+
+            ReuseOp op = _pendingOp;
+            if (_instances.Count == 0)
+            {
+                _pendingOp = ReuseOp.None;
+                _parked = op == ReuseOp.Park;
+                return;
+            }
+
+            if (!SolverReuse.HasStepped(_solver))
+                return;
+
+            _pendingOp = ReuseOp.None;
+            WriteBodies(op == ReuseOp.Park);
+            ClearLifecycleAndSleep();
+            _parked = op == ReuseOp.Park;
+        }
+
+        // Rewrites this emitter's own particle runs in the solver's buffer.
+        //
+        // Position and prevPosition are written together and velocity is zero,
+        // for the same reason a bounds teleport does it: the solver rebuilds
+        // velocity as (position - prevPosition) / substep, so a position written
+        // alone would come back as the whole distance divided by a substep.
+        //
+        // Contiguous instances go in one SetData, because the common case is a
+        // single flush at start and a SetData per body would be hundreds of
+        // calls to move one block.
+        void WriteBodies(bool park)
+        {
+            int total = 0;
+            for (int i = 0; i < _instances.Count; i++)
+                total += _instances[i].particleCount;
+            if (_writeScratch == null ||
+                _writeScratch.Length < total)
+            {
+                _writeScratch = new ParticleGPU[total];
+            }
+
+            ComputeBuffer target = _solver.ParticleBuffer;
+            int cursor = 0;
+            int runCursor = 0;
+            int runStart = -1;
+            int runLength = 0;
+            Vector3 half = spawnVolume * 0.5f;
+
+            for (int i = 0; i < _instances.Count; i++)
+            {
+                SolverParticleInstance instance = _instances[i];
+                if (runLength > 0 &&
+                    instance.particleOffset != runStart + runLength)
+                {
+                    target.SetData(
+                        _writeScratch, runCursor, runStart, runLength);
+                    runCursor = cursor;
+                    runLength = 0;
+                }
+                if (runLength == 0)
+                    runStart = instance.particleOffset;
+
+                Vector3 origin = park
+                    ? Vector3.zero
+                    : transform.TransformPoint(
+                        new Vector3(
+                            Random.Range(-half.x, half.x),
+                            Random.Range(-half.y, half.y),
+                            Random.Range(-half.z, half.z)));
+                int restBase = _restStart[i];
+
+                for (int j = 0; j < instance.particleCount; j++)
+                {
+                    ParticleGPU particle = _restParticles[restBase + j];
+                    Vector3 position;
+                    if (park)
+                    {
+                        position = SolverReuse.ParkPosition(
+                            instance.particleOffset + j);
+                        particle.invMass = 0f;
+                        particle.visible = 0u;
+                    }
+                    else
+                    {
+                        position = origin + particle.position;
+                    }
+
+                    particle.position = position;
+                    particle.prevPosition = position;
+                    particle.velocity = Vector3.zero;
+                    _writeScratch[cursor++] = particle;
+                    runLength++;
+                }
+            }
+
+            if (runLength > 0)
+            {
+                target.SetData(
+                    _writeScratch, runCursor, runStart, runLength);
+            }
+        }
+
+        // Fade state and sleep state both outlive a rewrite unless cleared. A
+        // body mid-fade would stay hidden, and a sleeping one is held at the
+        // pose recorded before the rewrite, which would pull it straight back.
+        void ClearLifecycleAndSleep()
+        {
+            if (_lifecycleBuffer != null)
+            {
+                int capacity = Mathf.Max(1, maxInstances);
+                if (_zeroLifecycle == null ||
+                    _zeroLifecycle.Length != capacity)
+                {
+                    _zeroLifecycle = new Vector4[capacity];
+                }
+                _lifecycleBuffer.SetData(_zeroLifecycle);
+            }
+
+            if (_runner == null)
+            {
+                _runner =
+                    GetComponent<SolverParticleModifierRunner>();
+            }
+            if (_runner != null)
+                _runner.ResetInstanceState();
         }
 
         public void SpawnOne()
@@ -323,6 +537,16 @@ namespace Yu5h1Lib.UnifiedSolver
                 return false;
             }
 
+            // Past the first step an add re-uploads the CPU snapshot over every
+            // live particle. Say so once, naming this emitter, and carry on:
+            // refusing would turn a mistake that is visible into one that is
+            // silent.
+            SolverReuse.WarnLateAdd(
+                _solver,
+                this,
+                "bodies",
+                ref _reportedLateAdd);
+
             int particleOffset = _solver.ActiveCount;
             int constraintOffset =
                 _solver.ConstraintCount;
@@ -353,6 +577,24 @@ namespace Yu5h1Lib.UnifiedSolver
                     profile.showCollisionParticles);
                 if (_indexScratch[i] < 0)
                     return false;
+
+                // Mirrors what AddParticle stores, with the position kept as an
+                // offset so the body can be set down anywhere later.
+                _restScratch[i] = new ParticleGPU
+                {
+                    position = worldOffset,
+                    velocity = Vector3.zero,
+                    prevPosition = worldOffset,
+                    invMass = particleMass > 0f
+                        ? 1f / particleMass
+                        : 0f,
+                    phase = phase,
+                    color = new Vector3(
+                        color.r, color.g, color.b),
+                    visible = profile.showCollisionParticles
+                        ? 1u
+                        : 0u
+                };
             }
 
             AddTopologyData(
@@ -360,6 +602,10 @@ namespace Yu5h1Lib.UnifiedSolver
                 _indexScratch,
                 request.position,
                 request.rotation);
+
+            _restStart.Add(_restParticles.Count);
+            for (int i = 0; i < shapeCount; i++)
+                _restParticles.Add(_restScratch[i]);
 
             // Rigid bodies are appended in order, so the id of the one just
             // created is the count captured before creating it.

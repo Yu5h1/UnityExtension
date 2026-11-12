@@ -142,18 +142,32 @@ namespace Yu5h1Lib.ParticlePhysics
 
         void FixedUpdate()
         {
+            ApplyNow();
+        }
+
+        /// <summary>
+        ///   Holds every bound particle at its Transform's position right now,
+        ///   instead of waiting for the next physics step.
+        /// </summary>
+        /// <remarks>
+        ///   For a body that has just been rewritten wholesale -- a cloth put
+        ///   back to its rest pose -- so the pinned particles do not spend one
+        ///   solver step at the rest pose while their Transforms are elsewhere.
+        /// </remarks>
+        public bool ApplyNow()
+        {
             IPhysicsParticleSource source = Source;
             if (source == null)
             {
                 ReportBadSourceOnce();
-                return;
+                return false;
             }
 
             int count = CollectTargets();
             if (count == 0)
-                return;
+                return false;
 
-            source.TryApplyTargets(_targets, count);
+            return source.TryApplyTargets(_targets, count);
         }
 
         // Drops entries with no Transform and no particles, so the per-step loop

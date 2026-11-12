@@ -29,6 +29,14 @@ namespace Yu5h1Lib.UnifiedSolver
         [Min(0f)]
         public float density;
 
+        // Declared here and not on the base class: the serialized name is the
+        // same either way, so existing medium assets are untouched, but only an
+        // effect where "everywhere except inside" has a use should offer it.
+        [Tooltip("On acts everywhere except inside the volume.")]
+        public bool actOutside;
+
+        public override bool ActsOutside => actOutside;
+
         [Space]
         [Tooltip("Metres per second the medium itself moves at. Zero is still water.")]
         public Vector3 flow;

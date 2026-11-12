@@ -122,7 +122,7 @@ Bridge 只會刪除 Emitter 已接受的 Particle。
 ## 目前限制
 
 - Solver 的 Particle Radius 仍是全域值。
-- Instance 採 append-only，尚未回收。
+- Instance 採 append-only，不能移除；多輪使用靠 `Respawn`／`Park`／`ResetToRest` 重用同一批身體，所有內容要在求解器第一步之前建立（見 `plan.md` §11）。
 - 不同 Emitter 同時接近容量上限時，Queue 預留不是全域原子操作。
 - Renderer 使用 GPU procedural instancing，不建立每個 Instance 的 GameObject。
 - 相容橋接依賴上述四個原版 private 欄位名稱與型別。

@@ -149,6 +149,70 @@ namespace Yu5h1Lib.UnifiedSolver
                 : _legacyProfile;
         }
 
+        /// <summary>
+        ///   Whether a world point is inside this volume's geometry, ignoring
+        ///   which side any effect acts on.
+        /// </summary>
+        /// <remarks>
+        ///   The CPU twin of the inside half of `VolumeReaches` in
+        ///   SolverParticleModifiers.compute, and kept branch for branch the
+        ///   same. It exists so the runner can ask a question about a single
+        ///   point -- an emitter's spawn centre -- without a GPU readback; the
+        ///   per-body test stays on the GPU.
+        /// </remarks>
+        public bool ContainsPoint(Vector3 worldPoint)
+        {
+            Vector3 offset = worldPoint - Center;
+            Vector3 local = new Vector3(
+                Vector3.Dot(offset, AxisX),
+                Vector3.Dot(offset, AxisY),
+                Vector3.Dot(offset, AxisZ));
+            Vector3 half = HalfExtents;
+
+            switch (Kind)
+            {
+                case ShapeKind.Box:
+                    return
+                        Mathf.Abs(local.x) <= half.x &&
+                        Mathf.Abs(local.y) <= half.y &&
+                        Mathf.Abs(local.z) <= half.z;
+
+                case ShapeKind.Cylinder:
+                {
+                    float rx = local.x / Mathf.Max(half.x, 1e-6f);
+                    float ry = local.y / Mathf.Max(half.y, 1e-6f);
+                    return
+                        Mathf.Abs(local.z) <= half.z &&
+                        rx * rx + ry * ry <= 1f;
+                }
+
+                case ShapeKind.Cone:
+                {
+                    // Axis on +Z, narrow at -Z; the two cross-section extents
+                    // are the two radii.
+                    float t = Mathf.Clamp01(
+                        (local.z + half.z) /
+                        Mathf.Max(2f * half.z, 1e-6f));
+                    float radius = Mathf.Lerp(half.y, half.x, t);
+                    return
+                        Mathf.Abs(local.z) <= half.z &&
+                        local.x * local.x + local.y * local.y
+                            <= radius * radius;
+                }
+
+                case ShapeKind.Sphere:
+                {
+                    float ux = local.x / half.x;
+                    float uy = local.y / half.y;
+                    float uz = local.z / half.z;
+                    return ux * ux + uy * uy + uz * uz <= 1f;
+                }
+
+                default:
+                    return false;
+            }
+        }
+
         // A volume with no usable effect is a shape that does nothing, and an
         // entry for it would still cost an inside test per particle to reach a
         // branch that applies nothing. Filtered here rather than in the kernel.
@@ -218,7 +282,7 @@ namespace Yu5h1Lib.UnifiedSolver
                     halfExtents = HalfExtents,
                     effectType = (float)effect.EffectType,
                     axisX = AxisX,
-                    invert = effect.actOutside ? 1f : 0f,
+                    invert = effect.ActsOutside ? 1f : 0f,
                     axisY = AxisY,
                     axisZ = AxisZ
                 };

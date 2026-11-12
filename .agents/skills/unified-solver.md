@@ -35,7 +35,7 @@ unified-solver        SolverManager        substeps 30, damping 2, particleRadiu
                                            frictionStatic 0.02, frictionKinetic 0.005
 SolverVolume/
   Sea                 SolverVolume + PrimitiveShape (Box)   -> Medium  density 472
-  Bound               SolverVolume + PrimitiveShape         -> Bounds  actOutside, fade 0.5/0.5
+  Bound               SolverVolume + PrimitiveShape         -> Bounds  Mode Contain, fade 0.5/0.5
   FishGenerator       SolverParticleEmitter  256 of 512, spawnVolume 5x2x5
     SolverMotionTarget                       mode Direction, radius 0
 splash water          SolverVolume + ParticleSystemAddon    -> Medium  density 1, flow (0,0,2000) local
@@ -97,13 +97,36 @@ up in one settles at a different level depending on where it happens to be.
 `Shape` may also be a GameObject rather than the component — dragging a provider
 out of the hierarchy hands over the GameObject, and the field resolves it.
 
-Every effect carries `actOutside`, because that motivating case needs both sides
-of one surface at once.
+A medium carries `actOutside`, because the motivating case needs both sides of
+one surface at once (water inside, recycle outside). Bounds does not: it states
+`Mode`, below.
 
 | Effect | Granularity | Does |
 |---|---|---|
 | `SolverMediumProfile` | Particle | density, flow |
 | `SolverBoundsProfile` | Instance | fade out, move back, fade in |
+
+### Bounds: Contain and Exclude
+
+Each bounds volume is **Contain** (bodies may only live inside) or **Exclude**
+(bodies are recycled on reaching inside). Every bounds in the scene combines by
+one rule, judged on each body's centre:
+
+1. Any Exclude that reaches it recycles it. **Exclude wins.**
+2. Otherwise, if any enabled Contain exists and the body is inside none of them,
+   it is recycled. Contain volumes are a **union**, so two schools in two
+   separate regions each need only their own Contain.
+3. Otherwise it lives. With no Contain, only Exclude is looked at.
+
+So: one Contain per region fish may live in, and an Exclude wherever they must not
+go, even inside a Contain. Do not stack two Contain volumes expecting an
+intersection; that was the old `actOutside` behaviour and the reason it went.
+
+An emitter whose spawn box **centre** is outside every Contain, or inside an
+Exclude, is exempted from that rule and warns once, because recycling would put
+its bodies straight back into the same fault. Fix the layout rather than the
+warning. Assets saved before `Mode` existed are converted on load (`actOutside`
+on -> Contain, off -> Exclude); a profile made in code should set `Mode`.
 
 Granularity is not a performance note. **Per particle** is what gives a floating
 body its waterline for nothing: part of it is inside, part is not, and it settles
@@ -430,6 +453,10 @@ knowing it is small saves hunting for an API that was never going to exist.
 | aim a jet | rotate the volume, with `flowIsLocal` on |
 | grab cloth | `ClothGrabber.Grab()` / `Release()` |
 | retune anything | edit the profile asset — it is live in play mode |
+| play another round with the same bodies | `SolverParticleEmitter.Respawn()` |
+| take the bodies out of play | `SolverParticleEmitter.Park()` (undo with `Respawn()`) |
+| put a net back and reuse it | `SolverClothParticles.ResetToRest()` |
+| take a net out of play | `SolverClothParticles.Park()` (undo with `ResetToRest()`) |
 
 Two consequences of that table worth stating outright.
 
@@ -445,6 +472,34 @@ named after one. Asking which fish are in a shoal is asking the wrong question.
 Capacity is the one place a script can quietly fail: `TryEnqueue` returns false
 past `maxInstances`, and the solver's own `maxParticles` / `maxRigidBodies` on
 `SolverManager` are separate ceilings that an emitter cannot raise.
+
+## Reusing bodies round after round
+
+One persistent `SolverManager`, bodies created once, the same bodies played again
+every round. The solver cannot remove a particle, and **any `AddParticle` after its
+first step re-uploads the CPU snapshot over every live particle**, putting the
+whole scene back to the state it was created in. So the rule is: create everything
+before the first step, then rewrite.
+
+- **Emitter:** `playOnAwake` with the full `initialCount` creates the bodies at
+  start. `Respawn()` puts each back at a fresh random point in the spawn box, same
+  shape and orientation, velocity zero, fade and sleep state cleared, drawn.
+  `Park()` hides them, takes them out of every collision and out of reach of every
+  volume. Neither adds a particle or a constraint, so `ActiveCount` and
+  `ConstraintCount` stay put however many rounds are played.
+- **Net:** `ClothGenerator` + `SolverClothParticles`. `ResetToRest()` rewrites it
+  to its rest pose at the generator's *current* Transform (pinned particles go
+  straight to their anchors), no velocity. `Park()` as above, and an anchor stops
+  holding the parked net. Do not move the `ClothGenerator` Transform to move a net;
+  move the anchor Transforms and call `ResetToRest()` when the net should start
+  over.
+- A call made before the solver's first step is held and applied one step after it.
+- Anything that still adds after the first step is warned about once, naming the
+  component. Treat that warning as a bug in the scene, not as noise.
+- The net is checked before it is built: if the solver's `maxParticles` or
+  `maxConstraints` leave too little room, the `ClothGenerator` is disabled and one
+  error names it with what it needs and what is free. Size the solver for the net
+  *and* the fish together. A net needs about `3 * X * Y` constraints with shear on.
 
 ## Settings that silently ruin things
 

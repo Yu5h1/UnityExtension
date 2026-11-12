@@ -60,6 +60,12 @@ namespace Yu5h1Lib.UnifiedSolver
                 return;
             }
 
+            // Parked bodies are far outside every view, but drawing them would
+            // still cost a draw, and the rigid path would still read their poses
+            // back from the solver. Skipped outright.
+            if (_emitter.IsParked)
+                return;
+
             // A rigid body is a mesh and a matrix, and the solver already hands
             // out that matrix on the CPU every frame through
             // TryGetRigidBodyMeshPose. So rigid instances are drawn with
