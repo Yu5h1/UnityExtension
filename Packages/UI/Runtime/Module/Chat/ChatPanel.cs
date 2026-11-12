@@ -178,7 +178,7 @@ namespace Yu5h1Lib.UI
         private readonly List<(ImageMessage Message, bool HasTime)> imageRows = new();
         private readonly List<Reply> replies = new();
         private readonly List<Reply> completedReplies = new();
-        private Options options = new();
+        [SerializeField] private Options options = new();
         private DateTime? lastDate;
         private FollowingScrollView scroll;
         private RectTransform viewport;
@@ -425,6 +425,7 @@ namespace Yu5h1Lib.UI
 
             messageStack = content.gameObject.AddComponent<VerticalLayoutGroup>();
             messageStack.spacing = RowGap;
+            messageStack.padding.bottom = Mathf.Max(0, options.MessageBottomInset);
             messageStack.childControlHeight = messageStack.childControlWidth = true;
             messageStack.childForceExpandHeight = false;
             messageStack.childForceExpandWidth = true;

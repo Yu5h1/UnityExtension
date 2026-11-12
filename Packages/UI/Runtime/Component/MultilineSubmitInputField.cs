@@ -3,10 +3,10 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace Yu5h1Lib.UI.Acceptance
+namespace Yu5h1Lib.UI
 {
-    /// <summary>Applies the chat keyboard shortcuts while preserving native multiline editing.</summary>
-    internal sealed class UxUiChatDraftField : InputField
+    /// <summary>Handles keyboard submission for the multiline uGUI input created by InputFieldAddon.</summary>
+    internal sealed class MultilineSubmitInputField : InputField
     {
         private readonly Event keyboardEvent = new();
         private bool previousComposition;
@@ -70,10 +70,16 @@ namespace Yu5h1Lib.UI.Acceptance
                     {
                         string draft = text;
                         SubmitRequested?.Invoke();
-                        if (draft.Length > 0 && text.Length == 0)
+                        if (this == null || !IsActive())
+                            return;
+                        if (draft.Length > 0 && text.Length == 0 && isFocused &&
+                            EventSystem.current?.currentSelectedGameObject == gameObject)
                         {
                             DeactivateInputField();
-                            ActivateInputField();
+                            if (this != null && IsActive() && IsInteractable() &&
+                                EventSystem.current?.currentSelectedGameObject == gameObject)
+                                ActivateInputField();
+                            return;
                         }
                     }
                 }

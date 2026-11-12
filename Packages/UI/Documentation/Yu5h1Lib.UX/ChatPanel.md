@@ -37,6 +37,10 @@ VCP 宿主／UxAcceptance sample
 
 [TransientSurface 1.1.2](../../../../../../UX/Documentation/ModuleSpec/TransientSurface.md) 有共用規則，uGUI 尚無獨立採用驗證。圖片檢視器使用原生 Canvas 與 EventSystem，證據只涵蓋下列 ChatPanel 測試範圍。Button 沿用原生 Selectable 行為，完整的 [uGUI Button](Button.md) 與 VisualFoundation 色彩驗收沿各自紀錄。TextField、Toggle、DirectionField 與聊天設定未列入本輪範圍。組裝入口以既有 UxAcceptance 場景及 `ChatPanel.Configure` 驗證，產品場景的組裝仍待後續 VCP 採用。
 
+## 消費端 prefab
+
+[ChatPanel.prefab](../../Runtime/Prefabs/ChatPanel.prefab) 隨 Yu5h1Lib.UI 套件交付。它是可拉伸至父容器的 uGUI 訊息區。消費端可在 Canvas 下引用 prefab，在 Inspector 設定 `Options`，或在加入訊息前透過 `ChatPanel.Configure` 提供設定。訊息、回覆、圖片和輸入列由宿主接到既有公開 API。Prefab 的 Editor 測試在獨立 Canvas 下驗證實例化、Inspector 設定與新增訊息。
+
 ## 試用範圍
 
 使用者在 VCP 直向試用發現訊息區遭工具列與輸入列擠壓。成因與共用元件取捨見 [uGUI ChatPanel 示範版對齊計畫](../../../../Documentation/ChatPanelDemoParityPlan.md)。
@@ -56,7 +60,7 @@ VCP → Package Manager → Yu5h1Lib.UI → Samples → UxAcceptance → Import�
 
 工具列使用 uGUI 格線，每列高 36，窄版按可用寬度換行。輸入列的單行高度是 44。草稿逐行增加，最多顯示五行，超出時右側出現捲軸。送出按鈕固定在輸入列右下。角色貼文與示範狀態放在聊天框上方。
 
-`UguiControlPalette` 提供明暗色彩角色、鍵盤焦點與停用外觀。驗收入口及聊天 sample 使用暗色配色。入口搜尋採可見焦點框，聊天的內嵌欄位用無框 caret。`InputFieldState` 回報原生欄位狀態，`MultilineInputField` 負責高度、可見行數及捲動，編輯與選取由原生 InputField 處理。
+`UguiControlPalette` 提供明暗色彩角色、鍵盤焦點與停用外觀。驗收入口及聊天 sample 使用暗色配色。入口搜尋採可見焦點框，聊天的內嵌欄位用無框 caret。`InputFieldState` 回報原生欄位狀態。聊天 sample 透過 `InputFieldAddon.CreateMultiline` 建立欄位，由 addon 接上五行排版、捲動及原生編輯。
 
 | 首輪直接量測的 sample 外框 | 工具列 | 輸入列，單行 → 五行 → 單行 | 訊息區，單行 → 五行 → 單行 |
 |---|---:|---:|---:|
@@ -88,9 +92,9 @@ EditMode 31/31（`20261112-140417-tests.xml`），包含套件新增的單指標
 
 ## 輸入列鍵盤操作
 
-Sample 的草稿欄位沿用原生 uGUI `InputField`，由 `InputFieldState` 回報欄位狀態、`MultilineInputField` 管理五行高度與捲動。實體鍵盤的 Enter 或數字鍵盤 Enter 與送出按鈕共用宿主的送出流程。Shift+Enter 會在游標處換行，有選取範圍時以一個換行取代選取文字。組字期間保留草稿。
+Sample 的 `InputFieldAddon` 以原生 uGUI `InputField` 編輯草稿，`InputFieldState` 繼續提供欄位狀態。實體鍵盤的 Enter 或數字鍵盤 Enter 由 addon 的 `Submitted` 通知宿主送出，程式也可透過 `InvokeSubmitEvent()` 使用同一個通知。Shift+Enter 會在游標處換行，有選取範圍時以一個換行取代選取文字。組字期間保留草稿。
 
-2026-11-12 以與 VCP 相同的 Unity 6000.6.0f1、uGUI 2.6.0、Input System 1.20.0，在 Yu5h1LibTest 執行 sample 的無畫面 PlayMode 1/1（`20261112-143602-tests.xml`）。涵蓋空白草稿、換行、選取取代、模擬組字、送出與焦點。手機原生鍵盤和中文 IME 需實機確認。
+2026-11-12 在 Yu5h1LibTest 使用與 VCP 相同的 Unity 6000.6.0f1、uGUI 2.6.0 和 Input System 1.20.0。無畫面 PlayMode 1/1（`20261112-144759-tests.xml`），涵蓋空白草稿、換行、選取取代、模擬組字、送出和焦點。直向與橫向外框的輸入列均從單行 44 增至五行 111，七行時高度仍為 111 並顯示右側捲軸。送出鍵維持 38 × 38，距右緣 4、底緣 3。EditMode 32/32（`20261112-144819-tests.xml`），包含套件 prefab 實例化和各尺寸排版回歸。畫面與手機中文 IME 由人工驗收。
 
 ## VCP batchmode 驗證
 

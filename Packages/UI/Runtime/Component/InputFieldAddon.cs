@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -65,7 +66,13 @@ namespace Yu5h1Lib.UI
         [SerializeField] private bool autoWrappingOverflowMode;
         [SerializeField] private bool DontSubmitIfIsNullOrWhiteSpace;
 
-        public UnityEvent<string> _submit;
+        public UnityEvent<string> _submit = new();
+        /// <summary>Fires when the addon requests submission with the current field value.</summary>
+        public event UnityAction<string> Submitted
+        {
+            add => _submit.AddListener(value);
+            remove => _submit.RemoveListener(value);
+        }
         public event UnityAction<string> submit
         {
             add => adapter.submit += value;
@@ -103,19 +110,68 @@ namespace Yu5h1Lib.UI
         private int lastSelectionStart = -1;
         private int lastSelectionEnd = -1;
         private int lastLineCount = -1;
+        private MultilineSubmitInputField multilineInput;
+
+        /// <summary>
+        /// Creates a multiline uGUI field in a dedicated parent viewport.
+        /// The text must stretch across the field. The viewport supplies layout height and scrolling.
+        /// </summary>
+        public static InputFieldAddon CreateMultiline(RectTransform field, Text text, Graphic placeholder,
+            Graphic targetGraphic, float minHeight = 44f, int maxVisibleLines = 5, float scrollbarWidth = 16f)
+        {
+            if (field == null || field.parent is not RectTransform viewport)
+                throw new ArgumentException("A field with a RectTransform parent is required.", nameof(field));
+            if (text == null || text.transform.parent != field ||
+                text.rectTransform.anchorMin != Vector2.zero || text.rectTransform.anchorMax != Vector2.one)
+                throw new ArgumentException("The text must be a direct child that stretches across the field.", nameof(text));
+            if (field.GetComponent<Selectable>() != null || field.GetComponent<InputFieldAddon>() != null ||
+                viewport.GetComponent<MultilineInputField>() != null)
+                throw new InvalidOperationException("The field and its viewport must be dedicated to this multiline input.");
+
+            var input = field.gameObject.AddComponent<MultilineSubmitInputField>();
+            input.targetGraphic = targetGraphic;
+            input.textComponent = text;
+            input.placeholder = placeholder;
+            input.lineType = InputField.LineType.MultiLineNewline;
+            viewport.gameObject.AddComponent<MultilineInputField>()
+                .Configure(input, minHeight, maxVisibleLines, scrollbarWidth);
+
+            var addon = field.gameObject.AddComponent<InputFieldAddon>();
+            addon.AutoResizeScrollRect = false;
+            addon.EnableScrollToCaret = false;
+            addon.Init(false);
+            return addon;
+        }
 
         protected override void OnInitializing()
         {
             base.OnInitializing();
+            scrollRect = GetComponentInParent<ScrollRect>();
+
+            if (Raw is MultilineSubmitInputField input)
+            {
+                multilineInput = input;
+                input.SubmitRequested -= InvokeSubmitEvent;
+                input.SubmitRequested += InvokeSubmitEvent;
+                return;
+            }
 
             submit += OnSubmit;
             textChanged += TextChanged;
             VisibleLineArea = new Vector2Int(0, visibleLineCount-1);
-            scrollRect = GetComponentInParent<ScrollRect>();
 
         }
+        private void OnDestroy()
+        {
+            if (multilineInput != null)
+                multilineInput.SubmitRequested -= InvokeSubmitEvent;
+        }
+
         private void Start()
         {
+            if (multilineInput != null)
+                return;
+
             ((RectTransform)rectTransform.parent).ForceRebuildLayoutImmediate();
             if (AutoResizeScrollRect && scrollRect != null )
                 ResizeScrollRect();
@@ -129,6 +185,9 @@ namespace Yu5h1Lib.UI
 
         void Update()
         {
+            if (multilineInput != null)
+                return;
+
             if (EnableScrollToCaret)
                 CheckCaretPositionChange();
 #if UNITY_STANDALONE || UNITY_PLATFORM_STANDALONE_WIN || UNITY_EDITOR
@@ -333,7 +392,8 @@ namespace Yu5h1Lib.UI
 
         public void InvokeSubmitEvent() 
         {
-            if (!allowSubmit || !IsAvailable())
+            if (!allowSubmit || !IsAvailable() ||
+                (multilineInput != null && string.IsNullOrWhiteSpace(text)))
                 return;
             _submit?.Invoke(text);        
         }

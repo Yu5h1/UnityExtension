@@ -388,6 +388,37 @@ namespace Yu5h1Lib.UI.Tests
             }
         }
 
+        [Test]
+        public void PackageChatPanelPrefabSupportsAConsumerCanvas()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Packages/com.yu5h1.ui/Runtime/Prefabs/ChatPanel.prefab");
+            Assert.That(prefab, Is.Not.Null);
+            var instance = Object.Instantiate(prefab, root.transform);
+            var chat = instance.GetComponent<ChatPanel>();
+            Assert.That(chat, Is.Not.Null);
+            var rect = (RectTransform)instance.transform;
+            Assert.That(rect.anchorMin, Is.EqualTo(Vector2.zero));
+            Assert.That(rect.anchorMax, Is.EqualTo(Vector2.one));
+            Assert.That(rect.offsetMin, Is.EqualTo(Vector2.zero));
+            Assert.That(rect.offsetMax, Is.EqualTo(Vector2.zero));
+
+            using (var serialized = new SerializedObject(chat))
+            {
+                var options = serialized.FindProperty("options");
+                options.FindPropertyRelative("MessageBottomInset").intValue = 8;
+                options.FindPropertyRelative("FollowResumeTolerance").floatValue = 12f;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            chat.AddMessage("Message from the consumer", id: "consumer");
+            Assert.That(chat.ScrollView.viewport.rect.size, Is.EqualTo(rect.rect.size));
+            Assert.That(chat.ScrollView.ResumeTolerance, Is.EqualTo(12f));
+            Assert.That(chat.MessageContent.GetComponent<VerticalLayoutGroup>().padding.bottom, Is.EqualTo(8));
+            Assert.That(chat.MessageContent.Find("consumer").GetComponentInChildren<Text>().text,
+                Is.EqualTo("Message from the consumer"));
+            Assert.That(instance.GetComponentInChildren<InputField>(), Is.Null);
+        }
+
         [TestCase(1280f, 720f, 36f, TestName = "SampleLayout_Desktop")]
         [TestCase(360f, 600f, 36f, TestName = "SampleLayout_PhonePortrait")]
         [TestCase(640f, 360f, 36f, TestName = "SampleLayout_PhoneLandscape")]
@@ -401,7 +432,10 @@ namespace Yu5h1Lib.UI.Tests
             var composer = (RectTransform)frame.Find("Conversation/Composer slot/Sample host composer");
             var viewport = demo.Panel.ScrollView.viewport;
             var send = (RectTransform)composer.Find("送出");
-            var field = composer.GetComponentInChildren<InputField>();
+            var input = composer.GetComponentInChildren<InputFieldAddon>();
+            Assert.That(input, Is.Not.Null);
+            var field = (InputField)input.Raw;
+            Assert.That(field.GetComponent<InputFieldState>(), Is.Not.Null);
             var multiline = composer.GetComponentInChildren<MultilineInputField>();
 
             LayoutRebuilder.ForceRebuildLayoutImmediate(frame);
@@ -417,7 +451,9 @@ namespace Yu5h1Lib.UI.Tests
                 Assert.That(bounds.max.x, Is.LessThanOrEqualTo(toolbar.rect.xMax + .05f));
             }
 
-            float sendBottom = RectTransformUtility.CalculateRelativeRectTransformBounds(frame, send).min.y;
+            var sendBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(frame, send);
+            float sendBottom = sendBounds.min.y;
+            float sendRight = sendBounds.max.x;
             field.text = "1\n2\n3\n4\n5";
             multiline.RefreshLayout();
             LayoutRebuilder.ForceRebuildLayoutImmediate(frame);
@@ -433,6 +469,8 @@ namespace Yu5h1Lib.UI.Tests
             Assert.That(multiline.HasOverflow, Is.True);
             Assert.That(composer.rect.height, Is.EqualTo(expanded).Within(.05f));
             Assert.That(send.rect.height, Is.EqualTo(38f).Within(.05f));
+            Assert.That(RectTransformUtility.CalculateRelativeRectTransformBounds(frame, send).max.x,
+                Is.EqualTo(sendRight).Within(.05f));
             Assert.That(RectTransformUtility.CalculateRelativeRectTransformBounds(frame, send).min.y,
                 Is.EqualTo(sendBottom).Within(.05f));
 
