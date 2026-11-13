@@ -80,6 +80,8 @@ namespace Yu5h1Lib.UI.Acceptance
                 UxUiModuleRegistry.Register(new UxUiBackgroundLoadDemoCase(), "背景載入、進度與失敗狀態");
             if (!UxUiModuleRegistry.Contains("chatpanel"))
                 UxUiModuleRegistry.Register(new UxUiChatPanelDemoCase(), "聊天面板、逐字回覆與圖片檢視");
+            if (!UxUiModuleRegistry.Contains("scrollview"))
+                UxUiModuleRegistry.Register(new UxUiScrollViewDemoCase(), "切換方向、循環與項目重用");
         }
 
         public void ShowCatalog()

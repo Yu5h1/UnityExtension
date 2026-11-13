@@ -51,3 +51,9 @@ ChatPanel sample 使用 `Yu5h1Lib.UI.ScrollView` 採用 ScrollView 0.2.2-draft�
 同一個 `ScrollView` 使用原生 `horizontal` 或 `vertical` 設定方向。以 `SetItems(prefab, count, size, bind)` 提供固定尺寸的項目，元件依可視範圍使用 Core `Recycler<RectTransform>` 借還實例。`Loop` 開啟且內容溢位時可以跨過首尾，捲軸對應本圈位置。有限清單可選擇 `PreservePosition` 或 `FollowLatest`，循環啟用時暫停跟隨。虛擬清單可使用 `ScrollViewScrollbar`，將其可操作區放在視窗邊緣，指標進入該區、拖曳或鍵盤聚焦時顯示。
 
 2026-11-13 在 Yu5h1LibTest（Unity 6000.6.0f1）跑定向驗收。EditMode 32/32，涵蓋兩軸的滾輪與拖曳跨圈、滑塊定位、靠邊顯示、關閉循環、同一批 prefab 實例重用，以及原有 ChatPanel 案例。既有 ChatPanel sample 的 PlayMode 案例 1/1 通過，驗證歷史載入維持閱讀位置及手動捲回底端後恢復跟隨。
+
+## Yu5h1LibTest 驗收展示
+
+在 `UxUiAcceptanceDemo.unity` 進入 Play，從目錄選「ScrollView 捲動視窗」。方向按鈕在同一個元件上切換水平與垂直，切換後回到首項並保留循環設定。循環按鈕控制是否跨過首尾。展示以 1,000 筆項目顯示實例建立數與使用中數量。捲軸位於當前捲動方向的底邊或右邊。
+
+Yu5h1LibTest（Unity 6000.6.0f1）使用本機 `Packages/UI`。PlayMode 2/2 通過，含展示目錄開啟、同一視窗與捲軸切換方向、雙向跨圈、捲軸定位及關閉循環的夾限，也重跑了原本的 ChatPanel 歷史載入與跟隨案例。展示驗證每軸捲三圈，垂直維持 8 個、水平維持 10 個已建立實例。EditMode 40/40 通過，含 ScrollView 12、ChatPanel 20、Button 與驗收目錄 8。結果位於 `W:/UnityProject/Yu5h1LibTest-Build/logs/` 的 `20261113-191526-tests.xml`（PlayMode）與 `20261113-191448-tests.xml`（EditMode）。測試使用無圖形模式，Game View 外觀與實體輸入手感待人工確認。
