@@ -19,6 +19,7 @@ namespace Yu5h1Lib
             bool GetButtonDown(string name);
             bool GetButton(string name);
             bool GetButtonUp(string name);
+            int TouchCount { get; }
             Touch GetTouch(int index);
         }
 
@@ -42,6 +43,17 @@ namespace Yu5h1Lib
         public static bool GetButtonDown(string name) => CurrentBackend?.GetButtonDown(name) == true;
         public static bool GetButton(string name) => CurrentBackend?.GetButton(name) == true;
         public static bool GetButtonUp(string name) => CurrentBackend?.GetButtonUp(name) == true;
+        /// <summary>
+        /// The number of touches this frame: fingers that are down, plus fingers that lifted this frame so a gesture can
+        /// see its end. Valid indices for <see cref="GetTouch"/> are <c>0</c> to <c>TouchCount - 1</c>.
+        /// </summary>
+        public static int TouchCount => CurrentBackend?.TouchCount ?? 0;
+
+        /// <summary>
+        /// The touch at <paramref name="index"/> among the <see cref="TouchCount"/> touches of this frame, in a stable
+        /// order while the fingers stay down; <c>default</c> outside that range. <see cref="Touch.fingerId"/> identifies
+        /// the same finger across frames.
+        /// </summary>
         public static Touch GetTouch(int index) => CurrentBackend?.GetTouch(index) ?? default;
     }
 }

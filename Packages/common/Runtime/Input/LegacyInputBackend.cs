@@ -23,7 +23,8 @@ namespace Yu5h1Lib
         public bool GetButtonDown(string name) => Input.GetButtonDown(name);
         public bool GetButton(string name) => Input.GetButton(name);
         public bool GetButtonUp(string name) => Input.GetButtonUp(name);
-        public Touch GetTouch(int index) => Input.GetTouch(index);
+        public int TouchCount => Input.touchCount;
+        public Touch GetTouch(int index) => index >= 0 && index < Input.touchCount ? Input.GetTouch(index) : default;
     }
 }
 #endif

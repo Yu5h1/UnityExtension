@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-11-13T11:53:33.815464+00:00",
+  "updated_at": "2026-11-13T15:21:35.435745+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -609,7 +609,23 @@
           "priority": 4
         }
       ],
-      "pending_items": []
+      "pending_items": [
+        {
+          "id": "problem-broadcaster-disable-test",
+          "title": "問題：common 的 BroadcasterObjectDispatchTests.DisablingHubClearsSubscriptions 在 Yu5h1LibTest（6000.6.0f1）EditMode 失敗（第 192 行預期 False 實得 True）。2026-11-10 的 Broadcaster 修正只在替身環境跑過測試，這是第一次在 Unity 內執行；log 在 W:/UnityProject/Yu5h1LibTest-Build/logs/20261113-231652-tests.xml。",
+          "status": "planned",
+          "priority": 2,
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-11-13T15:21:35.435745+00:00",
+              "session": "Core 功能與 debug graphic 搬移",
+              "session_id": "f5b161f4-e456-48ad-945c-d5ed25eb01cd"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "preferences",
@@ -2949,6 +2965,41 @@
               "actor": "codex",
               "at": "2026-10-27T19:06:36.463513+00:00",
               "session": "攝影機控制收斂任務建卡"
+            },
+            {
+              "event": "updated",
+              "actor": "claude",
+              "at": "2026-11-13T15:05:02.121426+00:00",
+              "session": "Core 功能與 debug graphic 搬移"
+            }
+          ],
+          "waits_for": [
+            {
+              "scope_id": "unity-extension",
+              "task_id": "camera-controller",
+              "item_id": "input-handler-multitouch"
+            }
+          ]
+        },
+        {
+          "id": "retire-core-camera-controller",
+          "title": "刪除 Core 的 CameraController（Unity/Core/Runtime/Source/Control/CameraController.cs，含 LookAt3rdPerson）並重建 Core DLL；刪除前重新搜尋各專案確認已無繼承或呼叫，UnityExtension/Runtime 的備份副本不動。",
+          "status": "planned",
+          "priority": 2,
+          "waits_for": [
+            {
+              "scope_id": "unity-extension",
+              "task_id": "camera-controller",
+              "item_id": "vcp-consumer",
+              "strict": true
+            }
+          ],
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-11-13T15:01:46.049319+00:00",
+              "session": "Core 功能與 debug graphic 搬移"
             }
           ]
         },
@@ -2975,6 +3026,51 @@
               "actor": "codex",
               "at": "2026-10-27T19:06:36.463513+00:00",
               "session": "攝影機控制收斂任務建卡"
+            }
+          ]
+        },
+        {
+          "id": "problem-pan-while-following-test",
+          "title": "問題：common 的 CameraControllerTests.PanWhileFollowingEditsTheOffsetInTargetSpace 在 Yu5h1LibTest（6000.6.0f1）EditMode 失敗：預期 offset (0,0,-1)，實得 (0,0,1)。2026-11-13 跑 InputHandler 多指觸控測試時發現，與該變更無關；log 在 W:/UnityProject/Yu5h1LibTest-Build/logs/20261113-231652-tests.xml。",
+          "status": "planned",
+          "priority": 2,
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-11-13T15:21:35.435745+00:00",
+              "session": "Core 功能與 debug graphic 搬移",
+              "session_id": "f5b161f4-e456-48ad-945c-d5ed25eb01cd"
+            }
+          ]
+        }
+      ],
+      "completed_items": [
+        {
+          "id": "input-handler-multitouch",
+          "title": "InputHandler 支援多指觸控：介面加上觸控數量，Input System 後端的 GetTouch 回傳任一指（目前 index 非 0 一律回傳空值），讓觸控 InputSource 經 InputHandler 就能做單指 Orbit 與雙指縮放，不再直接讀 Touchscreen。範圍是 common 的 InputHandler／LegacyInputBackend 與 InputSystem 套件的 InputSystemBackend。",
+          "status": "done",
+          "priority": 2,
+          "activity": [
+            {
+              "event": "created",
+              "actor": "claude",
+              "at": "2026-11-13T15:01:46.049319+00:00",
+              "session": "Core 功能與 debug graphic 搬移"
+            },
+            {
+              "event": "started",
+              "actor": "claude",
+              "at": "2026-11-13T15:11:33.798501+00:00",
+              "session": "Core 功能與 debug graphic 搬移",
+              "session_id": "f5b161f4-e456-48ad-945c-d5ed25eb01cd"
+            },
+            {
+              "event": "done",
+              "actor": "claude",
+              "at": "2026-11-13T15:21:35.435745+00:00",
+              "session": "Core 功能與 debug graphic 搬移",
+              "session_id": "f5b161f4-e456-48ad-945c-d5ed25eb01cd"
             }
           ]
         }

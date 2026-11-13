@@ -56,21 +56,76 @@ namespace Yu5h1Lib.Input
         public bool GetButton(string name) => _actions?.FindAction(name)?.IsPressed() == true;
         public bool GetButtonUp(string name) => _actions?.FindAction(name)?.WasReleasedThisFrame() == true;
 
-        public Touch GetTouch(int index)
+        public int TouchCount => CountTouches(Touchscreen.current);
+
+        public Touch GetTouch(int index) => ReadTouch(Touchscreen.current, index);
+
+        /// <summary>
+        /// Fingers that are down plus fingers that lifted this frame, in slot order. A slot keeps reporting Ended after
+        /// its finger lifts until a new touch reuses it, so an Ended or Canceled slot counts only in the frame its press
+        /// was released; counting every non-None slot would keep a lifted pinch finger in the count.
+        /// </summary>
+        internal static int CountTouches(Touchscreen screen)
         {
-            if (index != 0 || Touchscreen.current == null) return default;
+            if (screen == null) return 0;
+            var count = 0;
+            foreach (var slot in screen.touches)
+                if (IsCurrent(slot)) count++;
+            return count;
+        }
+
+        internal static Touch ReadTouch(Touchscreen screen, int index)
+        {
+            if (screen == null || index < 0) return default;
+            foreach (var slot in screen.touches)
+            {
+                if (!IsCurrent(slot)) continue;
+                if (index-- == 0) return ToTouch(slot);
+            }
+            return default;
+        }
+
+        private static bool IsCurrent(TouchControl slot)
+        {
+            switch (slot.phase.ReadValue())
+            {
+                case UnityEngine.InputSystem.TouchPhase.Began:
+                case UnityEngine.InputSystem.TouchPhase.Moved:
+                case UnityEngine.InputSystem.TouchPhase.Stationary:
+                    return true;
+                case UnityEngine.InputSystem.TouchPhase.Ended:
+                case UnityEngine.InputSystem.TouchPhase.Canceled:
+                    return slot.press.wasReleasedThisFrame;
+                default:
+                    return false;
+            }
+        }
+
+        private static Touch ToTouch(TouchControl slot)
+        {
+            var position = slot.position.ReadValue();
             return new Touch
             {
-                position         = Touchscreen.current.position.ReadValue(),
-                rawPosition      = Touchscreen.current.position.ReadValue(),
-                fingerId         = 0,
-                tapCount         = 1,
-                phase            = GetTouchPhase(),
+                fingerId         = slot.touchId.ReadValue(),
+                position         = position,
+                rawPosition      = position,
+                deltaPosition    = slot.delta.ReadValue(),
+                tapCount         = slot.tapCount.ReadValue(),
+                phase            = ToLegacyPhase(slot.phase.ReadValue()),
                 pressure         = 1f,
                 maximumPossiblePressure = 1f,
                 type             = TouchType.Direct,
             };
         }
+
+        private static TouchPhase ToLegacyPhase(UnityEngine.InputSystem.TouchPhase phase) => phase switch
+        {
+            UnityEngine.InputSystem.TouchPhase.Began      => TouchPhase.Began,
+            UnityEngine.InputSystem.TouchPhase.Moved      => TouchPhase.Moved,
+            UnityEngine.InputSystem.TouchPhase.Stationary => TouchPhase.Stationary,
+            UnityEngine.InputSystem.TouchPhase.Ended      => TouchPhase.Ended,
+            _                                             => TouchPhase.Canceled,
+        };
 
         private ButtonControl MouseButton(int b) => b switch
         {
@@ -79,16 +134,6 @@ namespace Yu5h1Lib.Input
             2 => Mouse.current?.middleButton,
             _ => null
         };
-
-        private TouchPhase GetTouchPhase()
-        {
-            var ts = Touchscreen.current;
-            if (ts == null) return TouchPhase.Canceled;
-            if (ts.press.wasPressedThisFrame)  return TouchPhase.Began;
-            if (ts.press.wasReleasedThisFrame) return TouchPhase.Ended;
-            if (ts.press.isPressed)            return TouchPhase.Moved;
-            return TouchPhase.Canceled;
-        }
     }
 }
 #endif

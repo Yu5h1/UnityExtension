@@ -24,6 +24,7 @@ namespace Yu5h1Lib.Tests
             public bool GetButtonDown(string name) => false;
             public bool GetButton(string name) => false;
             public bool GetButtonUp(string name) => false;
+            public int TouchCount => 0;
             public Touch GetTouch(int index) => default;
         }
 
