@@ -126,13 +126,13 @@ namespace Yu5h1Lib.UI.Tests
             throw new AssertionException("No visible history row.");
         }
 
-        private static float RowTop(FollowingScrollView scroll, RectTransform row) => scroll.viewport.rect.yMax -
+        private static float RowTop(ScrollView scroll, RectTransform row) => scroll.viewport.rect.yMax -
             scroll.viewport.InverseTransformPoint(row.TransformPoint(new Vector3(0f, row.rect.yMax))).y;
 
-        private static void AssertAtBottom(FollowingScrollView scroll) =>
+        private static void AssertAtBottom(ScrollView scroll) =>
             Assert.That(scroll.Offset, Is.EqualTo(scroll.MaxOffset).Within(Tolerance));
 
-        private static void Drag(FollowingScrollView scroll, float distance)
+        private static void Drag(ScrollView scroll, float distance)
         {
             Assert.That(EventSystem.current, Is.Not.Null);
             Vector2 localStart = scroll.viewport.rect.center;

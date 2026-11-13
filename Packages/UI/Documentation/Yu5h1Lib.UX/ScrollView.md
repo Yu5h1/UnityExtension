@@ -42,6 +42,12 @@
 
 ## uGUI 訊息區採用
 
-2026-11-12 的 ChatPanel sample 使用 `FollowingScrollView` 採用 ScrollView 0.2.2-draft。原生 `ScrollRect` 擁有拖曳、滾輪、夾限及慣性；元件補足短內容貼底、跟隨狀態及重排閱讀錨點。直接子項使用穩定名稱，變更資料後呼叫 `RefreshContent`。綁定 `FollowingScrollViewScrollbar` 可識別捲軸操作。
+ChatPanel sample 使用 `Yu5h1Lib.UI.ScrollView` 採用 ScrollView 0.2.2-draft。原生 `ScrollRect` 處理拖曳、滾輪、夾限與慣性。ChatPanel 選用 `ContentUpdateBehavior.FollowLatest`，直接子項使用穩定名稱，變更資料後呼叫 `RefreshContent`。`ScrollViewScrollbar` 會將捲軸操作通知視窗。
 
 [ChatPanel 採用紀錄](ChatPanel.md#釘選版本)保存本輪釘選版本與 VCP batchmode 證據。[驗收清單](../../../../checklists/ui-chatpanel.checklist#2-驗證訊息區與-scrollview)記錄目標 1 的自動與人工檢查。
+
+## 單軸循環與項目重用
+
+同一個 `ScrollView` 使用原生 `horizontal` 或 `vertical` 設定方向。以 `SetItems(prefab, count, size, bind)` 提供固定尺寸的項目，元件依可視範圍使用 Core `Recycler<RectTransform>` 借還實例。`Loop` 開啟且內容溢位時可以跨過首尾，捲軸對應本圈位置。有限清單可選擇 `PreservePosition` 或 `FollowLatest`，循環啟用時暫停跟隨。虛擬清單可使用 `ScrollViewScrollbar`，將其可操作區放在視窗邊緣，指標進入該區、拖曳或鍵盤聚焦時顯示。
+
+2026-11-13 在 Yu5h1LibTest（Unity 6000.6.0f1）跑定向驗收。EditMode 32/32，涵蓋兩軸的滾輪與拖曳跨圈、滑塊定位、靠邊顯示、關閉循環、同一批 prefab 實例重用，以及原有 ChatPanel 案例。既有 ChatPanel sample 的 PlayMode 案例 1/1 通過，驗證歷史載入維持閱讀位置及手動捲回底端後恢復跟隨。

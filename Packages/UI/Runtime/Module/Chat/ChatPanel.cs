@@ -46,7 +46,7 @@ namespace Yu5h1Lib.UI
             [NonSerialized] public UguiControlPalette ViewerPalette;
             [Min(0)] public float ViewerPreviewInset = 16f;
             [Min(0)] public float ViewerZoomGestureThreshold = .1f;
-            [Min(0)] public float FollowResumeTolerance = FollowingScrollView.DefaultResumeTolerance;
+            [Min(0)] public float FollowResumeTolerance = ScrollView.DefaultResumeTolerance;
             public BubbleStyle Self = new() { Background = new Color32(79, 140, 255, 255) };
             public BubbleStyle Other = new()
             {
@@ -180,7 +180,7 @@ namespace Yu5h1Lib.UI
         private readonly List<Reply> completedReplies = new();
         [SerializeField] private Options options = new();
         private DateTime? lastDate;
-        private FollowingScrollView scroll;
+        private ScrollView scroll;
         private RectTransform viewport;
         private RectTransform content;
         private CanvasGroup scrollbarVisibility;
@@ -191,7 +191,7 @@ namespace Yu5h1Lib.UI
         private float scrollbarIdle;
         private bool replacingHistory;
 
-        public FollowingScrollView ScrollView { get { EnsureView(); return scroll; } }
+        public ScrollView ScrollView { get { EnsureView(); return scroll; } }
         public bool ReduceMotion { get; set; }
         public bool ViewerOpen => viewer != null && viewer.gameObject.activeSelf;
         public bool ViewerFull => ViewerOpen && viewer.Full;
@@ -409,7 +409,12 @@ namespace Yu5h1Lib.UI
                 return;
             var scrollRoot = AddRect("Message Scroll View", transform);
             Stretch(scrollRoot);
-            scroll = scrollRoot.gameObject.AddComponent<FollowingScrollView>();
+            scroll = scrollRoot.gameObject.AddComponent<ScrollView>();
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
+            scroll.ContentUpdateBehavior = ContentUpdateBehavior.FollowLatest;
             scroll.scrollSensitivity = 6f;
             viewport = AddRect("Viewport", scrollRoot);
             Stretch(viewport);
@@ -460,7 +465,7 @@ namespace Yu5h1Lib.UI
             image.color = new Color(1f, 1f, 1f, .65f);
             image.raycastTarget = false;
 
-            var bar = track.gameObject.AddComponent<FollowingScrollViewScrollbar>();
+            var bar = track.gameObject.AddComponent<ScrollViewScrollbar>();
             bar.handleRect = handle;
             bar.targetGraphic = image;
             bar.direction = Scrollbar.Direction.BottomToTop;

@@ -1,5 +1,6 @@
 
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -7,11 +8,11 @@ using UnityEngine.UI;
 namespace Yu5h1Lib.UI.Tests
 {
     /// <summary>Exercises ScrollView goal 1 with native layout, pointer drag, wheel and scrollbar dispatch.</summary>
-    public sealed class FollowingScrollViewTests
+    public sealed class ScrollViewTests
     {
         private GameObject root;
         private EventSystem eventSystem;
-        private FollowingScrollView scroll;
+        private ScrollView scroll;
         private RectTransform viewport;
         private RectTransform content;
 
@@ -21,7 +22,11 @@ namespace Yu5h1Lib.UI.Tests
             root = new GameObject("Scroll test", typeof(RectTransform), typeof(Canvas));
             root.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
             eventSystem = new GameObject("Event system", typeof(EventSystem)).GetComponent<EventSystem>();
-            scroll = NewRect("ScrollView", root.transform, 300, 600).gameObject.AddComponent<FollowingScrollView>();
+            scroll = NewRect("ScrollView", root.transform, 300, 600).gameObject.AddComponent<ScrollView>();
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.ContentUpdateBehavior = ContentUpdateBehavior.FollowLatest;
             scroll.inertia = false;
             viewport = NewRect("Viewport", scroll.transform, 300, 600);
             content = NewRect("Items", viewport, 300, 600);
@@ -35,7 +40,7 @@ namespace Yu5h1Lib.UI.Tests
             var layout = content.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.childControlWidth = layout.childControlHeight = true;
             layout.childForceExpandHeight = false;
-            var bar = NewRect("Scrollbar", scroll.transform, 12, 600).gameObject.AddComponent<FollowingScrollViewScrollbar>();
+            var bar = NewRect("Scrollbar", scroll.transform, 12, 600).gameObject.AddComponent<ScrollViewScrollbar>();
             bar.handleRect = NewRect("Handle", bar.transform, 12, 40);
             bar.direction = Scrollbar.Direction.BottomToTop;
             bar.ScrollView = scroll;
@@ -198,6 +203,109 @@ namespace Yu5h1Lib.UI.Tests
             bar.OnPointerUp(pointer);
             Assert.That(scroll.Following, Is.False);
             Assert.That(scroll.Offset, Is.EqualTo(200f).Within(.05f));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void LoopWrapsBothWaysAndReusesPrefabInstances(bool horizontal)
+        {
+            const int count = 24;
+            const float size = 100f;
+            const float cycle = count * size;
+            scroll.horizontal = horizontal;
+            scroll.vertical = !horizontal;
+            scroll.Loop = true;
+            var bar = (ScrollViewScrollbar)scroll.verticalScrollbar;
+            if (horizontal)
+            {
+                scroll.verticalScrollbar = null;
+                scroll.horizontalScrollbar = bar;
+                bar.direction = Scrollbar.Direction.LeftToRight;
+            }
+            Object.DestroyImmediate(content.GetComponent<VerticalLayoutGroup>());
+            var template = NewRect("Item", root.transform, size, size);
+            var path = AssetDatabase.GenerateUniqueAssetPath("Assets/ScrollViewTestItem.prefab");
+            try
+            {
+                var prefab = (RectTransform)PrefabUtility.SaveAsPrefabAsset(template.gameObject, path).transform;
+                scroll.SetItems(prefab, count, size, (item, index) => item.name = "Item " + index);
+                scroll.ScrollToOffset(cycle - 20f);
+                Assert.That(content.Find("Item 23"), Is.Not.Null);
+                Assert.That(content.Find("Item 0"), Is.Not.Null);
+                Assert.That(scroll.Following, Is.False);
+                scroll.RequestFollow();
+                Assert.That(scroll.Offset, Is.EqualTo(cycle - 20f).Within(.05f));
+
+                void WheelBy(float delta) => scroll.OnScroll(new PointerEventData(eventSystem)
+                {
+                    scrollDelta = horizontal ? new Vector2(-delta, 0f) : new Vector2(0f, -delta),
+                });
+
+                WheelBy(60f);
+                Assert.That(scroll.Offset, Is.EqualTo(40f).Within(.05f));
+                WheelBy(-60f);
+                Assert.That(scroll.Offset, Is.EqualTo(cycle - 20f).Within(.05f));
+
+                var created = scroll.CreatedItemCount;
+                var original = new System.Collections.Generic.HashSet<Transform>();
+                foreach (Transform child in content)
+                    original.Add(child);
+                foreach (Transform child in scroll.transform)
+                    if (!child.gameObject.activeSelf)
+                        original.Add(child);
+                for (int i = 0; i < 18; i++)
+                    WheelBy(cycle / 2f);
+                Assert.That(scroll.Offset, Is.EqualTo(cycle - 20f).Within(.05f));
+                Assert.That(scroll.CreatedItemCount, Is.EqualTo(created));
+                Assert.That(content.childCount, Is.LessThan(count));
+                foreach (Transform child in content)
+                    Assert.That(original.Contains(child), Is.True);
+
+                Canvas.ForceUpdateCanvases();
+                Assert.That(bar.value, Is.EqualTo(horizontal ? (cycle - 20f) / cycle : 20f / cycle).Within(.001f));
+                var overlay = bar.GetComponent<CanvasGroup>();
+                var pointer = new PointerEventData(eventSystem);
+                Assert.That(overlay.alpha, Is.Zero);
+                bar.OnPointerEnter(pointer);
+                Assert.That(overlay.alpha, Is.EqualTo(1f));
+                bar.value = .5f;
+                Assert.That(scroll.Offset, Is.EqualTo(cycle / 2f).Within(.05f));
+                Assert.That(content.Find("Item 12"), Is.Not.Null);
+                bar.OnPointerExit(pointer);
+                Assert.That(overlay.alpha, Is.Zero);
+                eventSystem.SetSelectedGameObject(bar.gameObject);
+                Assert.That(overlay.alpha, Is.EqualTo(1f));
+                eventSystem.SetSelectedGameObject(null);
+                Assert.That(overlay.alpha, Is.Zero);
+
+                scroll.ScrollToOffset(cycle - 20f);
+                var drag = StartDrag();
+                drag.position = horizontal ? new Vector2(-60f, 0f) : new Vector2(0f, 60f);
+                scroll.OnDrag(drag);
+                scroll.OnEndDrag(drag);
+                Assert.That(scroll.Offset, Is.EqualTo(40f).Within(.05f));
+
+                scroll.Loop = false;
+                scroll.ScrollToOffset(cycle + 20f);
+                Assert.That(scroll.Offset, Is.EqualTo(cycle - (horizontal ? viewport.rect.width : viewport.rect.height)).Within(.05f));
+            }
+            finally
+            {
+                AssetDatabase.DeleteAsset(path);
+            }
+        }
+
+        [Test]
+        public void PreservePositionDoesNotResumeAtTheEnd()
+        {
+            scroll.ContentUpdateBehavior = ContentUpdateBehavior.PreservePosition;
+            SetItems(1000f);
+            Wheel(-400f);
+            Assert.That(scroll.Offset, Is.EqualTo(400f));
+            Assert.That(scroll.Following, Is.False);
+            SetItems(1000f, 100f);
+            scroll.RequestFollow();
+            Assert.That(scroll.Offset, Is.EqualTo(400f));
         }
 
         private void SetItems(params float[] heights)

@@ -11,7 +11,7 @@ VCP 宿主／UxAcceptance sample
 └─ Yu5h1Lib.UI.ChatPanel
    ├─ 訊息列、日期、外側時間與圖片
    ├─ 累積快照、逐字揭露與完成通知
-   ├─ FollowingScrollView → 原生 uGUI ScrollRect
+   ├─ ScrollView → 原生 uGUI ScrollRect
    └─ 圖片檢視 → 原生 uGUI Canvas 與事件系統
 ```
 
@@ -29,7 +29,7 @@ VCP 宿主／UxAcceptance sample
 | UX 行為 | 入口與檢查 |
 |---|---|
 | 左右對齊、固定文字寬度、日期和外側時間、泡泡樣式（CHAT-LAYOUT-ALIGN、CHAT-LAYOUT-TEXT-WIDTH、CHAT-LAYOUT-TIMESTAMP、CHAT-STYLE-MODE） | `ChatPanel.Configure`、`AddMessage`。原生 LayoutGroup 排列。可設定自己／對方的底色、文字色與九宮格 Sprite。Sample 用 70% 列寬。 |
-| 貼底、跟隨、保留閱讀位置、恢復跟隨（ScrollView 目標 1、CHAT-SCROLL-REENGAGE） | `FollowingScrollView.RefreshContent` 與 `RequestFollow`。原生捲輪、拖曳與捲軸輸入。訊息區新增自己的即時訊息及開始回覆時要求貼底，用 `ReplaceHistory` 和穩定訊息 ID 重建歷史時保留閱讀位置及跟隨狀態。Sample 採用觸控式覆蓋捲軸，捲動時顯示。 |
+| 貼底、跟隨、保留閱讀位置、恢復跟隨（ScrollView 目標 1、CHAT-SCROLL-REENGAGE） | `ScrollView.RefreshContent` 與 `RequestFollow`。原生捲輪、拖曳與捲軸輸入。訊息區新增自己的即時訊息及開始回覆時要求貼底，用 `ReplaceHistory` 和穩定訊息 ID 重建歷史時保留閱讀位置及跟隨狀態。Sample 採用觸控式覆蓋捲軸，捲動時顯示。 |
 | 思考中、累積快照、完整字素、宿主字速、減少動態與一次完成通知（CHAT-TIMER-THINKING、CHAT-STREAM-*） | `BeginReply`、`Reply.Push`、`Reply.Complete`、`Reply.RevealCompleted`。宿主決定何時開始下一句。與 UI Toolkit 共用字素邊界計算。Sample 採 20 字素／秒並顯示思考秒數，宿主可關閉秒數。 |
 | 縮圖、佔位、載入失敗與圖片預覽（CHAT-IMAGE-*、CHAT-VIEWER-*） | `AddImage`、`ImageMessage.SetLoaded`／`SetFailed`，由宿主管理 Sprite 和載入。縮圖可用原生 Button 選取。檢視器支援宿主安全區、預覽／滿版、點擊、滾輪、雙指、可否決的取消、失焦與焦點回復。Sample 縮圖採矩形。圓角裁切、輔助技術讀名與實機手勢屬後續驗收。 |
 | 可用範圍改變（CHAT-LAYOUT-ADAPT） | 改變 RectTransform 後重排目前訊息，回覆狀態維持。 |
