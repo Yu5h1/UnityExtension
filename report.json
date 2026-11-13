@@ -3,7 +3,7 @@
   "report_id": "unity-extension-progress",
   "scope_id": "unity-extension",
   "title": "UnityExtension 開發進度",
-  "updated_at": "2026-11-12T01:02:52.765725+00:00",
+  "updated_at": "2026-11-13T11:53:33.815464+00:00",
   "tasks": [
     {
       "id": "ux-button-adoption",
@@ -3067,6 +3067,86 @@
               "at": "2026-11-09T14:30:49.659011+00:00",
               "session": "part-import-attach acceptance",
               "session_id": "895cad1b-7ade-421b-a512-68017fc1952c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unity-runtime-shortcuts",
+      "summary": "規劃已整理，待使用者恢復後開始。以 ScrollView 循環為第一個可改鍵指令，驗證 uGUI 與 UI Toolkit 共用鍵位。",
+      "status": "planned",
+      "title": "Unity 執行時快捷鍵",
+      "goal_ref": {
+        "document": "Documentation/RuntimeShortcutsPlan.md#問題與目標"
+      },
+      "pending_items": [
+        {
+          "title": "建立 Common 快捷鍵 API 與 Unity Input System 接線",
+          "id": "common-and-input-system",
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-11-13T11:53:33.815464+00:00"
+            }
+          ]
+        },
+        {
+          "waits_for": [
+            {
+              "task_id": "unity-runtime-shortcuts",
+              "item_id": "common-and-input-system",
+              "scope_id": "unity-extension"
+            }
+          ],
+          "id": "scroll-view-pilot",
+          "title": "讓 ScrollView 的循環開關支援可改鍵指令",
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-11-13T11:53:33.815464+00:00"
+            }
+          ]
+        },
+        {
+          "waits_for": [
+            {
+              "task_id": "unity-runtime-shortcuts",
+              "item_id": "scroll-view-pilot",
+              "scope_id": "unity-extension"
+            }
+          ],
+          "id": "shared-ui-proof",
+          "title": "驗證 uGUI 與 UI Toolkit 共用同一份快捷鍵狀態",
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-11-13T11:53:33.815464+00:00"
+            }
+          ]
+        },
+        {
+          "waits_for": [
+            {
+              "task_id": "unity-runtime-shortcuts",
+              "item_id": "shared-ui-proof",
+              "scope_id": "unity-extension"
+            }
+          ],
+          "id": "vcp-command-pilot",
+          "title": "選擇並遷移一個 VCP 現有快捷鍵",
+          "status": "planned",
+          "activity": [
+            {
+              "event": "created",
+              "actor": "codex",
+              "at": "2026-11-13T11:53:33.815464+00:00"
             }
           ]
         }
