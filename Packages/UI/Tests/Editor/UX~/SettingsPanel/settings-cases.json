@@ -1,0 +1,1010 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.0",
+  "cases": [
+    {
+      "id": "save-bar-auto-mode-disables-save",
+      "initial": {
+        "kind": "saveBar"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "pressSave"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "saveLabel": "套用並保存",
+              "saveEnabled": false,
+              "toggleEnabled": true,
+              "autoSave": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "toggle"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "autoSaveChange",
+                "enabled": false
+              }
+            ],
+            "view": {
+              "autoSave": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "save-bar-toggle-is-a-request",
+      "initial": {
+        "kind": "saveBar"
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "toggle"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "autoSaveChange",
+                "enabled": false
+              }
+            ],
+            "view": {
+              "autoSave": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "set",
+            "state": {
+              "autoSave": false
+            }
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "autoSave": false,
+              "saveEnabled": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "toggle"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "autoSaveChange",
+                "enabled": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "save-bar-manual-follows-can-save",
+      "initial": {
+        "kind": "saveBar",
+        "state": {
+          "autoSave": false,
+          "canSave": false
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "pressSave"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "saveEnabled": false
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "set",
+            "state": {
+              "canSave": true
+            }
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "saveEnabled": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "pressSave"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "save"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "set",
+            "state": {
+              "saveLabel": "儲存"
+            }
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "saveLabel": "儲存"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "save-bar-busy-blocks-everything",
+      "initial": {
+        "kind": "saveBar",
+        "state": {
+          "autoSave": false,
+          "busy": true
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "pressSave"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "saveLabel": "處理中…",
+              "saveEnabled": false,
+              "toggleEnabled": false
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "toggle"
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "save-bar-retry-save-in-auto-mode",
+      "initial": {
+        "kind": "saveBar",
+        "state": {
+          "retrySave": true,
+          "message": "儲存失敗"
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "pressSave"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "save"
+              }
+            ],
+            "view": {
+              "saveLabel": "重試儲存",
+              "saveEnabled": true,
+              "toggleEnabled": true,
+              "status": "儲存失敗"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "save-bar-retry-apply-wins-and-locks-toggle",
+      "initial": {
+        "kind": "saveBar",
+        "state": {
+          "retrySave": true,
+          "retryApply": true,
+          "canSave": false
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "pressSave"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "retryApply"
+              }
+            ],
+            "view": {
+              "saveLabel": "重試套用",
+              "saveEnabled": true,
+              "toggleEnabled": false
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "toggle"
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "save-bar-disabled-and-toggle-lock",
+      "initial": {
+        "kind": "saveBar",
+        "state": {
+          "autoSave": false,
+          "disabled": true
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "pressSave"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "saveEnabled": false,
+              "toggleEnabled": false
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "set",
+            "state": {
+              "disabled": false,
+              "toggleDisabled": true
+            }
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "saveEnabled": true,
+              "toggleEnabled": false
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "toggle"
+          },
+          "expect": {
+            "emitted": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "panel-opens-on-selected-tab",
+      "initial": {
+        "kind": "panel",
+        "categories": [
+          {
+            "id": "appearance",
+            "label": "外觀"
+          },
+          {
+            "id": "animation",
+            "label": "動畫"
+          },
+          {
+            "id": "display",
+            "label": "顯示"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "selectTab",
+            "id": "animation"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "show"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ],
+            "view": {
+              "open": true,
+              "active": "animation",
+              "focus": "tab:animation"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "show"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "dismiss"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "close"
+              }
+            ],
+            "view": {
+              "open": false,
+              "focus": "trigger"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "panel-row-tabs-cycle-with-arrows",
+      "initial": {
+        "kind": "panel",
+        "categories": [
+          {
+            "id": "appearance",
+            "label": "外觀"
+          },
+          {
+            "id": "animation",
+            "label": "動畫"
+          },
+          {
+            "id": "display",
+            "label": "顯示"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "show"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "key": "ArrowRight"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "animation",
+              "focus": "tab:animation"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "key": "ArrowDown"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "animation"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "key": "End"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "display"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "key": "ArrowRight"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "appearance"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "key": "ArrowLeft"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "display"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "key": "Home"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "appearance",
+              "focus": "tab:appearance"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "panel-column-tabs-use-up-down",
+      "initial": {
+        "kind": "panel",
+        "categories": [
+          {
+            "id": "appearance",
+            "label": "外觀"
+          },
+          {
+            "id": "animation",
+            "label": "動畫"
+          },
+          {
+            "id": "display",
+            "label": "顯示"
+          }
+        ],
+        "state": {
+          "tabDirection": "column"
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "show"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "key": "ArrowRight"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "appearance"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "key": "ArrowUp"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "display"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "key": "ArrowDown"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "appearance"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "panel-busy-locks-tabs-content-and-close",
+      "initial": {
+        "kind": "panel",
+        "categories": [
+          {
+            "id": "appearance",
+            "label": "外觀"
+          },
+          {
+            "id": "animation",
+            "label": "動畫"
+          },
+          {
+            "id": "display",
+            "label": "顯示"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "show"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "set",
+            "state": {
+              "busy": true
+            }
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "tabsEnabled": false,
+              "contentEnabled": false,
+              "resetEnabled": false
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "key": "ArrowRight"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "appearance"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "selectTab",
+            "id": "display"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "appearance"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "pressReset"
+          },
+          "expect": {
+            "emitted": []
+          }
+        },
+        {
+          "action": {
+            "op": "dismiss"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "open": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "set",
+            "state": {
+              "busy": false
+            }
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "tabsEnabled": true,
+              "contentEnabled": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "dismiss"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "close"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "panel-load-error-or-retry-apply-locks-content",
+      "initial": {
+        "kind": "panel",
+        "categories": [
+          {
+            "id": "appearance",
+            "label": "外觀"
+          },
+          {
+            "id": "animation",
+            "label": "動畫"
+          },
+          {
+            "id": "display",
+            "label": "顯示"
+          }
+        ],
+        "state": {
+          "canApply": false
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "show"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ],
+            "view": {
+              "contentEnabled": false,
+              "resetEnabled": false,
+              "tabsEnabled": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "key",
+            "key": "ArrowRight"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "animation"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "set",
+            "state": {
+              "canApply": true,
+              "retryApply": true
+            }
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "contentEnabled": false,
+              "resetEnabled": false
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "set",
+            "state": {
+              "retryApply": false
+            }
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "contentEnabled": true
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "pressReset"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "reset"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "panel-intro-follows-save-mode",
+      "initial": {
+        "kind": "panel",
+        "categories": [
+          {
+            "id": "appearance",
+            "label": "外觀"
+          },
+          {
+            "id": "animation",
+            "label": "動畫"
+          },
+          {
+            "id": "display",
+            "label": "顯示"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "show"
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "open"
+              }
+            ],
+            "view": {
+              "intro": "auto"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "set",
+            "state": {
+              "autoSave": false
+            }
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "intro": "manual"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "panel-categories-validated",
+      "initial": {
+        "kind": "panel",
+        "categories": [
+          {
+            "id": "appearance",
+            "label": "外觀"
+          },
+          {
+            "id": "animation",
+            "label": "動畫"
+          },
+          {
+            "id": "display",
+            "label": "顯示"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "selectTab",
+            "id": "display"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "display"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "setCategories",
+            "categories": [
+              {
+                "id": "Display",
+                "label": "顯示"
+              }
+            ]
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "rejected"
+              }
+            ],
+            "view": {
+              "active": "display"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "setCategories",
+            "categories": [
+              {
+                "id": "a",
+                "label": "A"
+              },
+              {
+                "id": "a",
+                "label": "B"
+              }
+            ]
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "rejected"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "setCategories",
+            "categories": [
+              {
+                "id": "motion-2",
+                "label": " "
+              }
+            ]
+          },
+          "expect": {
+            "emitted": [
+              {
+                "type": "rejected"
+              }
+            ]
+          }
+        },
+        {
+          "action": {
+            "op": "setCategories",
+            "categories": [
+              {
+                "id": "motion-2",
+                "label": "動態"
+              },
+              {
+                "id": "display",
+                "label": "顯示"
+              }
+            ]
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "display"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "setCategories",
+            "categories": [
+              {
+                "id": "motion-2",
+                "label": "動態"
+              }
+            ]
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "motion-2"
+            }
+          }
+        },
+        {
+          "action": {
+            "op": "setCategories",
+            "categories": []
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "active": "",
+              "empty": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "panel-disabled-does-not-open",
+      "initial": {
+        "kind": "panel",
+        "categories": [
+          {
+            "id": "appearance",
+            "label": "外觀"
+          },
+          {
+            "id": "animation",
+            "label": "動畫"
+          },
+          {
+            "id": "display",
+            "label": "顯示"
+          }
+        ],
+        "state": {
+          "disabled": true
+        }
+      },
+      "steps": [
+        {
+          "action": {
+            "op": "show"
+          },
+          "expect": {
+            "emitted": [],
+            "view": {
+              "open": false
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

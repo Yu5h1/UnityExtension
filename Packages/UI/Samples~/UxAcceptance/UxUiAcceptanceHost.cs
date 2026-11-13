@@ -82,6 +82,8 @@ namespace Yu5h1Lib.UI.Acceptance
                 UxUiModuleRegistry.Register(new UxUiChatPanelDemoCase(), "聊天面板、逐字回覆與圖片檢視");
             if (!UxUiModuleRegistry.Contains("scrollview"))
                 UxUiModuleRegistry.Register(new UxUiScrollViewDemoCase(), "切換方向、循環與項目重用");
+            if (!UxUiModuleRegistry.Contains("settingspanel"))
+                UxUiModuleRegistry.Register(new UxUiSettingsDemoCase(), "Config、Setting 與確認保存");
         }
 
         public void ShowCatalog()
