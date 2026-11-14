@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Yu5h1Lib.ParticlePhysics;
 
@@ -19,7 +20,8 @@ namespace Yu5h1Lib.UnifiedSolver
     public abstract class SolverParticleSource :
         MonoBehaviour,
         IPhysicsParticleSource,
-        ISolverReuseTarget
+        ISolverReuseTarget,
+        ISolverParticleLayerSource
     {
         enum ReuseOp
         {
@@ -261,6 +263,27 @@ namespace Yu5h1Lib.UnifiedSolver
                     anchor.ApplyNow();
             }
             return true;
+        }
+
+        // The layer of this body's particles, for colliders that filter by it.
+        // The GameObject's own layer, so it follows the object whether or not
+        // it is parked.
+        UnityEngine.Object ISolverParticleLayerSource.Owner => this;
+
+        int ISolverParticleLayerSource.Layer => gameObject.layer;
+
+        int ISolverParticleLayerSource.Revision =>
+            Manager != null &&
+            TryGetParticleRange(Manager, out int offset, out int count)
+                ? (offset * 397 ^ count) & 0x7fffffff
+                : -1;
+
+        void ISolverParticleLayerSource.CollectRuns(
+            SolverManager manager,
+            List<Vector2Int> runs)
+        {
+            if (TryGetParticleRange(manager, out int offset, out int count))
+                runs.Add(new Vector2Int(offset, count));
         }
 
         public abstract int ParticleCount { get; }
@@ -522,6 +545,7 @@ namespace Yu5h1Lib.UnifiedSolver
 
         protected virtual void OnEnable()
         {
+            SolverParticleLayers.Register(this);
             MarkSolverSettingsDirty();
 
             // Not the first time: a body that has never been off is already at

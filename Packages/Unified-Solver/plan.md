@@ -1380,3 +1380,15 @@ tailPeak = 2 × peakHalfAngle × bias
 - **持續性區分了大小區分不了的兩種情況。** 真正靜止的實體沒有東西在推它，所以修正量基本上是零；被卡住的每幀回傳同樣的修正量。持續高於 `wakeDistance` 十分之一、且持續達 `sleepDelay` 的位移現在會喚醒它。不需要新欄位：兩個數字都由既有控制項導出。
 - **喚醒是重試，不是修復。** 還原停止，solver 得到一次乾淨的機會把實體推出去，然後它在落腳處重新睡著。仍然卡住就重複這個循環，那是正確的行為。
 - 沉睡分支重用 `state.y` 當持續推擠計時器，因為它清醒時持有的候選倒數與此不重疊。
+
+## 22. 依 layer 篩選粒子的碰撞體（`SolverLayerBoxCollider`）
+
+BonghuoVR 的收魚打撈工具要穿過網子、只撈魚（需求 `BonghuoVR-UnifiedSolver-5`）。vendored 的 `SolveBox` 對每個 `invMass` 不為 0 的粒子都做碰撞，沒有任何篩選，而且 vendored 碰撞核心不修改，所以做法是套件自己的碰撞元件。
+
+- **粒子的 layer 取自擁有它的物體的 GameObject layer，不放在粒子裡。** `ParticleGPU` 是 vendored 的 60 bytes，每一格都有用途，`phase` 又是每個物體各自分配、編輯時不能指定。所以套件自己持有一個 `uint` buffer（`SolverParticleLayers`），每個粒子一格、值為 `1 << layer`，下標與求解器的全域粒子下標相同。
+- **由粒子來源的範圍填入，不是讀回粒子。** `SolverParticleSource`（布料／繩子）與 `SolverParticleEmitter` 註冊成 `ISolverParticleLayerSource`；每個物理步驟最多重新整理一次，只重寫 layer 或「範圍修訂值」改變的來源（布料是範圍位置，emitter 是實體數，兩者都只會增加）。範圍來自既有的 `_particleOffset` 反射契約，沒有新增反射。沒有任何註冊來源擁有的粒子（vendored 剛體產生器、沒有 `SolverClothParticles` 的布料）算 Default layer，與沒改過 layer 的物件一致。
+- **重生與收起碰不到它。** `Respawn`／`Park`／`ResetToRest` 只改寫 `ParticleBuffer` 裡這個物體自己的那一段，layer buffer 另外存放，粒子下標又不會變，所以 layer 不用跟著重寫；停用再啟用網子、pool 回收再叫出魚之後 layer 仍然正確（BonghuoVR 2026-11-14 兩輪試驗：第二輪排除 Fish layer 的方塊，魚照樣穿過）。求解器換了或 buffer 大小變了才整份重建。
+- **碰撞元件每個 FixedUpdate 在求解器步進之後跑一次，不在子步驟內。** `SolverManager` 的子步驟迴圈沒有對外掛勾（30 次子步驟只有 vendored 的 `SolveBox` 在裡面）。後果：一次步進內深入薄板的粒子是從最近的面出來，不一定是進來的那一面。方塊要夠厚。BonghuoVR 的勺斗 5 片板各 0.15 m 厚，實測魚粒子在板內最多 1 個、貼近板（一個半徑內）最多 11 個，沒有穿過去或抖出來（`Build/FishingDecoupling` 的 n3／n5）。
+- **形狀至今只有方塊**（取 Transform 的中心、`lossyScale / 2`、三軸，與 `SolverBoxCollider` 相同）。球、膠囊要用時再加一個 kernel，不是現在的需求。
+- **與 `SolveBox` 不同的一點：粒子會被給予方塊自己的速度（與繞中心的轉動）。** `SolveBox` 的摩擦只看粒子自己的位移，方塊的運動從不進入計算，所以移動的板帶不動東西（見 `.agents/skills/unified-solver.md` 的 Colliders）。這裡推開之後把速度設成「方塊表面速度 + 去掉進入面的相對速度」，`friction`（0..1）再去掉這個比例的切向相對速度。預設 0 = 無摩擦。
+- **未採用**：在 `ParticleGPU` 上加欄位（vendored）；複製 `SolverManager`／`UnifiedSolver.compute`（見 handoff 的理由）；用 `phase` 當分類。

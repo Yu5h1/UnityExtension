@@ -20,7 +20,8 @@ namespace Yu5h1Lib.UnifiedSolver
     [DefaultExecutionOrder(-100)]
     public sealed class SolverParticleEmitter :
         MonoBehaviour,
-        ISolverReuseTarget
+        ISolverReuseTarget,
+        ISolverParticleLayerSource
     {
         [Inline]
         public SolverParticleProfile profile;
@@ -159,6 +160,7 @@ namespace Yu5h1Lib.UnifiedSolver
         {
             EnsureCompanions();
             CreateInstanceBuffer();
+            SolverParticleLayers.Register(this);
         }
 
         // Called when the component is first added in the editor, and when Reset
@@ -343,6 +345,30 @@ namespace Yu5h1Lib.UnifiedSolver
         }
 
         UnityEngine.Object ISolverReuseTarget.Owner => this;
+
+        // The layer of this emitter's bodies, for colliders that filter by it.
+        // Bodies are only ever appended, so the count says whether any are new.
+        UnityEngine.Object ISolverParticleLayerSource.Owner => this;
+
+        int ISolverParticleLayerSource.Layer => gameObject.layer;
+
+        int ISolverParticleLayerSource.Revision =>
+            _instances.Count > 0 ? _instances.Count : -1;
+
+        void ISolverParticleLayerSource.CollectRuns(
+            SolverManager manager,
+            List<Vector2Int> runs)
+        {
+            for (int i = 0; i < _instances.Count; i++)
+            {
+                SolverParticleInstance instance = _instances[i];
+                if (instance.particleCount > 0 && instance.particleOffset >= 0)
+                {
+                    runs.Add(new Vector2Int(
+                        instance.particleOffset, instance.particleCount));
+                }
+            }
+        }
 
         bool ISolverReuseTarget.TryApplyReuse()
         {

@@ -378,6 +378,28 @@ worlds, no bridge. Use the vendored `SolverBoxCollider`, `SolverSphereCollider`
 or `SolverCapsuleCollider`. Geometry comes from the Transform, and a box is a
 solid rather than a container, so a holding tank is built from thin walls.
 
+**A collider that ignores some things: `SolverLayerBoxCollider`.** The vendored
+colliders push every particle. When a box must leave some bodies alone (a scoop
+that passes through a net and carries only the fish), put the **source
+GameObject** of each kind in its own Unity layer and leave that layer out of the
+box's **Collide With** mask (`SolverLayerBoxCollider.collideWith`, an ordinary
+`LayerMask` field; Everything behaves like `SolverBoxCollider`). A particle's
+layer is the layer of the GameObject of the body that owns it: the
+`SolverParticleEmitter`, or the `ClothGenerator`/`RopeGenerator` carrying
+`SolverClothParticles`/`SolverRopeParticles`. Particles no such body owns count
+as Default. Three things to know:
+
+- It runs **once per FixedUpdate, after the solver's step**, not inside the 30
+  substeps (the solver has no hook there). A body that gets deep into a *thin*
+  box in one step leaves through the nearest face, which is not always the side
+  it came from: make the box thick enough for what moves into it.
+- Unlike `SolveBox` it gives the particle the box's own velocity (and turn), so a
+  moving plate carries its load; `friction` 0..1 removes that share of the
+  sliding speed per step.
+- **A layer a camera does not render makes the object invisible.** Check every
+  camera's culling mask when you give an object a new layer (an XR rig's main
+  camera often lists only the layers it uses).
+
 ## Anchoring particles to Transforms
 
 `PhysicsParticleAnchor` holds chosen particles of a body at scene Transforms.

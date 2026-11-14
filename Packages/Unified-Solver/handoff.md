@@ -148,6 +148,21 @@ assemblies compile with 0 warnings against 6000.3.9f1 and the `fxc` compile of
   allocation pass if its Start has run; if that is a Timeline clip starting at
   t=0, the clip's next evaluation switches it back on.
 
+- **Layer-mask box collider (`BonghuoVR-UnifiedSolver-5`, 2026-11-14).**
+  `Components/SolverLayerBoxCollider` (box, `collideWith` LayerMask, `friction`)
+  with `Resources/SolverLayerBox.compute` and `Compatibility/SolverParticleLayers`
+  (a package-owned `uint` mask per particle, filled from the emitter, cloth and
+  rope ranges, untouched by `Respawn`／`Park`). It runs once per FixedUpdate
+  after the solver's step, at order 50, not in the substeps. **Verified in
+  Unity by BonghuoVR's batch PlayMode trials on 6000.3.9f1**: a mask without the
+  net's layer lets the net through while fish stay carried (fish particles inside
+  a 0.15 m plate: at most 1); a mask without the fish layer lets fish through in
+  both rounds (62–72 particles), so the layer survives a pool respawn; a mask of
+  Everything snags the net as `SolverBoxCollider` did. Design: `plan.md` §22.
+  Vendored files are unchanged. A thin box moving fast through a body can
+  still push it out of the far face; nothing has shown that with the 0.15 m
+  scoop plates. Only a box exists (no sphere or capsule).
+
 Not yet seen in Unity: the migration of existing bounds assets; that a newly
 created bounds asset reads `Contain` (relies on `Reset()` running for a
 ScriptableObject created from the inspector — if not, it reads `Exclude`); parked

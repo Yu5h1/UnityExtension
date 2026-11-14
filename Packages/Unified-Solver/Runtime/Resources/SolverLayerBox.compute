@@ -1,0 +1,114 @@
+// A box collider that only pushes the particles whose layer its mask contains.
+//
+// Runs once per FixedUpdate, after SolverManager has stepped, instead of inside
+// the solver's substeps -- the vendored solver has no hook there and is not
+// modified. The geometry is SolveBox's: a particle outside the box within one
+// radius of it is moved out to a radius from the surface, and one inside is
+// moved out through the nearest face. What SolveBox does not do is carry: it
+// leaves the velocity of the particle alone, so here the velocity is also made
+// to follow the box (its motion, and its turn about its centre), which is what
+// lets a moving plate bring its load with it.
+
+#pragma kernel SolveLayerBox
+
+// Must match ParticleGPU in the vendored SolverData.cs byte for byte (60 bytes).
+struct Particle
+{
+    float3 position;
+    float3 velocity;
+    float3 prevPosition;
+    float  invMass;
+    int    phase;
+    float3 color;
+    uint   visible;
+};
+
+RWStructuredBuffer<Particle> _Particles;
+
+// One bit per particle, 1 << Unity layer, indexed like _Particles.
+StructuredBuffer<uint> _ParticleLayers;
+
+uint   _ParticleCount;
+float  _ParticleRadius;
+uint   _LayerMask;
+float  _Friction;
+
+float3 _BoxCenter;
+float3 _BoxHalfExtents;
+float3 _BoxAxisX;
+float3 _BoxAxisY;
+float3 _BoxAxisZ;
+float3 _BoxVelocity;
+float3 _BoxAngularVelocity;
+
+[numthreads(64, 1, 1)]
+void SolveLayerBox(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ParticleCount)
+        return;
+
+    if ((_ParticleLayers[id.x] & _LayerMask) == 0)
+        return;
+
+    Particle p = _Particles[id.x];
+
+    // Pinned, grabbed or parked: nothing moves it, so nothing here may.
+    if (p.invMass == 0.0)
+        return;
+
+    float3 rel = p.position - _BoxCenter;
+    float3 local = float3(dot(rel, _BoxAxisX), dot(rel, _BoxAxisY), dot(rel, _BoxAxisZ));
+
+    float3 clamped = clamp(local, -_BoxHalfExtents, _BoxHalfExtents);
+    float3 diffLocal = local - clamped;
+    float dist = length(diffLocal);
+
+    float3 n;
+    float3 closest;
+
+    if (dist > 1e-7)
+    {
+        if (dist >= _ParticleRadius)
+            return;
+
+        float3 nLocal = diffLocal / dist;
+        n = nLocal.x * _BoxAxisX + nLocal.y * _BoxAxisY + nLocal.z * _BoxAxisZ;
+        closest = _BoxCenter + clamped.x * _BoxAxisX + clamped.y * _BoxAxisY + clamped.z * _BoxAxisZ;
+    }
+    else
+    {
+        float3 distToFace = _BoxHalfExtents - abs(local);
+        float3 nLocal;
+
+        if (distToFace.x <= distToFace.y && distToFace.x <= distToFace.z)
+            nLocal = float3(local.x >= 0.0 ? 1.0 : -1.0, 0, 0);
+        else if (distToFace.y <= distToFace.z)
+            nLocal = float3(0, local.y >= 0.0 ? 1.0 : -1.0, 0);
+        else
+            nLocal = float3(0, 0, local.z >= 0.0 ? 1.0 : -1.0);
+
+        float minFaceDist = min(distToFace.x, min(distToFace.y, distToFace.z));
+        n = nLocal.x * _BoxAxisX + nLocal.y * _BoxAxisY + nLocal.z * _BoxAxisZ;
+
+        float3 faceLocal = local + nLocal * minFaceDist;
+        closest = _BoxCenter + faceLocal.x * _BoxAxisX + faceLocal.y * _BoxAxisY + faceLocal.z * _BoxAxisZ;
+    }
+
+    p.position = closest + n * _ParticleRadius;
+
+    // Velocity relative to the surface where the particle touches it: whatever
+    // goes into the box is dropped, the rest slides, and friction takes a share
+    // of the slide. The box's own velocity is added back, so the particle
+    // leaves moving with it.
+    float3 surfaceVelocity = _BoxVelocity + cross(_BoxAngularVelocity, closest - _BoxCenter);
+    float3 relative = p.velocity - surfaceVelocity;
+    float normalSpeed = dot(relative, n);
+    if (normalSpeed < 0.0)
+        relative -= normalSpeed * n;
+    float3 tangent = relative - dot(relative, n) * n;
+    relative -= tangent * saturate(_Friction);
+    p.velocity = surfaceVelocity + relative;
+
+    p.prevPosition = p.position;
+    _Particles[id.x] = p;
+}
