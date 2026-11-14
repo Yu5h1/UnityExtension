@@ -37,7 +37,7 @@ namespace Yu5h1Lib.UI
             [Min(0)] public int MessageBottomInset;
             [Min(0)] public float TimestampWidth = 38f;
             public Color MetadataColor = new(1f, 1f, 1f, .65f);
-            [Min(.01f)] public float GraphemesPerSecond = ChatReplyReveal.DefaultRate;
+            [Min(.01f)] public float GraphemesPerSecond = TextReveal.DefaultRate;
             [Min(1)] public float ImageMaxHeight = 240f;
             [Min(1)] public float ImagePlaceholderSize = 160f;
             public RectTransform ViewerSafeArea;
@@ -60,18 +60,21 @@ namespace Yu5h1Lib.UI
 
         public sealed class Reply
         {
+            private const int ThinkingSecondsThreshold = 5;
             private readonly ChatPanel panel;
-            private readonly ChatReplyReveal reveal = new();
-            internal readonly ChatPerformanceText Label;
+            private readonly TextPerformance label;
+            private float elapsed;
             private bool active = true;
 
-            internal Reply(ChatPanel panel, ChatPerformanceText label)
+            internal Reply(ChatPanel panel, TextPerformance label)
             {
                 this.panel = panel;
-                Label = label;
+                this.label = label;
+                label.AutoAdvance = false;
+                label.Begin();
             }
 
-            public string Text => Label != null ? Label.text : "";
+            public string Text => label != null ? label.text : "";
             public bool IsComplete { get; private set; }
             public event Action RevealCompleted;
             public float Pace { get; set; } = 1f;
@@ -80,7 +83,7 @@ namespace Yu5h1Lib.UI
             {
                 if (!active || IsComplete)
                     return;
-                reveal.Push(snapshot);
+                label.Push(snapshot);
                 panel.MarkReplyChanged(this);
             }
 
@@ -88,22 +91,27 @@ namespace Yu5h1Lib.UI
             {
                 if (!active || IsComplete)
                     return;
-                reveal.Complete(finalSnapshot);
+                label.Complete(finalSnapshot);
                 panel.MarkReplyChanged(this);
             }
 
             internal bool Advance(float dt, out bool completed)
             {
-                var options = panel.options;
-                var performance = panel.TextPerformance;
-                string text = reveal.Advance(dt, 1f / performance.SecondsPerGrapheme,
-                    Pace, panel.ReduceMotion || performance.Instant, options.ShowThinkingSeconds);
-                bool changed = Label.text != text;
-                if (changed)
-                    Label.text = text;
-                Label.Advance(Mathf.Max(0f, dt), text, reveal.HasSnapshot, reveal.Revision, panel.ReduceMotion, performance);
-                completed = reveal.Done && !Label.Playing;
-                return changed;
+                elapsed += Mathf.Max(0f, dt);
+                string previous = label.text;
+                label.Settings = panel.TextPerformance;
+                label.Pace = Pace;
+                label.ReduceMotion = panel.ReduceMotion;
+                completed = label.Advance(dt, label.HasSnapshot ? "" : ThinkingText());
+                return previous != label.text;
+            }
+
+            private string ThinkingText()
+            {
+                int seconds = Mathf.FloorToInt(elapsed);
+                return panel.options.ShowThinkingSeconds && seconds >= ThinkingSecondsThreshold
+                    ? $"思考中...{seconds}s"
+                    : "思考中" + new string('.', seconds % 3 + 1);
             }
 
             internal void NotifyCompleted()
@@ -111,13 +119,16 @@ namespace Yu5h1Lib.UI
                 if (!active || IsComplete)
                     return;
                 IsComplete = true;
-                Label.ReleaseEffects();
                 RevealCompleted?.Invoke();
+                if (label != null)
+                    label.NotifyCompleted();
             }
 
             internal void Cancel()
             {
                 active = false;
+                if (label != null)
+                    label.Stop();
                 RevealCompleted = null;
             }
         }
@@ -246,7 +257,7 @@ namespace Yu5h1Lib.UI
             if (replacingHistory)
                 throw new InvalidOperationException("Begin replies after replacing history.");
             EnsureView();
-            var reply = new Reply(this, CreateTextRow<ChatPerformanceText>(false, timestamp, id));
+            var reply = new Reply(this, CreateTextRow<TextPerformance>(false, timestamp, id));
             replies.Add(reply);
             reply.Advance(0f, out _);
             RefreshLayout();

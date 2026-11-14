@@ -53,7 +53,11 @@ ChatPanel sample 的齒輪會開啟共用 Config 的「聊天 → 文字表演�
 
 共用 Config 此處只提供文字表演分類。原生 Font 無法將字形可靠對應到字素時，該段文字直接顯示，回覆可正常完成。
 
+ChatPanel 的即時回覆使用 [uGUI TextPerformance](../../Runtime/Component/TextPerformance.cs)。其他消費端可在 Canvas 下使用同一個元件，設定 Font 與 `Settings` 後呼叫 `Play(text)`。串流可呼叫 `Begin()`、`Push(snapshot)` 和 `Complete()`，傳入累積的純文字快照。`Completed` 在文字及效果都結束後觸發。元件預設用未縮放時間播放。ChatPanel 關閉 `AutoAdvance`，在自己的更新中推進播放，並在訊息排版更新後發出回覆完成通知。
+
 2026-11-14 在 Yu5h1LibTest 以 Unity 6000.6 無畫面 EditMode 通過 42 項，其中 15 項直接驗證文字表演與 Config。測試量測中英混排的首末字形、緩出曲線、播放中設定變更及排版穩定，也從 sample 齒輪驗證設定入口、320 寬度的範圍欄位、收合保值、手動套用和讀取重試（`20261114-161326-tests.xml`）。實際畫面與操作手感待 sample 試用。
+
+抽成共用元件後，Yu5h1LibTest 無畫面 EditMode 通過 44 項（`20261114-223935-tests.xml`）。獨立標籤測試驗證逐字同時觸發兩個效果、排版尺寸、完成通知與取消。ChatPanel 完成回呼也能新增下一則回覆。uGUI runtime 在 Unity 6000.3.9f1 與 6000.6.0f1 都編譯通過。
 
 ## 試用範圍
 

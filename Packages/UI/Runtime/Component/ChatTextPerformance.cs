@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Yu5h1Lib.UI
 {
-    /// <summary>Controls the reveal and optional glyph effects for new chat replies.</summary>
+    /// <summary>Controls text reveal and optional glyph effects.</summary>
     [Serializable]
     public struct ChatTextPerformance
     {
@@ -21,7 +21,7 @@ namespace Yu5h1Lib.UI
 
         public static ChatTextPerformance Default => new()
         {
-            SecondsPerGrapheme = 1f / ChatReplyReveal.DefaultRate,
+            SecondsPerGrapheme = 1f / TextReveal.DefaultRate,
             Percentage = 100f,
             DurationMin = .45f,
             DurationMax = .75f,

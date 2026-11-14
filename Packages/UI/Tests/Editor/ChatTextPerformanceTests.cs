@@ -34,6 +34,70 @@ namespace Yu5h1Lib.UI.Tests
         [TearDown]
         public void TearDown() => Object.DestroyImmediate(root);
 
+        [Test]
+        public void StandaloneTextPerformanceRevealsAndAnimatesEachGrapheme()
+        {
+            var banner = new GameObject("Banner", typeof(RectTransform));
+            banner.transform.SetParent(root.transform, false);
+            var label = banner.AddComponent<TextPerformance>();
+            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.AutoAdvance = false;
+            var options = ChatTextPerformance.Default;
+            options.Fade = options.Move = options.FadeSequential = options.MoveSequential = true;
+            options.Directed = true;
+            options.SecondsPerGrapheme = .5f;
+            options.DurationMin = options.DurationMax = 1f;
+            options.DistanceMin = options.DistanceMax = 16f;
+            label.Settings = options;
+            int completed = 0;
+            label.Completed += () => completed++;
+
+            label.Play("GO");
+            Assert.That(label.text, Is.Empty);
+            label.Advance(.5f);
+            Assert.That(label.text, Is.EqualTo("G"));
+            label.Advance(.5f);
+            Assert.That(label.text, Is.EqualTo("GO"));
+            var active = Capture(label);
+            var preferredSize = new Vector2(label.preferredWidth, label.preferredHeight);
+            Assert.That(label.IsComplete, Is.False);
+
+            label.Advance(1f);
+            var settled = Capture(label);
+            Assert.That(label.IsComplete, Is.True);
+            Assert.That(completed, Is.EqualTo(1));
+            Assert.That(active.Count, Is.EqualTo(settled.Count));
+            Assert.That(active[0].color.a, Is.InRange(222, 225));
+            Assert.That(active[6].color.a, Is.Zero);
+            Assert.That(active[0].position.x - settled[0].position.x, Is.EqualTo(2f).Within(.01f));
+            Assert.That(active[6].position.x - settled[6].position.x, Is.EqualTo(16f).Within(.01f));
+            Assert.That(new Vector2(label.preferredWidth, label.preferredHeight), Is.EqualTo(preferredSize));
+
+            label.Play("OK");
+            label.Advance(.5f);
+            label.Stop();
+            label.Advance(1f);
+            Assert.That(label.text, Is.EqualTo("O"));
+            Assert.That(Capture(label)[0].color.a, Is.EqualTo(255));
+            Assert.That(completed, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ChatComponentCompletionCanStartAnotherReply()
+        {
+            var reply = chat.BeginReply();
+            reply.Complete("A");
+            var label = chat.MessageContent.GetComponentInChildren<TextPerformance>();
+            ChatPanel.Reply next = null;
+            label.Completed += () => next = chat.BeginReply();
+
+            chat.Advance(1f);
+
+            Assert.That(reply.IsComplete, Is.True);
+            Assert.That(next, Is.Not.Null);
+            Assert.That(next.IsComplete, Is.False);
+        }
+
         [TestCase("Hello world")]
         [TestCase("a\u0301 中文\n🇹🇼 👩‍💻 B")]
         public void CombinedEffectsAnimateGlyphsWithoutChangingLayout(string message)
@@ -50,7 +114,8 @@ namespace Yu5h1Lib.UI.Tests
             reply.RevealCompleted += () => completed++;
             reply.Complete(message);
             Assert.That(reply.Text, Is.EqualTo(message));
-            var label = chat.MessageContent.GetComponentInChildren<Text>();
+            var label = chat.MessageContent.GetComponentInChildren<TextPerformance>();
+            Assert.That(label, Is.Not.Null);
             var early = Capture(label);
             var preferredHeight = label.preferredHeight;
             var scrollHeight = chat.MessageContent.rect.height;

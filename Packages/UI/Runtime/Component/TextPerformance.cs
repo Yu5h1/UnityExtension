@@ -6,8 +6,9 @@ using UnityEngine.UI;
 
 namespace Yu5h1Lib.UI
 {
-    /// <summary>Plays chat effects on generated vertices while keeping the original label layout.</summary>
-    internal sealed class ChatPerformanceText : Text
+    /// <summary>Reveals plain text and animates glyph vertices without changing the text layout.</summary>
+    [AddComponentMenu("UI/Text Performance")]
+    public sealed class TextPerformance : Text
     {
         private readonly struct Effect
         {
@@ -34,6 +35,8 @@ namespace Yu5h1Lib.UI
             internal float Until;
         }
 
+        private TextReveal reveal;
+        private ChatTextPerformance settings = ChatTextPerformance.Default;
         private EffectLayer fades, moves;
         private ChatTextPerformance previousConfig;
         private System.Random random;
@@ -48,9 +51,95 @@ namespace Yu5h1Lib.UI
         private string shown = "";
         private int revision;
 
-        internal bool Playing => time < fades.Until || time < moves.Until;
+        /// <summary>Advances playback with unscaled time in Play mode when enabled.</summary>
+        public bool AutoAdvance { get; set; } = true;
+        public bool ReduceMotion { get; set; }
+        public float Pace { get; set; } = 1f;
+        public bool IsComplete { get; private set; }
+        public event Action Completed;
 
-        internal void ReleaseEffects()
+        public ChatTextPerformance Settings
+        {
+            get => settings;
+            set
+            {
+                value.Validate();
+                settings = value;
+            }
+        }
+
+        private bool EffectsPlaying => time < fades.Until || time < moves.Until;
+        internal bool HasSnapshot => reveal != null && reveal.HasSnapshot;
+
+        /// <summary>Starts an empty playback that accepts cumulative snapshots.</summary>
+        public void Begin()
+        {
+            Stop();
+            supportRichText = false;
+            text = "";
+            reveal = new TextReveal();
+        }
+
+        /// <summary>Replaces playback with a complete plain-text value, using the same settings as streamed text.</summary>
+        public void Play(string value)
+        {
+            Begin();
+            Complete(value);
+            Advance(0f);
+        }
+
+        /// <summary>Supplies a cumulative snapshot to the active playback.</summary>
+        public void Push(string snapshot) => reveal?.Push(snapshot);
+
+        /// <summary>Marks the active snapshot as final, optionally replacing it first.</summary>
+        public void Complete(string finalSnapshot = null) => reveal?.Complete(finalSnapshot);
+
+        /// <summary>Cancels playback and clears transient effects while keeping the displayed text.</summary>
+        public void Stop()
+        {
+            bool dirty = EffectsPlaying;
+            reveal = null;
+            IsComplete = false;
+            ReleaseEffects();
+            time = 0f;
+            if (dirty)
+                SetVerticesDirty();
+        }
+
+        /// <summary>Advances an active playback when the caller owns the clock.</summary>
+        public void Advance(float deltaTime)
+        {
+            if (Advance(deltaTime, ""))
+                NotifyCompleted();
+        }
+
+        internal bool Advance(float deltaTime, string waitingText)
+        {
+            if (reveal == null)
+                return false;
+
+            float dt = Mathf.Max(0f, deltaTime);
+            string value = reveal.Advance(dt, 1f / settings.SecondsPerGrapheme, Pace, ReduceMotion || settings.Instant);
+            text = reveal.HasSnapshot ? value : waitingText;
+            AdvanceEffects(dt, value, reveal.HasSnapshot, reveal.Revision);
+            if (!reveal.Done || EffectsPlaying)
+                return false;
+
+            reveal = null;
+            IsComplete = true;
+            ReleaseEffects();
+            return true;
+        }
+
+        internal void NotifyCompleted() => Completed?.Invoke();
+
+        private void Update()
+        {
+            if (AutoAdvance && Application.IsPlaying(gameObject))
+                Advance(Time.unscaledDeltaTime);
+        }
+
+        private void ReleaseEffects()
         {
             fades = moves = default;
             glyphEnds = null;
@@ -61,11 +150,12 @@ namespace Yu5h1Lib.UI
             shown = "";
         }
 
-        internal void Advance(float dt, string value, bool content, int nextRevision, bool reduced, ChatTextPerformance config)
+        private void AdvanceEffects(float dt, string value, bool content, int nextRevision)
         {
-            bool wasPlaying = Playing;
+            var config = settings;
+            bool wasPlaying = EffectsPlaying;
             time += dt;
-            if (!content || reduced || revision != nextRevision || !value.StartsWith(shown, StringComparison.Ordinal))
+            if (!content || ReduceMotion || revision != nextRevision || !value.StartsWith(shown, StringComparison.Ordinal))
                 ReleaseEffects();
             revision = nextRevision;
 
@@ -88,11 +178,11 @@ namespace Yu5h1Lib.UI
                     ends = GraphemeBoundaries.GetEnds(value);
                 }
 
-                if (!reduced && (config.Fade || config.Move))
+                if (!ReduceMotion && (config.Fade || config.Move))
                     StartEffects(config, oldLength, fadeChanged, moveChanged, fadeSequential, moveSequential);
             }
 
-            if (wasPlaying || Playing)
+            if (wasPlaying || EffectsPlaying)
                 SetVerticesDirty();
         }
 
@@ -247,7 +337,7 @@ namespace Yu5h1Lib.UI
         protected override void OnPopulateMesh(VertexHelper vertices)
         {
             base.OnPopulateMesh(vertices);
-            if (!Playing || shown.Length == 0 || shown != text)
+            if (!EffectsPlaying || shown.Length == 0 || shown != text)
                 return;
 
             int quads = vertices.currentVertCount / 4;

@@ -4,17 +4,15 @@ using UnityEngine;
 
 namespace Yu5h1Lib.UI
 {
-    /// <summary>Advances one reply by whole graphemes from cumulative snapshots.</summary>
-    internal sealed class ChatReplyReveal
+    /// <summary>Advances plain text by whole graphemes from cumulative snapshots.</summary>
+    internal sealed class TextReveal
     {
         internal const int DefaultRate = 30;
         internal const int MaxCredit = 8;
-        internal const int ThinkingSecondsThreshold = 5;
 
         private string target = "";
         private int[] boundaries = Array.Empty<int>();
         private int shownCount;
-        private float elapsed;
         private double credit;
         private bool complete;
 
@@ -52,16 +50,14 @@ namespace Yu5h1Lib.UI
             complete = true;
         }
 
-        internal string Advance(float dt, float rate, float pace, bool reduceMotion, bool showSeconds)
+        internal string Advance(float dt, float rate, float pace, bool instant)
         {
-            dt = Mathf.Max(0, dt);
-            elapsed += dt;
             int limit = boundaries.Length;
             if (!complete && (limit > 1 || limit == 1 && char.IsHighSurrogate(target[target.Length - 1])))
                 limit--;
             limit = Mathf.Max(shownCount, limit);
 
-            if (reduceMotion)
+            if (instant)
             {
                 shownCount = limit;
                 credit = 0;
@@ -74,13 +70,7 @@ namespace Yu5h1Lib.UI
                 credit = Math.Max(0d, credit - count);
             }
 
-            if (HasSnapshot || shownCount != 0)
-                return target.Substring(0, ShownLength);
-
-            int seconds = Mathf.FloorToInt(elapsed);
-            return showSeconds && seconds >= ThinkingSecondsThreshold
-                ? $"思考中...{seconds}s"
-                : "思考中" + new string('.', seconds % 3 + 1);
+            return target.Substring(0, ShownLength);
         }
     }
 }
