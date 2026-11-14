@@ -53,21 +53,9 @@ namespace Yu5h1Lib.UI.Acceptance
             if (!TryRead(out _, out var storedCustom))
                 return;
 
-            custom ??= storedCustom;
-            if (mode == SettingsThemeMode.Custom && custom == null)
-                throw new ArgumentNullException(nameof(custom));
-
-            string storedMode = mode switch
-            {
-                SettingsThemeMode.Light => Light,
-                SettingsThemeMode.Dark => Dark,
-                SettingsThemeMode.System => SystemMode,
-                SettingsThemeMode.Custom => CustomMode,
-                _ => throw new ArgumentOutOfRangeException(nameof(mode))
-            };
             try
             {
-                storage.Value = Encode(storedMode, custom);
+                storage.Value = Encode(mode, custom ?? storedCustom);
                 PlayerPrefs.Save();
             }
             catch (PlayerPrefsException)
@@ -76,19 +64,62 @@ namespace Yu5h1Lib.UI.Acceptance
             }
         }
 
+        internal bool TrySaveImported(SettingsThemeMode mode, SettingsCustomColors custom)
+        {
+            if (!Enum.IsDefined(typeof(SettingsThemeMode), mode) || (mode == SettingsThemeMode.Custom && custom == null))
+                return false;
+
+            string json = Encode(mode, custom);
+            bool hadPreviousValue = storage.TryGetValue(out var previous);
+            bool assigned = false;
+            try
+            {
+                storage.Value = json;
+                assigned = true;
+                PlayerPrefs.Save();
+                return true;
+            }
+            catch (PlayerPrefsException)
+            {
+                if (assigned)
+                {
+                    try
+                    {
+                        if (hadPreviousValue)
+                            storage.Value = previous;
+                        else
+                            storage.DeleteKey();
+                    }
+                    catch (PlayerPrefsException)
+                    {
+                        Debug.LogWarning("The previous UX Theme preference could not be restored.");
+                    }
+                }
+                return false;
+            }
+        }
+
         private bool TryRead(out SettingsThemeMode? mode, out SettingsCustomColors custom)
+        {
+            if (storage.TryGetValue(out string raw))
+                return TryDecode(raw, out mode, out custom);
+
+            mode = null;
+            custom = null;
+            return true;
+        }
+
+        internal static bool TryDecode(string raw, out SettingsThemeMode? mode, out SettingsCustomColors custom)
         {
             mode = null;
             custom = null;
-            if (!storage.TryGetValue(out string raw))
-                return true;
 
             if (!PreferencesFormat.TryReadJsonObject(raw, out var fields)
                 || !fields.TryGetValue("version", out var version) || !(version is double number) || number != Version
                 || !fields.TryGetValue("mode", out var modeValue) || !(modeValue is string value))
                 return false;
 
-            mode = value switch
+            SettingsThemeMode? decodedMode = value switch
             {
                 Light => SettingsThemeMode.Light,
                 Dark => SettingsThemeMode.Dark,
@@ -96,14 +127,20 @@ namespace Yu5h1Lib.UI.Acceptance
                 CustomMode => SettingsThemeMode.Custom,
                 _ => null
             };
-            if (mode == null)
+            if (decodedMode == null)
                 return false;
 
-            if (!fields.TryGetValue("custom", out var customValue))
-                return fields.Count == 2 && mode != SettingsThemeMode.Custom;
+            if (fields.TryGetValue("custom", out var customValue))
+            {
+                if (fields.Count != 3 || !(customValue is Dictionary<string, object> colors)
+                    || !TryDecodeCustom(colors, out custom))
+                    return false;
+            }
+            else if (fields.Count != 2 || decodedMode == SettingsThemeMode.Custom)
+                return false;
 
-            return fields.Count == 3 && customValue is Dictionary<string, object> colors
-                && TryDecodeCustom(colors, out custom);
+            mode = decodedMode;
+            return true;
         }
 
         private static bool TryDecodeCustom(Dictionary<string, object> colors, out SettingsCustomColors custom)
@@ -124,10 +161,21 @@ namespace Yu5h1Lib.UI.Acceptance
             return true;
         }
 
-        private static string Encode(string mode, SettingsCustomColors custom)
+        internal static string Encode(SettingsThemeMode mode, SettingsCustomColors custom)
         {
+            if (mode == SettingsThemeMode.Custom && custom == null)
+                throw new ArgumentNullException(nameof(custom));
+
+            string storedMode = mode switch
+            {
+                SettingsThemeMode.Light => Light,
+                SettingsThemeMode.Dark => Dark,
+                SettingsThemeMode.System => SystemMode,
+                SettingsThemeMode.Custom => CustomMode,
+                _ => throw new ArgumentOutOfRangeException(nameof(mode))
+            };
             var json = new StringBuilder("{\"version\":1,\"mode\":\"");
-            json.Append(mode).Append('"');
+            json.Append(storedMode).Append('"');
             if (custom != null)
             {
                 json.Append(",\"custom\":{\"base\":\"").Append(custom.IsDark ? Dark : Light).Append('"');

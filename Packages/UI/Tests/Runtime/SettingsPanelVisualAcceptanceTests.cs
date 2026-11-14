@@ -148,6 +148,15 @@ namespace Yu5h1Lib.UI.Tests
                                 Capture(camera, target, output, $"{presentation}-custom-panel", errors);
                                 Submit(themeSwitch);
                                 Submit(themeSwitch);
+
+                                Submit(panel.HeaderActions.GetComponentsInChildren<Button>()
+                                    .Single(button => button.name == "Theme JSON"));
+                                yield return new WaitForSecondsRealtime(ColorSettleSeconds);
+                                var exchange = host.ContentContainer.GetComponentsInChildren<RectTransform>()
+                                    .Single(rect => rect.name == "Theme exchange dialog");
+                                Capture(camera, target, output, $"{presentation}-theme-exchange", errors);
+                                Submit(exchange.GetComponentsInChildren<Button>()
+                                    .Single(button => button.name == "Close theme exchange dialog"));
                             }
                             panel.Close();
                         }

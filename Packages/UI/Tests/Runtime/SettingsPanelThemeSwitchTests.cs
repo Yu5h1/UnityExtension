@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
@@ -32,6 +34,7 @@ namespace Yu5h1Lib.UI.Tests
         private int applies;
         private Func<Task> write;
         private Func<bool?> readSystemTheme;
+        private string exchangeDirectory;
 
         private string ThemeKey => key + ".Theme";
 
@@ -105,6 +108,13 @@ namespace Yu5h1Lib.UI.Tests
 
             PlayerPrefs.DeleteKey(ThemeKey);
             PlayerPrefs.Save();
+            if (exchangeDirectory != null && Directory.Exists(exchangeDirectory))
+            {
+                foreach (var path in Directory.GetFiles(exchangeDirectory))
+                    File.Delete(path);
+                Directory.Delete(exchangeDirectory);
+            }
+            exchangeDirectory = null;
 
             foreach (var id in UxUiModuleRegistry.AllCases.Select(item => item.Id).Except(previousCaseIds).ToArray())
                 UxUiModuleRegistry.Unregister(id);
@@ -453,6 +463,164 @@ namespace Yu5h1Lib.UI.Tests
             Assert.That(writes, Is.Zero);
             Assert.That(applies, Is.EqualTo(2));
         }
+
+        [Test]
+        public void ThemeJsonRoundTripsAllEightColorsAndKeepsTheSettingsDraft()
+        {
+            var colors = new Dictionary<string, string>
+            {
+                ["pageBackground"] = "#152030", ["panelBackground"] = "#253249",
+                ["heading"] = "#ffe8b4", ["panelHeading"] = "#fbeed0",
+                ["itemText"] = "#d3e7f4", ["secondaryText"] = "#a5c5dd",
+                ["border"] = "#7089a0", ["accent"] = "#f6cf69"
+            };
+            string imported = ExchangePath("web-theme.json");
+            File.WriteAllText(imported, CustomJson(colors), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+            Submit(config.Opener);
+            Submit(config.SaveBar.ModeToggle);
+            var configField = VisibleField(config);
+            Submit(configField);
+            Submit(FindButton(config.Tabs, "details"));
+            var tab = config.Tabs.ActiveButton;
+            tab.Select();
+            var dialog = OpenExchange(config, usePointer: true);
+            RunExchange(dialog, imported, "Import theme JSON");
+            Assert.That(ExchangeStatus(dialog), Does.Contain("已匯入"));
+            AssertCustomColors(colors);
+            string stored = PlayerPrefs.GetString(ThemeKey);
+            Assert.That(stored, Does.Contain("\"mode\":\"custom\"").And.Contain("\"base\":\"light\""));
+            foreach (var (role, value) in colors)
+                Assert.That(stored, Does.Contain($"\"{role}\":\"{value}\""));
+
+            string exported = ExchangePath("unity-theme.json");
+            RunExchange(dialog, exported, "Export theme JSON");
+            Assert.That(ExchangeStatus(dialog), Does.Contain("已匯出"));
+            Assert.That(File.ReadAllText(exported), Is.EqualTo(stored));
+            Assert.That(PlayerPrefs.GetString(ThemeKey), Is.EqualTo(stored));
+            RunExchange(dialog, exported, "Export theme JSON");
+            Assert.That(ExchangeStatus(dialog), Does.Not.Contain("已匯出"));
+            Assert.That(File.ReadAllText(exported), Is.EqualTo(stored));
+            Submit(FindButton(dialog, "Close theme exchange dialog"));
+            Assert.That(config.Tabs.ActiveButton, Is.SameAs(tab));
+            Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(tab.gameObject));
+            Assert.That(configField.isOn, Is.False);
+            Assert.That(config.SaveBar.SaveButton.IsInteractable(), Is.True);
+            Assert.That(writes, Is.Zero);
+            Assert.That(applies, Is.EqualTo(1));
+
+            Assert.That(config.Close(), Is.True);
+            Submit(setting.Opener);
+            var settingField = VisibleField(setting);
+            Assert.That(settingField.isOn, Is.True);
+            Submit(settingField);
+            dialog = OpenExchange(setting);
+            string fromSetting = ExchangePath("unity-from-setting.json");
+            RunExchange(dialog, fromSetting, "Export theme JSON");
+            Assert.That(ExchangeStatus(dialog), Does.Contain("已匯出"));
+            Assert.That(File.ReadAllText(fromSetting), Is.EqualTo(stored));
+            RunExchange(dialog, exported, "Import theme JSON");
+            Assert.That(ExchangeStatus(dialog), Does.Contain("已匯入"));
+            Submit(FindButton(dialog, "Close theme exchange dialog"));
+            AssertCustomColors(colors);
+            Assert.That(settingField.isOn, Is.False);
+            Assert.That(writes, Is.Zero);
+            Assert.That(applies, Is.EqualTo(1));
+            Assert.That(PlayerPrefs.HasKey(key), Is.False);
+        }
+
+        [Test]
+        public void ExportKeepsInactiveCustomButAnExplicitImportReplacesIt()
+        {
+            Submit(setting.Opener);
+            Submit(FindButton(setting.HeaderActions, "Custom theme"));
+            Submit(FindButton(FindCustomEditor(), "Close custom theme editor"));
+            Submit(FindButton(setting.HeaderActions, "Theme switch"));
+            var cached = PlayerPrefs.GetString(ThemeKey);
+            Assert.That(cached, Does.Contain("\"mode\":\"light\"").And.Contain("\"custom\":{"));
+
+            var dialog = OpenExchange(setting);
+            string exported = ExchangePath("inactive-custom.json");
+            RunExchange(dialog, exported, "Export theme JSON");
+            Assert.That(ExchangeStatus(dialog), Does.Contain("已匯出"));
+            Assert.That(File.ReadAllText(exported), Is.EqualTo(cached));
+
+            string replacement = ExchangePath("no-custom.json");
+            File.WriteAllText(replacement, "{\"version\":1,\"mode\":\"dark\"}");
+            RunExchange(dialog, replacement, "Import theme JSON");
+            Assert.That(ExchangeStatus(dialog), Does.Contain("已匯入"));
+            AssertPreferenceMode("dark");
+            AssertCasePalette(UguiControlPalette.Dark);
+            Assert.That(writes, Is.Zero);
+            Assert.That(applies, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void InvalidThemeFilesLeaveThePalettePreferenceAndDraftUntouched()
+        {
+            Submit(config.Opener);
+            Submit(config.SaveBar.ModeToggle);
+            var field = VisibleField(config);
+            Submit(field);
+            Submit(FindButton(config.HeaderActions, "Theme switch"));
+            var stored = PlayerPrefs.GetString(ThemeKey);
+            var dialog = OpenExchange(config);
+            var cases = new[]
+            {
+                "{ broken",
+                "{\"version\":2,\"mode\":\"dark\"}",
+                "{\"version\":1,\"mode\":\"dark\",\"future\":true}",
+                "{\"version\":1,\"mode\":\"custom\",\"custom\":{\"base\":\"light\"}}",
+                "{\"version\":1,\"mode\":\"custom\",\"custom\":{\"base\":\"light\",\"pageBackground\":\"#12345678\","
+                    + "\"panelBackground\":\"#253249\",\"heading\":\"#ffe8b4\",\"panelHeading\":\"#fbeed0\","
+                    + "\"itemText\":\"#d3e7f4\",\"secondaryText\":\"#a5c5dd\",\"border\":\"#7089a0\",\"accent\":\"#f6cf69\"}}"
+            };
+            for (int i = 0; i < cases.Length; i++)
+                File.WriteAllText(ExchangePath($"invalid-{i}.json"), cases[i]);
+            File.WriteAllText(ExchangePath("invalid-encoding.json"), "{\"version\":1,\"mode\":\"dark\"}", Encoding.Unicode);
+            foreach (var path in Directory.GetFiles(exchangeDirectory))
+            {
+                RunExchange(dialog, path, "Import theme JSON");
+                Assert.That(ExchangeStatus(dialog), Does.Not.Contain("已匯入"), path);
+                Assert.That(PlayerPrefs.GetString(ThemeKey), Is.EqualTo(stored), path);
+                AssertCasePalette(UguiControlPalette.Light);
+            }
+            RunExchange(dialog, ExchangePath("missing.json"), "Import theme JSON");
+            Assert.That(ExchangeStatus(dialog), Does.Not.Contain("已匯入"));
+            Assert.That(PlayerPrefs.GetString(ThemeKey), Is.EqualTo(stored));
+            Submit(FindButton(dialog, "Close theme exchange dialog"));
+            AssertDraft(config, field, UguiControlPalette.Light);
+        }
+
+        private string ExchangePath(string file)
+        {
+            exchangeDirectory ??= Path.Combine(Application.temporaryCachePath, "ThemeExchange-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(exchangeDirectory);
+            return Path.Combine(exchangeDirectory, file);
+        }
+
+        private static string CustomJson(Dictionary<string, string> colors) =>
+            "{\"mode\":\"custom\",\"custom\":{" + string.Join(",", colors.Reverse().Select(
+                pair => $"\"{pair.Key}\":\"{pair.Value.ToUpperInvariant()}\"")) + ",\"base\":\"light\"},\"version\":1}";
+
+        private RectTransform OpenExchange(SettingsPanel panel, bool usePointer = false)
+        {
+            var button = FindButton(panel.HeaderActions, "Theme JSON");
+            if (usePointer)
+                Click(button);
+            else
+                Submit(button);
+            return host.ContentContainer.GetComponentsInChildren<RectTransform>()
+                .Single(rect => rect.name == "Theme exchange dialog");
+        }
+
+        private static void RunExchange(Component dialog, string path, string command)
+        {
+            dialog.GetComponentsInChildren<InputField>().Single(field => field.name == "Theme JSON path").text = path;
+            Submit(FindButton(dialog, command));
+        }
+
+        private static string ExchangeStatus(Component dialog) => dialog.GetComponentsInChildren<Text>()
+            .Single(text => text.name == "Theme exchange status").text;
 
         private RectTransform FindCustomEditor() => host.ContentContainer.GetComponentsInChildren<RectTransform>()
             .Single(rect => rect.name == "Custom theme editor");

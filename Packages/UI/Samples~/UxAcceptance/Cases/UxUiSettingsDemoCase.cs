@@ -24,6 +24,7 @@ namespace Yu5h1Lib.UI.Acceptance
         private SettingsCustomColors customColors;
         private SettingsCustomPalette customPalette;
         private SettingsCustomThemeEditor customEditor;
+        private SettingsThemeExchangeDialog exchangeDialog;
         private UguiControlPalette palette;
         private Image background;
         private Coroutine systemThemeWatch;
@@ -34,7 +35,7 @@ namespace Yu5h1Lib.UI.Acceptance
         private SettingsPanel setting;
         private Text preview;
         private ButtonAddon directionAddon;
-        private readonly List<(Button Button, Text Label, SettingsThemeMode? Mode)> themeButtons = new();
+        private readonly List<(Button Button, Text Label, SettingsThemeMode? Mode, bool SwitchScheme)> themeButtons = new();
         private readonly List<GraphicColorBinding> colorBindings = new();
         private ConfigStore<Values> store;
         private Values draft;
@@ -164,9 +165,10 @@ namespace Yu5h1Lib.UI.Acceptance
 
         private void AddThemeSwitch(SettingsPanel panel)
         {
-            AddThemeButton(panel, "Theme switch", "", 62, SwitchTheme, null);
-            AddThemeButton(panel, "Follow system theme", "跟隨系統", 82, FollowSystemTheme, SettingsThemeMode.System);
-            AddThemeButton(panel, "Custom theme", "自訂", 56, OpenCustomTheme, SettingsThemeMode.Custom);
+            AddThemeButton(panel, "Theme switch", "", 54, SwitchTheme, switchScheme: true);
+            AddThemeButton(panel, "Follow system theme", "跟隨系統", 78, FollowSystemTheme, SettingsThemeMode.System);
+            AddThemeButton(panel, "Custom theme", "自訂", 50, OpenCustomTheme, SettingsThemeMode.Custom);
+            AddThemeButton(panel, "Theme JSON", "JSON", 50, OpenThemeExchange);
             var divider = CreateRect(panel.HeaderActions, "Theme header divider");
             divider.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             divider.anchorMax = Vector2.right;
@@ -178,7 +180,7 @@ namespace Yu5h1Lib.UI.Acceptance
         }
 
         private void AddThemeButton(SettingsPanel panel, string name, string caption, float width, Action action,
-            SettingsThemeMode? mode)
+            SettingsThemeMode? mode = null, bool switchScheme = false)
         {
             var header = panel.HeaderActions;
             var rect = CreateRect(header, name);
@@ -195,7 +197,7 @@ namespace Yu5h1Lib.UI.Acceptance
 
             var label = CreateText(rect, "Label", caption, 15, palette.ItemText, TextAnchor.MiddleCenter);
             Stretch(label.rectTransform);
-            themeButtons.Add((button, label, mode));
+            themeButtons.Add((button, label, mode, switchScheme));
         }
 
         private void SwitchTheme()
@@ -238,6 +240,47 @@ namespace Yu5h1Lib.UI.Acceptance
                 () => SetPanelKeyboardEnabled(true));
             SetPanelKeyboardEnabled(false);
             customEditor.Show(customColors, palette);
+        }
+
+        private void OpenThemeExchange()
+        {
+            exchangeDialog ??= SettingsThemeExchangeDialog.Create(root, ImportTheme, ExportTheme,
+                () => SetPanelKeyboardEnabled(true));
+            SetPanelKeyboardEnabled(false);
+            exchangeDialog.Show(palette);
+        }
+
+        private string ImportTheme(string path)
+        {
+            if (!SettingsThemeExchangeFiles.TryRead(path, out var json, out var message))
+                return message;
+            if (!SettingsThemePreference.TryDecode(json, out var mode, out var colors) || !mode.HasValue)
+                return "匯入失敗。檔案須符合 UX Theme v1 格式。";
+            if (!themePreference.TrySaveImported(mode.Value, colors))
+                return "匯入失敗。無法保存主題偏好。";
+
+            StopSystemThemeWatch();
+            themeMode = mode;
+            customColors = colors;
+            if (mode == SettingsThemeMode.Custom)
+                BuildCustomPalette();
+            else if (mode == SettingsThemeMode.System)
+            {
+                bool? systemIsDark = readSystemTheme();
+                palette = ResolveSystemPalette(systemIsDark);
+                StartSystemThemeWatch(systemIsDark);
+            }
+            else
+                palette = mode == SettingsThemeMode.Light ? UguiControlPalette.Light : UguiControlPalette.Dark;
+            ApplyTheme();
+            return "已匯入並套用主題。";
+        }
+
+        private string ExportTheme(string path)
+        {
+            var mode = themeMode ?? (UsesLightTheme ? SettingsThemeMode.Light : SettingsThemeMode.Dark);
+            var json = SettingsThemePreference.Encode(mode, customColors);
+            return SettingsThemeExchangeFiles.TryWrite(path, json, out var message) ? "已匯出主題。" : message;
         }
 
         private void SetPanelKeyboardEnabled(bool enabled)
@@ -326,13 +369,14 @@ namespace Yu5h1Lib.UI.Acceptance
             setting.ApplyPalette(palette);
             palette.ApplyButton(directionAddon.ui, directionAddon.labelText);
             bool light = UsesLightTheme;
-            foreach (var (button, label, mode) in themeButtons)
+            foreach (var (button, label, mode, switchScheme) in themeButtons)
             {
-                if (!mode.HasValue)
+                if (switchScheme)
                     label.text = light ? "暗色" : "亮色";
                 palette.ApplyButton(button, label, accent: mode.HasValue && mode == themeMode);
             }
             customEditor?.ApplyPalette(palette);
+            exchangeDialog?.ApplyPalette(palette);
         }
 
         private static Task WritePlayerPrefs(string key, DataView data, CancellationToken token)
@@ -444,6 +488,8 @@ namespace Yu5h1Lib.UI.Acceptance
             StopSystemThemeWatch();
             customEditor?.Hide();
             customEditor = null;
+            exchangeDialog?.Hide();
+            exchangeDialog = null;
             customPalette?.Dispose();
             customPalette = null;
             customColors = null;

@@ -57,3 +57,11 @@ Unity 6000.6.0f1 使用隔離專案，從 `7506286` 加上本輪檔案。此輪�
 - Unity 6000.6.0f1 隔離專案以 `e78bafa` 加上本輪變更執行。EditMode 51/51、PlayMode 22/22。PlayMode 逐欄編輯並核對實際控件，確認無效輸入不保存、低對比依序提醒且可套用、切換基底及固定明暗／跟隨系統後返回自訂都保留八色。關閉自訂編輯器後返回原焦點和分頁，其他設定草稿仍待套用。
 - 兩次獨立 PlayMode batchmode 啟動各通過 1/1。第一次從 Config 操作並保存八色，第二次重開確認兩個面板還原自訂色並從 Setting 讀回全部欄位。
 - XML 位於 `WIP/Validation/UiConfigSettings/Project-Build/logs/` 下的 `custom-theme-editmode.xml`、`custom-theme-playmode.xml`、`custom-theme-process-1.xml` 和 `custom-theme-process-2.xml`。兩個面板及其自訂編輯器的 440×720 截圖位於 `WIP/Validation/UiConfigSettings/VisualAcceptance/custom-theme-regression/`。
+
+### Config 與 Setting 的 Theme v1 JSON（2026-11-14）
+
+從任一面板的「JSON」入口輸入完整檔案路徑。Unity Editor 也可透過「選擇匯入檔」或「選擇匯出位置」填入路徑，再按匯入或匯出。匯出請指定新檔名。匯入接受 UTF-8（可含 BOM）及 64 KiB 以內的 UX Theme v1 檔案。[實作計畫](../../../../Documentation/UiSettingsThemeExchangePlan.md)
+
+- Unity 6000.6.0f1 隔離專案從 `0fb379f` 加上本輪變更驗收。EditMode 51/51、PlayMode 26/26。從 Config 與 Setting 匯入和匯出時，已開啟的面板、分頁、草稿均保留，ConfigStore 無額外寫入或套用。損毀、未知版本、缺色、無效色值、UTF-16 與不存在的檔案未改變偏好。匯出保留暫未啟用的自訂八色，匯入則依檔案替換整筆偏好。
+- Web 公開的 `decodeThemePreference` 產生自訂明暗基底和八色。由 Config 匯入後再由 Setting 匯出，Web 比對解碼結果及 `resolveTheme` 輸出的角色值一致。使用的 `dist/theme/index.js` SHA-256 為 `3c4673f84fc243873bb164708d5f7c2450f1ad2dba268e4efca95337b80014f3`。
+- XML 位於 `WIP/Validation/UiConfigSettings/Project-Build/logs/` 下的 `theme-exchange-playmode.xml` 與 `theme-exchange-editmode.xml`。往返檔案位於 `Project-Build/ThemeExchange/`，截圖位於 `VisualAcceptance/theme-exchange-regression/`。Batchmode 以路徑欄位操作檔案，原生選檔視窗的互動留待 Editor 手動確認。
