@@ -8,12 +8,12 @@ namespace Yu5h1Lib.UI.Acceptance
     public sealed class UxUiScrollViewDemoCase : IUxUiModuleDemoCase
     {
         private const int ItemCount = 1000;
+        private const float ControlHeight = 28f;
+        private const float CheckboxSize = 16f;
         private RectTransform root;
         private RectTransform itemTemplate;
         private ScrollView view;
         private ScrollViewScrollbar scrollbar;
-        private ButtonAddon axisButton;
-        private ButtonAddon loopButton;
         private Text counters;
 
         public string Id => "scrollview";
@@ -31,12 +31,14 @@ namespace Yu5h1Lib.UI.Acceptance
             layout.childForceExpandHeight = false;
 
             var controls = CreateRect(root, "Controls");
-            controls.gameObject.AddComponent<LayoutElement>().preferredHeight = 40f;
+            controls.gameObject.AddComponent<LayoutElement>().preferredHeight = ControlHeight;
             var toolbar = controls.gameObject.AddComponent<HorizontalLayoutGroup>();
             toolbar.childControlWidth = toolbar.childControlHeight = true;
+            toolbar.childForceExpandWidth = toolbar.childForceExpandHeight = false;
+            toolbar.childAlignment = TextAnchor.MiddleLeft;
             toolbar.spacing = 8f;
-            axisButton = AddControl(controls, "Direction", "方向：垂直", () => SetAxis(!view.horizontal));
-            loopButton = AddControl(controls, "Loop", "循環：關閉", ToggleLoop);
+            AddToggle(controls, "Direction", "水平捲動", SetAxis);
+            AddToggle(controls, "Loop", "循環", SetLoop);
 
             counters = CreateText(root, "Counters", "", 15, Palette.SecondaryText, TextAnchor.MiddleLeft);
             counters.gameObject.AddComponent<LayoutElement>().preferredHeight = 26f;
@@ -92,14 +94,12 @@ namespace Yu5h1Lib.UI.Acceptance
                 view.verticalScrollbar = scrollbar;
 
             view.SetItems(itemTemplate, ItemCount, horizontal ? 128f : 48f, BindItem);
-            axisButton.label = horizontal ? "方向：水平" : "方向：垂直";
             RefreshCounters();
         }
 
-        private void ToggleLoop()
+        private void SetLoop(bool enabled)
         {
-            view.Loop = !view.Loop;
-            loopButton.label = view.Loop ? "循環：開啟" : "循環：關閉";
+            view.Loop = enabled;
             RefreshCounters();
         }
 
@@ -145,13 +145,48 @@ namespace Yu5h1Lib.UI.Acceptance
             return bar;
         }
 
-        private static ButtonAddon AddControl(RectTransform parent, string name, string label, UnityEngine.Events.UnityAction action)
+        private static void AddToggle(RectTransform parent, string name, string label, UnityEngine.Events.UnityAction<bool> action)
         {
-            var button = ButtonAddon.Create(parent, label: label, showIcon: false, size: 36f);
-            button.name = name;
-            Palette.ApplyButton(button.ui, button.labelText);
-            button.ui.onClick.AddListener(action);
-            return button;
+            var control = CreateRect(parent, name);
+            control.gameObject.AddComponent<Image>().color = Color.clear;
+            control.gameObject.AddComponent<LayoutElement>().preferredHeight = ControlHeight;
+            var layout = control.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.padding = new RectOffset(6, 6, 0, 0);
+            layout.spacing = 6f;
+            layout.childAlignment = TextAnchor.MiddleLeft;
+            layout.childControlWidth = layout.childControlHeight = true;
+            layout.childForceExpandWidth = layout.childForceExpandHeight = false;
+
+            var box = CreateRect(control, "Checkbox");
+            var boxLayout = box.gameObject.AddComponent<LayoutElement>();
+            boxLayout.minWidth = boxLayout.minHeight = CheckboxSize;
+            var border = box.gameObject.AddComponent<Image>();
+            border.color = Color.white;
+            border.raycastTarget = false;
+            var fill = CreateRect(box, "Fill");
+            Stretch(fill, 1f);
+            var background = fill.gameObject.AddComponent<Image>();
+            background.color = Palette.PanelBackground;
+            background.raycastTarget = false;
+            var indicator = CreateRect(fill, "Indicator");
+            Stretch(indicator, 3f);
+            var mark = indicator.gameObject.AddComponent<Image>();
+            mark.color = Palette.Accent;
+            mark.raycastTarget = false;
+            CreateText(control, "Label", label, 14, Palette.ItemText, TextAnchor.MiddleLeft);
+
+            var toggle = control.gameObject.AddComponent<Toggle>();
+            toggle.targetGraphic = border;
+            toggle.graphic = mark;
+            toggle.toggleTransition = Toggle.ToggleTransition.None;
+            var colors = toggle.colors;
+            colors.normalColor = Palette.ControlBorder;
+            colors.highlightedColor = colors.selectedColor = Palette.Focus;
+            colors.pressedColor = Palette.ItemText;
+            colors.disabledColor = Palette.Disabled;
+            toggle.colors = colors;
+            toggle.TrySetValueWithoutNotify(false);
+            toggle.onValueChanged.AddListener(action);
         }
     }
 }

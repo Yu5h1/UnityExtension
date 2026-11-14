@@ -36,29 +36,36 @@ namespace Yu5h1Lib.UI.Tests
             card.GetComponent<Button>().onClick.Invoke();
             Assert.That(host.CurrentCase?.Id, Is.EqualTo("scrollview"), host.StatusText);
             var dashboard = host.ContentContainer.Find("ScrollViewDemo");
-            var direction = dashboard.Find("Controls/Direction").GetComponent<Button>();
-            var loop = dashboard.Find("Controls/Loop").GetComponent<Button>();
+            var direction = dashboard.Find("Controls/Direction").GetComponent<Toggle>();
+            var loop = dashboard.Find("Controls/Loop").GetComponent<Toggle>();
             var view = dashboard.GetComponentInChildren<ScrollView>();
             var bar = view.verticalScrollbar;
             yield return null;
             Canvas.ForceUpdateCanvases();
+            AssertCompactReadableControls(direction, loop);
+            Assert.That(direction.isOn || loop.isOn, Is.False);
             Assert.That(view.vertical && !view.horizontal && !view.Loop, Is.True);
             var verticalCells = view.content.Cast<Transform>().ToArray();
 
-            loop.onClick.Invoke();
+            ToggleWithPointer(loop);
+            Assert.That(loop.isOn, Is.True);
             VerifyCycle(view, bar);
-            direction.onClick.Invoke();
+            ToggleWithPointer(direction);
+            Canvas.ForceUpdateCanvases();
+            AssertCompactReadableControls(direction, loop);
+            Assert.That(direction.isOn, Is.True);
             Assert.That(dashboard.GetComponentsInChildren<ScrollView>(), Is.EqualTo(new[] { view }));
             Assert.That(view.horizontal && !view.vertical && view.Loop, Is.True);
             Assert.That(view.horizontalScrollbar, Is.SameAs(bar));
             Assert.That(view.content.Cast<Transform>().Any(verticalCells.Contains), Is.True);
             VerifyCycle(view, bar);
 
-            loop.onClick.Invoke();
+            ToggleWithPointer(loop);
             view.ScrollToOffset(view.ContentSize + 20f);
             Assert.That(view.Loop, Is.False);
             Assert.That(view.Offset, Is.EqualTo(view.ContentSize - view.viewport.rect.width).Within(.05f));
-            direction.onClick.Invoke();
+            ToggleWithPointer(direction);
+            Assert.That(direction.isOn || loop.isOn, Is.False);
             Assert.That(view.vertical && !view.horizontal && !view.Loop, Is.True);
             Assert.That(view.verticalScrollbar, Is.SameAs(bar));
             Assert.That(view.Offset, Is.Zero.Within(.05f));
@@ -66,6 +73,32 @@ namespace Yu5h1Lib.UI.Tests
             host.ShowCatalog();
             Assert.That(host.CurrentCase, Is.Null);
             Assert.That(host.ContentContainer.childCount, Is.Zero);
+        }
+
+        private static void ToggleWithPointer(Toggle toggle)
+        {
+            ExecuteEvents.Execute(toggle.gameObject, new PointerEventData(EventSystem.current)
+            {
+                button = PointerEventData.InputButton.Left,
+            }, ExecuteEvents.pointerClickHandler);
+        }
+
+        private static void AssertCompactReadableControls(params Toggle[] toggles)
+        {
+            foreach (var toggle in toggles)
+            {
+                var rect = ((RectTransform)toggle.transform).rect;
+                var toolbar = ((RectTransform)toggle.transform.parent).rect;
+                var label = toggle.transform.Find("Label").GetComponent<Text>();
+                var background = toggle.transform.Find("Checkbox/Fill").GetComponent<Image>();
+                Assert.That(rect.width, Is.LessThan(toolbar.width / 3f), toggle.name);
+                Assert.That(rect.height, Is.EqualTo(28f).Within(.05f), toggle.name);
+                Assert.That(label.rectTransform.rect.width, Is.GreaterThanOrEqualTo(label.preferredWidth - .05f), toggle.name);
+                Assert.That(label.color, Is.EqualTo(UguiControlPalette.Dark.ItemText), toggle.name);
+                Assert.That(background.color, Is.EqualTo(UguiControlPalette.Dark.PanelBackground), toggle.name);
+                Assert.That(toggle.graphic.color, Is.EqualTo(UguiControlPalette.Dark.Accent), toggle.name);
+                Assert.That(toggle.graphic.canvasRenderer.GetAlpha(), Is.EqualTo(toggle.isOn ? 1f : 0f), toggle.name);
+            }
         }
 
         private static void VerifyCycle(ScrollView view, Scrollbar bar)

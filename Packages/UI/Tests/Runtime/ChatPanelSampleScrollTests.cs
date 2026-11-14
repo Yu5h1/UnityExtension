@@ -99,16 +99,32 @@ namespace Yu5h1Lib.UI.Tests
                 contentBefore = scroll.ContentSize;
             }
 
+            var receiveMessage = demo.transform.Find("Demo controls/收到新訊息")?.GetComponent<Button>();
+            Assert.That(receiveMessage, Is.Not.Null);
+            float bottomWhileReading = scroll.MaxOffset;
+            receiveMessage.onClick.Invoke();
+            yield return null;
+            Assert.That(scroll.MaxOffset, Is.GreaterThan(bottomWhileReading));
+            Assert.That(scroll.Following, Is.False);
+            Assert.That(scroll.Offset, Is.EqualTo(readingOffset).Within(Tolerance));
+            Assert.That(FirstVisible(panel), Is.SameAs(reloaded));
+            Assert.That(RowTop(scroll, reloaded), Is.EqualTo(originalTop).Within(Tolerance));
+            var received = content.GetChild(content.childCount - 1);
+            Assert.That(received.GetComponent<HorizontalLayoutGroup>().childAlignment, Is.EqualTo(TextAnchor.LowerLeft));
+            Assert.That(received.Find("Bubble/Text").GetComponent<Text>().text, Is.Not.Empty);
+            TestContext.WriteLine($"New message while reading: {reloaded.name} stayed at {RowTop(scroll, reloaded):0.##}, offset {scroll.Offset:0.##}.");
+
             Drag(scroll, scroll.MaxOffset - scroll.Offset);
             Assert.That(scroll.Following, Is.True);
             AssertAtBottom(scroll);
             float previousBottom = scroll.MaxOffset;
-            panel.AddMessage("New message from the other participant.", id: "latest");
+            receiveMessage.onClick.Invoke();
             yield return null;
+            Assert.That(content.GetChild(content.childCount - 1), Is.Not.SameAs(received));
             Assert.That(scroll.MaxOffset, Is.GreaterThan(previousBottom));
             Assert.That(scroll.Following, Is.True);
             AssertAtBottom(scroll);
-            TestContext.WriteLine($"User drag resumed follow: bottom moved from {previousBottom:0.##} to {scroll.Offset:0.##} with the next message.");
+            TestContext.WriteLine($"New message after manually returning to the bottom: followed from {previousBottom:0.##} to {scroll.Offset:0.##}.");
         }
 
         [UnityTearDown]

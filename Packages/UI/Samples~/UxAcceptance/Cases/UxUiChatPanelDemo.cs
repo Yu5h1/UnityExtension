@@ -64,6 +64,7 @@ namespace Yu5h1Lib.UI.Acceptance
             AddButton(controls, "短對話", ToolbarButtonHeight, () => ResetHistory(false));
             AddButton(controls, "載入歷史", ToolbarButtonHeight, () => ResetHistory(true));
             AddButton(controls, "加入更早歷史", ToolbarButtonHeight, PrependEarlierHistory);
+            AddButton(controls, "收到新訊息", ToolbarButtonHeight, ReceiveMessage);
             AddButton(controls, "回到最新", ToolbarButtonHeight, () => panel.ScrollView.RequestFollow());
             var motion = AddButton(controls, "減少動態", ToolbarButtonHeight, () => panel.ReduceMotion = !panel.ReduceMotion);
             quickQuestion = AddButton(controls, "角色貼文", ToolbarButtonHeight, () => StartCoroutine(AskForPost()));
@@ -195,6 +196,12 @@ namespace Yu5h1Lib.UI.Acceptance
             send.interactable = !answering && draftState.IsInteractable && draftState.HasNonWhitespace;
             sendAppearance.alpha = send.interactable ? 1f : .5f;
             quickQuestion.interactable = !answering;
+        }
+
+        private void ReceiveMessage()
+        {
+            panel.AddMessage("嗨，這是對方剛傳來的訊息。", timestamp: DateTime.Now);
+            hostStatus.text = "已收到一則對方的新訊息。";
         }
 
         private void Send()

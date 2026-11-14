@@ -77,3 +77,11 @@ Unity 6000.6.0f1 PlayMode batchmode 以隔離專案載入 `08a8436` 的 ConfigSt
 
 - PlayMode 8/8 通過，涵蓋新增的七項及既有面板整合測試。XML 為 `WIP/Validation/UiConfigSettings/Project-Build/logs/20261114-091651-tests.xml`。
 - EditMode 11/11 通過，涵蓋既有 `ConfigStoreTests` 及 `SettingsPanelTests`。XML 為 `WIP/Validation/UiConfigSettings/Project-Build/logs/20261114-091706-tests.xml`。
+
+### Config 與 Setting 窄版截圖（2026-11-14）
+
+Unity 6000.6.0f1 PlayMode batchmode 使用 D3D11 在隔離專案啟動 `7506286` 的 UxAcceptance「Config 與 Setting」案例。擷取八張面板圖及兩張關閉狀態圖，尺寸皆為 440×720，畫布縮放 1.00。畫布在案例開啟後設為固定像素，避免宿主的縮放影響邏輯寬度。測試透過隔離宿主選用套件既有的 Light 與 Dark 色票。正式案例的配色入口仍固定為 Dark。
+
+- 八張面板皆顯示正確的群組、分頁方向、選中提示、欄位、關閉及保存控制。中文字可讀，沒有互相覆蓋。手動保存說明文字正常換行。「恢復預設」顯示為三字加一字的兩行，文字完整。
+- 兩張關閉圖的齒輪皆可辨識，兩顆圖示的垂直位置相差約 6 px。「橫列／直欄」在明暗兩種畫面都呈現白字淺灰底，對比偏低。此範例按鈕未套用共用色票。
+- 幾何及配色斷言的 PlayMode 測試 1/1 通過，零編譯錯誤。截圖、`geometry.txt` 與重跑用腳本在 `WIP/Validation/UiConfigSettings/VisualAcceptance/7506286-narrow-440-1x/`。XML 為 `WIP/Validation/UiConfigSettings/Project-Build/logs/20261114-104029-tests.xml`。
