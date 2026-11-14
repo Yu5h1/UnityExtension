@@ -37,6 +37,7 @@ namespace Yu5h1Lib.UI.Tests
             var originalCase = UxUiModuleRegistry.Get(CaseId);
             var evidence = new List<string>();
             var errors = new List<string>();
+            var themeKeys = new List<string>();
             var target = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32);
             var cameraObject = new GameObject("Settings screenshot camera", typeof(Camera));
             var camera = cameraObject.GetComponent<Camera>();
@@ -68,7 +69,9 @@ namespace Yu5h1Lib.UI.Tests
                     canvas.worldCamera = camera;
                     canvas.planeDistance = 1f;
                     var host = hostObject.AddComponent<UxUiAcceptanceHost>();
-                    var demo = new UxUiSettingsDemoCase(palette, "Yu5h1Lib.VisualAcceptance." + Guid.NewGuid());
+                    var key = "Yu5h1Lib.VisualAcceptance." + Guid.NewGuid();
+                    themeKeys.Add(key + ".Theme");
+                    var demo = new UxUiSettingsDemoCase(palette, key);
                     UxUiModuleRegistry.Register(demo, CaseDescription);
                     host.SelectCase(CaseId);
                     var scaler = hostObject.GetComponent<CanvasScaler>();
@@ -148,6 +151,10 @@ namespace Yu5h1Lib.UI.Tests
                 }
                 if (eventSystem != null)
                     Object.Destroy(eventSystem);
+
+                foreach (var key in themeKeys)
+                    PlayerPrefs.DeleteKey(key);
+                PlayerPrefs.Save();
 
                 var addedIds = UxUiModuleRegistry.AllCases.Select(item => item.Id).Except(initialIds).ToArray();
                 foreach (var id in addedIds)

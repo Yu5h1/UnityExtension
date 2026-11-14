@@ -18,6 +18,7 @@ namespace Yu5h1Lib.UI.Acceptance
 
         private readonly string key;
         private readonly UguiControlPalette initialPalette;
+        private readonly SettingsThemePreference themePreference;
         private UguiControlPalette palette;
         private readonly Func<string, DataView, CancellationToken, Task> write;
         private readonly Func<bool, bool, CancellationToken, Task> apply;
@@ -62,6 +63,7 @@ namespace Yu5h1Lib.UI.Acceptance
         {
             this.key = key;
             initialPalette = palette ?? Palette;
+            themePreference = new SettingsThemePreference(key);
             this.write = write ?? throw new ArgumentNullException(nameof(write));
             this.apply = apply;
         }
@@ -70,7 +72,7 @@ namespace Yu5h1Lib.UI.Acceptance
         {
             Unmount();
             autoSave = true;
-            palette = initialPalette;
+            palette = themePreference.Load(initialPalette);
             root = CreateRect(container, "SettingsDemo");
             Stretch(root);
             var background = root.gameObject.AddComponent<Image>();
@@ -163,6 +165,7 @@ namespace Yu5h1Lib.UI.Acceptance
                 ? UguiControlPalette.Dark
                 : UguiControlPalette.Light;
             ApplyTheme();
+            themePreference.Save(palette);
         }
 
         private void ApplyTheme()

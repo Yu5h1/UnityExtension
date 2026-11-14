@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 using Yu5h1Lib.Serialization;
 
 namespace Yu5h1Lib
@@ -114,25 +115,42 @@ namespace Yu5h1Lib
             return copy.ToJson();
         }
 
+        /// <summary>Reads a JSON object for preferences using their own format, including numeric and nested values.</summary>
+        public static bool TryReadJsonObject(string raw, out Dictionary<string, object> fields)
+        {
+            fields = null;
+            if (raw == null || !JsonReader.TryRead(raw, out var value, out _, strict: true))
+                return false;
+
+            fields = value as Dictionary<string, object>;
+            return fields != null;
+        }
+
         /// <summary>A small strict JSON reader: objects become <c>Dictionary&lt;string, object&gt;</c>, arrays
         /// <c>List&lt;object&gt;</c>, strings <c>string</c>, numbers <c>double</c>, booleans <c>bool</c>, null null.
         /// Content after the root value is an error.</summary>
         private sealed class JsonReader
         {
             private const int MaxDepth = 64;
+            private static readonly Regex JsonNumber = new Regex(@"\A-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\z");
             private readonly string s;
+            private readonly bool strict;
             private int i;
 
-            private JsonReader(string text) => s = text;
+            private JsonReader(string text, bool strict)
+            {
+                s = text;
+                this.strict = strict;
+            }
 
             private sealed class ReadException : System.Exception
             {
                 public ReadException(string message) : base(message) { }
             }
 
-            public static bool TryRead(string text, out object value, out string error)
+            public static bool TryRead(string text, out object value, out string error, bool strict = false)
             {
-                var reader = new JsonReader(text);
+                var reader = new JsonReader(text, strict);
                 try
                 {
                     reader.SkipWhitespace();
@@ -187,7 +205,9 @@ namespace Yu5h1Lib
                 int start = i;
                 while (i < s.Length && "+-0123456789.eE".IndexOf(s[i]) >= 0)
                     i++;
-                if (i == start || !double.TryParse(s.Substring(start, i - start), NumberStyles.Float, CultureInfo.InvariantCulture, out var number))
+                var token = s.Substring(start, i - start);
+                if (i == start || (strict && !JsonNumber.IsMatch(token))
+                    || !double.TryParse(token, NumberStyles.Float, CultureInfo.InvariantCulture, out var number))
                     throw new ReadException($"unexpected token at position {start}");
                 return number;
             }
@@ -209,6 +229,8 @@ namespace Yu5h1Lib
                         throw new ReadException($"expected ':' at position {i}");
                     i++;
                     SkipWhitespace();
+                    if (strict && result.ContainsKey(key))
+                        throw new ReadException($"duplicate field at position {i}");
                     result[key] = ReadValue(depth + 1);
                     SkipWhitespace();
                     if (i < s.Length && s[i] == ',') { i++; continue; }

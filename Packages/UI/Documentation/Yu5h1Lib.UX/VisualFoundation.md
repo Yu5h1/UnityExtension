@@ -33,3 +33,11 @@ Unity 6000.6.0f1 使用隔離專案，從 `7506286` 加上本輪檔案。此輪�
 - 執行中切換（VIS-SWITCH）的亮暗場景在 Unity 6000.6.0f1 通過。Config 直欄與 Setting 橫列都以既有面板及控件從深色切到亮色再切回。PlayMode 分別驗證指標和鍵盤事件、相同焦點物件、原分頁和欄位、Config 群組的個別分頁記憶及未提交的手動草稿。切換期間沒有額外保存或套用設定。
 - EditMode 29/29、PlayMode 11/11 通過，零編譯錯誤。XML 位於 `WIP/Validation/UiConfigSettings/Project-Build/logs/`，分別為 `20261114-113940-tests.xml` 及 `20261114-114125-tests.xml`。
 - 截圖位於 `WIP/Validation/UiConfigSettings/VisualAcceptance/live-theme-settings-verified/`。包含原有八種 440×720 版面、兩張關閉畫面及四張在同一開啟面板切換後的畫面。外層 UxAcceptance 工具列使用宿主色票。
+
+### Config 與 Setting 保存明暗偏好（2026-11-14）
+
+[實作計畫](../../../../Documentation/UiSettingsThemePreferencePlan.md)記錄 UX Theme v1 schema 的來源與雜湊。案例開啟時從獨立的 `.Theme` PlayerPrefs 鍵還原明暗。主題按鈕使用現有 Theme 與 Binding 套色，儲存 UX Theme v1 JSON。
+
+- Unity 6000.6.0f1 隔離專案以 `2fa3c17` 加上本輪變更執行。EditMode 86/86、PlayMode 19/19。兩個面板在重建主機後第一個畫面都套用已保存的色票。手動草稿保持未提交，進行中的自動保存仍由原始設定動作完成。未知版本及無效資料保留原文，有效的自訂八色隨明暗切換一併保留。
+- 三次獨立的 PlayMode batchmode 啟動各通過 1/1。第一次從 Config 存亮色，第二次讀回亮色並從 Setting 存暗色，第三次讀回暗色。每次都確認兩個面板的色票及一般設定鍵狀態，最後清除驗收用偏好。
+- XML 在 `WIP/Validation/UiConfigSettings/Project-Build/logs/`，檔名為 `theme-pref-editmode.xml`、`theme-pref-playmode.xml` 與 `theme-pref-process-1.xml` 至 `theme-pref-process-3.xml`。跨程序案例放在隔離專案的 `Source/Packages/UI/Tests/Runtime/SettingsThemePreferenceProcessAcceptance.cs`。
