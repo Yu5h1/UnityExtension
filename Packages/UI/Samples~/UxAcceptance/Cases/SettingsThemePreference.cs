@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -5,6 +6,13 @@ using UnityEngine;
 
 namespace Yu5h1Lib.UI.Acceptance
 {
+    internal enum SettingsThemeMode
+    {
+        Light,
+        Dark,
+        System
+    }
+
     /// <summary>Stores the settings case's theme as a separate UX Theme v1 preference.</summary>
     internal sealed class SettingsThemePreference
     {
@@ -28,15 +36,23 @@ namespace Yu5h1Lib.UI.Acceptance
             storage = new PlayerPrefValue<string> { key = settingsKey + ".Theme" };
         }
 
-        public UguiControlPalette Load(UguiControlPalette fallback)
+        public UguiControlPalette Load(UguiControlPalette fallback, out SettingsThemeMode? mode)
         {
-            if (!TryRead(out string mode, out var custom))
+            mode = null;
+            if (!TryRead(out string storedMode, out var custom))
             {
                 Debug.LogWarning("Unsupported or corrupt UX Theme preference. The stored data was preserved.");
                 return fallback;
             }
 
-            string scheme = mode == CustomMode ? (string)custom["base"] : mode;
+            mode = storedMode switch
+            {
+                Light => SettingsThemeMode.Light,
+                Dark => SettingsThemeMode.Dark,
+                SystemMode => SettingsThemeMode.System,
+                _ => null
+            };
+            string scheme = storedMode == CustomMode ? (string)custom["base"] : storedMode;
             return scheme switch
             {
                 Light => UguiControlPalette.Light,
@@ -45,15 +61,21 @@ namespace Yu5h1Lib.UI.Acceptance
             };
         }
 
-        public void Save(UguiControlPalette palette)
+        public void Save(SettingsThemeMode mode)
         {
             if (!TryRead(out _, out var custom))
                 return;
 
-            string mode = ReferenceEquals(palette, UguiControlPalette.Light) ? Light : Dark;
+            string storedMode = mode switch
+            {
+                SettingsThemeMode.Light => Light,
+                SettingsThemeMode.Dark => Dark,
+                SettingsThemeMode.System => SystemMode,
+                _ => throw new ArgumentOutOfRangeException(nameof(mode))
+            };
             try
             {
-                storage.Value = Encode(mode, custom);
+                storage.Value = Encode(storedMode, custom);
                 PlayerPrefs.Save();
             }
             catch (PlayerPrefsException)

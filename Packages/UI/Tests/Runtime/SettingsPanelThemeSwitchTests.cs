@@ -30,6 +30,7 @@ namespace Yu5h1Lib.UI.Tests
         private int writes;
         private int applies;
         private Func<Task> write;
+        private Func<bool?> readSystemTheme;
 
         private string ThemeKey => key + ".Theme";
 
@@ -39,6 +40,7 @@ namespace Yu5h1Lib.UI.Tests
             key = "Yu5h1Lib.Tests.LiveTheme." + Guid.NewGuid();
             writes = applies = 0;
             write = () => Task.CompletedTask;
+            readSystemTheme = () => null;
             previousCaseIds = UxUiModuleRegistry.AllCases.Select(item => item.Id).ToArray();
             previousCase = UxUiModuleRegistry.Get(CaseId);
             if (EventSystem.current == null)
@@ -58,7 +60,8 @@ namespace Yu5h1Lib.UI.Tests
             host = hostObject.AddComponent<UxUiAcceptanceHost>();
             demo ??= new UxUiSettingsDemoCase(key,
                 (_, _, _) => { writes++; return write(); },
-                (_, _, _) => { applies++; return Task.CompletedTask; });
+                (_, _, _) => { applies++; return Task.CompletedTask; },
+                () => readSystemTheme());
             UxUiModuleRegistry.Register(demo, CaseDescription);
             host.SelectCase(CaseId);
 
@@ -209,16 +212,109 @@ namespace Yu5h1Lib.UI.Tests
         }
 
         [Test]
-        public void SystemPreferenceUsesTheSuppliedFirstPaintPalette()
+        public void SystemPreferenceUsesTheStartingPaletteWhenTheSystemValueIsUnavailable()
         {
             const string raw = "{\"version\":1,\"mode\":\"system\"}";
             PlayerPrefs.SetString(ThemeKey, raw);
+            ResetCase();
+            AssertCasePalette(UguiControlPalette.Dark);
+            Assert.That(PlayerPrefs.GetString(ThemeKey), Is.EqualTo(raw));
+        }
+
+        [UnityTest]
+        public IEnumerator ConfigSelectsSystemAndBothPanelsRestoreItBeforeTheFirstFrame()
+        {
+            bool isDark = false;
+            readSystemTheme = () => isDark;
+            Submit(config.Opener);
+            Submit(FindButton(config.HeaderActions, "Follow system theme"));
+            AssertCasePalette(UguiControlPalette.Light);
+            AssertPreferenceMode("system");
+            AssertSystemSelection(config, UguiControlPalette.Light, selected: true);
+            Assert.That(writes, Is.Zero);
+            Assert.That(applies, Is.EqualTo(1));
 
             CloseHost();
-            OpenHost(new UxUiSettingsDemoCase(UguiControlPalette.Light, key));
+            yield return null;
+            isDark = true;
+            const string raw = "{ \"mode\": \"system\", \"version\": 1 }";
+            PlayerPrefs.SetString(ThemeKey, raw);
+            OpenHost();
 
+            AssertCasePalette(UguiControlPalette.Dark);
+            Assert.That(PlayerPrefs.GetString(ThemeKey), Is.EqualTo(raw), "Loading must not rewrite the preference.");
+            Submit(setting.Opener);
+            AssertSystemSelection(setting, UguiControlPalette.Dark, selected: true);
+            Submit(FindButton(setting.HeaderActions, "Theme switch"));
             AssertCasePalette(UguiControlPalette.Light);
-            Assert.That(PlayerPrefs.GetString(ThemeKey), Is.EqualTo(raw));
+            AssertPreferenceMode("light");
+            AssertSystemSelection(setting, UguiControlPalette.Light, selected: false);
+            Submit(FindButton(setting.HeaderActions, "Follow system theme"));
+            AssertCasePalette(UguiControlPalette.Dark);
+            AssertPreferenceMode("system");
+            Assert.That(writes, Is.Zero);
+            Assert.That(applies, Is.EqualTo(2));
+        }
+
+        [UnityTest]
+        public IEnumerator SystemChangesRecolorInPlaceWithoutWritingOrApplyingTheDraft()
+        {
+            bool isDark = true;
+            int reads = 0;
+            readSystemTheme = () => { reads++; return isDark; };
+            Submit(config.Opener);
+            Submit(config.SaveBar.ModeToggle);
+            var field = VisibleField(config);
+            Submit(field);
+            Submit(FindButton(config.Tabs, "details"));
+            var tab = config.Tabs.ActiveButton;
+            var group = config.Groups.ActiveButton;
+            Click(FindButton(config.HeaderActions, "Follow system theme"));
+            tab.Select();
+
+            const string raw = "{ \"mode\": \"system\", \"version\": 1 }";
+            PlayerPrefs.SetString(ThemeKey, raw);
+            var timeScale = Time.timeScale;
+            try
+            {
+                Time.timeScale = 0;
+                foreach (var nextPalette in new[] { UguiControlPalette.Light, UguiControlPalette.Dark })
+                {
+                    isDark = nextPalette == UguiControlPalette.Dark;
+                    var deadline = Time.realtimeSinceStartup + 3f;
+                    while (caseBackground.color != nextPalette.PageBackground && Time.realtimeSinceStartup < deadline)
+                        yield return null;
+                    AssertCasePalette(nextPalette);
+                    Assert.That(config.IsOpen, Is.True);
+                    Assert.That(config.Tabs.ActiveButton, Is.SameAs(tab));
+                    Assert.That(config.Tabs.SelectedId, Is.EqualTo("details"));
+                    Assert.That(config.Groups.ActiveButton, Is.SameAs(group));
+                    Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(tab.gameObject));
+                    AssertDraft(config, field, nextPalette);
+                    AssertSystemSelection(config, nextPalette, selected: true);
+                    Assert.That(PlayerPrefs.GetString(ThemeKey), Is.EqualTo(raw), "A system signal must not write preferences.");
+                }
+
+                Submit(FindButton(config.HeaderActions, "Theme switch"));
+                AssertPreferenceMode("light");
+                var readsInFixedMode = reads;
+                yield return new WaitForSecondsRealtime(0.45f);
+                AssertCasePalette(UguiControlPalette.Light);
+                Assert.That(reads, Is.EqualTo(readsInFixedMode), "Fixed theme should stop observing the system.");
+
+                Submit(FindButton(config.HeaderActions, "Follow system theme"));
+                AssertPreferenceMode("system");
+                CloseHost();
+                var readsAfterClosing = reads;
+                yield return new WaitForSecondsRealtime(0.45f);
+                Assert.That(reads, Is.EqualTo(readsAfterClosing), "Closing the case should stop observing the system.");
+                Assert.That(writes, Is.Zero);
+                Assert.That(applies, Is.EqualTo(1));
+            }
+            finally
+            {
+                Time.timeScale = timeScale;
+            }
         }
 
         [Test]
@@ -363,6 +459,14 @@ namespace Yu5h1Lib.UI.Tests
             var choice = $"\"mode\"\\s*:\\s*\"{mode}\"";
             var raw = PlayerPrefs.GetString(ThemeKey);
             Assert.That(raw, Does.Match($"^\\s*\\{{\\s*(?:{version}\\s*,\\s*{choice}|{choice}\\s*,\\s*{version})\\s*\\}}\\s*$"));
+        }
+
+        private static void AssertSystemSelection(SettingsPanel panel, UguiControlPalette palette, bool selected)
+        {
+            var button = FindButton(panel.HeaderActions, "Follow system theme");
+            var label = button.GetComponentInChildren<Text>();
+            Assert.That(label.text, Is.EqualTo("跟隨系統"));
+            Assert.That(button.colors.normalColor, Is.EqualTo(selected ? palette.Accent : palette.PanelBackground));
         }
 
         private void AssertCasePalette(UguiControlPalette palette)

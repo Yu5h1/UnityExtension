@@ -41,3 +41,11 @@ Unity 6000.6.0f1 使用隔離專案，從 `7506286` 加上本輪檔案。此輪�
 - Unity 6000.6.0f1 隔離專案以 `2fa3c17` 加上本輪變更執行。EditMode 86/86、PlayMode 19/19。兩個面板在重建主機後第一個畫面都套用已保存的色票。手動草稿保持未提交，進行中的自動保存仍由原始設定動作完成。未知版本及無效資料保留原文，有效的自訂八色隨明暗切換一併保留。
 - 三次獨立的 PlayMode batchmode 啟動各通過 1/1。第一次從 Config 存亮色，第二次讀回亮色並從 Setting 存暗色，第三次讀回暗色。每次都確認兩個面板的色票及一般設定鍵狀態，最後清除驗收用偏好。
 - XML 在 `WIP/Validation/UiConfigSettings/Project-Build/logs/`，檔名為 `theme-pref-editmode.xml`、`theme-pref-playmode.xml` 與 `theme-pref-process-1.xml` 至 `theme-pref-process-3.xml`。跨程序案例放在隔離專案的 `Source/Packages/UI/Tests/Runtime/SettingsThemePreferenceProcessAcceptance.cs`。
+
+### Config 與 Setting 跟隨系統（2026-11-14）
+
+兩個面板的「跟隨系統」共用 UX Theme v1 的 `system` 模式。選中時以目前色票的強調色標示。[實作計畫](../../../../Documentation/UiSettingsSystemThemePlan.md)
+
+- Unity 6000.6.0f1 隔離專案以 `37b52db` 加上本輪變更執行。EditMode 51/51、PlayMode 21/21。PlayMode 模擬系統在明暗間切換，即使遊戲時間暫停也會更新兩個面板的色票。切換期間保持原分頁、焦點、手動草稿與偏好原文，ConfigStore 的保存及套用次數維持原值。改用固定主題或離開案例會停止監看。
+- 兩次獨立的 PlayMode batchmode 啟動各通過 1/1。第一次在 Config 選擇 `system`，第二次重開驗證存檔與首畫面。兩次都以與 Windows 應用程式偏好相反的起始色票驗證原生讀取。即時變更透過可替換的系統訊號驗收，Windows 全域外觀保持原設定。
+- XML 位於 `WIP/Validation/UiConfigSettings/Project-Build/logs/` 下的 `system-theme-editmode.xml`、`system-theme-playmode.xml`、`system-theme-process-1.xml` 和 `system-theme-process-2.xml`。跨程序案例位於隔離專案的 `Source/Packages/UI/Tests/Runtime/SettingsSystemThemeProcessAcceptance.cs`。440×720 窄版回歸截圖位於 `WIP/Validation/UiConfigSettings/VisualAcceptance/system-theme-regression/`。
