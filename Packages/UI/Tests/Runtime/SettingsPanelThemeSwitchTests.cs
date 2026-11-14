@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
@@ -332,7 +333,7 @@ namespace Yu5h1Lib.UI.Tests
             PlayerPrefs.SetString(ThemeKey, raw);
             ResetCase();
 
-            AssertCasePalette(UguiControlPalette.Light);
+            Assert.That(caseBackground.color, Is.EqualTo(ParseHex("#aabbcc")));
             Assert.That(PlayerPrefs.GetString(ThemeKey), Is.EqualTo(raw));
             Submit(setting.Opener);
             Submit(FindButton(setting.HeaderActions, "Theme switch"));
@@ -346,6 +347,143 @@ namespace Yu5h1Lib.UI.Tests
             ResetCase();
             AssertCasePalette(UguiControlPalette.Dark);
             Assert.That(PlayerPrefs.GetString(ThemeKey), Is.EqualTo(saved));
+        }
+
+        [UnityTest]
+        public IEnumerator CustomColorsApplyImmediatelyAndSurviveModeChangesAndReopen()
+        {
+            var colors = new Dictionary<string, string>
+            {
+                ["pageBackground"] = "#152030", ["panelBackground"] = "#253249",
+                ["heading"] = "#ffe8b4", ["panelHeading"] = "#fbeed0",
+                ["itemText"] = "#d3e7f4", ["secondaryText"] = "#a5c5dd",
+                ["border"] = "#7089a0", ["accent"] = "#f6cf69"
+            };
+
+            Submit(config.Opener);
+            Submit(config.SaveBar.ModeToggle);
+            var field = VisibleField(config);
+            Submit(field);
+            Submit(FindButton(config.Tabs, "details"));
+            var tab = config.Tabs.ActiveButton;
+            tab.Select();
+            Click(FindButton(config.HeaderActions, "Custom theme"));
+            var editor = FindCustomEditor();
+            var input = FindColorInput(editor, "pageBackground");
+            var before = PlayerPrefs.GetString(ThemeKey);
+            input.text = "#12";
+            Assert.That(PlayerPrefs.GetString(ThemeKey), Is.EqualTo(before));
+            input.onEndEdit.Invoke(input.text);
+            Assert.That(input.text, Is.Not.EqualTo("#12"));
+
+            foreach (var pair in colors)
+            {
+                input = FindColorInput(editor, pair.Key);
+                input.Select();
+                input.text = pair.Value.ToUpperInvariant();
+                Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(input.gameObject));
+                Assert.That(PlayerPrefs.GetString(ThemeKey), Does.Contain($"\"{pair.Key}\":\"{pair.Value}\""));
+            }
+            AssertCustomColors(colors);
+            var baseToggle = FindButton(editor, "Custom theme base");
+            Submit(baseToggle);
+            var raw = PlayerPrefs.GetString(ThemeKey);
+            Assert.That(raw, Does.Contain("\"mode\":\"custom\""));
+            Assert.That(raw, Does.Contain("\"base\":\"light\""));
+            AssertCustomColors(colors);
+            Assert.That(field.targetGraphic.color, Is.EqualTo(UguiControlPalette.Light.Hover),
+                "The base still supplies its fixed hover color.");
+            Assert.That(UguiControlPalette.Light.PageBackground, Is.Not.EqualTo(ParseHex(colors["pageBackground"])));
+            Assert.That(UguiControlPalette.Dark.PageBackground, Is.Not.EqualTo(ParseHex(colors["pageBackground"])));
+            Submit(FindButton(editor, "Close custom theme editor"));
+            Assert.That(config.IsOpen, Is.True);
+            Assert.That(config.Tabs.ActiveButton, Is.SameAs(tab));
+            Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(tab.gameObject));
+            Assert.That(field.isOn, Is.False);
+            Assert.That(config.SaveBar.SaveButton.IsInteractable(), Is.True);
+            Assert.That(writes, Is.Zero);
+            Assert.That(applies, Is.EqualTo(1));
+            Assert.That(PlayerPrefs.HasKey(key), Is.False);
+
+            Submit(FindButton(config.HeaderActions, "Follow system theme"));
+            AssertCasePalette(UguiControlPalette.Dark);
+            Assert.That(PlayerPrefs.GetString(ThemeKey), Does.Contain("\"mode\":\"system\""));
+            Submit(FindButton(config.HeaderActions, "Custom theme"));
+            AssertCustomColors(colors);
+            Assert.That(PlayerPrefs.GetString(ThemeKey), Is.EqualTo(raw));
+            Submit(FindButton(FindCustomEditor(), "Close custom theme editor"));
+            Assert.That(field.isOn, Is.False);
+            Assert.That(writes, Is.Zero);
+            Assert.That(applies, Is.EqualTo(1));
+
+            Submit(FindButton(config.HeaderActions, "Theme switch"));
+            AssertCasePalette(UguiControlPalette.Dark);
+            Assert.That(PlayerPrefs.GetString(ThemeKey), Does.Contain("\"mode\":\"dark\""));
+            Submit(FindButton(config.HeaderActions, "Custom theme"));
+            AssertCustomColors(colors);
+            Assert.That(PlayerPrefs.GetString(ThemeKey), Is.EqualTo(raw));
+            Submit(FindButton(FindCustomEditor(), "Close custom theme editor"));
+
+            CloseHost();
+            yield return null;
+            OpenHost();
+            AssertCustomColors(colors);
+            Assert.That(PlayerPrefs.GetString(ThemeKey), Is.EqualTo(raw));
+            Assert.That(host.ContentContainer.GetComponentsInChildren<RectTransform>()
+                .Any(rect => rect.name == "Custom theme editor"), Is.False);
+
+            Submit(setting.Opener);
+            Assert.That(VisibleField(setting).isOn, Is.True, "Closing the old case discarded the ordinary draft.");
+            Submit(FindButton(setting.HeaderActions, "Custom theme"));
+            editor = FindCustomEditor();
+            foreach (var pair in colors)
+                Assert.That(FindColorInput(editor, pair.Key).text, Is.EqualTo(pair.Value).IgnoreCase);
+            input = FindColorInput(editor, "panelHeading");
+            input.text = colors["panelBackground"];
+            FindColorInput(editor, "secondaryText").text = colors["panelBackground"];
+            Assert.That(FindImage(setting, "Settings panel").GetComponentsInChildren<Text>().Single(text => text.name == "Title").color,
+                Is.EqualTo(ParseHex(colors["panelBackground"])), "A low contrast color must still apply.");
+            var contrastWarning = editor.GetComponentsInChildren<Text>(true)
+                .Single(text => text.name == "Custom theme contrast warning");
+            Assert.That(contrastWarning.text, Does.Contain("對比"));
+            Assert.That(contrastWarning.text.IndexOf("面板標題", StringComparison.Ordinal),
+                Is.LessThan(contrastWarning.text.IndexOf("次要文字", StringComparison.Ordinal)));
+            Assert.That(contrastWarning.color, Is.Not.EqualTo(ParseHex(colors["panelBackground"])),
+                "The warning must remain readable when its usual text role has low contrast.");
+            Assert.That(writes, Is.Zero);
+            Assert.That(applies, Is.EqualTo(2));
+        }
+
+        private RectTransform FindCustomEditor() => host.ContentContainer.GetComponentsInChildren<RectTransform>()
+            .Single(rect => rect.name == "Custom theme editor");
+
+        private static InputField FindColorInput(Component editor, string role) =>
+            editor.GetComponentsInChildren<InputField>().Single(input => input.name == role);
+
+        private void AssertCustomColors(Dictionary<string, string> colors)
+        {
+            Assert.That(caseBackground.color, Is.EqualTo(ParseHex(colors["pageBackground"])));
+            Assert.That(caseBackground.GetComponentsInChildren<Text>(true).Single(text => text.name == "Applied").color,
+                Is.EqualTo(ParseHex(colors["heading"])));
+            foreach (var panel in new[] { config, setting })
+            {
+                var dialog = FindImage(panel, "Settings panel");
+                Assert.That(dialog.color, Is.EqualTo(ParseHex(colors["panelBackground"])));
+                Assert.That(FindImage(panel, "Theme header divider").color, Is.EqualTo(ParseHex(colors["border"])));
+                var labels = dialog.GetComponentsInChildren<Text>(true);
+                Assert.That(labels.Single(text => text.name == "Title").color, Is.EqualTo(ParseHex(colors["panelHeading"])));
+                Assert.That(labels.Single(text => text.name == "Instructions").color, Is.EqualTo(ParseHex(colors["secondaryText"])));
+                Assert.That(FindImage(panel.Tabs.ActiveButton, "Selection").color, Is.EqualTo(ParseHex(colors["accent"])));
+                var controls = panel.GetComponentsInChildren<Toggle>(true).Where(control => control != panel.SaveBar.ModeToggle);
+                foreach (var field in controls)
+                    Assert.That(field.GetComponentInChildren<Text>(true).color, Is.EqualTo(ParseHex(colors["itemText"])));
+            }
+        }
+
+        private static Color ParseHex(string hex)
+        {
+            Assert.That(ColorUtility.TryParseHtmlString(hex, out var color), Is.True);
+            return color;
         }
 
         [UnityTest]

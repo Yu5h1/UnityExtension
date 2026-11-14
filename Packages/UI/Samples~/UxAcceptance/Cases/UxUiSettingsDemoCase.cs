@@ -21,6 +21,9 @@ namespace Yu5h1Lib.UI.Acceptance
         private readonly SettingsThemePreference themePreference;
         private readonly Func<bool?> readSystemTheme;
         private SettingsThemeMode? themeMode;
+        private SettingsCustomColors customColors;
+        private SettingsCustomPalette customPalette;
+        private SettingsCustomThemeEditor customEditor;
         private UguiControlPalette palette;
         private Image background;
         private Coroutine systemThemeWatch;
@@ -31,7 +34,7 @@ namespace Yu5h1Lib.UI.Acceptance
         private SettingsPanel setting;
         private Text preview;
         private ButtonAddon directionAddon;
-        private readonly List<(Button Button, Text Label, bool FollowsSystem)> themeButtons = new();
+        private readonly List<(Button Button, Text Label, SettingsThemeMode? Mode)> themeButtons = new();
         private readonly List<GraphicColorBinding> colorBindings = new();
         private ConfigStore<Values> store;
         private Values draft;
@@ -84,11 +87,13 @@ namespace Yu5h1Lib.UI.Acceptance
         {
             Unmount();
             autoSave = true;
-            palette = themePreference.Load(initialPalette, out themeMode);
+            palette = themePreference.Load(initialPalette, out themeMode, out customColors);
             bool followsSystem = themeMode == SettingsThemeMode.System;
             bool? systemIsDark = followsSystem ? readSystemTheme() : null;
             if (followsSystem)
                 palette = ResolveSystemPalette(systemIsDark);
+            else if (themeMode == SettingsThemeMode.Custom)
+                BuildCustomPalette();
             root = CreateRect(container, "SettingsDemo");
             Stretch(root);
             background = root.gameObject.AddComponent<Image>();
@@ -98,8 +103,8 @@ namespace Yu5h1Lib.UI.Acceptance
             Stretch(page, 12);
             var actions = CreateRect(page, "Settings entries");
             Stretch(actions);
-            preview = CreateText(actions, "Applied", "", 18, palette.ItemText, TextAnchor.MiddleCenter);
-            BindColor("itemText", preview);
+            preview = CreateText(actions, "Applied", "", 18, palette.Heading, TextAnchor.MiddleCenter);
+            BindColor("heading", preview);
             Stretch(preview.rectTransform);
             directionAddon = ButtonAddon.Create(actions, label: "橫列／直欄", showIcon: false);
             var direction = directionAddon.ui;
@@ -159,12 +164,21 @@ namespace Yu5h1Lib.UI.Acceptance
 
         private void AddThemeSwitch(SettingsPanel panel)
         {
-            AddThemeButton(panel, "Theme switch", "", 72, SwitchTheme, false);
-            AddThemeButton(panel, "Follow system theme", "跟隨系統", 92, FollowSystemTheme, true);
+            AddThemeButton(panel, "Theme switch", "", 62, SwitchTheme, null);
+            AddThemeButton(panel, "Follow system theme", "跟隨系統", 82, FollowSystemTheme, SettingsThemeMode.System);
+            AddThemeButton(panel, "Custom theme", "自訂", 56, OpenCustomTheme, SettingsThemeMode.Custom);
+            var divider = CreateRect(panel.HeaderActions, "Theme header divider");
+            divider.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            divider.anchorMax = Vector2.right;
+            divider.anchoredPosition = new Vector2(0, -3);
+            divider.sizeDelta = new Vector2(0, 1);
+            var line = divider.gameObject.AddComponent<Image>();
+            line.raycastTarget = false;
+            BindColor("border", line);
         }
 
         private void AddThemeButton(SettingsPanel panel, string name, string caption, float width, Action action,
-            bool followsSystem)
+            SettingsThemeMode? mode)
         {
             var header = panel.HeaderActions;
             var rect = CreateRect(header, name);
@@ -181,18 +195,19 @@ namespace Yu5h1Lib.UI.Acceptance
 
             var label = CreateText(rect, "Label", caption, 15, palette.ItemText, TextAnchor.MiddleCenter);
             Stretch(label.rectTransform);
-            themeButtons.Add((button, label, followsSystem));
+            themeButtons.Add((button, label, mode));
         }
 
         private void SwitchTheme()
         {
+            customEditor?.Hide();
             StopSystemThemeWatch();
             bool useDark = UsesLightTheme;
             var mode = useDark ? SettingsThemeMode.Dark : SettingsThemeMode.Light;
             themeMode = mode;
             palette = useDark ? UguiControlPalette.Dark : UguiControlPalette.Light;
             ApplyTheme();
-            themePreference.Save(mode);
+            themePreference.Save(mode, customColors);
         }
 
         private void FollowSystemTheme()
@@ -200,12 +215,67 @@ namespace Yu5h1Lib.UI.Acceptance
             if (themeMode == SettingsThemeMode.System)
                 return;
 
+            customEditor?.Hide();
             bool? systemIsDark = readSystemTheme();
             themeMode = SettingsThemeMode.System;
             palette = ResolveSystemPalette(systemIsDark);
             ApplyTheme();
             StartSystemThemeWatch(systemIsDark);
-            themePreference.Save(SettingsThemeMode.System);
+            themePreference.Save(SettingsThemeMode.System, customColors);
+        }
+
+        private void OpenCustomTheme()
+        {
+            if (themeMode != SettingsThemeMode.Custom)
+            {
+                StopSystemThemeWatch();
+                customColors ??= SettingsCustomPalette.FromBase(!UsesLightTheme);
+                themeMode = SettingsThemeMode.Custom;
+                ApplyCustomTheme();
+            }
+
+            customEditor ??= SettingsCustomThemeEditor.Create(root, SetCustomColor, SetCustomBase,
+                () => SetPanelKeyboardEnabled(true));
+            SetPanelKeyboardEnabled(false);
+            customEditor.Show(customColors, palette);
+        }
+
+        private void SetPanelKeyboardEnabled(bool enabled)
+        {
+            config.enabled = enabled;
+            setting.enabled = enabled;
+        }
+
+        private void SetCustomColor(string role, string color)
+        {
+            if (themeMode != SettingsThemeMode.Custom ||
+                string.Equals(customColors[role], color, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            customColors[role] = color;
+            ApplyCustomTheme();
+        }
+
+        private void SetCustomBase(bool isDark)
+        {
+            if (themeMode != SettingsThemeMode.Custom || customColors.IsDark == isDark)
+                return;
+
+            customColors.IsDark = isDark;
+            ApplyCustomTheme();
+        }
+
+        private void BuildCustomPalette()
+        {
+            customPalette ??= new SettingsCustomPalette();
+            palette = customPalette.Build(customColors);
+        }
+
+        private void ApplyCustomTheme()
+        {
+            BuildCustomPalette();
+            ApplyTheme();
+            themePreference.Save(SettingsThemeMode.Custom, customColors);
         }
 
         private UguiControlPalette ResolveSystemPalette(bool? isDark) => isDark switch
@@ -242,7 +312,9 @@ namespace Yu5h1Lib.UI.Acceptance
             ApplyTheme();
         }
 
-        private bool UsesLightTheme => ReferenceEquals(palette.SourceTheme, UguiControlPalette.Light.SourceTheme);
+        private bool UsesLightTheme => themeMode == SettingsThemeMode.Custom
+            ? !customColors.IsDark
+            : ReferenceEquals(palette.SourceTheme, UguiControlPalette.Light.SourceTheme);
 
         private void ApplyTheme()
         {
@@ -254,12 +326,13 @@ namespace Yu5h1Lib.UI.Acceptance
             setting.ApplyPalette(palette);
             palette.ApplyButton(directionAddon.ui, directionAddon.labelText);
             bool light = UsesLightTheme;
-            foreach (var (button, label, followsSystem) in themeButtons)
+            foreach (var (button, label, mode) in themeButtons)
             {
-                if (!followsSystem)
+                if (!mode.HasValue)
                     label.text = light ? "暗色" : "亮色";
-                palette.ApplyButton(button, label, accent: followsSystem && themeMode == SettingsThemeMode.System);
+                palette.ApplyButton(button, label, accent: mode.HasValue && mode == themeMode);
             }
+            customEditor?.ApplyPalette(palette);
         }
 
         private static Task WritePlayerPrefs(string key, DataView data, CancellationToken token)
@@ -369,6 +442,11 @@ namespace Yu5h1Lib.UI.Acceptance
         public void Unmount()
         {
             StopSystemThemeWatch();
+            customEditor?.Hide();
+            customEditor = null;
+            customPalette?.Dispose();
+            customPalette = null;
+            customColors = null;
             background = null;
             if (store != null)
             {

@@ -49,3 +49,11 @@ Unity 6000.6.0f1 使用隔離專案，從 `7506286` 加上本輪檔案。此輪�
 - Unity 6000.6.0f1 隔離專案以 `37b52db` 加上本輪變更執行。EditMode 51/51、PlayMode 21/21。PlayMode 模擬系統在明暗間切換，即使遊戲時間暫停也會更新兩個面板的色票。切換期間保持原分頁、焦點、手動草稿與偏好原文，ConfigStore 的保存及套用次數維持原值。改用固定主題或離開案例會停止監看。
 - 兩次獨立的 PlayMode batchmode 啟動各通過 1/1。第一次在 Config 選擇 `system`，第二次重開驗證存檔與首畫面。兩次都以與 Windows 應用程式偏好相反的起始色票驗證原生讀取。即時變更透過可替換的系統訊號驗收，Windows 全域外觀保持原設定。
 - XML 位於 `WIP/Validation/UiConfigSettings/Project-Build/logs/` 下的 `system-theme-editmode.xml`、`system-theme-playmode.xml`、`system-theme-process-1.xml` 和 `system-theme-process-2.xml`。跨程序案例位於隔離專案的 `Source/Packages/UI/Tests/Runtime/SettingsSystemThemeProcessAcceptance.cs`。440×720 窄版回歸截圖位於 `WIP/Validation/UiConfigSettings/VisualAcceptance/system-theme-regression/`。
+
+### Config 與 Setting 自訂主題（2026-11-14）
+
+兩個面板的「自訂」共用一組 UX Theme v1 色值。八個欄位接受 `#RRGGBB`，有效輸入立即套用並保存。明暗基底提供固定角色，焦點、停用及強調前景按色值推導。匯入的 Theme 供執行時 Theme 取用。[實作計畫](../../../../Documentation/UiSettingsCustomThemePlan.md)
+
+- Unity 6000.6.0f1 隔離專案以 `e78bafa` 加上本輪變更執行。EditMode 51/51、PlayMode 22/22。PlayMode 逐欄編輯並核對實際控件，確認無效輸入不保存、低對比依序提醒且可套用、切換基底及固定明暗／跟隨系統後返回自訂都保留八色。關閉自訂編輯器後返回原焦點和分頁，其他設定草稿仍待套用。
+- 兩次獨立 PlayMode batchmode 啟動各通過 1/1。第一次從 Config 操作並保存八色，第二次重開確認兩個面板還原自訂色並從 Setting 讀回全部欄位。
+- XML 位於 `WIP/Validation/UiConfigSettings/Project-Build/logs/` 下的 `custom-theme-editmode.xml`、`custom-theme-playmode.xml`、`custom-theme-process-1.xml` 和 `custom-theme-process-2.xml`。兩個面板及其自訂編輯器的 440×720 截圖位於 `WIP/Validation/UiConfigSettings/VisualAcceptance/custom-theme-regression/`。

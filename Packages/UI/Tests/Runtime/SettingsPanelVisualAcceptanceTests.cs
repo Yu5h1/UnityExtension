@@ -131,6 +131,23 @@ namespace Yu5h1Lib.UI.Tests
                                     if (EventSystem.current.currentSelectedGameObject != focused)
                                         errors.Add($"{switchName}: switching theme moved the existing focus.");
                                 }
+
+                                var custom = panel.HeaderActions.GetComponentsInChildren<Button>()
+                                    .Single(button => button.name == "Custom theme");
+                                Submit(custom);
+                                yield return new WaitForSecondsRealtime(ColorSettleSeconds);
+                                var editor = host.ContentContainer.GetComponentsInChildren<RectTransform>()
+                                    .Single(rect => rect.name == "Custom theme editor");
+                                editor.GetComponentsInChildren<InputField>()
+                                    .Single(field => field.name == "panelBackground").text = "#26384d";
+                                yield return new WaitForSecondsRealtime(ColorSettleSeconds);
+                                Capture(camera, target, output, $"{presentation}-custom-editor", errors);
+                                Submit(editor.GetComponentsInChildren<Button>()
+                                    .Single(button => button.name == "Close custom theme editor"));
+                                yield return new WaitForSecondsRealtime(ColorSettleSeconds);
+                                Capture(camera, target, output, $"{presentation}-custom-panel", errors);
+                                Submit(themeSwitch);
+                                Submit(themeSwitch);
                             }
                             panel.Close();
                         }
