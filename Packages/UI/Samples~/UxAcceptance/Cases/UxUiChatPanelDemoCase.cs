@@ -25,6 +25,13 @@ namespace Yu5h1Lib.UI.Acceptance
             root = demo.gameObject;
             root.name = prefab.name;
             demo.Build();
+            var config = ChatTextPerformanceSettings.Mount((RectTransform)root.transform, demo.Panel,
+                "yu5h1lib.ui.acceptance.chat.text-performance.v1", UguiControlPalette.Dark);
+            config.gameObject.AddComponent<UnityEngine.UI.LayoutElement>().ignoreLayout = true;
+            var content = root.GetComponent<UnityEngine.UI.VerticalLayoutGroup>();
+            var padding = content.padding;
+            content.padding = new RectOffset(padding.left, padding.right, padding.top + 36, padding.bottom);
+            ((RectTransform)config.Opener.transform).anchoredPosition = new Vector2(-padding.right, -padding.top);
         }
 
         public void Unmount()

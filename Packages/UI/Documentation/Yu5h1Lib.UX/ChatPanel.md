@@ -33,9 +33,9 @@ VCP 宿主／UxAcceptance sample
 | 思考中、累積快照、完整字素、宿主字速、減少動態與一次完成通知（CHAT-TIMER-THINKING、CHAT-STREAM-*） | `BeginReply`、`Reply.Push`、`Reply.Complete`、`Reply.RevealCompleted`。宿主決定何時開始下一句。與 UI Toolkit 共用字素邊界計算。Sample 採 20 字素／秒並顯示思考秒數，宿主可關閉秒數。 |
 | 縮圖、佔位、載入失敗與圖片預覽（CHAT-IMAGE-*、CHAT-VIEWER-*） | `AddImage`、`ImageMessage.SetLoaded`／`SetFailed`，由宿主管理 Sprite 和載入。縮圖可用原生 Button 選取。檢視器支援宿主安全區、預覽／滿版、點擊、滾輪、雙指、可否決的取消、失焦與焦點回復。Sample 縮圖採矩形。圓角裁切、輔助技術讀名與實機手勢屬後續驗收。 |
 | 可用範圍改變（CHAT-LAYOUT-ADAPT） | 改變 RectTransform 後重排目前訊息，回覆狀態維持。 |
-| 本輪能力選擇 | 一對一隱藏頭像及名稱。輸入列歸 VCP 宿主；漸層淡出、文字表演擴充、拖曳調高與共用設定留待後續選用。 |
+| 本輪能力選擇 | 一對一隱藏頭像及名稱。輸入列歸 VCP 宿主。文字表演與共用設定見下方的增量驗證。 |
 
-[TransientSurface 1.1.2](../../../../../../UX/Documentation/ModuleSpec/TransientSurface.md) 有共用規則，uGUI 尚無獨立採用驗證。圖片檢視器使用原生 Canvas 與 EventSystem，證據只涵蓋下列 ChatPanel 測試範圍。Button 沿用原生 Selectable 行為，完整的 [uGUI Button](Button.md) 與 VisualFoundation 色彩驗收沿各自紀錄。TextField、Toggle、DirectionField 與聊天設定未列入本輪範圍。組裝入口以既有 UxAcceptance 場景及 `ChatPanel.Configure` 驗證，產品場景的組裝仍待後續 VCP 採用。
+[TransientSurface 1.1.2](../../../../../../UX/Documentation/ModuleSpec/TransientSurface.md) 有共用規則，uGUI 尚無獨立採用驗證。圖片檢視器使用原生 Canvas 與 EventSystem，證據只涵蓋下列 ChatPanel 測試範圍。Button 沿用原生 Selectable 行為，完整的 [uGUI Button](Button.md) 與 VisualFoundation 色彩驗收沿各自紀錄。組裝入口以既有 UxAcceptance 場景及 `ChatPanel.Configure` 驗證，產品場景的組裝仍待後續 VCP 採用。
 
 ## 消費端 prefab
 
@@ -44,6 +44,16 @@ VCP 宿主／UxAcceptance sample
 展示 prefab 以 Inspector 的 `chatPanelPrefab` 欄位直接引用套件資產。示範宿主將訊息區與自己的 `InputFieldAddon` 輸入列放在同一個版面下。輸入列的 `Submitted` 和送出按鈕共用宿主的送出流程，透過 `AddMessage` 更新訊息區。宿主以 `ReplaceHistory` 提供歷史，以 `BeginReply`、`Push` 和 `Complete` 提供模擬回覆，並由宿主將載入的 Sprite 交給圖片訊息。 [ChatPanelDemo.prefab](../../Samples~/UxAcceptance/Resources/UxAcceptance/ChatPanelDemo.prefab) · [示範宿主](../../Samples~/UxAcceptance/Cases/UxUiChatPanelDemo.cs)
 
 2026-11-12 在 Yu5h1LibTest 以無畫面 PlayMode 驗證同一個訊息區實例接收宿主歷史、輸入、模擬回覆和延遲圖片，重設案例會建立新實例。PlayMode 1/1（`20261112-155515-tests.xml`），EditMode 40/40（`20261112-155544-tests.xml`）。
+
+## 文字表演與 Config
+
+ChatPanel sample 的齒輪會開啟共用 Config 的「聊天 → 文字表演」。逐字、淡入、位移歸位各有啟用開關，啟用才展開欄位。逐字關閉時直接顯示文字，並保留兩個效果各自的依序觸發設定。兩個效果共用一組比例和時間範圍，最短和最長同排。位移可用全方位或指定角度。uGUI 目前用角度與距離欄位，Web 的 DirectionField 拖曳操作仍待採用。設定可自動保存或手動套用。讀取失敗時保留原存檔，並提供重新讀取。 [共用 SettingsPanel](SettingsPanel.md)
+
+消費端可用 `ChatPanel.TextPerformance` 套用已接受的設定，或透過 `ChatTextPerformanceSettings.Mount` 掛入共用 Config，並提供該範圍的儲存鍵。進行中的回覆會取用已套用的顯示與效果設定。改字速或不生效的依序選項時，既有表演會繼續。uGUI 在原生 Font 的字形頂點套用與 Web 相同的三次方緩出，泡泡尺寸與捲動範圍沿用原本的文字排版。混合語系依原生字形能力顯示，單位保留完整字素，中文沒有詞典切分時逐字素取樣。
+
+共用 Config 此處只提供文字表演分類。原生 Font 無法將字形可靠對應到字素時，該段文字直接顯示，回覆可正常完成。
+
+2026-11-14 在 Yu5h1LibTest 以 Unity 6000.6 無畫面 EditMode 通過 42 項，其中 15 項直接驗證文字表演與 Config。測試量測中英混排的首末字形、緩出曲線、播放中設定變更及排版穩定，也從 sample 齒輪驗證設定入口、320 寬度的範圍欄位、收合保值、手動套用和讀取重試（`20261114-161326-tests.xml`）。實際畫面與操作手感待 sample 試用。
 
 ## 試用範圍
 

@@ -62,10 +62,10 @@ namespace Yu5h1Lib.UI
         {
             private readonly ChatPanel panel;
             private readonly ChatReplyReveal reveal = new();
-            internal readonly Text Label;
+            internal readonly ChatPerformanceText Label;
             private bool active = true;
 
-            internal Reply(ChatPanel panel, Text label)
+            internal Reply(ChatPanel panel, ChatPerformanceText label)
             {
                 this.panel = panel;
                 Label = label;
@@ -95,12 +95,14 @@ namespace Yu5h1Lib.UI
             internal bool Advance(float dt, out bool completed)
             {
                 var options = panel.options;
-                string text = reveal.Advance(dt, Mathf.Max(.01f, options.GraphemesPerSecond),
-                    Pace, panel.ReduceMotion, options.ShowThinkingSeconds);
+                var performance = panel.TextPerformance;
+                string text = reveal.Advance(dt, 1f / performance.SecondsPerGrapheme,
+                    Pace, panel.ReduceMotion || performance.Instant, options.ShowThinkingSeconds);
                 bool changed = Label.text != text;
                 if (changed)
                     Label.text = text;
-                completed = reveal.Done;
+                Label.Advance(Mathf.Max(0f, dt), text, reveal.HasSnapshot, reveal.Revision, panel.ReduceMotion, performance);
+                completed = reveal.Done && !Label.Playing;
                 return changed;
             }
 
@@ -109,6 +111,7 @@ namespace Yu5h1Lib.UI
                 if (!active || IsComplete)
                     return;
                 IsComplete = true;
+                Label.ReleaseEffects();
                 RevealCompleted?.Invoke();
             }
 
@@ -190,9 +193,26 @@ namespace Yu5h1Lib.UI
         private float lastScrollOffset;
         private float scrollbarIdle;
         private bool replacingHistory;
+        private ChatTextPerformance? textPerformance;
 
         public ScrollView ScrollView { get { EnsureView(); return scroll; } }
         public bool ReduceMotion { get; set; }
+        public ChatTextPerformance TextPerformance
+        {
+            get
+            {
+                if (textPerformance is ChatTextPerformance setting)
+                    return setting;
+                var defaults = ChatTextPerformance.Default;
+                defaults.SecondsPerGrapheme = 1f / Mathf.Max(.01f, options.GraphemesPerSecond);
+                return defaults;
+            }
+            set
+            {
+                value.Validate();
+                textPerformance = value;
+            }
+        }
         public bool ViewerOpen => viewer != null && viewer.gameObject.activeSelf;
         public bool ViewerFull => ViewerOpen && viewer.Full;
         public RectTransform MessageContent { get { EnsureView(); return content; } }
@@ -226,7 +246,7 @@ namespace Yu5h1Lib.UI
             if (replacingHistory)
                 throw new InvalidOperationException("Begin replies after replacing history.");
             EnsureView();
-            var reply = new Reply(this, CreateTextRow(false, timestamp, id));
+            var reply = new Reply(this, CreateTextRow<ChatPerformanceText>(false, timestamp, id));
             replies.Add(reply);
             reply.Advance(0f, out _);
             RefreshLayout();
@@ -493,7 +513,10 @@ namespace Yu5h1Lib.UI
             return (row, self, hasTime);
         }
 
-        private Text CreateTextRow(bool self, DateTime? timestamp, string id)
+        private Text CreateTextRow(bool self, DateTime? timestamp, string id) =>
+            CreateTextRow<Text>(self, timestamp, id);
+
+        private T CreateTextRow<T>(bool self, DateTime? timestamp, string id) where T : Text
         {
             var row = CreateRow(self, timestamp, id);
             var style = self ? options.Self : options.Other;
@@ -509,7 +532,7 @@ namespace Yu5h1Lib.UI
             layout.childControlWidth = layout.childControlHeight = true;
             layout.childForceExpandHeight = false;
             layout.childForceExpandWidth = true;
-            var label = AddLabel("Text", bubble, Mathf.Max(1, options.MessageFontSize), style.Text, TextAnchor.UpperLeft);
+            var label = AddLabel<T>("Text", bubble, Mathf.Max(1, options.MessageFontSize), style.Text, TextAnchor.UpperLeft);
             label.lineSpacing = Mathf.Max(.1f, options.MessageLineSpacing);
             if (options.MessageMinLineHeight > 0f)
                 label.gameObject.AddComponent<LayoutElement>().minHeight = options.MessageMinLineHeight;
@@ -566,9 +589,12 @@ namespace Yu5h1Lib.UI
         private Font ResolveFont() => options.Font != null
             ? options.Font : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
-        private Text AddLabel(string name, Transform parent, int size, Color color, TextAnchor alignment)
+        private Text AddLabel(string name, Transform parent, int size, Color color, TextAnchor alignment) =>
+            AddLabel<Text>(name, parent, size, color, alignment);
+
+        private T AddLabel<T>(string name, Transform parent, int size, Color color, TextAnchor alignment) where T : Text
         {
-            var label = AddRect(name, parent).gameObject.AddComponent<Text>();
+            var label = AddRect(name, parent).gameObject.AddComponent<T>();
             label.font = ResolveFont();
             label.fontSize = size;
             label.color = color;

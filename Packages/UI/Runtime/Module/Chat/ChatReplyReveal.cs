@@ -21,6 +21,7 @@ namespace Yu5h1Lib.UI
         private int ShownLength => shownCount == 0 ? 0 : boundaries[shownCount - 1];
         internal bool Done => complete && shownCount == boundaries.Length;
         internal bool HasSnapshot => target.Length != 0 || complete;
+        internal int Revision { get; private set; }
 
         internal void Push(string snapshot)
         {
@@ -35,6 +36,7 @@ namespace Yu5h1Lib.UI
             {
                 shownCount = 0;
                 credit = 0;
+                Revision++;
             }
             else if (shownLength > 0)
                 shownCount = matchedBoundary + 1;
