@@ -26,6 +26,18 @@ namespace Yu5h1Lib.UI
         private bool interactable;
         private bool focused;
 
+        internal static bool HasPalette(Selectable control)
+        {
+            foreach (Transform child in control.transform)
+            {
+                if (child.TryGetComponent(out UguiControlDecoration decoration)
+                    && decoration.control == control && decoration.palette != null)
+                    return true;
+            }
+
+            return false;
+        }
+
         internal static UguiControlDecoration GetOrCreate(Selectable control)
         {
             foreach (Transform child in control.transform)

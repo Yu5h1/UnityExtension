@@ -16,6 +16,7 @@ namespace Yu5h1Lib.UI.Acceptance
         public string ModuleSpec => "Yu5h1Lib.UX/SettingsPanel";
 
         private readonly string key;
+        private readonly UguiControlPalette palette;
         private readonly Func<string, DataView, CancellationToken, Task> write;
         private readonly Func<bool, bool, CancellationToken, Task> apply;
         private RectTransform root;
@@ -38,11 +39,24 @@ namespace Yu5h1Lib.UI.Acceptance
         {
         }
 
+        /// <summary>Uses the supplied palette for this settings case.</summary>
+        public UxUiSettingsDemoCase(UguiControlPalette palette, string key)
+            : this(key, WritePlayerPrefs, null, palette)
+        {
+        }
+
         /// <summary>Uses an alternate writer for the demo scope and an optional application target for the two settings.</summary>
         public UxUiSettingsDemoCase(string key, Func<string, DataView, CancellationToken, Task> write,
             Func<bool, bool, CancellationToken, Task> apply = null)
+            : this(key, write, apply, null)
+        {
+        }
+
+        private UxUiSettingsDemoCase(string key, Func<string, DataView, CancellationToken, Task> write,
+            Func<bool, bool, CancellationToken, Task> apply, UguiControlPalette palette)
         {
             this.key = key;
+            this.palette = palette ?? Palette;
             this.write = write ?? throw new ArgumentNullException(nameof(write));
             this.apply = apply;
         }
@@ -52,12 +66,20 @@ namespace Yu5h1Lib.UI.Acceptance
             Unmount();
             autoSave = true;
             root = CreateRect(container, "SettingsDemo");
-            Stretch(root, 12);
-            var actions = CreateRect(root, "Settings entries");
+            Stretch(root);
+            var background = root.gameObject.AddComponent<Image>();
+            background.color = palette.PageBackground;
+            background.raycastTarget = false;
+            var page = CreateRect(root, "Settings demo content");
+            Stretch(page, 12);
+            var actions = CreateRect(page, "Settings entries");
             Stretch(actions);
-            preview = CreateText(actions, "Applied", "", 18, Palette.ItemText, TextAnchor.MiddleCenter);
+            preview = CreateText(actions, "Applied", "", 18, palette.ItemText, TextAnchor.MiddleCenter);
             Stretch(preview.rectTransform);
-            var direction = ButtonAddon.Create(actions, label: "橫列／直欄", showIcon: false).ui;
+            var directionAddon = ButtonAddon.Create(actions, label: "橫列／直欄", showIcon: false);
+            var direction = directionAddon.ui;
+            direction.name = "Tab direction";
+            palette.ApplyButton(direction, directionAddon.labelText);
             var directionRect = (RectTransform)direction.transform;
             directionRect.anchorMin = directionRect.anchorMax = new Vector2(0, 1);
             directionRect.pivot = new Vector2(0, 1);
@@ -68,8 +90,8 @@ namespace Yu5h1Lib.UI.Acceptance
                 config.Tabs.Orientation = setting.Tabs.Orientation = next;
             });
 
-            config = SettingsPanel.Create(root, SettingsPanel.Presentation.Config, Palette);
-            setting = SettingsPanel.Create(root, SettingsPanel.Presentation.Setting, Palette);
+            config = SettingsPanel.Create(page, SettingsPanel.Presentation.Config, palette);
+            setting = SettingsPanel.Create(page, SettingsPanel.Presentation.Setting, palette);
             ((RectTransform)setting.Opener.transform).anchoredPosition = new Vector2(-48, 0);
             ((RectTransform)setting.Opener.transform).sizeDelta = new Vector2(46, 36);
             setting.Opener.name = "提示設定";
@@ -123,7 +145,7 @@ namespace Yu5h1Lib.UI.Acceptance
             });
             var details = CreateRect(panel.transform, "Details");
             var text = CreateText(details, "Details", hints ? "提示會顯示在操作區。" : "音效會在操作時播放。",
-                16, Palette.ItemText, TextAnchor.UpperLeft);
+                16, palette.ItemText, TextAnchor.UpperLeft);
             Stretch(text.rectTransform, 6);
             return new SettingsPanel.Group(hints ? "hints" : "sound", hints ? "提示" : "音效",
                 new[] { new Tabs.Item("general", "一般", page), new Tabs.Item("details", "說明", details) });
@@ -142,13 +164,13 @@ namespace Yu5h1Lib.UI.Acceptance
             box.anchoredPosition = new Vector2(12, 0);
             box.sizeDelta = new Vector2(18, 18);
             var background = box.gameObject.AddComponent<Image>();
-            background.color = Palette.Hover;
+            background.color = palette.Hover;
             var check = CreateRect(box, "Check");
             Stretch(check, 3);
             var mark = check.gameObject.AddComponent<Image>();
-            mark.color = Palette.Accent;
+            mark.color = palette.Accent;
             mark.raycastTarget = false;
-            var caption = CreateText(row, "Label", label, 16, Palette.ItemText, TextAnchor.MiddleLeft);
+            var caption = CreateText(row, "Label", label, 16, palette.ItemText, TextAnchor.MiddleLeft);
             Stretch(caption.rectTransform);
             caption.rectTransform.offsetMin = new Vector2(28, 0);
             caption.raycastTarget = true;

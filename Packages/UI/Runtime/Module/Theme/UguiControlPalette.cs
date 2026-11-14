@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,51 +9,96 @@ namespace Yu5h1Lib.UI
     /// </summary>
     public sealed class UguiControlPalette
     {
+        private const string VisualFoundationResource = "Yu5h1Lib.UI/VisualFoundation";
         private const float FadeDuration = 0.1f;
+        private readonly string defaultScheme;
+        private PaletteColors colors;
 
-        // VisualFoundation visual-design.json 1.3.0, SHA-256 ffcfb60703205089157835e6c15348798c43eb4b59b2df4a488b20a4b7e73250.
-        public static UguiControlPalette Light { get; } = new UguiControlPalette(
-            page: new Color32(0xf5, 0xf3, 0xec, 255),
-            panel: new Color32(0xff, 0xfd, 0xf8, 255),
-            itemText: new Color32(0x27, 0x34, 0x2e, 255),
-            secondaryText: new Color32(0x4f, 0x5e, 0x57, 255),
-            controlBorder: new Color32(0x80, 0x89, 0x81, 255),
-            hover: new Color32(0xef, 0xee, 0xe8, 255),
-            accent: new Color32(0x1f, 0x68, 0x4f, 255),
-            onAccent: Color.white);
+        /// <summary>The built-in light palette. Read its colors on the Unity main thread.</summary>
+        public static UguiControlPalette Light { get; } = new UguiControlPalette("Light");
+        /// <summary>The built-in dark palette. Read its colors on the Unity main thread.</summary>
+        public static UguiControlPalette Dark { get; } = new UguiControlPalette("Dark");
 
-        public static UguiControlPalette Dark { get; } = new UguiControlPalette(
-            page: new Color32(0x17, 0x1a, 0x21, 255),
-            panel: new Color32(0x20, 0x25, 0x30, 255),
-            itemText: new Color32(0xcb, 0xd4, 0xdf, 255),
-            secondaryText: new Color32(0x9d, 0xa9, 0xb8, 255),
-            controlBorder: new Color32(0x73, 0x7d, 0x8c, 255),
-            hover: new Color32(0x2a, 0x31, 0x3c, 255),
-            accent: new Color32(0x7f, 0x9f, 0xd1, 255),
-            onAccent: Color.black);
+        private PaletteColors Colors => colors ??= LoadDefault(defaultScheme);
 
-        public Color PageBackground { get; }
-        public Color PanelBackground { get; }
-        public Color ItemText { get; }
-        public Color SecondaryText { get; }
-        public Color ControlBorder { get; }
-        public Color Hover { get; }
-        public Color Accent { get; }
-        public Color OnAccent { get; }
-        public Color Focus => Accent;
-        public Color Disabled => SecondaryText;
+        public Color PageBackground => Colors.PageBackground;
+        public Color PanelBackground => Colors.PanelBackground;
+        public Color Heading => Colors.Heading;
+        public Color PanelHeading => Colors.PanelHeading;
+        public Color ItemText => Colors.ItemText;
+        public Color SecondaryText => Colors.SecondaryText;
+        public Color ControlBorder => Colors.ControlBorder;
+        public Color Hover => Colors.Hover;
+        public Color Accent => Colors.Accent;
+        public Color OnAccent => Colors.OnAccent;
+        public Color Focus => Colors.Focus;
+        public Color Disabled => Colors.Disabled;
+        public Color Overlay => Colors.Overlay;
 
-        private UguiControlPalette(Color page, Color panel, Color itemText, Color secondaryText,
-            Color controlBorder, Color hover, Color accent, Color onAccent)
+        /// <summary>Reads the VisualFoundation roles from a Theme and its schema for use by uGUI controls.</summary>
+        public static UguiControlPalette FromTheme(Theme theme)
         {
-            PageBackground = page;
-            PanelBackground = panel;
-            ItemText = itemText;
-            SecondaryText = secondaryText;
-            ControlBorder = controlBorder;
-            Hover = hover;
-            Accent = accent;
-            OnAccent = onAccent;
+            if (theme == null)
+                throw new ArgumentNullException(nameof(theme));
+
+            return new UguiControlPalette(new PaletteColors(theme));
+        }
+
+        private UguiControlPalette(string defaultScheme) => this.defaultScheme = defaultScheme;
+
+        private UguiControlPalette(PaletteColors colors) => this.colors = colors;
+
+        private static PaletteColors LoadDefault(string scheme)
+        {
+            var themes = Resources.LoadAll<Theme>(VisualFoundationResource);
+            var theme = Array.Find(themes, candidate => candidate.name == scheme);
+            if (theme == null)
+                throw new InvalidOperationException(
+                    $"The imported VisualFoundation Theme '{scheme}' is missing from Resources/{VisualFoundationResource}.");
+
+            return new PaletteColors(theme);
+        }
+
+        private sealed class PaletteColors
+        {
+            public readonly Color PageBackground;
+            public readonly Color PanelBackground;
+            public readonly Color Heading;
+            public readonly Color PanelHeading;
+            public readonly Color ItemText;
+            public readonly Color SecondaryText;
+            public readonly Color ControlBorder;
+            public readonly Color Hover;
+            public readonly Color Accent;
+            public readonly Color OnAccent;
+            public readonly Color Focus;
+            public readonly Color Disabled;
+            public readonly Color Overlay;
+
+            internal PaletteColors(Theme theme)
+            {
+                PageBackground = ReadColor(theme, "pageBackground");
+                PanelBackground = ReadColor(theme, "panelBackground");
+                Heading = ReadColor(theme, "heading");
+                PanelHeading = ReadColor(theme, "panelHeading");
+                ItemText = ReadColor(theme, "itemText");
+                SecondaryText = ReadColor(theme, "secondaryText");
+                ControlBorder = ReadColor(theme, "controlBorder");
+                Hover = ReadColor(theme, "hover");
+                Accent = ReadColor(theme, "accent");
+                OnAccent = ReadColor(theme, "onAccent");
+                Focus = ReadColor(theme, "focus");
+                Disabled = ReadColor(theme, "disabled");
+                Overlay = ReadColor(theme, "overlay");
+            }
+
+            private static Color ReadColor(Theme theme, string role)
+            {
+                if (theme.TryGet<Color>(role, out var color))
+                    return color;
+
+                throw new ArgumentException($"Theme '{theme.name}' is missing VisualFoundation color role '{role}'.", nameof(theme));
+            }
         }
 
         /// <summary>

@@ -276,7 +276,7 @@ namespace Yu5h1Lib.UI.Tests
             var search = host.GetComponentInChildren<InputField>();
             var noResults = host.transform.Find("HostRoot/Catalog/CatalogScroll/NoResults");
             var originalOrder = VisibleCards(grid);
-            CollectionAssert.AreEqual(new[] { first.Id, second.Id, "button", "backgroundload", "chatpanel", "scrollview" }, originalOrder);
+            CollectionAssert.AreEqual(new[] { first.Id, second.Id, "button", "backgroundload", "chatpanel", "scrollview", "settingspanel" }, originalOrder);
             var configuredCard = grid.transform.Find(UxUiAcceptanceTarget.ResolveCurrentTargetId());
             Assert.That(configuredCard.Find("Description").GetComponent<Text>().text, Does.Contain("本輪驗收目標"));
 

@@ -283,7 +283,7 @@ namespace Yu5h1Lib.UI
 
         private void ApplyAppearance()
         {
-            if (ui == null)
+            if (ui == null || UguiControlDecoration.HasPalette(ui))
             {
                 return;
             }

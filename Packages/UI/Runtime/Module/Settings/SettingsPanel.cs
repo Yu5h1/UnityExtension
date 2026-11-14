@@ -77,7 +77,7 @@ namespace Yu5h1Lib.UI
                 var overlay = Rect(panel.surface, "Backdrop");
                 Stretch(overlay);
                 var shade = overlay.gameObject.AddComponent<Image>();
-                shade.color = new Color(0, 0, 0, .55f);
+                shade.color = palette.Overlay;
                 panel.backdrop = overlay.gameObject.AddComponent<Button>();
                 panel.backdrop.transition = Selectable.Transition.None;
                 panel.backdrop.navigation = new Navigation { mode = Navigation.Mode.None };
@@ -93,6 +93,7 @@ namespace Yu5h1Lib.UI
             var header = Rect(panel.dialog, "Header");
             Layout<HorizontalLayoutGroup>(header, 4);
             panel.title = MakeText(header, "Title", "介面設定", palette);
+            panel.title.color = palette.PanelHeading;
             panel.title.fontSize = 20;
             Size(panel.title, height: 32, flexibleWidth: 1);
             if (presentation != Presentation.Embedded)
