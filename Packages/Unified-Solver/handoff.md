@@ -21,6 +21,19 @@ Keep changes out of it unless the user explicitly authorizes otherwise. The
 former standalone Unified Solver workspace is retired; do not route work back to
 it.
 
+## Direction (2026-11-14 user decision)
+
+This package is not moved or restructured. It keeps serving BonghuoVR as-is,
+vendored dependency included, and retires once BonghuoVR has switched every
+scene to the replacement. The replacement is a re-implementation of this
+package's Yu5h1Lib extension features in the Unity Motion package
+(`Packages/Motion`, `com.yu5h1.motion`) on an own GPU solver, with no dependency
+on the vendored `unified-solver`. No legacy-backend wrapper is built here;
+rollback is via kept prefabs/scenes. `particle-physics` is not a package name.
+Plan and stages: Motion repo
+`Documentation/GpuPhysicsMigrationPlan.md`. Fixes or features added here for
+BonghuoVR before the switch must also be reproduced in the Motion package.
+
 ## Where the reasoning lives
 
 | Subject | `plan.md` |
@@ -215,8 +228,9 @@ go through `Undo.RegisterCompleteObjectUndo` on the component, not through
 Unity: a `ParticleSystemAddon` cone drives a region, confirmed through fish
 locomotion inside it, and `flowIsLocal` resolves against the provider's frame.
 
-- `Runtime/ParticlePhysics/` is the backend-neutral core that is expected to
-  leave this package eventually, as `com.yu5h1.particle-physics`.
+- `Runtime/ParticlePhysics/` is the backend-neutral core. It was expected to
+  leave this package as `com.yu5h1.particle-physics`; superseded on 2026-11-14
+  (see Direction): it stays here, and the Motion package re-implements it.
   `IPhysicsParticleSource` and `PhysicsParticleAnchor` moved there (with their
   `.meta` files, so `pip.prefab` still resolves).
 - **Namespace `Yu5h1Lib.ParticlePhysics`** — the two words are deliberately in
