@@ -30,6 +30,7 @@ namespace Yu5h1Lib.UI
         private State state;
         private ButtonAddon save;
         private Text message;
+        private Text modeLabel;
         public RectTransform Actions { get; private set; }
         public Button SaveButton => save.ui;
         public Toggle ModeToggle { get; private set; }
@@ -43,8 +44,7 @@ namespace Yu5h1Lib.UI
             var root = Rect(parent, "Save bar");
             Layout<VerticalLayoutGroup>(root, 4).childForceExpandWidth = true;
             var bar = root.gameObject.AddComponent<SaveBar>();
-            bar.message = MakeText(root, "Status", "", palette);
-            bar.message.color = palette.SecondaryText;
+            bar.message = MakeText(root, "Status", "");
             Size(bar.message, height: 26);
             var row = Rect(root, "Save actions");
             var toolbar = Layout<HorizontalLayoutGroup>(row, 6);
@@ -52,13 +52,23 @@ namespace Yu5h1Lib.UI
             bar.Actions = Rect(row, "Host actions");
             Layout<HorizontalLayoutGroup>(bar.Actions, 6);
             Size(bar.Actions, flexibleWidth: 1);
-            bar.ModeToggle = CreateToggle(row, palette);
-            bar.save = MakeButton(row, "Save", "套用並保存", palette);
+            bar.ModeToggle = CreateToggle(row, out bar.modeLabel);
+            bar.save = MakeButton(row, "Save", "套用並保存");
             Size(bar.save, 120, 36);
             bar.ModeToggle.onValueChanged.AddListener(bar.RequestMode);
             bar.SaveButton.onClick.AddListener(bar.RequestSave);
+            bar.ApplyPalette(palette);
             bar.SetState(new State(autoSave: true));
             return bar;
+        }
+
+        internal void ApplyPalette(UguiControlPalette palette)
+        {
+            message.color = palette.SecondaryText;
+            modeLabel.color = palette.ItemText;
+            ModeToggle.targetGraphic.color = palette.Hover;
+            ModeToggle.graphic.color = palette.Accent;
+            palette.ApplyButton(save.ui, save.labelText);
         }
 
         public void SetState(State value)
@@ -91,7 +101,7 @@ namespace Yu5h1Lib.UI
                 SaveRequested?.Invoke();
         }
 
-        private static Toggle CreateToggle(Transform parent, UguiControlPalette palette)
+        private static Toggle CreateToggle(Transform parent, out Text label)
         {
             var root = Rect(parent, "自動儲存");
             Size(root, 90, 36);
@@ -101,15 +111,13 @@ namespace Yu5h1Lib.UI
             box.sizeDelta = new Vector2(18, 18);
             box.anchoredPosition = new Vector2(9, 0);
             var background = box.gameObject.AddComponent<Image>();
-            background.color = palette.Hover;
             var check = Rect(box, "Checked");
             Stretch(check);
             check.offsetMin = new Vector2(3, 3);
             check.offsetMax = new Vector2(-3, -3);
             var mark = check.gameObject.AddComponent<Image>();
-            mark.color = palette.Accent;
             mark.raycastTarget = false;
-            var label = MakeText(root, "Label", "自動儲存", palette);
+            label = MakeText(root, "Label", "自動儲存");
             Stretch(label.rectTransform);
             label.rectTransform.offsetMin = new Vector2(23, 0);
             label.raycastTarget = true;

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -16,16 +17,20 @@ namespace Yu5h1Lib.UI.Acceptance
         public string ModuleSpec => "Yu5h1Lib.UX/SettingsPanel";
 
         private readonly string key;
-        private readonly UguiControlPalette palette;
+        private readonly UguiControlPalette initialPalette;
+        private UguiControlPalette palette;
         private readonly Func<string, DataView, CancellationToken, Task> write;
         private readonly Func<bool, bool, CancellationToken, Task> apply;
         private RectTransform root;
         private SettingsPanel config;
         private SettingsPanel setting;
         private Text preview;
+        private ButtonAddon directionAddon;
+        private readonly List<(Button Button, Text Label)> themeButtons = new();
+        private readonly List<GraphicColorBinding> colorBindings = new();
         private ConfigStore<Values> store;
         private Values draft;
-        private readonly System.Collections.Generic.List<(Toggle Toggle, bool First)> fields = new();
+        private readonly List<(Toggle Toggle, bool First)> fields = new();
         private bool autoSave = true;
         private enum Choice { Hints, Sound }
         private readonly struct Values
@@ -56,7 +61,7 @@ namespace Yu5h1Lib.UI.Acceptance
             Func<bool, bool, CancellationToken, Task> apply, UguiControlPalette palette)
         {
             this.key = key;
-            this.palette = palette ?? Palette;
+            initialPalette = palette ?? Palette;
             this.write = write ?? throw new ArgumentNullException(nameof(write));
             this.apply = apply;
         }
@@ -65,21 +70,22 @@ namespace Yu5h1Lib.UI.Acceptance
         {
             Unmount();
             autoSave = true;
+            palette = initialPalette;
             root = CreateRect(container, "SettingsDemo");
             Stretch(root);
             var background = root.gameObject.AddComponent<Image>();
-            background.color = palette.PageBackground;
+            BindColor("pageBackground", background);
             background.raycastTarget = false;
             var page = CreateRect(root, "Settings demo content");
             Stretch(page, 12);
             var actions = CreateRect(page, "Settings entries");
             Stretch(actions);
             preview = CreateText(actions, "Applied", "", 18, palette.ItemText, TextAnchor.MiddleCenter);
+            BindColor("itemText", preview);
             Stretch(preview.rectTransform);
-            var directionAddon = ButtonAddon.Create(actions, label: "橫列／直欄", showIcon: false);
+            directionAddon = ButtonAddon.Create(actions, label: "橫列／直欄", showIcon: false);
             var direction = directionAddon.ui;
             direction.name = "Tab direction";
-            palette.ApplyButton(direction, directionAddon.labelText);
             var directionRect = (RectTransform)direction.transform;
             directionRect.anchorMin = directionRect.anchorMax = new Vector2(0, 1);
             directionRect.pivot = new Vector2(0, 1);
@@ -97,6 +103,9 @@ namespace Yu5h1Lib.UI.Acceptance
             setting.Opener.name = "提示設定";
             config.SetGroups(new[] { CreateGroup(config, Choice.Hints), CreateGroup(config, Choice.Sound) });
             setting.SetGroups(new[] { CreateGroup(setting, Choice.Hints) });
+            AddThemeSwitch(config);
+            AddThemeSwitch(setting);
+            ApplyTheme();
             store = new ConfigStore<Values>(new Values(true, true), value => value, _ => { },
                 _ =>
                 {
@@ -125,6 +134,54 @@ namespace Yu5h1Lib.UI.Acceptance
             _ = store.LoadAsync();
         }
 
+        private void BindColor(string role, Graphic graphic) =>
+            colorBindings.Add(GraphicColorBinding.Create(role, graphic));
+
+        private void AddThemeSwitch(SettingsPanel panel)
+        {
+            var header = panel.HeaderActions;
+            var rect = CreateRect(header, "Theme switch");
+            rect.SetSiblingIndex(header.childCount - 2);
+            var size = rect.gameObject.AddComponent<LayoutElement>();
+            size.preferredWidth = 72;
+            size.preferredHeight = 36;
+
+            var background = rect.gameObject.AddComponent<Image>();
+            var button = rect.gameObject.AddComponent<SettingsThemeButton>();
+            button.Initialize(panel);
+            button.targetGraphic = background;
+            button.onClick.AddListener(SwitchTheme);
+
+            var label = CreateText(rect, "Label", "", 15, palette.ItemText, TextAnchor.MiddleCenter);
+            Stretch(label.rectTransform);
+            themeButtons.Add((button, label));
+        }
+
+        private void SwitchTheme()
+        {
+            palette = ReferenceEquals(palette.SourceTheme, UguiControlPalette.Light.SourceTheme)
+                ? UguiControlPalette.Dark
+                : UguiControlPalette.Light;
+            ApplyTheme();
+        }
+
+        private void ApplyTheme()
+        {
+            var theme = palette.SourceTheme;
+            foreach (var binding in colorBindings)
+                binding.Apply(theme);
+
+            config.ApplyPalette(palette);
+            setting.ApplyPalette(palette);
+            palette.ApplyButton(directionAddon.ui, directionAddon.labelText);
+            bool light = ReferenceEquals(theme, UguiControlPalette.Light.SourceTheme);
+            foreach (var (button, label) in themeButtons)
+            {
+                label.text = light ? "暗色" : "亮色";
+                palette.ApplyButton(button, label);
+            }
+        }
+
         private static Task WritePlayerPrefs(string key, DataView data, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
@@ -146,6 +203,7 @@ namespace Yu5h1Lib.UI.Acceptance
             var details = CreateRect(panel.transform, "Details");
             var text = CreateText(details, "Details", hints ? "提示會顯示在操作區。" : "音效會在操作時播放。",
                 16, palette.ItemText, TextAnchor.UpperLeft);
+            BindColor("itemText", text);
             Stretch(text.rectTransform, 6);
             return new SettingsPanel.Group(hints ? "hints" : "sound", hints ? "提示" : "音效",
                 new[] { new Tabs.Item("general", "一般", page), new Tabs.Item("details", "說明", details) });
@@ -164,13 +222,14 @@ namespace Yu5h1Lib.UI.Acceptance
             box.anchoredPosition = new Vector2(12, 0);
             box.sizeDelta = new Vector2(18, 18);
             var background = box.gameObject.AddComponent<Image>();
-            background.color = palette.Hover;
+            BindColor("hover", background);
             var check = CreateRect(box, "Check");
             Stretch(check, 3);
             var mark = check.gameObject.AddComponent<Image>();
-            mark.color = palette.Accent;
+            BindColor("accent", mark);
             mark.raycastTarget = false;
             var caption = CreateText(row, "Label", label, 16, palette.ItemText, TextAnchor.MiddleLeft);
+            BindColor("itemText", caption);
             Stretch(caption.rectTransform);
             caption.rectTransform.offsetMin = new Vector2(28, 0);
             caption.raycastTarget = true;
@@ -236,6 +295,13 @@ namespace Yu5h1Lib.UI.Acceptance
                 store = null;
             }
             fields.Clear();
+            themeButtons.Clear();
+            foreach (var binding in colorBindings)
+            {
+                if (Application.isPlaying) UnityEngine.Object.Destroy(binding);
+                else UnityEngine.Object.DestroyImmediate(binding);
+            }
+            colorBindings.Clear();
             if (root == null)
                 return;
             root.gameObject.SetActive(false);

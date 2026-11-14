@@ -112,6 +112,23 @@ namespace Yu5h1Lib.UI.Tests
 
                             Capture(camera, target, output, name, errors);
                             InspectPanel(canvas, panel, palette, direction, name, evidence, errors);
+                            if (theme == "dark" && direction == Tabs.Direction.Row)
+                            {
+                                var themeSwitch = panel.HeaderActions.GetComponentsInChildren<Button>()
+                                    .Single(button => button.name == "Theme switch");
+                                var focused = EventSystem.current.currentSelectedGameObject;
+                                foreach (var (nextTheme, nextPalette) in schemes)
+                                {
+                                    Submit(themeSwitch);
+                                    yield return new WaitForSecondsRealtime(ColorSettleSeconds);
+
+                                    var switchName = $"{presentation}-live-{nextTheme}";
+                                    Capture(camera, target, output, switchName, errors);
+                                    InspectPanel(canvas, panel, nextPalette, direction, switchName, evidence, errors);
+                                    if (EventSystem.current.currentSelectedGameObject != focused)
+                                        errors.Add($"{switchName}: switching theme moved the existing focus.");
+                                }
+                            }
                             panel.Close();
                         }
                     }
@@ -145,7 +162,7 @@ namespace Yu5h1Lib.UI.Tests
                 File.WriteAllLines(Path.Combine(output, "geometry.txt"), evidence.Concat(errors));
             }
 
-            Assert.That(evidence.Count, Is.EqualTo(8), string.Join(Environment.NewLine, errors));
+            Assert.That(evidence.Count, Is.EqualTo(12), string.Join(Environment.NewLine, errors));
             Assert.That(errors, Is.Empty, string.Join(Environment.NewLine, errors));
         }
 

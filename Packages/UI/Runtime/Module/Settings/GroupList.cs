@@ -40,6 +40,8 @@ namespace Yu5h1Lib.UI
             return items;
         }
 
+        internal void ApplyPalette(UguiControlPalette palette) => choices.ApplyPalette(palette);
+
         public bool Select(string id, bool focus = false) => choices.Select(id, focus);
     }
 }

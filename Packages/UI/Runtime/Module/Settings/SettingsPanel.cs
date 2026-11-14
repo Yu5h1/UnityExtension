@@ -33,14 +33,19 @@ namespace Yu5h1Lib.UI
         private RectTransform dialog;
         private Text title;
         private Text intro;
-        private Button dismiss;
+        private Image dialogBackground;
+        private Image backdropShade;
+        private ButtonAddon opener;
+        private ButtonAddon dismiss;
         private Button backdrop;
-        private Button reset;
+        private ButtonAddon reset;
         private CanvasGroup contentGate;
         private SaveBar.State state;
         private Presentation presentation;
 
-        public Button Opener { get; private set; }
+        public Button Opener => opener == null ? null : opener.ui;
+        /// <summary>The title bar in which the caller may place and style additional actions.</summary>
+        public RectTransform HeaderActions { get; private set; }
         public GroupList Groups { get; private set; }
         public Tabs Tabs { get; private set; }
         public SaveBar SaveBar { get; private set; }
@@ -61,12 +66,11 @@ namespace Yu5h1Lib.UI
             panel.presentation = presentation;
             if (presentation != Presentation.Embedded)
             {
-                var opener = MakeButton(root, "設定", "⚙", palette);
-                var rect = (RectTransform)opener.transform;
+                panel.opener = MakeButton(root, "設定", "⚙");
+                var rect = (RectTransform)panel.opener.transform;
                 rect.anchorMin = rect.anchorMax = Vector2.one;
                 rect.pivot = Vector2.one;
                 rect.sizeDelta = new Vector2(38, 36);
-                panel.Opener = opener.ui;
                 panel.Opener.onClick.AddListener(() => panel.Show());
             }
 
@@ -76,8 +80,7 @@ namespace Yu5h1Lib.UI
             {
                 var overlay = Rect(panel.surface, "Backdrop");
                 Stretch(overlay);
-                var shade = overlay.gameObject.AddComponent<Image>();
-                shade.color = palette.Overlay;
+                panel.backdropShade = overlay.gameObject.AddComponent<Image>();
                 panel.backdrop = overlay.gameObject.AddComponent<Button>();
                 panel.backdrop.transition = Selectable.Transition.None;
                 panel.backdrop.navigation = new Navigation { mode = Navigation.Mode.None };
@@ -86,24 +89,22 @@ namespace Yu5h1Lib.UI
 
             panel.dialog = Rect(panel.surface, "Settings panel");
             Stretch(panel.dialog);
-            panel.dialog.gameObject.AddComponent<Image>().color = palette.PanelBackground;
+            panel.dialogBackground = panel.dialog.gameObject.AddComponent<Image>();
             var layout = Layout<VerticalLayoutGroup>(panel.dialog, 8);
             layout.padding = new RectOffset(12, 12, 10, 10);
             layout.childForceExpandWidth = true;
-            var header = Rect(panel.dialog, "Header");
-            Layout<HorizontalLayoutGroup>(header, 4);
-            panel.title = MakeText(header, "Title", "介面設定", palette);
-            panel.title.color = palette.PanelHeading;
+            panel.HeaderActions = Rect(panel.dialog, "Header");
+            Layout<HorizontalLayoutGroup>(panel.HeaderActions, 4);
+            panel.title = MakeText(panel.HeaderActions, "Title", "介面設定");
             panel.title.fontSize = 20;
             Size(panel.title, height: 32, flexibleWidth: 1);
             if (presentation != Presentation.Embedded)
             {
-                panel.dismiss = MakeButton(header, "關閉", "×", palette).ui;
-                panel.dismiss.onClick.AddListener(() => panel.Close());
+                panel.dismiss = MakeButton(panel.HeaderActions, "關閉", "×");
+                panel.dismiss.ui.onClick.AddListener(() => panel.Close());
             }
 
-            panel.intro = MakeText(panel.dialog, "Instructions", "", palette);
-            panel.intro.color = palette.SecondaryText;
+            panel.intro = MakeText(panel.dialog, "Instructions", "");
             Size(panel.intro, height: 40);
             var body = Rect(panel.dialog, "Settings body");
             Size(body, flexibleHeight: 1);
@@ -120,16 +121,44 @@ namespace Yu5h1Lib.UI
             panel.contentGate = panel.Tabs.ContentRoot.gameObject.AddComponent<CanvasGroup>();
             Size(panel.Tabs, flexibleWidth: 1);
             panel.SaveBar = SaveBar.Create(panel.dialog, palette);
-            panel.reset = MakeButton(panel.SaveBar.Actions, "Reset", "恢復預設", palette).ui;
-            panel.reset.onClick.AddListener(() =>
+            panel.reset = MakeButton(panel.SaveBar.Actions, "Reset", "恢復預設");
+            panel.reset.ui.onClick.AddListener(() =>
             {
-                if (panel.reset.IsInteractable())
+                if (panel.reset.ui.IsInteractable())
                     panel.ResetRequested?.Invoke();
             });
             panel.surface.gameObject.SetActive(presentation == Presentation.Embedded);
+            panel.ApplySurfacePalette(palette);
             panel.ResizeDialog();
             panel.SetState(new SaveBar.State(autoSave: true, enabled: false));
             return panel;
+        }
+
+        /// <summary>Restyles the existing panel controls. The caller styles content and actions it supplies.</summary>
+        public void ApplyPalette(UguiControlPalette palette)
+        {
+            if (palette == null)
+                throw new ArgumentNullException(nameof(palette));
+
+            ApplySurfacePalette(palette);
+            Groups?.ApplyPalette(palette);
+            Tabs.ApplyPalette(palette);
+            SaveBar.ApplyPalette(palette);
+        }
+
+        private void ApplySurfacePalette(UguiControlPalette palette)
+        {
+            dialogBackground.color = palette.PanelBackground;
+            title.color = palette.PanelHeading;
+            intro.color = palette.SecondaryText;
+            if (backdropShade != null)
+            {
+                backdropShade.color = palette.Overlay;
+                palette.ApplyButton(opener.ui, opener.labelText);
+                palette.ApplyButton(dismiss.ui, dismiss.labelText);
+            }
+
+            palette.ApplyButton(reset.ui, reset.labelText);
         }
 
         public void SetGroups(IReadOnlyList<Group> value)
@@ -177,9 +206,9 @@ namespace Yu5h1Lib.UI
             if (Groups != null)
                 Groups.Interactable = !value.Busy;
             contentGate.interactable = contentGate.blocksRaycasts = CanEdit;
-            reset.interactable = CanEdit && hasTabs;
+            reset.ui.interactable = CanEdit && hasTabs;
             if (dismiss != null)
-                dismiss.interactable = backdrop.interactable = !value.Busy;
+                dismiss.ui.interactable = backdrop.interactable = !value.Busy;
             intro.text = value.AutoSave
                 ? "修改後自動保存，下次開啟仍會保留。"
                 : "修改先保留在草稿，按套用後才保存；關閉會放棄尚未提交的修改。";
@@ -192,7 +221,7 @@ namespace Yu5h1Lib.UI
             transform.SetAsLastSibling();
             surface.gameObject.SetActive(true);
             Canvas.ForceUpdateCanvases();
-            (Tabs.ActiveButton ?? dismiss).Select();
+            (Tabs.ActiveButton ?? dismiss.ui).Select();
             Opened?.Invoke();
             return true;
         }

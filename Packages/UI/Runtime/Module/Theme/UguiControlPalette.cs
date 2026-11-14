@@ -12,6 +12,7 @@ namespace Yu5h1Lib.UI
         private const string VisualFoundationResource = "Yu5h1Lib.UI/VisualFoundation";
         private const float FadeDuration = 0.1f;
         private readonly string defaultScheme;
+        private Theme sourceTheme;
         private PaletteColors colors;
 
         /// <summary>The built-in light palette. Read its colors on the Unity main thread.</summary>
@@ -19,7 +20,10 @@ namespace Yu5h1Lib.UI
         /// <summary>The built-in dark palette. Read its colors on the Unity main thread.</summary>
         public static UguiControlPalette Dark { get; } = new UguiControlPalette("Dark");
 
-        private PaletteColors Colors => colors ??= LoadDefault(defaultScheme);
+        /// <summary>The imported or explicitly supplied Theme used by this palette.</summary>
+        public Theme SourceTheme => sourceTheme ??= LoadDefaultTheme(defaultScheme);
+
+        private PaletteColors Colors => colors ??= new PaletteColors(SourceTheme);
 
         public Color PageBackground => Colors.PageBackground;
         public Color PanelBackground => Colors.PanelBackground;
@@ -41,14 +45,18 @@ namespace Yu5h1Lib.UI
             if (theme == null)
                 throw new ArgumentNullException(nameof(theme));
 
-            return new UguiControlPalette(new PaletteColors(theme));
+            return new UguiControlPalette(theme);
         }
 
         private UguiControlPalette(string defaultScheme) => this.defaultScheme = defaultScheme;
 
-        private UguiControlPalette(PaletteColors colors) => this.colors = colors;
+        private UguiControlPalette(Theme theme)
+        {
+            sourceTheme = theme;
+            colors = new PaletteColors(theme);
+        }
 
-        private static PaletteColors LoadDefault(string scheme)
+        private static Theme LoadDefaultTheme(string scheme)
         {
             var themes = Resources.LoadAll<Theme>(VisualFoundationResource);
             var theme = Array.Find(themes, candidate => candidate.name == scheme);
@@ -56,7 +64,7 @@ namespace Yu5h1Lib.UI
                 throw new InvalidOperationException(
                     $"The imported VisualFoundation Theme '{scheme}' is missing from Resources/{VisualFoundationResource}.");
 
-            return new PaletteColors(theme);
+            return theme;
         }
 
         private sealed class PaletteColors

@@ -40,7 +40,7 @@ namespace Yu5h1Lib.UI
             return size;
         }
 
-        internal static ButtonAddon MakeButton(Transform parent, string name, string label, UguiControlPalette palette)
+        internal static ButtonAddon MakeButton(Transform parent, string name, string label)
         {
             var button = ButtonAddon.Create(parent, label: label, showIcon: false, size: 36f);
             button.name = name;
@@ -48,17 +48,15 @@ namespace Yu5h1Lib.UI
             button.labelText.supportRichText = false;
             var size = Size(button, Mathf.Max(40, button.labelText.preferredWidth + 20), 36);
             size.minWidth = 0;
-            palette.ApplyButton(button.ui, button.labelText);
             return button;
         }
 
-        internal static Text MakeText(Transform parent, string name, string label, UguiControlPalette palette)
+        internal static Text MakeText(Transform parent, string name, string label)
         {
             var text = Rect(parent, name).gameObject.AddComponent<Text>();
             text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             text.fontSize = 15;
             text.text = label;
-            text.color = palette.ItemText;
             text.supportRichText = false;
             text.raycastTarget = false;
             text.alignment = TextAnchor.MiddleLeft;

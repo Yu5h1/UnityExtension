@@ -31,6 +31,8 @@ namespace Yu5h1Lib
             [SerializeField,CollectionConstraint(true)] private TUnityObject[] _targets;
             public TUnityObject[] targets => _targets;
 
+            protected void SetTargets(TUnityObject[] targets) => _targets = targets;
+
             protected abstract void SetValue(TUnityObject c, TValue value);
 
             public override void Apply(Theme profile)

@@ -28,7 +28,7 @@ namespace Yu5h1Lib.UI
         }
 
         private static readonly Regex idFormat = new(@"\A[a-z][a-z0-9-]*\z");
-        private readonly List<(Item Item, ButtonAddon Button, RectTransform Line)> entries = new();
+        private readonly List<(Item Item, ButtonAddon Button, Image Line)> entries = new();
         private RectTransform rail;
         private RectTransform content;
         private ScrollView scroll;
@@ -78,7 +78,8 @@ namespace Yu5h1Lib.UI
             tabs.palette = palette ?? UguiControlPalette.Light;
             tabs.selectionOnly = selectionOnly;
             tabs.content = Rect(root, "Tab content");
-            tabs.empty = MakeText(tabs.content, "Empty", "尚無設定分類。", tabs.palette);
+            tabs.empty = MakeText(tabs.content, "Empty", "尚無設定分類。");
+            tabs.empty.color = tabs.palette.ItemText;
             Stretch(tabs.empty.rectTransform);
             tabs.scroll = Scroll(Rect(root, "Tab strip"), out tabs.row);
             tabs.column = Rect(tabs.scroll.viewport, "Column");
@@ -123,13 +124,12 @@ namespace Yu5h1Lib.UI
             foreach (var item in items)
             {
                 var index = entries.Count;
-                var button = MakeButton(rail, item.Id, item.Label, palette);
+                var button = MakeButton(rail, item.Id, item.Label);
                 button.ui.onClick.AddListener(() => SetSelection(index, true, true));
                 button.ui.navigation = new Navigation { mode = Navigation.Mode.Explicit };
                 button.gameObject.AddComponent<TabNavigation>().Initialize(this);
                 var line = Rect(button.transform, "Selection");
                 var image = line.gameObject.AddComponent<Image>();
-                image.color = palette.Accent;
                 image.raycastTarget = false;
                 Size(line).ignoreLayout = true;
                 ConfigureLine(line);
@@ -138,12 +138,27 @@ namespace Yu5h1Lib.UI
                     item.Content.SetParent(content, false);
                     Stretch(item.Content);
                 }
-                entries.Add((item, button, line));
+                ApplyEntryPalette(button, image);
+                entries.Add((item, button, image));
             }
             var retained = entries.FindIndex(entry => entry.Item.Id == previous);
             selected = retained >= 0 ? retained : (entries.Count > 0 ? 0 : -1);
             Interactable = interactable;
             UpdateSelection();
+        }
+
+        internal void ApplyPalette(UguiControlPalette value)
+        {
+            palette = value;
+            empty.color = palette.ItemText;
+            foreach (var entry in entries)
+                ApplyEntryPalette(entry.Button, entry.Line);
+        }
+
+        private void ApplyEntryPalette(ButtonAddon button, Image line)
+        {
+            palette.ApplyButton(button.ui, button.labelText);
+            line.color = palette.Accent;
         }
 
         public bool Select(string id, bool focus = false)
@@ -234,7 +249,7 @@ namespace Yu5h1Lib.UI
                 PositionColumn(strip);
 
             foreach (var entry in entries)
-                ConfigureLine(entry.Line);
+                ConfigureLine(entry.Line.rectTransform);
         }
 
         private void PositionColumn(RectTransform strip)
