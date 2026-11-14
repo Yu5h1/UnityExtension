@@ -28,6 +28,6 @@ using (var scatter = new MotionScatter2D())
 
 `Configuration/motion.settings.json` 是 WEB-7 定案前的版本化宣告，含六項設定、型別、預設和範圍。修改唯一來源 `Motion/configuration/motion.settings.json` 後重新交付；不要修改此副本。預設由原生核心讀取，設定 JSON 不包含算法。
 
-GPU 粒子物理（批量布料、繩索、魚群與碰撞）的規格在 `Documentation/ParticlePhysics/`：[ParticleSolver](Documentation/ParticlePhysics/ParticleSolver.md) 規定數值求解，[ParticleWorld](Documentation/ParticlePhysics/ParticleWorld.md) 規定場景中的世界、配置與釋放；尚無實作。
+GPU 粒子物理（批量布料、繩索、魚群與碰撞）的規格在 `Documentation/ParticlePhysics/`：[ParticleSolver](Documentation/ParticlePhysics/ParticleSolver.md) 規定數值求解，[ParticleWorld](Documentation/ParticlePhysics/ParticleWorld.md) 規定場景中的世界、配置與釋放。`Runtime/Particles`（asmdef `Yu5h1Lib.Motion.Particles`，型別在 `Yu5h1Lib`）已有場景元件 `ParticleWorld`、驅動器 `PhysicsParticle`、三類 profile（佈局、互動、外觀）與 `ParticleSphereCollider`／`ParticleCapsuleCollider`／`ParticleBoxCollider`；GPU 求解器與繪製尚未實作，世界目前只做配置與登記，不模擬。粒子物理依賴 `com.yu5h1.library`。
 
 測試專案 `manifest.json` 的 `testables` 加入 `com.yu5h1.motion`，即可執行 `Yu5h1Lib.Motion.Editor.Tests`。可重現建置、平台驗證命令與驗收限制見 Motion repository 的 `Documentation/NativeDelivery.md`。插件為預先編譯原生庫，C# 透過 C ABI 呼叫，無需在使用者裝置編譯 C++。

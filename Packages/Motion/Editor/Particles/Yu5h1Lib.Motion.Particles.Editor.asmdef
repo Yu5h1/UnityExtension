@@ -1,0 +1,7 @@
+{
+  "name": "Yu5h1Lib.Motion.Particles.Editor",
+  "rootNamespace": "Yu5h1Lib.EditorExtension",
+  "references": ["Yu5h1Lib.Motion.Particles"],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": true
+}
