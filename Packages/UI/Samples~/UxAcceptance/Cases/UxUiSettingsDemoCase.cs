@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,6 +16,8 @@ namespace Yu5h1Lib.UI.Acceptance
         public string ModuleSpec => "Yu5h1Lib.UX/SettingsPanel";
 
         private readonly string key;
+        private readonly Func<string, DataView, CancellationToken, Task> write;
+        private readonly Func<bool, bool, CancellationToken, Task> apply;
         private RectTransform root;
         private SettingsPanel config;
         private SettingsPanel setting;
@@ -30,7 +33,19 @@ namespace Yu5h1Lib.UI.Acceptance
             public Values(bool hints, bool sound) { Hints = hints; Sound = sound; }
         }
 
-        public UxUiSettingsDemoCase(string key = "Yu5h1Lib.UI.Acceptance.Settings") => this.key = key;
+        public UxUiSettingsDemoCase(string key = "Yu5h1Lib.UI.Acceptance.Settings")
+            : this(key, WritePlayerPrefs)
+        {
+        }
+
+        /// <summary>Uses an alternate writer for the demo scope and an optional application target for the two settings.</summary>
+        public UxUiSettingsDemoCase(string key, Func<string, DataView, CancellationToken, Task> write,
+            Func<bool, bool, CancellationToken, Task> apply = null)
+        {
+            this.key = key;
+            this.write = write ?? throw new ArgumentNullException(nameof(write));
+            this.apply = apply;
+        }
 
         public void Mount(RectTransform container)
         {
@@ -69,22 +84,30 @@ namespace Yu5h1Lib.UI.Acceptance
                     return Task.FromResult(read.Status == PreferencesLoadStatus.Missing
                         ? (false, default(Values)) : (true, new Values(bool.Parse(read.Data["hints"]), bool.Parse(read.Data["sound"]))));
                 },
-                (value, _) =>
+                (value, token) =>
                 {
                     var data = new DataView { ["hints"] = value.Hints.ToString(), ["sound"] = value.Sound.ToString() };
-                    Preferences.DefaultStorage.Save(key, data);
-                    return Task.CompletedTask;
+                    return write(key, data, token);
                 },
-                (value, _) =>
+                async (value, token) =>
                 {
+                    if (apply != null)
+                        await apply(value.Hints, value.Sound, token);
+                    token.ThrowIfCancellationRequested();
                     preview.text = $"目前套用　提示 {(value.Hints ? "開" : "關")}　音效 {(value.Sound ? "開" : "關")}";
-                    return Task.CompletedTask;
                 });
             draft = store.Defaults;
             Bind(config);
             Bind(setting);
             store.Changed += Render;
             _ = store.LoadAsync();
+        }
+
+        private static Task WritePlayerPrefs(string key, DataView data, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            Preferences.DefaultStorage.Save(key, data);
+            return Task.CompletedTask;
         }
 
         private SettingsPanel.Group CreateGroup(SettingsPanel panel, Choice choice)

@@ -2,6 +2,7 @@
     "name": "Yu5h1Lib.UI.PlayMode.Tests",
     "rootNamespace": "Yu5h1Lib.UI.Tests",
     "references": [
+        "Yu5h1Lib.Common",
         "Yu5h1Lib.UI",
         "Yu5h1Lib.UI.Samples.UxAcceptance",
         "UnityEngine.UI",
