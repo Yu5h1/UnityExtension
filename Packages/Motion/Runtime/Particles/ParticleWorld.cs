@@ -501,6 +501,40 @@ namespace Yu5h1Lib
             Enqueue(ParticleWorldChangeKind.SetRadius, entity.Id, record).radius = radius;
         }
 
+        internal bool SetConstraintParameters(
+            ParticleEntity entity,
+            IReadOnlyList<DistanceConstraintSpec> constraints,
+            out string error)
+        {
+            EntityRecord record = RecordOf(entity);
+            List<DistanceConstraintSpec> current = record.rest.constraints;
+            error = null;
+            if (constraints == null || constraints.Count != current.Count)
+                error = $"The entity has {current.Count} constraints; {constraints?.Count ?? 0} were given.";
+            else
+                for (int i = 0; i < current.Count && error == null; i++)
+                {
+                    DistanceConstraintSpec spec = constraints[i];
+                    if (spec.a != current[i].a || spec.b != current[i].b)
+                        error = $"Constraint {i} joins {spec.a} and {spec.b}; the entity's joins {current[i].a} and {current[i].b}.";
+                    else if (spec.compliance < 0f || spec.damping < 0f || spec.breakForce < 0f
+                             || float.IsInfinity(spec.compliance) || float.IsInfinity(spec.damping) || float.IsInfinity(spec.breakForce)
+                             || (!float.IsNaN(spec.restLength) && (spec.restLength < 0f || float.IsInfinity(spec.restLength))))
+                        error = $"Constraint {i} has a negative or non-finite parameter.";
+                }
+            if (error != null)
+                return false;
+            for (int i = 0; i < current.Count; i++)
+            {
+                DistanceConstraintSpec spec = constraints[i];
+                if (float.IsNaN(spec.restLength))
+                    spec.restLength = current[i].restLength;
+                current[i] = spec;
+            }
+            Enqueue(ParticleWorldChangeKind.SetConstraints, entity.Id, record);
+            return true;
+        }
+
         internal void SetGroupMode(ParticleEntity entity, ParticleGroupMode mode)
         {
             EntityRecord record = RecordOf(entity);

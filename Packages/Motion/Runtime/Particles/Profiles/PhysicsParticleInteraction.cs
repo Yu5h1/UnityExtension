@@ -68,6 +68,19 @@ namespace Yu5h1Lib
             set => _selfCollision = value;
         }
 
+        /// <summary>
+        ///   Changes whenever the profile's values change, so drivers can hand new constraint
+        ///   parameters to their entities while playing (ParticleWorld WORLD-16).
+        /// </summary>
+        public int Version { get; private set; }
+
+        /// <summary>
+        ///   Marks the profile changed after a script edits its constraint materials directly.
+        /// </summary>
+        public void MarkChanged() => Version++;
+
+        protected virtual void OnValidate() => Version++;
+
         public abstract bool Accepts(ParticleLayoutKind kind);
 
         /// <summary>

@@ -38,6 +38,7 @@ namespace Yu5h1Lib
         readonly List<ParticleEntity> _entities = new List<ParticleEntity>();
         readonly List<Vector3> _positions = new List<Vector3>();
         ParticleWorld _bound;
+        int _appliedInteractionVersion;
         bool _active;
         string _lastError;
 
@@ -94,6 +95,12 @@ namespace Yu5h1Lib
         void OnDisable() => DisableDriver();
         void OnDestroy() => DestroyDriver();
 
+        void FixedUpdate()
+        {
+            if (_interaction != null && _interaction.Version != _appliedInteractionVersion)
+                ApplyInteraction();
+        }
+
         internal void EnableDriver()
         {
             _active = true;
@@ -124,6 +131,27 @@ namespace Yu5h1Lib
         /// </summary>
         public Pose SpawnPose(int index) =>
             new Pose(transform.TransformPoint(_batchSpacing * index), transform.rotation);
+
+        /// <summary>
+        ///   Hands the interaction's current constraint parameters to every entity without
+        ///   resetting it (ParticleWorld WORLD-16). Called automatically after the profile changes;
+        ///   an interaction that now builds a different set of constraints is reported and needs a
+        ///   respawn instead.
+        /// </summary>
+        public void ApplyInteraction()
+        {
+            if (_interaction == null || _layout == null)
+                return;
+            _appliedInteractionVersion = _interaction.Version;
+            for (int i = 0; i < _entities.Count; i++)
+            {
+                if (!_entities[i].IsValid)
+                    continue;
+                ParticleEntityRequest request = BuildRequest(_layout, _interaction, i % _layout.VariantCount, SpawnPose(i), 1u << gameObject.layer);
+                if (!_entities[i].SetConstraintParameters(request.constraints, out string error))
+                    Fail($"PhysicsParticle '{name}' could not apply its interaction: {error}");
+            }
+        }
 
         /// <summary>
         ///   Total particles of all <see cref="Count"/> entities as the layout lays them out, or 0
@@ -297,6 +325,7 @@ namespace Yu5h1Lib
                 return;
             }
             uint category = 1u << gameObject.layer;
+            _appliedInteractionVersion = _interaction.Version;
             var requests = new List<ParticleEntityRequest>(_count);
             for (int i = 0; i < _count; i++)
                 requests.Add(BuildRequest(_layout, _interaction, i % _layout.VariantCount, SpawnPose(i), category));

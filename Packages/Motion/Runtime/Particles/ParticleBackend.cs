@@ -16,7 +16,8 @@ namespace Yu5h1Lib
         SetParked,
         SetCategory,
         SetRadius,
-        SetGroup
+        SetGroup,
+        SetConstraints
     }
 
     /// <summary>

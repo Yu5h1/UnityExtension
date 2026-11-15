@@ -72,6 +72,16 @@ namespace Yu5h1Lib
         public void SetRadius(float radius) => _world.SetRadius(this, radius);
         public void SetGroupMode(ParticleGroupMode mode) => _world.SetGroupMode(this, mode);
 
+        /// <summary>
+        ///   Replaces the rest length, compliance, damping and break force of every constraint from
+        ///   the next step on, keeping positions, velocities and broken constraints (ParticleWorld
+        ///   WORLD-16). <paramref name="constraints"/> must list the entity's constraints in order
+        ///   with the same particle pairs; a NaN rest length keeps the current one. Returns false
+        ///   with the reason otherwise.
+        /// </summary>
+        public bool SetConstraintParameters(IReadOnlyList<DistanceConstraintSpec> constraints, out string error) =>
+            _world.SetConstraintParameters(this, constraints, out error);
+
         public bool Equals(ParticleEntity other) =>
             ReferenceEquals(_world, other._world) && _id == other._id && _generation == other._generation;
 

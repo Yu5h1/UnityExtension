@@ -107,7 +107,7 @@ namespace Yu5h1Lib
         {
             "Predict", "ClearAccumulators", "SolveDistance", "SolveContacts", "ApplyAccumulated",
             "CollideShapes", "MatchRigidGroups", "UpdateVelocities", "ClearCells", "InsertCells",
-            "ApplyMedia", "TransformRange", "TransformGroups"
+            "ApplyMedia", "TransformRange", "TransformGroups", "UpdateConstraintParameters"
         };
 
         readonly ComputeShader _shader;
@@ -137,6 +137,7 @@ namespace Yu5h1Lib
         readonly int _cellCount;
         ComputeBuffer _colliders;
         ComputeBuffer _media;
+        ComputeBuffer _constraintStaging;
         GpuCollider[] _colliderData = Array.Empty<GpuCollider>();
         GpuMedium[] _mediumData = Array.Empty<GpuMedium>();
         float _maxRadius;
@@ -192,6 +193,7 @@ namespace Yu5h1Lib
             _particleCell = Create(particles, 16);
             _colliders = Create(1, Marshal.SizeOf<GpuCollider>());
             _media = Create(1, Marshal.SizeOf<GpuMedium>());
+            _constraintStaging = Create(1, Marshal.SizeOf<GpuConstraint>());
             BindAll();
         }
 
@@ -223,6 +225,10 @@ namespace Yu5h1Lib
                         if (_entities.TryGetValue(change.entityId, out Entity parked))
                             parked.parked = change.parked;
                         _listsDirty = true;
+                        break;
+                    case ParticleWorldChangeKind.SetConstraints:
+                        if (_entities.TryGetValue(change.entityId, out Entity tuned))
+                            UpdateConstraintParameters(tuned);
                         break;
                     case ParticleWorldChangeKind.SetCategory:
                     case ParticleWorldChangeKind.SetRadius:
@@ -494,6 +500,40 @@ namespace Yu5h1Lib
             _groups.SetData(groups, 0, entity.rigidGroups.start, groups.Length);
         }
 
+        /// <summary>
+        ///   Copies the entity's current constraint parameters into its slots without touching
+        ///   their broken flags (ParticleWorld WORLD-16).
+        /// </summary>
+        void UpdateConstraintParameters(Entity entity)
+        {
+            int count = entity.constraints.length;
+            if (count == 0)
+                return;
+            var constraints = new GpuConstraint[count];
+            for (int c = 0; c < count; c++)
+            {
+                DistanceConstraintSpec spec = entity.rest.constraints[c];
+                constraints[c] = new GpuConstraint
+                {
+                    a = entity.particles.start + spec.a,
+                    b = entity.particles.start + spec.b,
+                    restLength = spec.restLength,
+                    compliance = spec.compliance,
+                    damping = spec.damping,
+                    breakForce = spec.breakForce
+                };
+            }
+            if (count > _constraintStaging.count)
+            {
+                Replace(ref _constraintStaging, Mathf.NextPowerOfTwo(count), Marshal.SizeOf<GpuConstraint>());
+                BindAll();
+            }
+            _constraintStaging.SetData(constraints);
+            _shader.SetInt("_RangeStart", entity.constraints.start);
+            _shader.SetInt("_RangeCount", count);
+            Dispatch(13, count);
+        }
+
         void WriteMeta(Entity entity)
         {
             int count = entity.particles.length;
@@ -669,6 +709,7 @@ namespace Yu5h1Lib
                 _shader.SetBuffer(kernel, "_CellHead", _cellHead);
                 _shader.SetBuffer(kernel, "_CellNext", _cellNext);
                 _shader.SetBuffer(kernel, "_ParticleCell", _particleCell);
+                _shader.SetBuffer(kernel, "_ConstraintStaging", _constraintStaging);
             }
         }
 

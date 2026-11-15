@@ -73,7 +73,8 @@ ParticleWorld
   - 錨定啟用期間持續固定這些點；停用或取消註冊時放開（EXT-05），反質量恢復成實體配置時的值。
   - 來源實體收起時不處理它的點；實體重設後下一個子步驟重新固定。
   - 編號超出來源粒子數的點被略過並在編輯器報錯，不影響其他點。
-- **證據**：一個 Transform 綁多顆粒子、帶各自偏移的設計來自套件 `Documentation/Plan/PhysicsParticleAnchor.md`。
+  - 布料與繩子的配方不提供固定邊或固定端點：不動的固定點也是錨定到一個不動的 Transform，同一顆粒子只由一種機制固定。
+- **證據**：一個 Transform 綁多顆粒子、帶各自偏移的設計來自套件 `Documentation/Plan/PhysicsParticleAnchor.md`；同一份文件第 5 節記錄了繩子的 fixStart／fixEnd 與錨定同時管同一顆粒子、行為來源難追的問題。
 - **驗證**：PEXT-CHECK-04、06。
 
 ### 抓取（EXT-07）
