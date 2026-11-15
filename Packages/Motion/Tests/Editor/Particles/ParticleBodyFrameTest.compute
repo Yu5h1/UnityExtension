@@ -1,0 +1,25 @@
+// Test kernel for ParticleExtensions PEXT-CHECK-10: evaluates the body frame of each test body
+// with Shaders/ParticleBodyFrame.hlsl so the test can compare it with the expected frame.
+
+#pragma kernel EvaluateFrames
+
+#define PARTICLE_WORLD_READ_ONLY
+#include "Packages/com.yu5h1.motion/Runtime/Particles/Shaders/ParticleWorldData.hlsl"
+#include "Packages/com.yu5h1.motion/Runtime/Particles/Shaders/ParticleBodyFrame.hlsl"
+
+StructuredBuffer<ParticleBody> _TestBodies;
+RWStructuredBuffer<float4> _TestFrames;
+uint _TestCount;
+
+[numthreads(64, 1, 1)]
+void EvaluateFrames(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _TestCount)
+        return;
+    ParticleBody body = _TestBodies[id.x];
+    BodyFrame frame = GetBodyFrame(body, 1u);
+    _TestFrames[id.x * 4u + 0u] = float4(frame.center, 0.0);
+    _TestFrames[id.x * 4u + 1u] = float4(frame.tangent, 0.0);
+    _TestFrames[id.x * 4u + 2u] = float4(frame.side, 0.0);
+    _TestFrames[id.x * 4u + 3u] = BodyColor(body);
+}
