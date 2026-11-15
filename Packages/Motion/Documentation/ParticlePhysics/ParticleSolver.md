@@ -1,10 +1,12 @@
 # ParticleSolver：粒子求解
 
-> 規格版本 1.1.0 · 2026-11-15 · 目標已確認；Motion package 的 GPU 實作已通過全部 22 個案例（第 3 階段）；與 Unified-Solver 的網子下垂與擋魚對照已執行，結果記在 Motion repo 的遷移計畫
+> 規格版本 1.2.0 · 2026-11-15 · 目標已確認；Motion package 的 GPU 實作已通過全部 23 個案例（第 3 階段）；與 Unified-Solver 的網子下垂與擋魚對照已執行，結果記在 Motion repo 的遷移計畫
 >
 > 1.0.1 補上〈來源與致謝〉；1.0.2 補上 32 位元浮點數的精度說明與剛體群旋轉的初值，行為不變。案例檔升為 1.1.0：剛體群案例改以配置姿勢放置，三個案例的起點、子步驟與容差依精度說明調整。
 >
 > 1.1.0 修正 SOLVER-01 的自相矛盾：原文「以步驟開始時的位置建立鄰近結構」與同一條的「結果不得因格子大小而改變」衝突；粒子一步移動超過一格時會漏掉接觸（與 Unified-Solver 對照時，10 m/s 落下的魚有一半粒子嵌進網子）。改為每個子步驟在預測後重建。案例檔升為 1.2.0，新增 PSOLVE-CASE-22。
+>
+> 1.2.0 新增世界設定 contactWeight（使用者 2026-11-15 決定）：與 Unified-Solver 對照時，每對接觸只處理一次讓接觸在平均中的比重只有第三方求解器的一半，20 m/s 的魚會穿過網子。contactWeight 預設 1（行為不變），設 2 等同第三方求解器的雙邊處理。案例檔升為 1.3.0，新增 PSOLVE-CASE-23。
 >
 > 與其他文件的關係：本文件規定粒子的數值行為；粒子怎麼配置、登記、釋放，以及擴充行為掛在哪個階段，由 [ParticleWorld](ParticleWorld.md) 規定。解析解案例在 [ParticleSolverCases.json](ParticleSolverCases.json)，由 [generate_particle_solver_cases.py](generate_particle_solver_cases.py) 依本文件的公式產生。遷移順序與擁有權決定見 Motion repo 的 `Documentation/GpuPhysicsMigrationPlan.md`。
 
@@ -75,6 +77,7 @@ ParticleSolver 是批量粒子的位置式動力學求解：每顆粒子帶位�
 | 重力 gravity | (0, −9.81, 0) | 任意有限向量 |
 | 全域阻尼 damping | 0 | ≥ 0（1/s） |
 | 平均放大係數 sor | 1.0 | 1～2 |
+| 接觸權重 contactWeight | 1.0 | 1～2 |
 | 靜摩擦 μs | 0.4 | ≥ 0 |
 | 動摩擦 μk | 0.2 | ≥ 0 |
 | 最大去穿透速度 maxDepenetrationSpeed | 5 m/s | > 0 |
@@ -127,10 +130,11 @@ ParticleSolver 是批量粒子的位置式動力學求解：每顆粒子帶位�
 
 ### 平均套用（SOLVER-05）
 
-- **規則**：一個子步驟中，距離約束與接觸（含摩擦）的所有修正先對每顆粒子累加總和 Σδ 與計數 count；全部計算完才套用：對 w > 0 且 count > 0 的粒子，x ← x + sor · Σδ / count。
+- **規則**：一個子步驟中，距離約束與接觸（含摩擦）的所有修正先對每顆粒子累加總和 Σδ 與計數 count；全部計算完才套用：對 w > 0 且 count > 0 的粒子，x ← x + sor · Σδ / count。距離約束的修正以權重 1 計入（Σδ 加 δ、count 加 1）；接觸與接觸摩擦以權重 contactWeight 計入（Σδ 加 contactWeight · δ、count 加 contactWeight）。
+- **contactWeight**：預設 1.0。調高時接觸在與約束一起平均時占比較重，網子比較擋得住高速的物體；設 2 等同第三方求解器每對從兩邊各處理一次的結果。
 - **sor**：預設 1.0，此時單一修正剛好補到位；設大於 1 時在多個修正平均後放大。
 - **精度**：累加可用定點數，但解析度不得粗於 1e-5 m；總和不得因累加順序而改變。
-- **驗證**：PSOLVE-CASE-05、06。
+- **驗證**：PSOLVE-CASE-05、06、23。
 
 ### 粒子間接觸（SOLVER-06）
 
@@ -144,7 +148,7 @@ ParticleSolver 是批量粒子的位置式動力學求解：每顆粒子帶位�
   δ_i = +n · s · w_i        δ_j = −n · s · w_j
   ```
 
-  δ_i、δ_j 各計入累加，計數各加 1。w_i + w_j = 0 時略過。
+  δ_i、δ_j 各以權重 contactWeight 計入累加（SOLVER-05）。w_i + w_j = 0 時略過。
 - **驗證**：PSOLVE-CASE-11、12、14。
 
 ### 接觸摩擦（SOLVER-07）
@@ -161,7 +165,7 @@ ParticleSolver 是批量粒子的位置式動力學求解：每顆粒子帶位�
     f_j   = +(Δt / len) · m · w_j / (w_i + w_j)
   ```
 
-  f_i、f_j 各計入累加，計數各加 1。
+  f_i、f_j 各以權重 contactWeight 計入累加（SOLVER-05）。
 - **驗證**：靜摩擦與動摩擦的粒子對粒子案例尚無；碰撞體摩擦由 PSOLVE-CASE-18 驗證同一條 μs／μk 規則。
 
 ### 群組互斥（SOLVER-08）
@@ -282,7 +286,7 @@ len > 1e-7 時：limit = (len < μs·pen) ? len : μk·pen；x ← x − (Δt/le
 | 項目 | 第三方求解器 | 本規格 |
 |---|---|---|
 | 平均套用 | 單一修正也乘 1.5 | sor 預設 1.0，單一修正剛好補到位（SOLVER-05） |
-| 粒子間接觸 | 每對從兩顆粒子各處理一次，修正與計數加倍 | 每對只處理一次（SOLVER-06） |
+| 粒子間接觸 | 每對從兩顆粒子各處理一次，修正與計數加倍 | 每對只處理一次（SOLVER-06）；要相同的接觸比重時設 contactWeight = 2（SOLVER-05） |
 | 斷裂判定 | \|Δλ\| / h | 約束力 \|Δλ\| / h²，單位為牛頓（SOLVER-04） |
 | 已斷約束 | 重新上傳資料時復原 | 保持斷開（SOLVER-04） |
 | 雜湊碰撞 | 同一候選可能被處理多次 | 只處理一次（SOLVER-01） |
@@ -302,8 +306,8 @@ len > 1e-7 時：limit = (len < μs·pen) ? len : μk·pen；x ← x − (Δt/le
 | 預測（SOLVER-02） | 01、03 | — |
 | 距離約束（SOLVER-03） | 05、07、08 | 約束阻尼不為 0 且柔度不為 0 |
 | 約束斷裂（SOLVER-04） | 09、10 | 斷後經資料重新上傳仍斷開（屬 ParticleWorld 平台檢查） |
-| 平均套用（SOLVER-05） | 05、06 | — |
-| 粒子間接觸（SOLVER-06） | 11、12、14、22 | — |
+| 平均套用（SOLVER-05） | 05、06、23 | — |
+| 粒子間接觸（SOLVER-06） | 11、12、14、22、23 | — |
 | 接觸摩擦（SOLVER-07） | — | 粒子對粒子的靜摩擦與動摩擦 |
 | 群組互斥（SOLVER-08） | 13 | — |
 | 地面（SOLVER-09） | 04 | 地面摩擦 |

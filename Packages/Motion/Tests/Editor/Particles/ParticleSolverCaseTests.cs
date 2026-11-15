@@ -36,7 +36,7 @@ namespace Yu5h1Lib.Tests
         }
         [Serializable] sealed class WorldDefinition
         {
-            public float fixedDeltaTime, damping, sor, frictionStatic, frictionKinetic, maxDepenetrationSpeed, groundY;
+            public float fixedDeltaTime, damping, sor, contactWeight, frictionStatic, frictionKinetic, maxDepenetrationSpeed, groundY;
             public int substeps;
             public float[] gravity;
         }
@@ -138,6 +138,7 @@ namespace Yu5h1Lib.Tests
             settings.gravity = V(world.gravity);
             settings.damping = world.damping;
             settings.sor = world.sor;
+            settings.contactWeight = world.contactWeight;
             settings.frictionStatic = world.frictionStatic;
             settings.frictionKinetic = world.frictionKinetic;
             settings.maxDepenetrationSpeed = world.maxDepenetrationSpeed;

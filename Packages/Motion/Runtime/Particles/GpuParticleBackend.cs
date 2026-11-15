@@ -251,6 +251,7 @@ namespace Yu5h1Lib
             _shader.SetVector("_Gravity", settings.gravity);
             _shader.SetFloat("_Damping", settings.damping);
             _shader.SetFloat("_Sor", settings.sor);
+            _shader.SetFloat("_ContactWeight", settings.contactWeight);
             _shader.SetFloat("_FrictionStatic", settings.frictionStatic);
             _shader.SetFloat("_FrictionKinetic", settings.frictionKinetic);
             _shader.SetFloat("_MaxDepenetrationSpeed", settings.maxDepenetrationSpeed);

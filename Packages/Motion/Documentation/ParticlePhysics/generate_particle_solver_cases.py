@@ -9,7 +9,7 @@ def r7(v):
 
 
 def base(**kw):
-    w = dict(fixedDeltaTime=0.01, substeps=1, gravity=[0, 0, 0], damping=0.0, sor=1.0,
+    w = dict(fixedDeltaTime=0.01, substeps=1, gravity=[0, 0, 0], damping=0.0, sor=1.0, contactWeight=1.0,
              frictionStatic=0.4, frictionKinetic=0.2, maxDepenetrationSpeed=5.0, groundY=-1000.0)
     w.update(kw)
     return w
@@ -214,8 +214,18 @@ add(id="PSOLVE-CASE-22", name="快速相向的粒子在步驟中途接觸", cove
                              dict(index=1, position=r7([xb, 0, 0]), velocity=r7([vb, 0, 0]))]),
     tolerance=TOL_DELTA)
 
+wc = 2.0
+xb = (wc * 0.05 - 0.05) / (wc + 1)
+add(id="PSOLVE-CASE-23", name="接觸權重", covers=["SOLVER-05", "SOLVER-06"],
+    world=base(contactWeight=wc),
+    particles=[P((-0.3, 0, 0), invMass=0.0), P((0, 0, 0)), P((-0.15, 0, 0), invMass=0.0)],
+    constraints=[con(a=0, b=1, restLength=0.25)], steps=1,
+    derivation="A、C 釘住，B 在原點。A–B 約束靜止長度 0.25、目前 0.3，給 B δ = −0.05（拉向 A）；C–B 相距 0.15 < 0.2，穿透 0.05，給 B δ = +0.05（推離 C）。A–C 兩者都釘住，略過。contactWeight = 2 時 Σδ = 2·0.05 − 0.05 = 0.05，count = 1 + 2 = 3，x_B = 0.05/3，v = x_B/0.01。contactWeight = 1 時兩者抵消，B 不動。",
+    expected=dict(particles=[dict(index=1, position=r7([xb, 0, 0]), velocity=r7([xb / 0.01, 0, 0]))]),
+    tolerance=TOL_DELTA)
+
 doc = dict(
-    schema="yu5h1.motion.particle-solver-cases", version="1.2.0", spec="ParticleSolver 1.1.0",
+    schema="yu5h1.motion.particle-solver-cases", version="1.3.0", spec="ParticleSolver 1.2.0",
     units=dict(length="m", time="s", mass="kg"),
     comparison="只比對 expected 列出的欄位，逐分量絕對誤差不得超過該案例的 tolerance。steps 是固定步數，每步 fixedDeltaTime 秒、substeps 個子步驟。未列出的世界設定採 ParticleSolver 預設值。media 在步後階段依列出順序作用。collider 的 linearVelocity 表示每步開始時姿勢依此速度平移、表面速度等於該速度。constraints 的 restLength 為明確指定的靜止長度。32 位元浮點數下由 (x − p)/h 重建的速度誤差約為 ulp(|x|)/h，案例的起點、子步驟與容差依此設定。particles 的 position 是實體本地座標；有 pose 的案例以 pose（position 與 [w,x,y,z] rotation）放置，沒有 pose 時即世界座標。rigidGroups 的 particles 是群組成員索引，靜止形狀取自粒子本地位置。",
     cases=cases)

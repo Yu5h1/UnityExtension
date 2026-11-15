@@ -21,6 +21,7 @@
 
 #define THREADS 64
 #define FIXED_SCALE 100000.0
+#define COUNT_SCALE 1024.0
 #define SHAPE_SPHERE 0
 #define SHAPE_CAPSULE 1
 #define SHAPE_BOX 2
@@ -114,6 +115,7 @@ float _StepTime;
 float3 _Gravity;
 float _Damping;
 float _Sor;
+float _ContactWeight;
 float _FrictionStatic;
 float _FrictionKinetic;
 float _MaxDepenetrationSpeed;
@@ -125,13 +127,13 @@ float4x4 _RangeTransform;
 float4 _RangeRotation;
 float3 _RangeVelocity;
 
-void Accumulate(uint index, float3 delta)
+void Accumulate(uint index, float3 delta, float weight)
 {
     int ignored;
-    InterlockedAdd(_Accumulated[index * 3 + 0], (int)round(delta.x * FIXED_SCALE), ignored);
-    InterlockedAdd(_Accumulated[index * 3 + 1], (int)round(delta.y * FIXED_SCALE), ignored);
-    InterlockedAdd(_Accumulated[index * 3 + 2], (int)round(delta.z * FIXED_SCALE), ignored);
-    InterlockedAdd(_AccumulatedCount[index], 1, ignored);
+    InterlockedAdd(_Accumulated[index * 3 + 0], (int)round(delta.x * weight * FIXED_SCALE), ignored);
+    InterlockedAdd(_Accumulated[index * 3 + 1], (int)round(delta.y * weight * FIXED_SCALE), ignored);
+    InterlockedAdd(_Accumulated[index * 3 + 2], (int)round(delta.z * weight * FIXED_SCALE), ignored);
+    InterlockedAdd(_AccumulatedCount[index], (int)round(weight * COUNT_SCALE), ignored);
 }
 
 float4 QuaternionMultiply(float4 a, float4 b)
@@ -220,8 +222,8 @@ void SolveDistance(uint3 id : SV_DispatchThreadID)
         _Constraints[index].broken = 1u;
         return;
     }
-    Accumulate((uint)c.a, -a.w * deltaLambda * n);
-    Accumulate((uint)c.b, b.w * deltaLambda * n);
+    Accumulate((uint)c.a, -a.w * deltaLambda * n, 1.0);
+    Accumulate((uint)c.b, b.w * deltaLambda * n, 1.0);
 }
 
 [numthreads(THREADS, 1, 1)]
@@ -262,8 +264,8 @@ void Contact(uint i, uint j, float4 pi, Meta mi)
     float penetration = min(reach - dist, _MaxDepenetrationSpeed * _Substep);
     float3 n = d / dist;
     float s = penetration / weightSum;
-    Accumulate(i, n * s * pi.w);
-    Accumulate(j, -n * s * pj.w);
+    Accumulate(i, n * s * pi.w, _ContactWeight);
+    Accumulate(j, -n * s * pj.w, _ContactWeight);
 
     float3 relative = (pi.xyz - _Previous[i].xyz) - (pj.xyz - _Previous[j].xyz);
     float3 tangent = relative - dot(relative, n) * n;
@@ -272,8 +274,8 @@ void Contact(uint i, uint j, float4 pi, Meta mi)
         return;
     float limit = slide < _FrictionStatic * penetration ? slide : _FrictionKinetic * penetration;
     float3 friction = (tangent / slide) * min(slide, limit);
-    Accumulate(i, -friction * pi.w / weightSum);
-    Accumulate(j, friction * pj.w / weightSum);
+    Accumulate(i, -friction * pi.w / weightSum, _ContactWeight);
+    Accumulate(j, friction * pj.w / weightSum, _ContactWeight);
 }
 
 [numthreads(THREADS, 1, 1)]
@@ -307,7 +309,7 @@ void ApplyAccumulated(uint3 id : SV_DispatchThreadID)
     if (position.w == 0.0 || count == 0)
         return;
     float3 sum = float3(_Accumulated[i * 3 + 0], _Accumulated[i * 3 + 1], _Accumulated[i * 3 + 2]) / FIXED_SCALE;
-    _Position[i] = float4(position.xyz + _Sor * sum / count, position.w);
+    _Position[i] = float4(position.xyz + _Sor * sum * COUNT_SCALE / count, position.w);
 }
 
 void PushOut(inout float3 x, inout float3 previous, float3 closest, float3 n, float penetration, float radius, float3 surfaceVelocity)

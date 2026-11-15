@@ -5,7 +5,7 @@ namespace Yu5h1Lib
 {
     /// <summary>
     ///   World-wide numerical settings of the particle solver, with the defaults and ranges of
-    ///   ParticleSolver 1.0.0 (Packages/Motion/Documentation/ParticlePhysics/ParticleSolver.md).
+    ///   ParticleSolver 1.2.0 (Packages/Motion/Documentation/ParticlePhysics/ParticleSolver.md).
     /// </summary>
     [Serializable]
     public sealed class ParticleSolverSettings
@@ -17,6 +17,9 @@ namespace Yu5h1Lib
         public float damping = 0f;
         [Range(1f, 2f)]
         public float sor = 1f;
+        [Range(1f, 2f)]
+        [Tooltip("Weight of particle contacts against distance constraints when corrections are averaged (ParticleSolver SOLVER-05).")]
+        public float contactWeight = 1f;
         [Min(0f)]
         public float frictionStatic = 0.4f;
         [Min(0f)]
@@ -41,6 +44,8 @@ namespace Yu5h1Lib
                 error = "damping must be a finite value of at least 0.";
             else if (!(sor >= 1f && sor <= 2f))
                 error = "sor must be between 1 and 2.";
+            else if (!(contactWeight >= 1f && contactWeight <= 2f))
+                error = "contactWeight must be between 1 and 2.";
             else if (!(frictionStatic >= 0f) || !(frictionKinetic >= 0f))
                 error = "friction coefficients must be at least 0.";
             else if (!(maxDepenetrationSpeed > 0f) || float.IsInfinity(maxDepenetrationSpeed))
