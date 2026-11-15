@@ -10,12 +10,13 @@ using UnityEngine.TestTools;
 namespace Yu5h1Lib.Tests
 {
     /// <summary>
-    ///   Platform checks PEXT-CHECK-01 to 07 of ParticleExtensions 1.0.0 on the GPU backend.
+    ///   Platform checks PEXT-CHECK-01 to 08 of ParticleExtensions 1.1.0 on the GPU backend.
     /// </summary>
     public sealed class ParticleExtensionTests
     {
         const float Dt = 0.02f;
         const string PlatePath = "Packages/com.yu5h1.motion/Tests/Editor/Particles/ParticleExtensionTestPlate.compute";
+        const string RigidPath = "Packages/com.yu5h1.motion/Tests/Editor/Particles/ParticleExtensionTestRigid.compute";
 
         sealed class RecordingExtension : IParticleExtension
         {
@@ -384,6 +385,80 @@ namespace Yu5h1Lib.Tests
             Assert.AreEqual(1, results.Count);
             Assert.AreEqual(4, results[0].Count, "Expected the four neighbours within 0.11 m, without the anchored centre.");
             Assert.AreEqual(grabStep, results[0].Step);
+        }
+
+        [Test]
+        public void Check08_RigidPosesComposedOnTheGpuMatchTheSimulation()
+        {
+            var shader = AssetDatabase.LoadAssetAtPath<ComputeShader>(RigidPath);
+            Assert.IsNotNull(shader, RigidPath);
+            ParticleWorld world = World(substeps: 4);
+            var request = new ParticleEntityRequest
+            {
+                groupMode = ParticleGroupMode.NewGroup,
+                pose = new Pose(new Vector3(0.3f, 0.2f, -0.1f), Quaternion.Euler(20f, 35f, 10f))
+            };
+            Vector3[] corners =
+            {
+                new Vector3(0f, 0f, 0f), new Vector3(0.2f, 0f, 0f), new Vector3(0f, 0.1f, 0f), new Vector3(0f, 0f, 0.3f)
+            };
+            float[] invMasses = { 1f, 0.5f, 2f, 1f };
+            Vector3 spin = new Vector3(0f, 3f, 1f);
+            for (int i = 0; i < corners.Length; i++)
+                request.particles.Add(new ParticleSpawn
+                {
+                    position = corners[i],
+                    velocity = Vector3.Cross(spin, corners[i]) + new Vector3(0.5f, 0f, 0f),
+                    invMass = invMasses[i],
+                    radius = 0.01f
+                });
+            request.rigidGroups.Add(new[] { 0, 1, 2, 3 });
+            Assert.IsTrue(world.TryAllocate(request, out ParticleEntity entity, out string error), error);
+            for (int step = 0; step < 20; step++)
+                world.Step(Dt);
+            Vector3[] simulated = Read(world, entity).Positions;
+
+            int count = corners.Length;
+            Vector3 centre = entity.RigidGroupRestCentroid(0);
+            var groups = new ComputeBuffer(count, sizeof(uint));
+            var rest = new ComputeBuffer(count, 16);
+            var centres = new ComputeBuffer(count, 16);
+            var points = new ComputeBuffer(count, 16);
+            var matrices = new ComputeBuffer(count, 16);
+            try
+            {
+                groups.SetData(Enumerable.Repeat((uint)entity.RigidGroups.start, count).ToArray());
+                rest.SetData(corners.Select(c => (Vector4)c).ToArray());
+                centres.SetData(Enumerable.Repeat((Vector4)centre, count).ToArray());
+                int kernel = shader.FindKernel("PoseMembers");
+                Assert.IsTrue(world.TryBind(shader, kernel));
+                shader.SetBuffer(kernel, "_TestGroup", groups);
+                shader.SetBuffer(kernel, "_TestRest", rest);
+                shader.SetBuffer(kernel, "_TestCentre", centres);
+                shader.SetBuffer(kernel, "_TestPoint", points);
+                shader.SetBuffer(kernel, "_TestMatrix", matrices);
+                shader.SetInt("_TestCount", count);
+                ParticleExtensionContext.Dispatch(shader, kernel, count);
+                Vector4[] posed = null, transformed = null;
+                AsyncGPUReadback.Request(points, r => posed = r.GetData<Vector4>().ToArray());
+                AsyncGPUReadback.Request(matrices, r => transformed = r.GetData<Vector4>().ToArray());
+                AsyncGPUReadback.WaitAllRequests();
+                for (int i = 0; i < count; i++)
+                {
+                    AreClose(simulated[i], posed[i], 1e-5f, $"member {i} from RigidGroupPoint");
+                    AreClose(simulated[i], transformed[i], 1e-5f, $"member {i} from RigidGroupMatrix");
+                }
+                Assert.That(Vector3.Distance(simulated[0], request.pose.position), Is.GreaterThan(0.1f), "The fragment did not move.");
+                Assert.IsTrue(world.TryBind(new MaterialPropertyBlock()));
+            }
+            finally
+            {
+                groups.Release();
+                rest.Release();
+                centres.Release();
+                points.Release();
+                matrices.Release();
+            }
         }
     }
 }

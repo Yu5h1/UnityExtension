@@ -8,6 +8,8 @@ namespace Yu5h1Lib
     internal interface IParticleDataBinder
     {
         void Bind(ComputeShader shader, int kernel);
+
+        void Bind(MaterialPropertyBlock block);
     }
 
     /// <summary>

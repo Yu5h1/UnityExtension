@@ -297,6 +297,19 @@ namespace Yu5h1Lib
             return true;
         }
 
+        /// <summary>
+        ///   Binds this world's particle and rigid-group buffers to <paramref name="block"/> for a
+        ///   shader that draws straight from the simulation, including rigid fragments posed on the
+        ///   GPU. Returns false when the world has no GPU data (ParticleExtensions EXT-08).
+        /// </summary>
+        public bool TryBind(MaterialPropertyBlock block)
+        {
+            if (_destroyed || block == null || !(Backend is IParticleDataBinder binder))
+                return false;
+            binder.Bind(block);
+            return true;
+        }
+
         void ApplyExtensionChanges()
         {
             if (_extensionChanges.Count == 0)

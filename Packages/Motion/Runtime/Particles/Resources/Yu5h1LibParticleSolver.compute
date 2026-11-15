@@ -42,15 +42,6 @@ struct Constraint
     uint padding;
 };
 
-struct RigidGroup
-{
-    uint memberStart;
-    uint memberCount;
-    uint padding0;
-    uint padding1;
-    float4 rotation;
-    float4 massCenter;
-};
 
 struct Collider
 {
@@ -85,7 +76,7 @@ RWStructuredBuffer<int> _AccumulatedCount;
 StructuredBuffer<uint> _ActiveConstraints;
 StructuredBuffer<uint> _ActiveGroups;
 RWStructuredBuffer<Constraint> _Constraints;
-RWStructuredBuffer<RigidGroup> _Groups;
+RWStructuredBuffer<ParticleRigidGroup> _Groups;
 StructuredBuffer<uint> _GroupMembers;
 StructuredBuffer<float4> _GroupOffsets;
 StructuredBuffer<Collider> _Colliders;
@@ -433,7 +424,7 @@ void MatchRigidGroups(uint3 id : SV_DispatchThreadID)
     if (id.x >= _ActiveGroupCount)
         return;
     uint g = _ActiveGroups[id.x];
-    RigidGroup group = _Groups[g];
+    ParticleRigidGroup group = _Groups[g];
     float totalMass = 0.0;
     float3 massCenter = float3(0.0, 0.0, 0.0);
     for (uint m = 0u; m < group.memberCount; m++)
@@ -545,7 +536,7 @@ void TransformGroups(uint3 id : SV_DispatchThreadID)
     if (id.x >= _RangeCount)
         return;
     uint g = _RangeStart + id.x;
-    RigidGroup group = _Groups[g];
+    ParticleRigidGroup group = _Groups[g];
     _Groups[g].rotation = normalize(QuaternionMultiply(_RangeRotation, group.rotation));
     _Groups[g].massCenter = float4(mul(_RangeTransform, float4(group.massCenter.xyz, 1.0)).xyz, 0.0);
 }

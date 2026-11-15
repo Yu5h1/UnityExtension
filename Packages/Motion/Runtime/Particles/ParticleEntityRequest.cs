@@ -103,6 +103,28 @@ namespace Yu5h1Lib
             return true;
         }
 
+        /// <summary>
+        ///   Mass-weighted centre of rigid group <paramref name="group"/>'s rest positions in the
+        ///   entity's local frame; the plain average when every member is pinned. A drawn fragment
+        ///   places its mesh relative to this point (ParticleExtensions EXT-08).
+        /// </summary>
+        public Vector3 RigidGroupCentroid(int group)
+        {
+            int[] members = rigidGroups[group];
+            float totalMass = 0f;
+            Vector3 weighted = Vector3.zero;
+            Vector3 plain = Vector3.zero;
+            foreach (int index in members)
+            {
+                float invMass = particles[index].invMass;
+                float mass = invMass > 0f ? 1f / invMass : 0f;
+                totalMass += mass;
+                weighted += mass * particles[index].position;
+                plain += particles[index].position;
+            }
+            return totalMass > 0f ? weighted / totalMass : plain / members.Length;
+        }
+
         static bool Fail(string message, out string error)
         {
             error = message;

@@ -1,0 +1,26 @@
+// Test kernel for ParticleExtensions PEXT-CHECK-08: poses rigid-group members on the GPU with the
+// drawing helpers, so the test can compare them with the simulated particle positions.
+
+#pragma kernel PoseMembers
+
+#define PARTICLE_WORLD_READ_ONLY
+#include "Packages/com.yu5h1.motion/Runtime/Particles/Shaders/ParticleWorldData.hlsl"
+
+StructuredBuffer<uint> _TestGroup;
+StructuredBuffer<float4> _TestRest;
+StructuredBuffer<float4> _TestCentre;
+RWStructuredBuffer<float4> _TestPoint;
+RWStructuredBuffer<float4> _TestMatrix;
+uint _TestCount;
+
+[numthreads(64, 1, 1)]
+void PoseMembers(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _TestCount)
+        return;
+    uint g = _TestGroup[id.x];
+    float3 rest = _TestRest[id.x].xyz;
+    float3 centre = _TestCentre[id.x].xyz;
+    _TestPoint[id.x] = float4(RigidGroupPoint(g, rest - centre), 0.0);
+    _TestMatrix[id.x] = float4(mul(RigidGroupMatrix(g, centre), float4(rest, 1.0)).xyz, 0.0);
+}

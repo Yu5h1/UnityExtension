@@ -27,6 +27,7 @@ namespace Yu5h1Lib
         static readonly int MetaId = Shader.PropertyToID("_Meta");
         static readonly int ActiveParticlesId = Shader.PropertyToID("_ActiveParticles");
         static readonly int ActiveParticleCountId = Shader.PropertyToID("_ActiveParticleCount");
+        static readonly int GroupsId = Shader.PropertyToID("_Groups");
 
         [StructLayout(LayoutKind.Sequential)]
         struct GpuMeta
@@ -304,7 +305,21 @@ namespace Yu5h1Lib
             shader.SetBuffer(kernel, VelocityId, _velocity);
             shader.SetBuffer(kernel, MetaId, _meta);
             shader.SetBuffer(kernel, ActiveParticlesId, _activeParticleBuffer);
+            shader.SetBuffer(kernel, GroupsId, _groups);
             shader.SetInt(ActiveParticleCountId, _activeParticles.Count);
+        }
+
+        public void Bind(MaterialPropertyBlock block)
+        {
+            if (_disposed)
+                return;
+            block.SetBuffer(PositionId, _position);
+            block.SetBuffer(PreviousId, _previous);
+            block.SetBuffer(VelocityId, _velocity);
+            block.SetBuffer(MetaId, _meta);
+            block.SetBuffer(ActiveParticlesId, _activeParticleBuffer);
+            block.SetBuffer(GroupsId, _groups);
+            block.SetInt(ActiveParticleCountId, _activeParticles.Count);
         }
 
         public void RequestReadback(
@@ -464,17 +479,7 @@ namespace Yu5h1Lib
             for (int g = 0; g < groups.Length; g++)
             {
                 int[] indices = rest.rigidGroups[g];
-                float totalMass = 0f;
-                Vector3 centroid = Vector3.zero;
-                foreach (int index in indices)
-                {
-                    float invMass = rest.particles[index].invMass;
-                    float mass = invMass > 0f ? 1f / invMass : 0f;
-                    totalMass += mass;
-                    centroid += mass * rest.particles[index].position;
-                }
-                if (totalMass > 0f)
-                    centroid /= totalMass;
+                Vector3 centroid = rest.RigidGroupCentroid(g);
                 if (writeMembers && hasMembers)
                     for (int m = 0; m < indices.Length; m++)
                     {

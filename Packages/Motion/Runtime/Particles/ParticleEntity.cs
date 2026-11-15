@@ -49,6 +49,18 @@ namespace Yu5h1Lib
         /// </summary>
         public IReadOnlyList<ParticleSpawn> RestParticles => _world.RecordOf(this).rest.particles;
 
+        /// <summary>
+        ///   Members of each rigid group as particle indices inside the entity, indexed like
+        ///   <see cref="RigidGroups"/>.
+        /// </summary>
+        public IReadOnlyList<int[]> RestRigidGroups => _world.RecordOf(this).rest.rigidGroups;
+
+        /// <summary>
+        ///   Rest centre of rigid group <paramref name="group"/> (an index inside the entity) in the
+        ///   entity's local frame; see <see cref="ParticleEntityRequest.RigidGroupCentroid"/>.
+        /// </summary>
+        public Vector3 RigidGroupRestCentroid(int group) => _world.RecordOf(this).rest.RigidGroupCentroid(group);
+
         public void Release()
         {
             if (_world != null)
