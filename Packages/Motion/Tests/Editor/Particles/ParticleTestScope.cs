@@ -117,10 +117,16 @@ namespace Yu5h1Lib.Tests
                 applied.Add(change.kind);
         }
 
-        public void Step(float deltaTime, ParticleSolverSettings settings, IReadOnlyList<ParticleColliderState> colliders, int activeParticleCount)
+        public void Step(float deltaTime, ParticleSolverSettings settings, IReadOnlyList<ParticleColliderState> colliders, IReadOnlyList<ParticleMedium> media, int activeParticleCount)
         {
             steppedActiveCounts.Add(activeParticleCount);
             colliderCountAtLastStep = colliders.Count;
+        }
+
+        public void RequestReadback(RangeInt particles, RangeInt constraints, RangeInt rigidGroups, ParticleReadback readback, Action<ParticleReadback> onComplete)
+        {
+            readback.Error = "Recording backend holds no state.";
+            onComplete?.Invoke(readback);
         }
 
         public void Dispose() => disposed = true;

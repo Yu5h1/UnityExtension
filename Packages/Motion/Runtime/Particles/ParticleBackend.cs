@@ -54,6 +54,18 @@ namespace Yu5h1Lib
             float deltaTime,
             ParticleSolverSettings settings,
             IReadOnlyList<ParticleColliderState> colliders,
+            IReadOnlyList<ParticleMedium> media,
             int activeParticleCount);
+
+        /// <summary>
+        ///   Reads the given slots asynchronously and fills <paramref name="readback"/> before
+        ///   invoking <paramref name="onComplete"/>.
+        /// </summary>
+        void RequestReadback(
+            RangeInt particles,
+            RangeInt constraints,
+            RangeInt rigidGroups,
+            ParticleReadback readback,
+            Action<ParticleReadback> onComplete);
     }
 }

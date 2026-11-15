@@ -24,6 +24,8 @@ namespace Yu5h1Lib
         [Min(0.0001f)]
         public float maxDepenetrationSpeed = 5f;
         public float groundY = 0f;
+        [Tooltip("Particle categories the ground plane pushes (ParticleSolver SOLVER-13).")]
+        public uint groundMask = uint.MaxValue;
 
         /// <summary>
         ///   Returns false and the first violated rule when a value is outside its specified range.

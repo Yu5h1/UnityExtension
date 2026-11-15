@@ -1,0 +1,574 @@
+// GPU implementation of ParticleSolver 1.0.1
+// (Packages/Motion/Documentation/ParticlePhysics/ParticleSolver.md), written from that
+// specification. Every particle kernel walks a compact list of active particles, so parked,
+// sleeping and released slots are never processed (ParticleWorld WORLD-10). Corrections from
+// dist constraints and contacts accumulate as fixed-point integers with a resolution of
+// 1e-5 m, which makes their sums independent of thread order (SOLVER-05).
+
+#pragma kernel Predict
+#pragma kernel ClearAccumulators
+#pragma kernel SolveDistance
+#pragma kernel SolveContacts
+#pragma kernel ApplyAccumulated
+#pragma kernel CollideShapes
+#pragma kernel MatchRigidGroups
+#pragma kernel UpdateVelocities
+#pragma kernel ClearCells
+#pragma kernel InsertCells
+#pragma kernel ApplyMedia
+#pragma kernel TransformRange
+#pragma kernel TransformGroups
+
+#define THREADS 64
+#define FIXED_SCALE 100000.0
+#define SHAPE_SPHERE 0
+#define SHAPE_CAPSULE 1
+#define SHAPE_BOX 2
+
+struct Meta
+{
+    uint group;
+    uint category;
+    uint flags;
+    float radius;
+};
+
+struct Constraint
+{
+    int a;
+    int b;
+    float restLength;
+    float compliance;
+    float damping;
+    float breakForce;
+    uint broken;
+    uint padding;
+};
+
+struct RigidGroup
+{
+    uint memberStart;
+    uint memberCount;
+    uint padding0;
+    uint padding1;
+    float4 rotation;
+    float4 massCenter;
+};
+
+struct Collider
+{
+    uint shape;
+    uint mask;
+    uint padding0;
+    uint padding1;
+    float4 center;
+    float4 pointA;
+    float4 pointB;
+    float4 halfExtents;
+    float4 axisX;
+    float4 axisY;
+    float4 axisZ;
+    float4 linearVelocity;
+    float4 angularVelocity;
+};
+
+struct Medium
+{
+    float4 center;
+    float4 halfExtents;
+    float4 axisX;
+    float4 axisY;
+    float4 axisZ;
+    float4 flow;
+    float4 parameters;
+};
+
+RWStructuredBuffer<float4> _Position;
+RWStructuredBuffer<float4> _Previous;
+RWStructuredBuffer<float4> _Velocity;
+StructuredBuffer<Meta> _Meta;
+RWStructuredBuffer<int> _Accumulated;
+RWStructuredBuffer<int> _AccumulatedCount;
+StructuredBuffer<uint> _ActiveParticles;
+StructuredBuffer<uint> _ActiveConstraints;
+StructuredBuffer<uint> _ActiveGroups;
+RWStructuredBuffer<Constraint> _Constraints;
+RWStructuredBuffer<RigidGroup> _Groups;
+StructuredBuffer<uint> _GroupMembers;
+StructuredBuffer<float4> _GroupOffsets;
+StructuredBuffer<Collider> _Colliders;
+StructuredBuffer<Medium> _Media;
+RWStructuredBuffer<int> _CellHead;
+RWStructuredBuffer<int> _CellNext;
+RWStructuredBuffer<int4> _ParticleCell;
+
+uint _ActiveParticleCount;
+uint _ActiveConstraintCount;
+uint _ActiveGroupCount;
+uint _ColliderCount;
+uint _MediumCount;
+uint _CellCount;
+float _CellSize;
+float _Substep;
+float _StepTime;
+float3 _Gravity;
+float _Damping;
+float _Sor;
+float _FrictionStatic;
+float _FrictionKinetic;
+float _MaxDepenetrationSpeed;
+float _GroundY;
+uint _GroundMask;
+uint _RangeStart;
+uint _RangeCount;
+float4x4 _RangeTransform;
+float4 _RangeRotation;
+float3 _RangeVelocity;
+
+void Accumulate(uint index, float3 delta)
+{
+    int ignored;
+    InterlockedAdd(_Accumulated[index * 3 + 0], (int)round(delta.x * FIXED_SCALE), ignored);
+    InterlockedAdd(_Accumulated[index * 3 + 1], (int)round(delta.y * FIXED_SCALE), ignored);
+    InterlockedAdd(_Accumulated[index * 3 + 2], (int)round(delta.z * FIXED_SCALE), ignored);
+    InterlockedAdd(_AccumulatedCount[index], 1, ignored);
+}
+
+float4 QuaternionMultiply(float4 a, float4 b)
+{
+    return float4(
+        a.w * b.xyz + b.w * a.xyz + cross(a.xyz, b.xyz),
+        a.w * b.w - dot(a.xyz, b.xyz));
+}
+
+float3 Rotate(float4 q, float3 v)
+{
+    float3 t = 2.0 * cross(q.xyz, v);
+    return v + q.w * t + cross(q.xyz, t);
+}
+
+float4 AxisAngle(float3 axis, float angle)
+{
+    float halfAngle = 0.5 * angle;
+    return float4(axis * sin(halfAngle), cos(halfAngle));
+}
+
+int3 CellOf(float3 position)
+{
+    return (int3)floor(position / _CellSize);
+}
+
+uint CellHash(int3 cell)
+{
+    return (((uint)cell.x * 73856093u) ^ ((uint)cell.y * 19349663u) ^ ((uint)cell.z * 83492791u)) % _CellCount;
+}
+
+[numthreads(THREADS, 1, 1)]
+void Predict(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ActiveParticleCount)
+        return;
+    uint i = _ActiveParticles[id.x];
+    float4 position = _Position[i];
+    if (position.w == 0.0)
+        return;
+    float3 velocity = _Velocity[i].xyz + _Substep * _Gravity;
+    _Previous[i] = float4(position.xyz, 0.0);
+    _Velocity[i] = float4(velocity, 0.0);
+    _Position[i] = float4(position.xyz + _Substep * velocity, position.w);
+}
+
+[numthreads(THREADS, 1, 1)]
+void ClearAccumulators(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ActiveParticleCount)
+        return;
+    uint i = _ActiveParticles[id.x];
+    _Accumulated[i * 3 + 0] = 0;
+    _Accumulated[i * 3 + 1] = 0;
+    _Accumulated[i * 3 + 2] = 0;
+    _AccumulatedCount[i] = 0;
+}
+
+[numthreads(THREADS, 1, 1)]
+void SolveDistance(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ActiveConstraintCount)
+        return;
+    uint index = _ActiveConstraints[id.x];
+    Constraint c = _Constraints[index];
+    if (c.broken != 0u)
+        return;
+    float4 a = _Position[c.a];
+    float4 b = _Position[c.b];
+    float weightSum = a.w + b.w;
+    if (weightSum <= 0.0)
+        return;
+    float3 d = b.xyz - a.xyz;
+    float dist = length(d);
+    if (dist < 1e-7)
+        return;
+    float3 n = d / dist;
+    float h = _Substep;
+    float alpha = c.compliance / (h * h);
+    float gamma = c.compliance * c.damping / h;
+    float3 relative = (b.xyz - _Previous[c.b].xyz) - (a.xyz - _Previous[c.a].xyz);
+    float deltaLambda = (-(dist - c.restLength) - gamma * dot(n, relative))
+        / ((1.0 + gamma) * weightSum + alpha);
+    if (c.breakForce > 0.0 && abs(deltaLambda) / (h * h) > c.breakForce)
+    {
+        _Constraints[index].broken = 1u;
+        return;
+    }
+    Accumulate((uint)c.a, -a.w * deltaLambda * n);
+    Accumulate((uint)c.b, b.w * deltaLambda * n);
+}
+
+[numthreads(THREADS, 1, 1)]
+void ClearCells(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x < _CellCount)
+        _CellHead[id.x] = -1;
+}
+
+[numthreads(THREADS, 1, 1)]
+void InsertCells(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ActiveParticleCount)
+        return;
+    uint i = _ActiveParticles[id.x];
+    int3 cell = CellOf(_Position[i].xyz);
+    int previousHead;
+    InterlockedExchange(_CellHead[CellHash(cell)], (int)i, previousHead);
+    _CellNext[i] = previousHead;
+    _ParticleCell[i] = int4(cell, 0);
+}
+
+void Contact(uint i, uint j, float4 pi, Meta mi)
+{
+    Meta mj = _Meta[j];
+    if (mi.group != 0u && mi.group == mj.group)
+        return;
+    float4 pj = _Position[j];
+    float weightSum = pi.w + pj.w;
+    if (weightSum <= 0.0)
+        return;
+    float3 d = pi.xyz - pj.xyz;
+    float distSquared = dot(d, d);
+    float reach = mi.radius + mj.radius;
+    if (!(distSquared < reach * reach && distSquared > 1e-10))
+        return;
+    float dist = sqrt(distSquared);
+    float penetration = min(reach - dist, _MaxDepenetrationSpeed * _Substep);
+    float3 n = d / dist;
+    float s = penetration / weightSum;
+    Accumulate(i, n * s * pi.w);
+    Accumulate(j, -n * s * pj.w);
+
+    float3 relative = (pi.xyz - _Previous[i].xyz) - (pj.xyz - _Previous[j].xyz);
+    float3 tangent = relative - dot(relative, n) * n;
+    float slide = length(tangent);
+    if (slide <= 1e-7)
+        return;
+    float limit = slide < _FrictionStatic * penetration ? slide : _FrictionKinetic * penetration;
+    float3 friction = (tangent / slide) * min(slide, limit);
+    Accumulate(i, -friction * pi.w / weightSum);
+    Accumulate(j, friction * pj.w / weightSum);
+}
+
+[numthreads(THREADS, 1, 1)]
+void SolveContacts(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ActiveParticleCount)
+        return;
+    uint i = _ActiveParticles[id.x];
+    float4 pi = _Position[i];
+    Meta mi = _Meta[i];
+    int3 cell = CellOf(pi.xyz);
+    [loop]
+    for (uint c = 0u; c < 27u; c++)
+    {
+        int3 neighbour = cell + int3((int)(c % 3u), (int)((c / 3u) % 3u), (int)(c / 9u)) - 1;
+        [loop]
+        for (int j = _CellHead[CellHash(neighbour)]; j != -1; j = _CellNext[j])
+            if ((uint)j > i && all(_ParticleCell[j].xyz == neighbour))
+                Contact(i, (uint)j, pi, mi);
+    }
+}
+
+[numthreads(THREADS, 1, 1)]
+void ApplyAccumulated(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ActiveParticleCount)
+        return;
+    uint i = _ActiveParticles[id.x];
+    float4 position = _Position[i];
+    int count = _AccumulatedCount[i];
+    if (position.w == 0.0 || count == 0)
+        return;
+    float3 sum = float3(_Accumulated[i * 3 + 0], _Accumulated[i * 3 + 1], _Accumulated[i * 3 + 2]) / FIXED_SCALE;
+    _Position[i] = float4(position.xyz + _Sor * sum / count, position.w);
+}
+
+void PushOut(inout float3 x, inout float3 previous, float3 closest, float3 n, float penetration, float radius, float3 surfaceVelocity)
+{
+    float3 moved = x - previous;
+    x = closest + n * radius;
+    float projection = dot(previous - closest, n);
+    if (projection < radius)
+        previous += (radius - projection) * n;
+    float3 relative = moved - surfaceVelocity * _Substep;
+    float3 tangent = relative - dot(relative, n) * n;
+    float slide = length(tangent);
+    if (slide <= 1e-7)
+        return;
+    float limit = slide < _FrictionStatic * penetration ? slide : _FrictionKinetic * penetration;
+    x -= (tangent / slide) * min(slide, limit);
+}
+
+bool RoundContact(float3 x, float3 center, float shapeRadius, float radius, out float3 closest, out float3 n, out float penetration)
+{
+    float3 d = x - center;
+    float dist = length(d);
+    closest = center;
+    n = float3(0.0, 1.0, 0.0);
+    penetration = 0.0;
+    if (!(dist < shapeRadius + radius && dist > 1e-7))
+        return false;
+    n = d / dist;
+    penetration = shapeRadius + radius - dist;
+    closest = center + n * shapeRadius;
+    return true;
+}
+
+bool BoxContact(float3 x, Collider c, float radius, out float3 closest, out float3 n, out float penetration)
+{
+    float3 relative = x - c.center.xyz;
+    float3 local = float3(dot(relative, c.axisX.xyz), dot(relative, c.axisY.xyz), dot(relative, c.axisZ.xyz));
+    float3 extents = c.halfExtents.xyz;
+    float3 clamped = clamp(local, -extents, extents);
+    float3 outside = local - clamped;
+    float dist = length(outside);
+    float3 nLocal;
+    float3 closestLocal;
+    if (dist > 1e-7)
+    {
+        if (dist >= radius)
+        {
+            closest = x;
+            n = float3(0.0, 1.0, 0.0);
+            penetration = 0.0;
+            return false;
+        }
+        nLocal = outside / dist;
+        closestLocal = clamped;
+        penetration = radius - dist;
+    }
+    else
+    {
+        float3 toFace = extents - abs(local);
+        float faceDistance;
+        if (toFace.x <= toFace.y && toFace.x <= toFace.z)
+        {
+            nLocal = float3(local.x >= 0.0 ? 1.0 : -1.0, 0.0, 0.0);
+            faceDistance = toFace.x;
+        }
+        else if (toFace.y <= toFace.z)
+        {
+            nLocal = float3(0.0, local.y >= 0.0 ? 1.0 : -1.0, 0.0);
+            faceDistance = toFace.y;
+        }
+        else
+        {
+            nLocal = float3(0.0, 0.0, local.z >= 0.0 ? 1.0 : -1.0);
+            faceDistance = toFace.z;
+        }
+        closestLocal = local + nLocal * faceDistance;
+        penetration = radius + faceDistance;
+    }
+    n = nLocal.x * c.axisX.xyz + nLocal.y * c.axisY.xyz + nLocal.z * c.axisZ.xyz;
+    closest = c.center.xyz + closestLocal.x * c.axisX.xyz + closestLocal.y * c.axisY.xyz + closestLocal.z * c.axisZ.xyz;
+    return true;
+}
+
+[numthreads(THREADS, 1, 1)]
+void CollideShapes(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ActiveParticleCount)
+        return;
+    uint i = _ActiveParticles[id.x];
+    float4 position = _Position[i];
+    if (position.w == 0.0)
+        return;
+    Meta meta = _Meta[i];
+    float radius = meta.radius;
+    float3 x = position.xyz;
+    float3 previous = _Previous[i].xyz;
+
+    float floorY = _GroundY + radius;
+    if ((meta.category & _GroundMask) != 0u && x.y < floorY)
+    {
+        float penetration = floorY - x.y;
+        x.y = floorY;
+        float2 slide2 = (x - previous).xz;
+        float slide = length(slide2);
+        if (slide > 1e-7)
+        {
+            float limit = slide < _FrictionStatic * penetration ? slide : _FrictionKinetic * penetration;
+            x.xz -= (slide2 / slide) * min(slide, limit);
+        }
+    }
+
+    for (uint k = 0u; k < _ColliderCount; k++)
+    {
+        Collider c = _Colliders[k];
+        if ((meta.category & c.mask) == 0u)
+            continue;
+        float3 closest;
+        float3 n;
+        float penetration;
+        bool touching;
+        if (c.shape == SHAPE_SPHERE)
+            touching = RoundContact(x, c.center.xyz, c.center.w, radius, closest, n, penetration);
+        else if (c.shape == SHAPE_CAPSULE)
+        {
+            float3 a = c.pointA.xyz;
+            float3 ab = c.pointB.xyz - a;
+            float lengthSquared = dot(ab, ab);
+            float t = lengthSquared < 1e-10 ? 0.0 : saturate(dot(x - a, ab) / lengthSquared);
+            touching = RoundContact(x, a + t * ab, c.center.w, radius, closest, n, penetration);
+        }
+        else
+            touching = BoxContact(x, c, radius, closest, n, penetration);
+        if (!touching)
+            continue;
+        float3 surfaceVelocity = c.linearVelocity.xyz + cross(c.angularVelocity.xyz, closest - c.center.xyz);
+        PushOut(x, previous, closest, n, penetration, radius, surfaceVelocity);
+    }
+
+    _Position[i] = float4(x, position.w);
+    _Previous[i] = float4(previous, 0.0);
+}
+
+[numthreads(THREADS, 1, 1)]
+void MatchRigidGroups(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ActiveGroupCount)
+        return;
+    uint g = _ActiveGroups[id.x];
+    RigidGroup group = _Groups[g];
+    float totalMass = 0.0;
+    float3 massCenter = float3(0.0, 0.0, 0.0);
+    for (uint m = 0u; m < group.memberCount; m++)
+    {
+        float4 p = _Position[_GroupMembers[group.memberStart + m]];
+        float mass = p.w > 0.0 ? 1.0 / p.w : 0.0;
+        totalMass += mass;
+        massCenter += mass * p.xyz;
+    }
+    if (totalMass < 1e-9)
+        return;
+    massCenter /= totalMass;
+
+    float3 column0 = float3(0.0, 0.0, 0.0);
+    float3 column1 = float3(0.0, 0.0, 0.0);
+    float3 column2 = float3(0.0, 0.0, 0.0);
+    for (uint m2 = 0u; m2 < group.memberCount; m2++)
+    {
+        float4 p = _Position[_GroupMembers[group.memberStart + m2]];
+        float mass = p.w > 0.0 ? 1.0 / p.w : 0.0;
+        float3 offset = _GroupOffsets[group.memberStart + m2].xyz;
+        float3 r = mass * (p.xyz - massCenter);
+        column0 += offset.x * r;
+        column1 += offset.y * r;
+        column2 += offset.z * r;
+    }
+
+    float4 q = group.rotation;
+    for (int iteration = 0; iteration < 20; iteration++)
+    {
+        float3 r0 = Rotate(q, float3(1.0, 0.0, 0.0));
+        float3 r1 = Rotate(q, float3(0.0, 1.0, 0.0));
+        float3 r2 = Rotate(q, float3(0.0, 0.0, 1.0));
+        float3 omega = (cross(r0, column0) + cross(r1, column1) + cross(r2, column2))
+            / (abs(dot(r0, column0) + dot(r1, column1) + dot(r2, column2)) + 1e-12);
+        float angle = length(omega);
+        if (angle < 1e-12)
+            break;
+        q = normalize(QuaternionMultiply(AxisAngle(omega / angle, angle), q));
+    }
+
+    for (uint m3 = 0u; m3 < group.memberCount; m3++)
+    {
+        uint index = _GroupMembers[group.memberStart + m3];
+        float4 p = _Position[index];
+        if (p.w > 0.0)
+            _Position[index] = float4(Rotate(q, _GroupOffsets[group.memberStart + m3].xyz) + massCenter, p.w);
+    }
+    _Groups[g].rotation = q;
+    _Groups[g].massCenter = float4(massCenter, 0.0);
+}
+
+[numthreads(THREADS, 1, 1)]
+void UpdateVelocities(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ActiveParticleCount)
+        return;
+    uint i = _ActiveParticles[id.x];
+    float4 position = _Position[i];
+    if (position.w == 0.0)
+        return;
+    float3 velocity = (position.xyz - _Previous[i].xyz) / _Substep;
+    _Velocity[i] = float4(velocity * max(0.0, 1.0 - _Damping * _Substep), 0.0);
+}
+
+[numthreads(THREADS, 1, 1)]
+void ApplyMedia(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ActiveParticleCount)
+        return;
+    uint i = _ActiveParticles[id.x];
+    float4 position = _Position[i];
+    if (position.w == 0.0)
+        return;
+    float radius = _Meta[i].radius;
+    float volume = 4.0 / 3.0 * 3.14159265358979 * radius * radius * radius;
+    float3 velocity = _Velocity[i].xyz;
+    for (uint k = 0u; k < _MediumCount; k++)
+    {
+        Medium medium = _Media[k];
+        float3 relative = position.xyz - medium.center.xyz;
+        float3 local = float3(dot(relative, medium.axisX.xyz), dot(relative, medium.axisY.xyz), dot(relative, medium.axisZ.xyz));
+        if (any(abs(local) > medium.halfExtents.xyz))
+            continue;
+        float ratio = medium.flow.w * volume * position.w;
+        velocity -= _Gravity * ratio * _StepTime;
+        float blend = 1.0 - exp(-ratio * medium.parameters.x * _StepTime);
+        velocity += (medium.flow.xyz - velocity) * blend;
+    }
+    _Velocity[i] = float4(velocity, 0.0);
+}
+
+[numthreads(THREADS, 1, 1)]
+void TransformRange(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _RangeCount)
+        return;
+    uint i = _RangeStart + id.x;
+    float4 position = _Position[i];
+    float3 moved = mul(_RangeTransform, float4(position.xyz, 1.0)).xyz;
+    _Position[i] = float4(moved, position.w);
+    _Previous[i] = float4(moved, 0.0);
+    _Velocity[i] = float4(_RangeVelocity, 0.0);
+}
+
+[numthreads(THREADS, 1, 1)]
+void TransformGroups(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _RangeCount)
+        return;
+    uint g = _RangeStart + id.x;
+    RigidGroup group = _Groups[g];
+    _Groups[g].rotation = normalize(QuaternionMultiply(_RangeRotation, group.rotation));
+    _Groups[g].massCenter = float4(mul(_RangeTransform, float4(group.massCenter.xyz, 1.0)).xyz, 0.0);
+}

@@ -30,11 +30,11 @@ def add(**c):
 
 
 dt = 0.02; n = 30; h = dt / n; N = 10 * n
-y = 1.0 + g * h * h * N * (N + 1) / 2
+y = g * h * h * N * (N + 1) / 2
 v = g * h * N
 add(id="PSOLVE-CASE-01", name="自由落體", covers=["SOLVER-01", "SOLVER-02", "SOLVER-16"],
-    world=base(fixedDeltaTime=dt, substeps=n, gravity=[0, g, 0]), particles=[P((0, 1, 0))], steps=10,
-    derivation="每子步驟 v_k = k·h·g，x_k = x_0 + h²·g·k(k+1)/2；N = 10 步 × 30 子步驟 = 300，h = 0.02/30。",
+    world=base(fixedDeltaTime=dt, substeps=n, gravity=[0, g, 0]), particles=[P((0, 0, 0))], steps=10,
+    derivation="每子步驟 v_k = k·h·g，x_k = x_0 + h²·g·k(k+1)/2；N = 10 步 × 30 子步驟 = 300，h = 0.02/30。起點在原點，使 32 位元浮點數重建速度的誤差維持在容差內。",
     expected=dict(particles=[dict(index=0, position=r7([0, y, 0]), velocity=r7([0, v, 0]))]), tolerance=TOL_EXACT)
 
 d = 2.0; vv = 0.0; yy = 1.0
@@ -150,13 +150,13 @@ add(id="PSOLVE-CASE-17", name="方塊內部推到最近面", covers=["SOLVER-12"
     derivation="中心在方塊內，到各面距離 x 1、y 0.1、z 1，最近為 +y；推到面上點 (0,1,0) 加 r，得 (0,1.1,0)；前一位置補到相同高度，速度 0。",
     expected=dict(particles=[dict(index=0, position=[0, 1.1, 0], velocity=[0, 0, 0])]), tolerance=TOL_EXACT)
 
-dt = 0.02; n = 30; h = dt / n; N = 10 * n; muk = 0.2
+dt = 0.02; n = 1; h = dt / n; N = 10 * n; muk = 0.2
 vx = N * muk * (-g) * h
 x = muk * (-g) * h * h * N * (N + 1) / 2
 mbox = dict(box, center=[0, -0.5, 0], halfExtents=[100, 0.5, 100], linearVelocity=[1, 0, 0])
 add(id="PSOLVE-CASE-18", name="移動方塊以動摩擦帶動粒子", covers=["SOLVER-12", "SOLVER-14"],
     world=base(fixedDeltaTime=dt, substeps=n, gravity=[0, g, 0]), particles=[P((0, 0.1, 0))], colliders=[mbox], steps=10,
-    derivation="頂面以 1 m/s 沿 x 移動。每子步驟穿透 = |g|·h²；相對切向位移 h·(1 − v_x) 大於 μs·|g|·h²，取動摩擦：x 多移 μk·|g|·h²，v_x 每子步驟增加 μk·|g|·h。300 子步驟後 v_x = 300·μk·|g|·h，x = μk·|g|·h²·N(N+1)/2，尚未追上 1 m/s。靜止方塊時 x 與 v_x 維持 0。",
+    derivation="頂面以 1 m/s 沿 x 移動，每步 1 個子步驟（h = 0.02），使穿透量 |g|·h² 遠大於 32 位元浮點數的捨入誤差。相對切向位移 h·(1 − v_x) 大於 μs·|g|·h²，取動摩擦：x 多移 μk·|g|·h²，v_x 每步增加 μk·|g|·h。10 步後 v_x = 10·μk·|g|·h，x = μk·|g|·h²·N(N+1)/2，尚未追上 1 m/s。靜止方塊時 x 與 v_x 維持 0。",
     expected=dict(particles=[dict(index=0, position=r7([x, 0.1, 0]), velocity=r7([vx, 0, 0]))]),
     tolerance=dict(position=1e-4, velocity=2e-3))
 
@@ -165,10 +165,12 @@ cm0 = rest.mean(0); q = rest - cm0
 ang = math.radians(30)
 R = np.array([[math.cos(ang), 0, math.sin(ang)], [0, 1, 0], [-math.sin(ang), 0, math.cos(ang)]])
 cur = (R @ q.T).T + np.array([1, 0, 0])
+pose_position = np.array([1, 0, 0]) - R @ cm0
 add(id="PSOLVE-CASE-19", name="剛體群保持剛性", covers=["SOLVER-15"],
-    world=base(), particles=[P(c) for c in cur], rigidGroups=[dict(particles=[0, 1, 2, 3], restPositions=rest.tolist())],
+    world=base(), particles=[P(c) for c in rest], pose=dict(position=r7(pose_position), rotation=r7([math.cos(ang / 2), 0, math.sin(ang / 2), 0])),
+    rigidGroups=[dict(particles=[0, 1, 2, 3])],
     steps=1,
-    derivation="目前位置是靜止佈局繞 y 軸轉 30° 再平移 (1,0,0)，本身已是剛性；旋轉萃取從單位四元數起算 20 次後收斂到 30°，位置不變，群組旋轉為 (cos15°, 0, sin15°, 0)。",
+    derivation="粒子的靜止佈局以姿勢（繞 y 軸 30°，位置使質心落在 (1,0,0)）放置，本身已是剛性；剛體群以配置姿勢的旋轉為起點，形狀匹配後位置不變，旋轉維持 (cos15°, 0, sin15°, 0)。",
     expected=dict(particles=[dict(index=i, position=r7(c)) for i, c in enumerate(cur)],
                   rigidGroups=[dict(index=0, rotation=r7([math.cos(ang / 2), 0, math.sin(ang / 2), 0]))]),
     tolerance=dict(position=1e-4, velocity=2e-2, rotation=1e-4))
@@ -186,18 +188,19 @@ add(id="PSOLVE-CASE-20", name="介質受力一步", covers=["SOLVER-17"],
     derivation="求解步驟後 v = (0, g·dt, 0)。介質階段：比值 = 密度·(4/3)πr³·w = 0.5；v −= g·0.5·dt；blend = 1 − exp(−0.5·2·dt)；v += (flow − v)·blend。位置只受求解步驟影響。",
     expected=dict(particles=[dict(index=0, position=r7([0, yy, 0]), velocity=r7(v))]), tolerance=TOL_EXACT)
 
+dt = 0.05
 b = 1 - math.exp(-ratio * Cd * dt)
 vt = g * dt * (1 - ratio) * (1 - b) / b
-add(id="PSOLVE-CASE-21", name="介質中的終端速度", covers=["SOLVER-17"],
-    world=base(fixedDeltaTime=dt, substeps=n, gravity=[0, g, 0]), particles=[P((0, 0, 0), radius=r)],
-    media=[dict(med, flow=[0, 0, 0])], steps=1500,
-    derivation="無碰撞時每步求解後 v += g·dt；介質階段 v = (v − g·ratio·dt)·(1 − b)。穩態 v* = g·dt·(1 − ratio)·(1 − b)/b，b = 1 − exp(−ratio·Cd·dt)；dt 趨近 0 時趨近連續解 g(1 − ratio)/(ratio·Cd)。只比對速度。",
-    expected=dict(particles=[dict(index=0, velocity=r7([0, vt, 0]))]), tolerance=dict(velocity=1e-4))
+add(id="PSOLVE-CASE-21", name="介質中浮力、拖曳與流速的平衡", covers=["SOLVER-17"],
+    world=base(fixedDeltaTime=dt, substeps=1, gravity=[0, g, 0]), particles=[P((0, 0, 0), vel=(0, -3, 0), radius=r)],
+    media=[dict(med, flow=r7([0, -vt, 0]), halfExtents=[1000, 1000, 1000])], steps=240,
+    derivation="無碰撞時每步求解後 v += g·dt；介質階段 v = (v − g·ratio·dt)·(1 − b) + flow·b，b = 1 − exp(−ratio·Cd·dt)。靜水中的穩態是終端速度 v_t = g·dt·(1 − ratio)·(1 − b)/b（dt 趨近 0 時趨近 g(1 − ratio)/(ratio·Cd)）；有垂直流速時穩態為 v_t + flow。本例 flow = −v_t，粒子以 −3 m/s 進入後減速到 0；240 步（12 秒，時間常數 1 秒）後與穩態差小於 1e-4。粒子留在原點附近，使 32 位元浮點數重建速度的誤差小於容差。只比對速度。",
+    expected=dict(particles=[dict(index=0, velocity=[0, 0, 0])]), tolerance=dict(velocity=1e-3))
 
 doc = dict(
-    schema="yu5h1.motion.particle-solver-cases", version="1.0.0", spec="ParticleSolver 1.0.0",
+    schema="yu5h1.motion.particle-solver-cases", version="1.1.0", spec="ParticleSolver 1.0.1",
     units=dict(length="m", time="s", mass="kg"),
-    comparison="只比對 expected 列出的欄位，逐分量絕對誤差不得超過該案例的 tolerance。steps 是固定步數，每步 fixedDeltaTime 秒、substeps 個子步驟。未列出的世界設定採 ParticleSolver 預設值。media 在步後階段依列出順序作用。collider 的 linearVelocity 表示每步開始時姿勢依此速度平移、表面速度等於該速度。constraints 的 restLength 為明確指定的靜止長度。",
+    comparison="只比對 expected 列出的欄位，逐分量絕對誤差不得超過該案例的 tolerance。steps 是固定步數，每步 fixedDeltaTime 秒、substeps 個子步驟。未列出的世界設定採 ParticleSolver 預設值。media 在步後階段依列出順序作用。collider 的 linearVelocity 表示每步開始時姿勢依此速度平移、表面速度等於該速度。constraints 的 restLength 為明確指定的靜止長度。32 位元浮點數下由 (x − p)/h 重建的速度誤差約為 ulp(|x|)/h，案例的起點、子步驟與容差依此設定。particles 的 position 是實體本地座標；有 pose 的案例以 pose（position 與 [w,x,y,z] rotation）放置，沒有 pose 時即世界座標。rigidGroups 的 particles 是群組成員索引，靜止形狀取自粒子本地位置。",
     cases=cases)
 import os
 with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ParticleSolverCases.json"), "w", encoding="utf-8", newline="\n") as f:

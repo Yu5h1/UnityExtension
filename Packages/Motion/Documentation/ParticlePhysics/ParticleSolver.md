@@ -1,6 +1,8 @@
 # ParticleSolver：粒子求解
 
-> 規格版本 1.0.1 · 2026-11-15 · 目標已確認，尚無實作（1.0.1 只補上〈來源與致謝〉，行為不變）
+> 規格版本 1.0.2 · 2026-11-15 · 目標已確認；Motion package 的 GPU 實作已通過全部 21 個案例（第 3 階段），BonghuoVR 情境的場景對照尚未執行
+>
+> 1.0.1 補上〈來源與致謝〉；1.0.2 補上 32 位元浮點數的精度說明與剛體群旋轉的初值，行為不變。案例檔升為 1.1.0：剛體群案例改以配置姿勢放置，三個案例的起點、子步驟與容差依精度說明調整。
 >
 > 與其他文件的關係：本文件規定粒子的數值行為；粒子怎麼配置、登記、釋放，以及擴充行為掛在哪個階段，由 [ParticleWorld](ParticleWorld.md) 規定。解析解案例在 [ParticleSolverCases.json](ParticleSolverCases.json)，由 [generate_particle_solver_cases.py](generate_particle_solver_cases.py) 依本文件的公式產生。遷移順序與擁有權決定見 Motion repo 的 `Documentation/GpuPhysicsMigrationPlan.md`。
 
@@ -46,6 +48,8 @@ ParticleSolver 是批量粒子的位置式動力學求解：每顆粒子帶位�
 ## 單位與座標
 
 公尺、秒、公斤。座標為 Unity 世界座標（左手系，Y 朝上）。重力預設 (0, −9.81, 0) m/s²。所有長度、半徑、位置都是世界座標的公尺。
+
+數值以 32 位元浮點數計算。速度由 (x − p)/h 重建（SOLVER-16），所以每個子步驟的速度誤差約為 ulp(|x|)/h：離原點越遠、子步驟越短，誤差越大；穿透量很小時，由兩個相近座標相減得到的穿透量相對誤差也會變大。容差的訂定與案例設計都以此為依據；需要在遠離原點處精確模擬的場景，應把世界座標原點移近模擬區域。
 
 ## 狀態與資料
 
@@ -225,6 +229,7 @@ len > 1e-7 時：limit = (len < μs·pen) ? len : μk·pen；x ← x − (Δt/le
   2. A 的第 k 欄 = Σ m_i · q_i[k] · (x_i − x_cm)。
   3. 從上一次的旋轉 R（以四元數保存，初值為單位四元數）起算，迭代 20 次：ω = Σ_k (R 第 k 欄 × A 第 k 欄) / (|Σ_k R 第 k 欄 · A 第 k 欄| + 1e-12)；|ω| < 1e-12 時停止；否則 R ← 繞 ω/|ω| 轉 |ω| 的旋轉 × R，並正規化。
   4. 對 w > 0 的成員：x_i ← R·q_i + x_cm。保存 R 與 x_cm。
+- **初值**：剛體群的旋轉初值是實體配置姿勢的旋轉；實體被傳送時，旋轉隨傳送一起轉動，被重置時回到重置姿勢的旋轉（ParticleWorld 傳送與重置（WORLD-07））。
 - **依賴上一次的旋轉**：旋轉萃取從上一次的結果起算，單一子步驟內的旋轉變化很小時才保證在 20 次內收斂；從單位四元數起算 90° 的差距不會收斂。
 - **順序**：剛體群在碰撞形狀之後執行，可能把成員推回碰撞體內，下一個子步驟再推出。
 - **驗證**：PSOLVE-CASE-19。
@@ -287,7 +292,7 @@ len > 1e-7 時：limit = (len < μs·pen) ? len : μk·pen；x ← x − (Δt/le
 
 ## 驗收與案例
 
-案例檔 [ParticleSolverCases.json](ParticleSolverCases.json) 的每個案例列出世界設定、初始粒子、約束、碰撞體、剛體群、介質、步數與預期值；比對規則寫在檔案的 `comparison` 欄。預期值由 [generate_particle_solver_cases.py](generate_particle_solver_cases.py) 依本文件的公式以解析解或封閉遞推算出，不經任何實作；每個案例的 `derivation` 寫出推導。
+案例檔 [ParticleSolverCases.json](ParticleSolverCases.json) 的每個案例列出世界設定、初始粒子、約束、碰撞體、剛體群、介質、步數與預期值；比對規則寫在檔案的 `comparison` 欄。預期值由 [generate_particle_solver_cases.py](generate_particle_solver_cases.py) 依本文件的公式以解析解或封閉遞推算出，不經任何實作；每個案例的 `derivation` 寫出推導。實作的重播在 Motion package 的 `Tests/Editor/Particles/ParticleSolverCaseTests.cs`。
 
 | 行為 | 案例 | 尚未覆蓋 |
 |---|---|---|

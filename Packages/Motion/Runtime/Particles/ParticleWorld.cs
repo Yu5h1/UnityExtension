@@ -49,9 +49,9 @@ namespace Yu5h1Lib
         public static event Action ActiveWorldsChanged;
 
         /// <summary>
-        ///   Creates the solver backend for a world when it is first enabled. Unset until a solver
-        ///   implementation registers itself; a world without a backend keeps its bookkeeping and
-        ///   simulates nothing.
+        ///   Creates the solver backend for a world when it is first enabled. Null uses the GPU
+        ///   solver; a world whose backend cannot be created keeps its bookkeeping and simulates
+        ///   nothing.
         /// </summary>
         internal static Func<ParticleWorld, IParticleBackend> BackendFactory;
 
@@ -73,7 +73,9 @@ namespace Yu5h1Lib
             new List<ParticleCollider>()
         };
         readonly List<ParticleColliderState> _colliderStates = new List<ParticleColliderState>();
+        readonly List<ParticleMedium> _media = new List<ParticleMedium>();
         readonly ParticleGroupAllocator _groups = new ParticleGroupAllocator();
+        IParticleBackend _backend;
         ParticleRangeAllocator _particleSlots;
         ParticleRangeAllocator _constraintSlots;
         ParticleRangeAllocator _rigidGroupSlots;
@@ -102,7 +104,30 @@ namespace Yu5h1Lib
         /// </summary>
         public int ActiveParticleCount { get; private set; }
 
-        internal IParticleBackend Backend { get; set; }
+        /// <summary>
+        ///   Steps advanced with a valid time step since the world was created.
+        /// </summary>
+        public int StepCount { get; private set; }
+
+        /// <summary>
+        ///   Fluid regions applied after every step in list order (ParticleSolver SOLVER-17).
+        /// </summary>
+        public List<ParticleMedium> Media => _media;
+
+        /// <summary>
+        ///   The solver side of this world. Replacing it disposes the previous backend.
+        /// </summary>
+        internal IParticleBackend Backend
+        {
+            get => _backend;
+            set
+            {
+                if (ReferenceEquals(_backend, value))
+                    return;
+                _backend?.Dispose();
+                _backend = value;
+            }
+        }
         internal IReadOnlyList<ParticleWorldChange> PendingChanges => _pending;
         internal IReadOnlyList<ParticleColliderState> ColliderStates => _colliderStates;
 
@@ -147,8 +172,8 @@ namespace Yu5h1Lib
         {
             if (_destroyed || s_active.Contains(this))
                 return;
-            if (Backend == null && BackendFactory != null)
-                Backend = BackendFactory(this);
+            if (Backend == null)
+                Backend = (BackendFactory ?? GpuParticleBackend.TryCreate)(this);
             s_active.Add(this);
             Log("enabled");
             ActiveWorldsChanged?.Invoke();
@@ -176,7 +201,6 @@ namespace Yu5h1Lib
             foreach (List<ParticleCollider> list in _colliders)
                 list.Clear();
             ActiveParticleCount = 0;
-            Backend?.Dispose();
             Backend = null;
             ActiveWorldsChanged?.Invoke();
         }
@@ -190,6 +214,7 @@ namespace Yu5h1Lib
         {
             if (_destroyed || !(deltaTime > 0f) || float.IsInfinity(deltaTime))
                 return;
+            StepCount++;
             if (_pending.Count > 0)
             {
                 Backend?.Apply(_pending);
@@ -206,7 +231,31 @@ namespace Yu5h1Lib
                 return;
             }
             _lastSettingsError = null;
-            Backend.Step(deltaTime, _settings, _colliderStates, ActiveParticleCount);
+            Backend.Step(deltaTime, _settings, _colliderStates, _media, ActiveParticleCount);
+        }
+
+        /// <summary>
+        ///   Requests the entity's simulated state without stalling the CPU (ParticleWorld
+        ///   WORLD-14). <paramref name="onComplete"/> runs once the data arrives, or immediately with
+        ///   <see cref="ParticleReadback.Succeeded"/> false when the world cannot read it.
+        /// </summary>
+        public void RequestReadback(ParticleEntity entity, Action<ParticleReadback> onComplete)
+        {
+            var readback = new ParticleReadback { Entity = entity, Step = StepCount };
+            if (!IsAlive(entity))
+            {
+                readback.Error = "The ParticleEntity was released or its world was destroyed.";
+                onComplete?.Invoke(readback);
+                return;
+            }
+            if (Backend == null)
+            {
+                readback.Error = $"ParticleWorld '{name}' has no solver backend.";
+                onComplete?.Invoke(readback);
+                return;
+            }
+            EntityRecord record = _entities[entity.Id];
+            Backend.RequestReadback(record.particles, record.constraints, record.rigidGroups, readback, onComplete);
         }
 
         public bool TryAllocate(ParticleEntityRequest request, out ParticleEntity entity, out string error)
