@@ -43,6 +43,12 @@ namespace Yu5h1Lib
         /// </summary>
         public IReadOnlyList<Vector3Int> Roles => _world.RecordOf(this).rest.roles;
 
+        /// <summary>
+        ///   Each particle as allocated: rest position in the entity's local frame, velocity,
+        ///   inverse mass and radius, indexed like <see cref="Particles"/>.
+        /// </summary>
+        public IReadOnlyList<ParticleSpawn> RestParticles => _world.RecordOf(this).rest.particles;
+
         public void Release()
         {
             if (_world != null)

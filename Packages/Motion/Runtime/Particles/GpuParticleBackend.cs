@@ -8,18 +8,25 @@ namespace Yu5h1Lib
 {
     /// <summary>
     ///   GPU solver behind a <see cref="ParticleWorld"/>, running its own copy of the compute
-    ///   shader Resources/Yu5h1LibParticleSolver (which implements ParticleSolver 1.0.1) so worlds
-    ///   never share uniform state. Storage is sized
+    ///   shader Resources/Yu5h1LibParticleSolver (which implements ParticleSolver 1.2.0) so worlds
+    ///   never share uniform state. Extensions run inside its step and reach its particle buffers
+    ///   through <see cref="IParticleDataBinder"/> (ParticleExtensions EXT-02, EXT-03). Storage is sized
     ///   from the world's capacity when the world is first enabled. Entity changes are written to
     ///   their own slots only, so other particles are never disturbed (ParticleWorld WORLD-06);
     ///   every kernel walks compact lists of the active particles, constraints and rigid groups,
     ///   rebuilt whenever entities are added, released, parked or resized (WORLD-10). State leaves
     ///   the GPU only through asynchronous readback (WORLD-14).
     /// </summary>
-    internal sealed class GpuParticleBackend : IParticleBackend
+    internal sealed class GpuParticleBackend : IParticleBackend, IParticleDataBinder
     {
         const string ShaderName = "Yu5h1LibParticleSolver";
         const int Threads = 64;
+        static readonly int PositionId = Shader.PropertyToID("_Position");
+        static readonly int PreviousId = Shader.PropertyToID("_Previous");
+        static readonly int VelocityId = Shader.PropertyToID("_Velocity");
+        static readonly int MetaId = Shader.PropertyToID("_Meta");
+        static readonly int ActiveParticlesId = Shader.PropertyToID("_ActiveParticles");
+        static readonly int ActiveParticleCountId = Shader.PropertyToID("_ActiveParticleCount");
 
         [StructLayout(LayoutKind.Sequential)]
         struct GpuMeta
@@ -239,7 +246,8 @@ namespace Yu5h1Lib
             ParticleSolverSettings settings,
             IReadOnlyList<ParticleColliderState> colliders,
             IReadOnlyList<ParticleMedium> media,
-            int activeParticleCount)
+            int activeParticleCount,
+            ParticleExtensionRunner extensions)
         {
             if (_disposed || _activeParticles.Count == 0)
                 return;
@@ -255,6 +263,7 @@ namespace Yu5h1Lib
             _shader.SetFloat("_FrictionStatic", settings.frictionStatic);
             _shader.SetFloat("_FrictionKinetic", settings.frictionKinetic);
             _shader.SetFloat("_MaxDepenetrationSpeed", settings.maxDepenetrationSpeed);
+            _shader.SetInt("_SubstepCount", settings.substeps);
             _shader.SetFloat("_GroundY", settings.groundY);
             _shader.SetInt("_GroundMask", unchecked((int)settings.groundMask));
             _shader.SetFloat("_CellSize", Mathf.Max(2f * _maxRadius, 1e-4f));
@@ -271,11 +280,25 @@ namespace Yu5h1Lib
                 Dispatch(3, particles);
                 Dispatch(4, particles);
                 Dispatch(5, particles);
+                extensions?.RunSubstep(s);
                 Dispatch(6, _activeGroups.Count);
                 Dispatch(7, particles);
             }
             if (_mediumData.Length > 0 && media.Count > 0)
                 Dispatch(10, particles);
+            extensions?.RunPostStep();
+        }
+
+        public void Bind(ComputeShader shader, int kernel)
+        {
+            if (_disposed)
+                return;
+            shader.SetBuffer(kernel, PositionId, _position);
+            shader.SetBuffer(kernel, PreviousId, _previous);
+            shader.SetBuffer(kernel, VelocityId, _velocity);
+            shader.SetBuffer(kernel, MetaId, _meta);
+            shader.SetBuffer(kernel, ActiveParticlesId, _activeParticleBuffer);
+            shader.SetInt(ActiveParticleCountId, _activeParticles.Count);
         }
 
         public void RequestReadback(

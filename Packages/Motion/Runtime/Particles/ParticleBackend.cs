@@ -50,12 +50,17 @@ namespace Yu5h1Lib
     {
         void Apply(IReadOnlyList<ParticleWorldChange> changes);
 
+        /// <summary>
+        ///   Runs one step. <paramref name="extensions"/> is called after collision shapes in every
+        ///   substep and once after media (ParticleExtensions EXT-02).
+        /// </summary>
         void Step(
             float deltaTime,
             ParticleSolverSettings settings,
             IReadOnlyList<ParticleColliderState> colliders,
             IReadOnlyList<ParticleMedium> media,
-            int activeParticleCount);
+            int activeParticleCount,
+            ParticleExtensionRunner extensions);
 
         /// <summary>
         ///   Reads the given slots asynchronously and fills <paramref name="readback"/> before

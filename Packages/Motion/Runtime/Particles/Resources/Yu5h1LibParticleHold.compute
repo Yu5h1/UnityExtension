@@ -1,0 +1,94 @@
+// Kinematic hold of particles by Transforms (ParticleExtensions EXT-05), shared by anchors
+// (EXT-06) and grabbers (EXT-07). A holder carries its localToWorld matrix at the start and at
+// the end of the step; a held particle follows lerp(previous * offset, current * offset, f) with
+// inverse mass 0, and gets its recorded inverse mass back when released.
+
+#pragma kernel ApplyHolds
+#pragma kernel CaptureHolds
+#pragma kernel ReleaseHolds
+
+#include "Packages/com.yu5h1.motion/Runtime/Particles/Shaders/ParticleWorldData.hlsl"
+
+struct Holder
+{
+    float4x4 previous;
+    float4x4 current;
+    float4x4 previousInverse;
+};
+
+struct HoldEntry
+{
+    uint particle;
+    uint holder;
+    uint held;
+    float originalInvMass;
+    float4 localOffset;
+};
+
+StructuredBuffer<Holder> _Holders;
+RWStructuredBuffer<HoldEntry> _HoldEntries;
+RWStructuredBuffer<uint> _HoldCount;
+uint _HoldEntryCount;
+float _HoldRadius;
+
+float3 HoldTarget(Holder holder, float3 offset, float fraction)
+{
+    float3 from = mul(holder.previous, float4(offset, 1.0)).xyz;
+    float3 to = mul(holder.current, float4(offset, 1.0)).xyz;
+    return lerp(from, to, fraction);
+}
+
+[numthreads(64, 1, 1)]
+void ApplyHolds(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _HoldEntryCount)
+        return;
+    HoldEntry entry = _HoldEntries[id.x];
+    if (entry.held == 0u)
+        return;
+    Holder holder = _Holders[entry.holder];
+    float3 start = HoldTarget(holder, entry.localOffset.xyz, SubstepFractionStart());
+    float3 end = HoldTarget(holder, entry.localOffset.xyz, SubstepFractionEnd());
+    _Position[entry.particle] = float4(end, 0.0);
+    _Previous[entry.particle] = float4(start, 0.0);
+    _Velocity[entry.particle] = float4((end - start) / _Substep, 0.0);
+}
+
+[numthreads(64, 1, 1)]
+void CaptureHolds(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _HoldEntryCount)
+        return;
+    HoldEntry entry = _HoldEntries[id.x];
+    if (entry.held != 0u)
+        return;
+    float4 position = _Position[entry.particle];
+    if (position.w <= 0.0)
+        return;
+    Holder holder = _Holders[entry.holder];
+    float3 center = float3(holder.previous._m03, holder.previous._m13, holder.previous._m23);
+    float3 delta = position.xyz - center;
+    if (dot(delta, delta) > _HoldRadius * _HoldRadius)
+        return;
+    entry.localOffset = float4(mul(holder.previousInverse, float4(position.xyz, 1.0)).xyz, 0.0);
+    entry.originalInvMass = position.w;
+    entry.held = 1u;
+    _HoldEntries[id.x] = entry;
+    _Position[entry.particle] = float4(position.xyz, 0.0);
+    uint ignored;
+    InterlockedAdd(_HoldCount[0], 1u, ignored);
+}
+
+[numthreads(64, 1, 1)]
+void ReleaseHolds(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _HoldEntryCount)
+        return;
+    HoldEntry entry = _HoldEntries[id.x];
+    if (entry.held == 0u)
+        return;
+    float4 position = _Position[entry.particle];
+    _Position[entry.particle] = float4(position.xyz, entry.originalInvMass);
+    entry.held = 0u;
+    _HoldEntries[id.x] = entry;
+}

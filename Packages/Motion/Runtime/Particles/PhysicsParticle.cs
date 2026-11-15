@@ -126,6 +126,63 @@ namespace Yu5h1Lib
             new Pose(transform.TransformPoint(_batchSpacing * index), transform.rotation);
 
         /// <summary>
+        ///   Total particles of all <see cref="Count"/> entities as the layout lays them out, or 0
+        ///   without a layout.
+        /// </summary>
+        public int FlatParticleCount
+        {
+            get
+            {
+                if (_layout == null || _layout.VariantCount < 1)
+                    return 0;
+                int total = 0;
+                for (int i = 0; i < _count; i++)
+                    total += _layout.GetParticleCount(i % _layout.VariantCount);
+                return total;
+            }
+        }
+
+        /// <summary>
+        ///   Splits a flat particle number, which joins the entities' particles in entity order,
+        ///   into the entity number and the particle index inside it (ParticleExtensions EXT-06).
+        /// </summary>
+        public bool TryLocate(int flatIndex, out int entityIndex, out int particleIndex)
+        {
+            entityIndex = -1;
+            particleIndex = -1;
+            if (flatIndex < 0 || _layout == null || _layout.VariantCount < 1)
+                return false;
+            int start = 0;
+            for (int i = 0; i < _count; i++)
+            {
+                int count = _layout.GetParticleCount(i % _layout.VariantCount);
+                if (flatIndex < start + count)
+                {
+                    entityIndex = i;
+                    particleIndex = flatIndex - start;
+                    return true;
+                }
+                start += count;
+            }
+            return false;
+        }
+
+        /// <summary>
+        ///   World position of a flat particle number at its entity's spawn pose, from the layout
+        ///   alone, so it works in the editor before anything is allocated.
+        /// </summary>
+        public bool TryGetRestPosition(int flatIndex, out Vector3 position)
+        {
+            position = default;
+            if (!TryLocate(flatIndex, out int entityIndex, out int particleIndex))
+                return false;
+            _layout.GetRestPositions(entityIndex % _layout.VariantCount, _positions);
+            Pose pose = SpawnPose(entityIndex);
+            position = pose.position + pose.rotation * _positions[particleIndex];
+            return true;
+        }
+
+        /// <summary>
         ///   Validates the three profiles against each other and their own rules.
         /// </summary>
         public void Validate(List<PhysicsParticleMessage> messages)

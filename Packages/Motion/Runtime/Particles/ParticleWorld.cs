@@ -75,6 +75,9 @@ namespace Yu5h1Lib
         readonly List<ParticleColliderState> _colliderStates = new List<ParticleColliderState>();
         readonly List<ParticleMedium> _media = new List<ParticleMedium>();
         readonly ParticleGroupAllocator _groups = new ParticleGroupAllocator();
+        readonly List<(IParticleExtension extension, bool add)> _extensionChanges =
+            new List<(IParticleExtension extension, bool add)>();
+        ParticleExtensionRunner _extensions;
         IParticleBackend _backend;
         ParticleRangeAllocator _particleSlots;
         ParticleRangeAllocator _constraintSlots;
@@ -128,6 +131,14 @@ namespace Yu5h1Lib
                 _backend = value;
             }
         }
+        /// <summary>
+        ///   Extensions in effect for the current step, in registration order (ParticleExtensions
+        ///   EXT-01). Registrations made since the last step are not included yet.
+        /// </summary>
+        public IReadOnlyList<IParticleExtension> Extensions => Runner.Registered;
+
+        ParticleExtensionRunner Runner => _extensions ?? (_extensions = new ParticleExtensionRunner(this));
+
         internal IReadOnlyList<ParticleWorldChange> PendingChanges => _pending;
         internal IReadOnlyList<ParticleColliderState> ColliderStates => _colliderStates;
 
@@ -200,15 +211,18 @@ namespace Yu5h1Lib
             _pending.Clear();
             foreach (List<ParticleCollider> list in _colliders)
                 list.Clear();
+            _extensionChanges.Clear();
+            Runner.Clear();
             ActiveParticleCount = 0;
             Backend = null;
             ActiveWorldsChanged?.Invoke();
         }
 
         /// <summary>
-        ///   Advances the world by one fixed step: queued changes reach the backend first, collider
-        ///   poses and surface velocities are captured, and the solver runs only when some particle
-        ///   is active and the settings are valid (ParticleSolver SOLVER-01, SOLVER-18).
+        ///   Advances the world by one fixed step: queued changes and extension registrations take
+        ///   effect first, collider poses and surface velocities are captured, and the solver and
+        ///   extensions run only when some particle is active and the settings are valid
+        ///   (ParticleSolver SOLVER-01, SOLVER-18; ParticleExtensions EXT-01, EXT-02).
         /// </summary>
         internal void Step(float deltaTime)
         {
@@ -220,6 +234,7 @@ namespace Yu5h1Lib
                 Backend?.Apply(_pending);
                 _pending.Clear();
             }
+            ApplyExtensionChanges();
             CaptureColliders(deltaTime);
             if (ActiveParticleCount == 0 || Backend == null)
                 return;
@@ -231,7 +246,70 @@ namespace Yu5h1Lib
                 return;
             }
             _lastSettingsError = null;
-            Backend.Step(deltaTime, _settings, _colliderStates, _media, ActiveParticleCount);
+            ParticleExtensionRunner runner = Runner;
+            runner.Prepare(Backend as IParticleDataBinder, StepCount, deltaTime, _settings);
+            Backend.Step(deltaTime, _settings, _colliderStates, _media, ActiveParticleCount, runner);
+        }
+
+        /// <summary>
+        ///   Registers <paramref name="extension"/> from the next step on, after the extensions
+        ///   already registered in its stage. Registering it again keeps its place. Fails with the
+        ///   reason for a null extension, a destroyed world, or a substep extension that declares
+        ///   velocity writes, which the velocity update would overwrite (ParticleExtensions EXT-01,
+        ///   EXT-04).
+        /// </summary>
+        public bool RegisterExtension(IParticleExtension extension, out string error)
+        {
+            error = null;
+            if (extension == null)
+                error = "The extension is null.";
+            else if (_destroyed)
+                error = $"ParticleWorld '{name}' is destroyed.";
+            else if (extension.Stage == ParticleExtensionStage.Substep
+                     && (extension.Writes & ParticleExtensionWrites.Velocities) != 0)
+                error = $"Extension {extension.GetType().Name} runs every substep but declares velocity writes; "
+                    + "the velocity update rebuilds velocities from positions in the same substep.";
+            if (error != null)
+                return false;
+            _extensionChanges.Add((extension, true));
+            return true;
+        }
+
+        /// <summary>
+        ///   Stops calling <paramref name="extension"/> from the next step on.
+        /// </summary>
+        public void UnregisterExtension(IParticleExtension extension)
+        {
+            if (extension != null && !_destroyed)
+                _extensionChanges.Add((extension, false));
+        }
+
+        /// <summary>
+        ///   Binds this world's particle buffers to <paramref name="kernel"/> for work outside a
+        ///   step, such as releasing held particles. Returns false when the world has no GPU data
+        ///   (ParticleExtensions EXT-03).
+        /// </summary>
+        public bool TryBind(ComputeShader shader, int kernel)
+        {
+            if (_destroyed || shader == null || !(Backend is IParticleDataBinder binder))
+                return false;
+            binder.Bind(shader, kernel);
+            return true;
+        }
+
+        void ApplyExtensionChanges()
+        {
+            if (_extensionChanges.Count == 0)
+                return;
+            ParticleExtensionRunner runner = Runner;
+            foreach ((IParticleExtension extension, bool add) in _extensionChanges)
+            {
+                if (add)
+                    runner.Add(extension);
+                else
+                    runner.Remove(extension);
+            }
+            _extensionChanges.Clear();
         }
 
         /// <summary>

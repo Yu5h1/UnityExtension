@@ -1,0 +1,25 @@
+// Test extension for ParticleExtensions PEXT-CHECK-03: pushes particles out of a horizontal plate
+// of half thickness _PlateHalfThickness centred at _PlateY, to the side the particle started the
+// substep on.
+
+#pragma kernel PushOutOfPlate
+
+#include "Packages/com.yu5h1.motion/Runtime/Particles/Shaders/ParticleWorldData.hlsl"
+
+float _PlateY;
+float _PlateHalfThickness;
+
+[numthreads(64, 1, 1)]
+void PushOutOfPlate(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ActiveParticleCount)
+        return;
+    uint i = _ActiveParticles[id.x];
+    float4 position = _Position[i];
+    if (position.w == 0.0)
+        return;
+    float reach = _PlateHalfThickness + _Meta[i].radius;
+    float side = _Previous[i].y >= _PlateY ? 1.0 : -1.0;
+    if ((position.y - _PlateY) * side < reach)
+        _Position[i] = float4(position.x, _PlateY + side * reach, position.z, position.w);
+}

@@ -1,6 +1,7 @@
-// GPU implementation of ParticleSolver 1.0.1
+// GPU implementation of ParticleSolver 1.2.0
 // (Packages/Motion/Documentation/ParticlePhysics/ParticleSolver.md), written from that
-// specification. Every particle kernel walks a compact list of active particles, so parked,
+// specification. Particle buffers and step uniforms are declared in ParticleWorldData.hlsl,
+// shared with extension compute shaders (ParticleExtensions EXT-03). Every particle kernel walks a compact list of active particles, so parked,
 // sleeping and released slots are never processed (ParticleWorld WORLD-10). Corrections from
 // dist constraints and contacts accumulate as fixed-point integers with a resolution of
 // 1e-5 m, which makes their sums independent of thread order (SOLVER-05).
@@ -26,13 +27,7 @@
 #define SHAPE_CAPSULE 1
 #define SHAPE_BOX 2
 
-struct Meta
-{
-    uint group;
-    uint category;
-    uint flags;
-    float radius;
-};
+#include "Packages/com.yu5h1.motion/Runtime/Particles/Shaders/ParticleWorldData.hlsl"
 
 struct Constraint
 {
@@ -84,13 +79,8 @@ struct Medium
     float4 parameters;
 };
 
-RWStructuredBuffer<float4> _Position;
-RWStructuredBuffer<float4> _Previous;
-RWStructuredBuffer<float4> _Velocity;
-StructuredBuffer<Meta> _Meta;
 RWStructuredBuffer<int> _Accumulated;
 RWStructuredBuffer<int> _AccumulatedCount;
-StructuredBuffer<uint> _ActiveParticles;
 StructuredBuffer<uint> _ActiveConstraints;
 StructuredBuffer<uint> _ActiveGroups;
 RWStructuredBuffer<Constraint> _Constraints;
@@ -103,16 +93,12 @@ RWStructuredBuffer<int> _CellHead;
 RWStructuredBuffer<int> _CellNext;
 RWStructuredBuffer<int4> _ParticleCell;
 
-uint _ActiveParticleCount;
 uint _ActiveConstraintCount;
 uint _ActiveGroupCount;
 uint _ColliderCount;
 uint _MediumCount;
 uint _CellCount;
 float _CellSize;
-float _Substep;
-float _StepTime;
-float3 _Gravity;
 float _Damping;
 float _Sor;
 float _ContactWeight;
@@ -134,19 +120,6 @@ void Accumulate(uint index, float3 delta, float weight)
     InterlockedAdd(_Accumulated[index * 3 + 1], (int)round(delta.y * weight * FIXED_SCALE), ignored);
     InterlockedAdd(_Accumulated[index * 3 + 2], (int)round(delta.z * weight * FIXED_SCALE), ignored);
     InterlockedAdd(_AccumulatedCount[index], (int)round(weight * COUNT_SCALE), ignored);
-}
-
-float4 QuaternionMultiply(float4 a, float4 b)
-{
-    return float4(
-        a.w * b.xyz + b.w * a.xyz + cross(a.xyz, b.xyz),
-        a.w * b.w - dot(a.xyz, b.xyz));
-}
-
-float3 Rotate(float4 q, float3 v)
-{
-    float3 t = 2.0 * cross(q.xyz, v);
-    return v + q.w * t + cross(q.xyz, t);
 }
 
 float4 AxisAngle(float3 axis, float angle)
@@ -246,9 +219,9 @@ void InsertCells(uint3 id : SV_DispatchThreadID)
     _ParticleCell[i] = int4(cell, 0);
 }
 
-void Contact(uint i, uint j, float4 pi, Meta mi)
+void Contact(uint i, uint j, float4 pi, ParticleMeta mi)
 {
-    Meta mj = _Meta[j];
+    ParticleMeta mj = _Meta[j];
     if (mi.group != 0u && mi.group == mj.group)
         return;
     float4 pj = _Position[j];
@@ -285,7 +258,7 @@ void SolveContacts(uint3 id : SV_DispatchThreadID)
         return;
     uint i = _ActiveParticles[id.x];
     float4 pi = _Position[i];
-    Meta mi = _Meta[i];
+    ParticleMeta mi = _Meta[i];
     int3 cell = CellOf(pi.xyz);
     [loop]
     for (uint c = 0u; c < 27u; c++)
@@ -402,7 +375,7 @@ void CollideShapes(uint3 id : SV_DispatchThreadID)
     float4 position = _Position[i];
     if (position.w == 0.0)
         return;
-    Meta meta = _Meta[i];
+    ParticleMeta meta = _Meta[i];
     float radius = meta.radius;
     float3 x = position.xyz;
     float3 previous = _Previous[i].xyz;
