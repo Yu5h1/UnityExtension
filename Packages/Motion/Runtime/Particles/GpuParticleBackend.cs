@@ -260,11 +260,11 @@ namespace Yu5h1Lib
             _shader.SetInt("_CellCount", _cellCount);
 
             int particles = _activeParticles.Count;
-            Dispatch(8, _cellCount);
-            Dispatch(9, particles);
             for (int s = 0; s < settings.substeps; s++)
             {
                 Dispatch(0, particles);
+                Dispatch(8, _cellCount);
+                Dispatch(9, particles);
                 Dispatch(1, particles);
                 Dispatch(2, _activeConstraints.Count);
                 Dispatch(3, particles);

@@ -1,7 +1,7 @@
 {
   "schema": "yu5h1.motion.particle-solver-cases",
-  "version": "1.1.0",
-  "spec": "ParticleSolver 1.0.1",
+  "version": "1.2.0",
+  "spec": "ParticleSolver 1.1.0",
   "units": {
     "length": "m",
     "time": "s",
@@ -1828,6 +1828,99 @@
       },
       "tolerance": {
         "velocity": 0.001
+      }
+    },
+    {
+      "id": "PSOLVE-CASE-22",
+      "name": "快速相向的粒子在步驟中途接觸",
+      "covers": [
+        "SOLVER-01",
+        "SOLVER-06"
+      ],
+      "world": {
+        "fixedDeltaTime": 0.02,
+        "substeps": 4,
+        "gravity": [
+          0,
+          0,
+          0
+        ],
+        "damping": 0.0,
+        "sor": 1.0,
+        "frictionStatic": 0.4,
+        "frictionKinetic": 0.2,
+        "maxDepenetrationSpeed": 5.0,
+        "groundY": -1000.0
+      },
+      "particles": [
+        {
+          "position": [
+            -0.14,
+            0,
+            0
+          ],
+          "velocity": [
+            5,
+            0,
+            0
+          ],
+          "invMass": 1.0,
+          "radius": 0.05,
+          "group": 0,
+          "category": 1
+        },
+        {
+          "position": [
+            0.14,
+            0,
+            0
+          ],
+          "velocity": [
+            -5,
+            0,
+            0
+          ],
+          "invMass": 1.0,
+          "radius": 0.05,
+          "group": 0,
+          "category": 1
+        }
+      ],
+      "steps": 1,
+      "derivation": "半徑 0.05，格子邊長 0.1；步驟開始時兩粒子相距 0.28，所在格子相差 3 格，不是鄰格。每子步驟（h = 0.005）各移動 0.025，第 4 個子步驟預測後相距 0.08，穿透 0.02 小於 5 m/s × h，各推開 0.01，得 x = ∓0.05、v = ±3 m/s。鄰近結構若只在步驟開始建立，這一步會漏掉接觸，結果變成 x = ∓0.04、v = ±5 m/s。",
+      "expected": {
+        "particles": [
+          {
+            "index": 0,
+            "position": [
+              -0.05,
+              0.0,
+              0.0
+            ],
+            "velocity": [
+              3.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "index": 1,
+            "position": [
+              0.05,
+              0.0,
+              0.0
+            ],
+            "velocity": [
+              -3.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "tolerance": {
+        "position": 0.0001,
+        "velocity": 0.02
       }
     }
   ]

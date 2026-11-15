@@ -197,8 +197,25 @@ add(id="PSOLVE-CASE-21", name="介質中浮力、拖曳與流速的平衡", cove
     derivation="無碰撞時每步求解後 v += g·dt；介質階段 v = (v − g·ratio·dt)·(1 − b) + flow·b，b = 1 − exp(−ratio·Cd·dt)。靜水中的穩態是終端速度 v_t = g·dt·(1 − ratio)·(1 − b)/b（dt 趨近 0 時趨近 g(1 − ratio)/(ratio·Cd)）；有垂直流速時穩態為 v_t + flow。本例 flow = −v_t，粒子以 −3 m/s 進入後減速到 0；240 步（12 秒，時間常數 1 秒）後與穩態差小於 1e-4。粒子留在原點附近，使 32 位元浮點數重建速度的誤差小於容差。只比對速度。",
     expected=dict(particles=[dict(index=0, velocity=[0, 0, 0])]), tolerance=dict(velocity=1e-3))
 
+dt = 0.02; n = 4; h = dt / n; r = 0.05; xa, xb, va, vb = -0.14, 0.14, 5.0, -5.0
+for _ in range(n):
+    pa, pb = xa, xb
+    xa, xb = xa + h * va, xb + h * vb
+    dist = xb - xa
+    if dist < 2 * r:
+        s = min(2 * r - dist, 5.0 * h) / 2
+        xa, xb = xa - s, xb + s
+    va, vb = (xa - pa) / h, (xb - pb) / h
+add(id="PSOLVE-CASE-22", name="快速相向的粒子在步驟中途接觸", covers=["SOLVER-01", "SOLVER-06"],
+    world=base(fixedDeltaTime=dt, substeps=n), particles=[P((-0.14, 0, 0), vel=(5, 0, 0), radius=r), P((0.14, 0, 0), vel=(-5, 0, 0), radius=r)],
+    steps=1,
+    derivation="半徑 0.05，格子邊長 0.1；步驟開始時兩粒子相距 0.28，所在格子相差 3 格，不是鄰格。每子步驟（h = 0.005）各移動 0.025，第 4 個子步驟預測後相距 0.08，穿透 0.02 小於 5 m/s × h，各推開 0.01，得 x = ∓0.05、v = ±3 m/s。鄰近結構若只在步驟開始建立，這一步會漏掉接觸，結果變成 x = ∓0.04、v = ±5 m/s。",
+    expected=dict(particles=[dict(index=0, position=r7([xa, 0, 0]), velocity=r7([va, 0, 0])),
+                             dict(index=1, position=r7([xb, 0, 0]), velocity=r7([vb, 0, 0]))]),
+    tolerance=TOL_DELTA)
+
 doc = dict(
-    schema="yu5h1.motion.particle-solver-cases", version="1.1.0", spec="ParticleSolver 1.0.1",
+    schema="yu5h1.motion.particle-solver-cases", version="1.2.0", spec="ParticleSolver 1.1.0",
     units=dict(length="m", time="s", mass="kg"),
     comparison="只比對 expected 列出的欄位，逐分量絕對誤差不得超過該案例的 tolerance。steps 是固定步數，每步 fixedDeltaTime 秒、substeps 個子步驟。未列出的世界設定採 ParticleSolver 預設值。media 在步後階段依列出順序作用。collider 的 linearVelocity 表示每步開始時姿勢依此速度平移、表面速度等於該速度。constraints 的 restLength 為明確指定的靜止長度。32 位元浮點數下由 (x − p)/h 重建的速度誤差約為 ulp(|x|)/h，案例的起點、子步驟與容差依此設定。particles 的 position 是實體本地座標；有 pose 的案例以 pose（position 與 [w,x,y,z] rotation）放置，沒有 pose 時即世界座標。rigidGroups 的 particles 是群組成員索引，靜止形狀取自粒子本地位置。",
     cases=cases)
