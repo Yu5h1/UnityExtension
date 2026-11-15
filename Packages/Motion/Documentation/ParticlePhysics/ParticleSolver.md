@@ -1,6 +1,6 @@
 # ParticleSolver：粒子求解
 
-> 規格版本 1.0.0 · 2026-11-14 · 目標已確認，尚無實作
+> 規格版本 1.0.1 · 2026-11-15 · 目標已確認，尚無實作（1.0.1 只補上〈來源與致謝〉，行為不變）
 >
 > 與其他文件的關係：本文件規定粒子的數值行為；粒子怎麼配置、登記、釋放，以及擴充行為掛在哪個階段，由 [ParticleWorld](ParticleWorld.md) 規定。解析解案例在 [ParticleSolverCases.json](ParticleSolverCases.json)，由 [generate_particle_solver_cases.py](generate_particle_solver_cases.py) 依本文件的公式產生。遷移順序與擁有權決定見 Motion repo 的 `Documentation/GpuPhysicsMigrationPlan.md`。
 
@@ -258,9 +258,19 @@ len > 1e-7 時：limit = (len < μs·pen) ? len : μk·pen；x ← x − (Δt/le
 - 粒子半徑 ≤ 0、反質量 < 0、非有限的位置或速度：ParticleWorld 在配置時拒絕（WORLD-04），求解不處理。
 - 約束兩端是同一顆粒子：配置時拒絕。
 
+## 來源與致謝
+
+本規格的算法基礎是 Johann Hotzel 的 [unified-solver](https://github.com/JohannHotzel/unified-solver)（MIT 授權，Copyright (c) 2026 Johann），Unified-Solver 套件以它為依賴擴充。本規格整理自對它的行為研讀；Motion package 的實作依本規格重新撰寫，不複製其原始碼。所用方法出自下列公開研究：
+
+- 位置式動力學與柔度約束：Macklin, Müller, Chentanez，〈XPBD: Position-Based Simulation of Compliant Constrained Dynamics〉，MIG 2016。
+- 統一粒子表示與約束平均（Jacobi 平均與 SOR）：Macklin, Müller, Chentanez, Kim，〈Unified Particle Physics for Real-Time Applications〉，SIGGRAPH 2014。
+- 剛體群的形狀匹配：Müller, Heidelberger, Teschner, Gross，〈Meshless Deformations Based on Shape Matching〉，SIGGRAPH 2005。
+- 旋轉萃取：Müller, Bender, Chentanez, Macklin，〈A Robust Method to Extract the Rotational Part of Deformations〉，MIG 2016。
+- 鄰近搜尋的空間雜湊：Teschner, Heidelberger, Müller, Pomeranets, Gross，〈Optimized Spatial Hashing for Collision Detection of Deformable Objects〉，VMV 2003。
+
 ## 與第三方求解器的差異
 
-本規格以 Unified-Solver 依賴的第三方求解器為算法基礎。下列項目刻意不同，使用者 2026-11-14 決定改成標準做法（BonghuoVR 繼續使用 Unified-Solver，不受影響）：
+本規格以上述第三方求解器為算法基礎。下列項目刻意不同，使用者 2026-11-14 決定改成標準做法（BonghuoVR 繼續使用 Unified-Solver，不受影響）：
 
 | 項目 | 第三方求解器 | 本規格 |
 |---|---|---|

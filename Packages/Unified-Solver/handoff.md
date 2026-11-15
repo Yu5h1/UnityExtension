@@ -19,7 +19,10 @@ The original `unified-solver` is vendored read-only under
 `Runtime/Dependencies/unified-solver` and `Editor/Dependencies/unified-solver`.
 Keep changes out of it unless the user explicitly authorizes otherwise. The
 former standalone Unified Solver workspace is retired; do not route work back to
-it.
+it. Source and license: https://github.com/JohannHotzel/unified-solver, MIT,
+recorded with the full notice and the local `SolverManager.cs` modification in
+`Third Party Notices.md` (2026-11-15); keep that file current if the vendored
+copy or its modifications change.
 
 ## Direction (2026-11-14 user decision)
 
