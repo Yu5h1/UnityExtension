@@ -5,7 +5,10 @@ namespace Yu5h1Lib
 {
     /// <summary>
     ///   A mesh drawn at the entity's rigid pose, oriented by a forward axis and optionally fitted to
-    ///   the layout's dimensions. Suited to rigid groups; other interactions only move the pose.
+    ///   the layout's dimensions (ParticleRendering REND-06). Suited to rigid groups; other
+    ///   interactions only move the pose. The mesh's <see cref="ForwardAxis"/> becomes the entity's
+    ///   local Y axis; with <see cref="FitToDimensions"/> the mesh is scaled to the entity's rest
+    ///   extent (rest particles plus their radius), and <see cref="VisualScale"/> multiplies on top.
     /// </summary>
     public sealed class AuthoredMeshAppearance : PhysicsParticleAppearance
     {
@@ -17,6 +20,8 @@ namespace Yu5h1Lib
         bool _flipForward;
         [SerializeField]
         bool _fitToDimensions;
+        [SerializeField]
+        Vector3 _visualScale = Vector3.one;
 
         public Mesh Mesh
         {
@@ -40,6 +45,12 @@ namespace Yu5h1Lib
         {
             get => _fitToDimensions;
             set => _fitToDimensions = value;
+        }
+
+        public Vector3 VisualScale
+        {
+            get => _visualScale;
+            set => _visualScale = ParticleMeshAxis.ClampScale(value);
         }
 
         public override void Validate(
