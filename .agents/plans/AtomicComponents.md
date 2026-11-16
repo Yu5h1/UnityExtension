@@ -78,8 +78,14 @@
 ## Timer 整合（real consumer，planned；2026-06-12）
 
 - **Timer 不繼承 `Resolver<T>`**：繼承後序列化事件名變 `resolved`，跟 Timer 既有 `completed` 語意打架——**vocabulary mismatch = 「不是 is-a」的訊號**。Timer 是 Repeater 的 **consumer/composer，不是 is-a Resolver**。
-- 做法：**Timer 保留現狀、只刪內部 repeat 功能**，改用 UnityEvent 組合：`TimerBehaviour._completed → RepeaterObject.Resolve()`（void，UnityEvent 接得了；`bool TryResolve(out)` 接不了）→ RepeaterObject 的 `_resolving` → `Timer.Start()` 重啟，`_resolved` → 停。全程 inspector 接線、零膠水 = 可組合的 `repeatTimer`。
+- Timer 保留既有 Inspector 事件接線，重複計數交給 `RepeaterObject`。`_Completed` 以 UnityEvent 呼叫 `RepeaterObject.Resolve()`，`_resolving` 觸發 `Timer.Start()` 開始下一輪。`_resolved` 表示重啟次數已用完，最後一輪實際結束由 Timer 的完成事件判斷。
 - 這個 consumer **驗證了**：Repeater 核心 + SO 層的 UnityEvent 橋接（無程式碼組合的理由）。**仍未驗**：`IResolver<int>` 的「值」面（restart 用不到 int）、`IResolver<T>` 多型抽換（直接接 concrete RepeaterObject）。
+
+### 單次計時的執行資料
+
+- **Timer 元件保留設定和 Inspector 事件接線。** 同一個元件每次 `Start()` 開始一輪新計時，沿用原有接線。每輪的時間、進度和等待狀態由該輪的執行資料管理。
+- **每輪執行資料可獨立清理。** 完成或取消時，解除該輪的執行參考和回呼。`Wait` 與延後執行的回呼綁定到建立時的那一輪。驗收時讓舊 `Wait` 在新一輪開始後再次輪詢，並讓完成事件立即呼叫 `Start()`，確認舊的輪詢、回呼或清理都碰不到新一輪，原有 Inspector 接線仍可使用。
+- **預留接 `Recycler` 的能力。** 單次執行資料有明確的初始化與清理流程，可以獨立借還。先以一般建立與清理驗證行為。等實際負載量到短命計時工作的配置或 GC 成本，再評估由 `Recycler` 管理這份執行資料。
 
 ## 未來方向：IValuePort 綁定（breadcrumb，2026-06-13）
 
