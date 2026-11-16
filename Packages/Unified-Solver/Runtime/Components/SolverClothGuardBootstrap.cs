@@ -100,16 +100,19 @@ namespace Yu5h1Lib.UnifiedSolver
 
         static void AllocateInactive()
         {
-            SolverManager solver = SolverManager.Instance;
-            if (solver == null || SolverReuse.HasStepped(solver))
-                return;
-
             // Grouped by object: one GameObject can carry a generator, its glue
             // and an emitter, and it is switched on once for all of them.
             var owners = new List<GameObject>();
             CollectInactive<SolverParticleEmitter>(owners);
             CollectInactive<SolverClothParticles>(owners);
             CollectInactive<SolverRopeParticles>(owners);
+
+            if (owners.Count == 0)
+                return;
+
+            SolverManager solver = SolverManager.Instance;
+            if (solver == null || SolverReuse.HasStepped(solver))
+                return;
 
             for (int i = 0; i < owners.Count; i++)
             {

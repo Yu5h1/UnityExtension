@@ -1,0 +1,56 @@
+# UI Toolkit ChatPanel Checklist
+
+Current round: `Packages/UIToolkit/Documentation/Yu5h1Lib.UX/ChatPanel.md#2026-11-15-ui-toolkit-驗收050-draft`.
+
+- [x] **1. 核對驗收來源並重跑既有測試**
+  Outcome: 釘選規範、測試環境和既有測試結果均可追溯。
+  Checks:
+    - [x] **乾淨套件來源與宿主還原**
+      - Action: 核對 UX manifest 雜湊及 Unity Package Manager 解析路徑，測試後核對原始檔案和樣本連結。
+      - Expect: 規範、設計資料與案例符合 manifest，測試解析至 9469710 工作樹，結束後復原原始套件路徑、三個樣本 junction、manifest 及 lock。
+    - [x] **既有回覆和輸入列 EditMode**
+      - Action: 以 Unity 6000.6.0f1 執行 ChatReplyPerformanceTests 與 ChatComposerTests，證據為 editmode.xml。
+      - Expect: 兩組共 20 項既有測試通過。
+    - [x] **既有捲動與距離淡出 PlayMode**
+      - Action: 以同一測試專案執行 ChatPresenterScrollTests，證據為 playmode.xml。
+      - Expect: 既有的向下跟隨、宿主要求捲動、距離淡出及停用淡出共 4 項測試通過。
+
+- [!] **2. 依 UX 案例驗證串流揭露**
+  Outcome: 公開播放入口符合思考和串流案例。
+  Checks:
+    - [x] **預設配速與上限（CHAT-STREAM-PACING）**
+      - Action: 以 chat-stream-pacing 的 tick 時間推進 ChatReplyPerformance，證據為 neutral-reply-results.json。
+      - Expect: 0.1 秒推進 3 字素，長 tick 最多再推進 8 字素。
+    - [!] **思考計時（CHAT-TIMER-THINKING）**
+      - Action: 以 chat-timer-thinking 的時間重播，另由新回覆立刻推送非空快照。
+      - Expect: 5 秒起固定三個句點，非空快照略過思考提示。
+      - Observed: 6 秒顯示「思考中.6s」。新的非空快照以零時間更新時仍顯示思考提示。
+    - [!] **快照重寫（CHAT-STREAM-SNAPSHOT）**
+      - Action: 重播 chat-stream-snapshot 的延伸與不相符快照，推送改寫後以零時間更新。
+      - Expect: 延伸保留已顯示前綴，改寫清掉原有文字與揭露配額。
+      - Observed: 延伸保留前綴，改寫後零時間更新仍可揭露新文字。
+    - [!] **字素與減少動態（CHAT-STREAM-GRAPHEME、CHAT-STREAM-REDUCEMOTION）**
+      - Action: 重播兩個案例的暫留字素與 Complete(null)。
+      - Expect: 保留已收到的完整字素，Complete(null) 釋放最後一個字素。
+      - Observed: 國旗維持完整，減少動態立即顯示安全前綴。Complete(null) 清空兩組文字。
+    - [ ] **完成通知與宿主覆寫（CHAT-STREAM-DONE、CHAT-STREAM-PACING、CHAT-TIMER-THINKING）**
+      - Action: 經公開入口測一次性通知、基本字速覆寫和隱藏秒數。
+      - Expect: 宿主能收到恰好一次完成通知，並覆寫字速和秒數顯示。
+
+- [!] **3. 核對聊天組合與驗收入口**
+  Outcome: 訊息區和輸入列可按本版規範組裝並完成核心情境。
+  Checks:
+    - [!] **開始回覆時保留閱讀狀態（CHAT-SCROLL-REENGAGE）**
+      - Action: 檢視宿主送出與 ChatPresenter.BeginReply 的跟隨接線。
+      - Expect: 送出要求貼底，開始回覆沿用觀看者目前的捲動狀態。
+      - Observed: 程式核對確認宿主送出與 BeginReply 都呼叫 FollowBottom。未執行此中性案例及觸控案例。
+    - [!] **多行輸入與鍵盤分流（CHAT-COMPOSE-MULTILINE、CHAT-COMPOSE-SUBMIT）**
+      - Action: 檢視樣本呼叫的 ChatComposer 欄位及鍵盤事件處理。
+      - Expect: 多行欄位最多顯示五行，Shift+Enter 換行並保留送出鍵位置。
+      - Observed: 欄位建立時設定為單行。非組字的 Return 路徑未檢查 Shift，缺少五行高度和內部捲動接線。
+    - [ ] **訊息排版與覆蓋捲軸（CHAT-LAYOUT、CHAT-STYLE、CHAT-SCROLL-FADE、CHAT-SCROLL-BAR）**
+      - Action: 透過 Chat Module 樣本比較頭像、泡泡、名稱、時間、淡出和捲軸，改變可用尺寸並觀察位置。
+      - Expect: 可切換時間位置，宿主能設定列寬，淡出與捲軸符合本版規範。
+    - [ ] **輸入列外觀、實體輸入與組裝（CHAT-COMPOSE、DX）**
+      - Action: 核對 Chat Module 樣本的組裝及預覽，驗證輸入焦點、麥克風、送出和中文 IME。
+      - Expect: 樣本可供消費端使用，焦點及按鍵不造成誤送，組合重用同平台已驗證的下層交付。

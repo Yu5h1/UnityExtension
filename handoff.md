@@ -6,6 +6,7 @@
 
 - uGUI 驗收入口：由 [AcceptanceDemo 採用紀錄](Packages/UI/Documentation/Yu5h1Lib.UX/AcceptanceDemo.md) 進入，包含 VCP sample 的搜尋、格線與切換驗證。
 - uGUI ChatPanel（VCP sample）：直向試用後依 [示範版對齊計畫](Documentation/ChatPanelDemoParityPlan.md) 接續。訊息區採用與試用入口見 [ChatPanel 採用紀錄](Packages/UI/Documentation/Yu5h1Lib.UX/ChatPanel.md)，實機檢查見 [ui-chatpanel](checklists/ui-chatpanel.checklist)。產品遷移與舊版退役留待試用確認。
+- UI Toolkit ChatPanel：0.5.0-draft 的驗收與來源基線見 [ChatPanel 驗收紀錄](Packages/UIToolkit/Documentation/Yu5h1Lib.UX/ChatPanel.md) 與 [驗收清單](checklists/uitk-chatpanel.checklist)。
 
 Yu5h1's UnityExtension is a Unity application-extension solution from Yu5h1's development perspective. It collects reusable systems, tools, packages, and workflows so Unity projects can be built in a more efficient, low-waste, user-friendly way.
 
