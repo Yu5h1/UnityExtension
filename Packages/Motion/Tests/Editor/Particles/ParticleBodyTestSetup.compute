@@ -1,0 +1,25 @@
+// Test kernel for the body, behaviour, sleep and volume checks (ParticleExtensions PEXT-CHECK-10 to
+// 14): writes chosen particles' position, previous position and velocity, keeping their inverse
+// mass, so a test can place a body in a pose the layout cannot produce (a hairpin, a far corner).
+
+#pragma kernel SetParticles
+
+#include "Packages/com.yu5h1.motion/Runtime/Particles/Shaders/ParticleWorldData.hlsl"
+
+StructuredBuffer<uint> _TestIndices;
+StructuredBuffer<float4> _TestPositions;
+StructuredBuffer<float4> _TestVelocities;
+uint _TestCount;
+
+[numthreads(64, 1, 1)]
+void SetParticles(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _TestCount)
+        return;
+    uint i = _TestIndices[id.x];
+    float4 position = _Position[i];
+    float3 placed = _TestPositions[id.x].xyz;
+    _Position[i] = float4(placed, position.w);
+    _Previous[i] = float4(placed, 0.0);
+    _Velocity[i] = float4(_TestVelocities[id.x].xyz, 0.0);
+}

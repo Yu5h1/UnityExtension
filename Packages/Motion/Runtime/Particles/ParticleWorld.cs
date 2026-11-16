@@ -35,7 +35,9 @@ namespace Yu5h1Lib
             public RangeInt constraints;
             public RangeInt rigidGroups;
             public int group;
+            public bool groupOwned;
             public bool parked;
+            public bool sleeping;
             public Pose pose;
             public ParticleEntityRequest rest;
         }
@@ -74,6 +76,9 @@ namespace Yu5h1Lib
         };
         readonly List<ParticleColliderState> _colliderStates = new List<ParticleColliderState>();
         readonly List<ParticleMedium> _media = new List<ParticleMedium>();
+        readonly List<ParticleMedium> _stepMedia = new List<ParticleMedium>();
+        readonly List<ParticleVolume> _volumes = new List<ParticleVolume>();
+        readonly List<ParticleMotionTarget> _motionTargets = new List<ParticleMotionTarget>();
         readonly ParticleGroupAllocator _groups = new ParticleGroupAllocator();
         readonly List<(IParticleExtension extension, bool add)> _extensionChanges =
             new List<(IParticleExtension extension, bool add)>();
@@ -102,10 +107,16 @@ namespace Yu5h1Lib
         public int UsedRigidGroups => Slots(ref _rigidGroupSlots, _capacity.rigidGroups).Used;
 
         /// <summary>
-        ///   Particles of entities that are allocated and not parked; the solver's workload
-        ///   (ParticleWorld WORLD-10).
+        ///   Particles of entities that are allocated, not parked and not asleep; the solver's
+        ///   workload (ParticleWorld WORLD-10).
         /// </summary>
         public int ActiveParticleCount { get; private set; }
+
+        /// <summary>
+        ///   Particles of sleeping entities: not processed by any solver kernel, only present in
+        ///   the neighbour structure as immovable contact partners (ParticleExtensions EXT-13).
+        /// </summary>
+        public int SleepingParticleCount { get; private set; }
 
         /// <summary>
         ///   Steps advanced with a valid time step since the world was created.
@@ -113,9 +124,27 @@ namespace Yu5h1Lib
         public int StepCount { get; private set; }
 
         /// <summary>
-        ///   Fluid regions applied after every step in list order (ParticleSolver SOLVER-17).
+        ///   Fluid regions a script adds, applied after every step in list order after the media of
+        ///   the registered <see cref="ParticleVolume"/>s (ParticleSolver SOLVER-17, ParticleExtensions
+        ///   EXT-14).
         /// </summary>
         public List<ParticleMedium> Media => _media;
+
+        /// <summary>
+        ///   Volumes registered with this world, in registration order.
+        /// </summary>
+        public IReadOnlyList<ParticleVolume> Volumes => _volumes;
+
+        /// <summary>
+        ///   Motion targets registered with this world, in registration order.
+        /// </summary>
+        public IReadOnlyList<ParticleMotionTarget> MotionTargets => _motionTargets;
+
+        /// <summary>
+        ///   The media in effect for the current step: the volumes' first, then
+        ///   <see cref="Media"/>. Refreshed at the start of every step.
+        /// </summary>
+        public IReadOnlyList<ParticleMedium> StepMedia => _stepMedia;
 
         /// <summary>
         ///   The solver side of this world. Replacing it disposes the previous backend.
@@ -211,9 +240,12 @@ namespace Yu5h1Lib
             _pending.Clear();
             foreach (List<ParticleCollider> list in _colliders)
                 list.Clear();
+            _volumes.Clear();
+            _motionTargets.Clear();
             _extensionChanges.Clear();
             Runner.Clear();
             ActiveParticleCount = 0;
+            SleepingParticleCount = 0;
             Backend = null;
             ActiveWorldsChanged?.Invoke();
         }
@@ -246,9 +278,10 @@ namespace Yu5h1Lib
                 return;
             }
             _lastSettingsError = null;
+            CaptureMedia();
             ParticleExtensionRunner runner = Runner;
             runner.Prepare(Backend as IParticleDataBinder, StepCount, deltaTime, _settings);
-            Backend.Step(deltaTime, _settings, _colliderStates, _media, ActiveParticleCount, runner);
+            Backend.Step(deltaTime, _settings, _colliderStates, _stepMedia, ActiveParticleCount, runner);
         }
 
         /// <summary>
@@ -348,6 +381,15 @@ namespace Yu5h1Lib
             EntityRecord record = _entities[entity.Id];
             Backend.RequestReadback(record.particles, record.constraints, record.rigidGroups, readback, onComplete);
         }
+
+        /// <summary>
+        ///   Reserves a group number for <see cref="ParticleEntityRequest.sharedGroup"/>: entities in
+        ///   it skip one another (ParticleSolver SOLVER-08). Release it with
+        ///   <see cref="ReleaseGroup"/> once no entity uses it.
+        /// </summary>
+        public int AllocateGroup() => _groups.Allocate();
+
+        public void ReleaseGroup(int group) => _groups.Release(group);
 
         public bool TryAllocate(ParticleEntityRequest request, out ParticleEntity entity, out string error)
         {
@@ -458,7 +500,9 @@ namespace Yu5h1Lib
             EntityRecord record = _entities[entity.Id];
             Enqueue(ParticleWorldChangeKind.Release, entity.Id, record);
             Unreserve(record, _particleSlots, _constraintSlots, _rigidGroupSlots);
-            if (!record.parked)
+            if (record.sleeping)
+                SleepingParticleCount -= record.particles.length;
+            else if (!record.parked)
                 ActiveParticleCount -= record.particles.length;
             record.alive = false;
             _freeIds.Push(entity.Id);
@@ -467,6 +511,7 @@ namespace Yu5h1Lib
         internal void Teleport(ParticleEntity entity, Pose pose, Vector3 velocity)
         {
             EntityRecord record = RecordOf(entity);
+            Wake(entity.Id, record);
             ParticleWorldChange change = Enqueue(ParticleWorldChangeKind.Teleport, entity.Id, record);
             change.transformDelta =
                 Matrix4x4.TRS(pose.position, pose.rotation, Vector3.one)
@@ -479,6 +524,7 @@ namespace Yu5h1Lib
         internal void Reset(ParticleEntity entity, Pose pose)
         {
             EntityRecord record = RecordOf(entity);
+            Wake(entity.Id, record);
             record.pose = pose;
             Enqueue(ParticleWorldChangeKind.Reset, entity.Id, record).pose = pose;
         }
@@ -488,9 +534,37 @@ namespace Yu5h1Lib
             EntityRecord record = RecordOf(entity);
             if (record.parked == parked)
                 return;
+            if (parked)
+                Wake(entity.Id, record);
             record.parked = parked;
             ActiveParticleCount += parked ? -record.particles.length : record.particles.length;
             Enqueue(ParticleWorldChangeKind.SetParked, entity.Id, record).parked = parked;
+        }
+
+        internal void SetSleeping(ParticleEntity entity, bool sleeping)
+        {
+            EntityRecord record = RecordOf(entity);
+            if (record.sleeping == sleeping || (sleeping && record.parked))
+                return;
+            record.sleeping = sleeping;
+            int length = record.particles.length;
+            ActiveParticleCount += sleeping ? -length : length;
+            SleepingParticleCount += sleeping ? length : -length;
+            Enqueue(ParticleWorldChangeKind.SetSleeping, entity.Id, record).sleeping = sleeping;
+        }
+
+        /// <summary>
+        ///   Clears the entity's sleep right away, before the change that called for it is queued
+        ///   (ParticleExtensions EXT-13).
+        /// </summary>
+        void Wake(int id, EntityRecord record)
+        {
+            if (!record.sleeping)
+                return;
+            record.sleeping = false;
+            ActiveParticleCount += record.particles.length;
+            SleepingParticleCount -= record.particles.length;
+            Enqueue(ParticleWorldChangeKind.SetSleeping, id, record).sleeping = false;
         }
 
         internal void SetCategory(ParticleEntity entity, uint category)
@@ -551,10 +625,13 @@ namespace Yu5h1Lib
         internal void SetGroupMode(ParticleEntity entity, ParticleGroupMode mode)
         {
             EntityRecord record = RecordOf(entity);
-            if (record.rest.groupMode == mode)
+            if (record.rest.groupMode == mode && record.rest.sharedGroup <= 0)
                 return;
-            _groups.Release(record.group);
-            record.group = mode == ParticleGroupMode.NewGroup ? _groups.Allocate() : 0;
+            if (record.groupOwned)
+                _groups.Release(record.group);
+            record.rest.sharedGroup = 0;
+            record.groupOwned = mode == ParticleGroupMode.NewGroup;
+            record.group = record.groupOwned ? _groups.Allocate() : 0;
             record.rest.groupMode = mode;
             Enqueue(ParticleWorldChangeKind.SetGroup, entity.Id, record);
         }
@@ -593,6 +670,66 @@ namespace Yu5h1Lib
 
         internal int ColliderCount(ParticleColliderShape shape) => _colliders[(int)shape].Count;
 
+        /// <summary>
+        ///   Adds a volume in registration order; registering it again keeps its place
+        ///   (ParticleExtensions EXT-14, ParticleWorld WORLD-02).
+        /// </summary>
+        internal bool RegisterVolume(ParticleVolume volume, out string error)
+        {
+            error = null;
+            if (_destroyed)
+            {
+                error = $"ParticleWorld '{name}' is destroyed.";
+                return false;
+            }
+            if (!_volumes.Contains(volume))
+            {
+                _volumes.Add(volume);
+                Log($"registered volume '{volume.name}'");
+            }
+            return true;
+        }
+
+        internal void UnregisterVolume(ParticleVolume volume)
+        {
+            if (_volumes.Remove(volume))
+                Log($"unregistered volume '{volume.name}'");
+        }
+
+        /// <summary>
+        ///   Adds a motion target in registration order (ParticleExtensions EXT-12).
+        /// </summary>
+        internal bool RegisterMotionTarget(ParticleMotionTarget target, out string error)
+        {
+            error = null;
+            if (_destroyed)
+            {
+                error = $"ParticleWorld '{name}' is destroyed.";
+                return false;
+            }
+            if (!_motionTargets.Contains(target))
+            {
+                _motionTargets.Add(target);
+                Log($"registered motion target '{target.name}'");
+            }
+            return true;
+        }
+
+        internal void UnregisterMotionTarget(ParticleMotionTarget target)
+        {
+            if (_motionTargets.Remove(target))
+                Log($"unregistered motion target '{target.name}'");
+        }
+
+        void CaptureMedia()
+        {
+            _stepMedia.Clear();
+            foreach (ParticleVolume volume in _volumes)
+                if (volume != null)
+                    volume.AppendMedia(_stepMedia);
+            _stepMedia.AddRange(_media);
+        }
+
         void CaptureColliders(float deltaTime)
         {
             _colliderStates.Clear();
@@ -624,13 +761,15 @@ namespace Yu5h1Lib
                 return false;
             }
             ParticleEntityRequest rest = Snapshot(request);
+            bool owned = rest.sharedGroup <= 0 && rest.groupMode == ParticleGroupMode.NewGroup;
             record = new EntityRecord
             {
                 alive = true,
                 particles = particles,
                 constraints = constraints,
                 rigidGroups = rigidGroups,
-                group = rest.groupMode == ParticleGroupMode.NewGroup ? _groups.Allocate() : 0,
+                group = rest.sharedGroup > 0 ? rest.sharedGroup : owned ? _groups.Allocate() : 0,
+                groupOwned = owned,
                 pose = rest.pose,
                 rest = rest
             };
@@ -646,7 +785,8 @@ namespace Yu5h1Lib
             particleSlots.Free(record.particles);
             constraintSlots.Free(record.constraints);
             rigidGroupSlots.Free(record.rigidGroups);
-            _groups.Release(record.group);
+            if (record.groupOwned)
+                _groups.Release(record.group);
         }
 
         /// <summary>
@@ -658,6 +798,7 @@ namespace Yu5h1Lib
             var copy = new ParticleEntityRequest
             {
                 groupMode = request.groupMode,
+                sharedGroup = request.sharedGroup,
                 category = request.category,
                 pose = request.pose
             };
@@ -690,6 +831,7 @@ namespace Yu5h1Lib
                 request = record.rest,
                 pose = record.pose,
                 parked = record.parked,
+                sleeping = record.sleeping,
                 category = record.rest.category
             };
             _pending.Add(change);

@@ -14,8 +14,10 @@ namespace Yu5h1Lib
     ///   from the world's capacity when the world is first enabled. Entity changes are written to
     ///   their own slots only, so other particles are never disturbed (ParticleWorld WORLD-06);
     ///   every kernel walks compact lists of the active particles, constraints and rigid groups,
-    ///   rebuilt whenever entities are added, released, parked or resized (WORLD-10). State leaves
-    ///   the GPU only through asynchronous readback (WORLD-14).
+    ///   rebuilt whenever entities are added, released, parked, put to sleep or resized (WORLD-10);
+    ///   sleeping particles only join the neighbour structure as immovable contact partners
+    ///   (ParticleExtensions EXT-13). State leaves the GPU only through asynchronous readback
+    ///   (WORLD-14).
     /// </summary>
     internal sealed class GpuParticleBackend : IParticleBackend, IParticleDataBinder
     {
@@ -28,6 +30,9 @@ namespace Yu5h1Lib
         static readonly int ActiveParticlesId = Shader.PropertyToID("_ActiveParticles");
         static readonly int ActiveParticleCountId = Shader.PropertyToID("_ActiveParticleCount");
         static readonly int GroupsId = Shader.PropertyToID("_Groups");
+        static readonly int MediaId = Shader.PropertyToID("_Media");
+        static readonly int MediumCountId = Shader.PropertyToID("_MediumCount");
+        static readonly int SleepPushId = Shader.PropertyToID("_SleepPush");
 
         [StructLayout(LayoutKind.Sequential)]
         struct GpuMeta
@@ -101,6 +106,7 @@ namespace Yu5h1Lib
             public int group;
             public uint category;
             public bool parked;
+            public bool sleeping;
             public ParticleEntityRequest rest;
         }
 
@@ -108,7 +114,7 @@ namespace Yu5h1Lib
         {
             "Predict", "ClearAccumulators", "SolveDistance", "SolveContacts", "ApplyAccumulated",
             "CollideShapes", "MatchRigidGroups", "UpdateVelocities", "ClearCells", "InsertCells",
-            "ApplyMedia", "TransformRange", "TransformGroups", "UpdateConstraintParameters"
+            "ApplyMedia", "TransformRange", "TransformGroups", "UpdateConstraintParameters", "InsertSleepingCells"
         };
 
         readonly ComputeShader _shader;
@@ -118,6 +124,7 @@ namespace Yu5h1Lib
         readonly List<uint> _activeParticles = new List<uint>();
         readonly List<uint> _activeConstraints = new List<uint>();
         readonly List<uint> _activeGroups = new List<uint>();
+        readonly List<uint> _sleepingParticles = new List<uint>();
         readonly List<ComputeBuffer> _buffers = new List<ComputeBuffer>();
         readonly ComputeBuffer _position;
         readonly ComputeBuffer _previous;
@@ -128,6 +135,8 @@ namespace Yu5h1Lib
         readonly ComputeBuffer _activeParticleBuffer;
         readonly ComputeBuffer _activeConstraintBuffer;
         readonly ComputeBuffer _activeGroupBuffer;
+        readonly ComputeBuffer _sleepingParticleBuffer;
+        readonly ComputeBuffer _sleepPush;
         readonly ComputeBuffer _constraints;
         readonly ComputeBuffer _groups;
         readonly ComputeBuffer _groupMembers;
@@ -185,6 +194,9 @@ namespace Yu5h1Lib
             _activeParticleBuffer = Create(particles, 4);
             _activeConstraintBuffer = Create(constraints, 4);
             _activeGroupBuffer = Create(groups, 4);
+            _sleepingParticleBuffer = Create(particles, 4);
+            _sleepPush = Create(particles, 4);
+            _sleepPush.SetData(new uint[Mathf.Max(1, particles)]);
             _constraints = Create(constraints, Marshal.SizeOf<GpuConstraint>());
             _groups = Create(groups, Marshal.SizeOf<GpuGroup>());
             _groupMembers = Create(particles, 4);
@@ -225,6 +237,11 @@ namespace Yu5h1Lib
                     case ParticleWorldChangeKind.SetParked:
                         if (_entities.TryGetValue(change.entityId, out Entity parked))
                             parked.parked = change.parked;
+                        _listsDirty = true;
+                        break;
+                    case ParticleWorldChangeKind.SetSleeping:
+                        if (_entities.TryGetValue(change.entityId, out Entity sleeper))
+                            SetSleeping(sleeper, change.sleeping);
                         _listsDirty = true;
                         break;
                     case ParticleWorldChangeKind.SetConstraints:
@@ -279,9 +296,11 @@ namespace Yu5h1Lib
             int particles = _activeParticles.Count;
             for (int s = 0; s < settings.substeps; s++)
             {
+                _shader.SetInt("_SubstepIndex", s);
                 Dispatch(0, particles);
                 Dispatch(8, _cellCount);
                 Dispatch(9, particles);
+                Dispatch(14, _sleepingParticles.Count);
                 Dispatch(1, particles);
                 Dispatch(2, _activeConstraints.Count);
                 Dispatch(3, particles);
@@ -296,6 +315,16 @@ namespace Yu5h1Lib
             extensions?.RunPostStep();
         }
 
+        /// <summary>
+        ///   Particles the solver kernels walk: awake, not parked, not released (WORLD-10).
+        /// </summary>
+        internal int ActiveParticleListCount => _activeParticles.Count;
+
+        /// <summary>
+        ///   Sleeping particles that only join the neighbour structure (EXT-13).
+        /// </summary>
+        internal int SleepingParticleListCount => _sleepingParticles.Count;
+
         public void Bind(ComputeShader shader, int kernel)
         {
             if (_disposed)
@@ -307,6 +336,21 @@ namespace Yu5h1Lib
             shader.SetBuffer(kernel, ActiveParticlesId, _activeParticleBuffer);
             shader.SetBuffer(kernel, GroupsId, _groups);
             shader.SetInt(ActiveParticleCountId, _activeParticles.Count);
+        }
+
+        public void BindMedia(ComputeShader shader, int kernel)
+        {
+            if (_disposed)
+                return;
+            shader.SetBuffer(kernel, MediaId, _media);
+            shader.SetInt(MediumCountId, _mediumData.Length);
+        }
+
+        public void BindSleep(ComputeShader shader, int kernel)
+        {
+            if (_disposed)
+                return;
+            shader.SetBuffer(kernel, SleepPushId, _sleepPush);
         }
 
         public void Bind(MaterialPropertyBlock block)
@@ -399,6 +443,27 @@ namespace Yu5h1Lib
                 UnityEngine.Object.Destroy(_shader);
             else
                 UnityEngine.Object.DestroyImmediate(_shader);
+        }
+
+        /// <summary>
+        ///   Marks the entity's particles as sleeping or awake in their metadata and, when they fall
+        ///   asleep, stops them where they are: previous position equals position and velocity is 0,
+        ///   so waking resumes from rest. The push the entity's contacts recorded is cleared.
+        /// </summary>
+        void SetSleeping(Entity entity, bool sleeping)
+        {
+            entity.sleeping = sleeping;
+            WriteMeta(entity);
+            if (entity.particles.length == 0)
+                return;
+            _sleepPush.SetData(new uint[entity.particles.length], 0, entity.particles.start, entity.particles.length);
+            if (!sleeping)
+                return;
+            _shader.SetMatrix("_RangeTransform", Matrix4x4.identity);
+            _shader.SetVector("_RangeVelocity", Vector3.zero);
+            _shader.SetInt("_RangeStart", entity.particles.start);
+            _shader.SetInt("_RangeCount", entity.particles.length);
+            Dispatch(11, entity.particles.length);
         }
 
         void Upload(ParticleWorldChange change)
@@ -548,7 +613,7 @@ namespace Yu5h1Lib
                 {
                     group = (uint)entity.group,
                     category = entity.category,
-                    flags = 1u,
+                    flags = entity.sleeping ? 3u : 1u,
                     radius = entity.rest.particles[i].radius
                 };
             _meta.SetData(meta, 0, entity.particles.start, count);
@@ -578,11 +643,21 @@ namespace Yu5h1Lib
             _activeParticles.Clear();
             _activeConstraints.Clear();
             _activeGroups.Clear();
+            _sleepingParticles.Clear();
             _maxRadius = 0f;
             foreach (Entity entity in _entities.Values)
             {
                 if (entity.parked)
                     continue;
+                if (entity.sleeping)
+                {
+                    for (int i = 0; i < entity.particles.length; i++)
+                    {
+                        _sleepingParticles.Add((uint)(entity.particles.start + i));
+                        _maxRadius = Mathf.Max(_maxRadius, entity.rest.particles[i].radius);
+                    }
+                    continue;
+                }
                 for (int i = 0; i < entity.particles.length; i++)
                 {
                     _activeParticles.Add((uint)(entity.particles.start + i));
@@ -601,6 +676,9 @@ namespace Yu5h1Lib
                 _activeConstraintBuffer.SetData(_activeConstraints);
             if (_activeGroups.Count > 0)
                 _activeGroupBuffer.SetData(_activeGroups);
+            if (_sleepingParticles.Count > 0)
+                _sleepingParticleBuffer.SetData(_sleepingParticles);
+            _shader.SetInt("_SleepingParticleCount", _sleepingParticles.Count);
             _shader.SetInt("_ActiveParticleCount", _activeParticles.Count);
             _shader.SetInt("_ActiveConstraintCount", _activeConstraints.Count);
             _shader.SetInt("_ActiveGroupCount", _activeGroups.Count);
@@ -705,6 +783,8 @@ namespace Yu5h1Lib
                 _shader.SetBuffer(kernel, "_ActiveParticles", _activeParticleBuffer);
                 _shader.SetBuffer(kernel, "_ActiveConstraints", _activeConstraintBuffer);
                 _shader.SetBuffer(kernel, "_ActiveGroups", _activeGroupBuffer);
+                _shader.SetBuffer(kernel, "_SleepingParticles", _sleepingParticleBuffer);
+                _shader.SetBuffer(kernel, "_SleepPush", _sleepPush);
                 _shader.SetBuffer(kernel, "_Constraints", _constraints);
                 _shader.SetBuffer(kernel, "_Groups", _groups);
                 _shader.SetBuffer(kernel, "_GroupMembers", _groupMembers);

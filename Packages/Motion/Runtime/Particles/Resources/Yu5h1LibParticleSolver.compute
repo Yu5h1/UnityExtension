@@ -2,7 +2,8 @@
 // (Packages/Motion/Documentation/ParticlePhysics/ParticleSolver.md), written from that
 // specification. Particle buffers and step uniforms are declared in ParticleWorldData.hlsl,
 // shared with extension compute shaders (ParticleExtensions EXT-03). Every particle kernel walks a compact list of active particles, so parked,
-// sleeping and released slots are never processed (ParticleWorld WORLD-10). Corrections from
+// sleeping and released slots are never processed (ParticleWorld WORLD-10); sleeping particles
+// only join the neighbour structure as immovable contact partners (ParticleExtensions EXT-13). Corrections from
 // dist constraints and contacts accumulate as fixed-point integers with a resolution of
 // 1e-5 m, which makes their sums independent of thread order (SOLVER-05).
 
@@ -20,6 +21,7 @@
 #pragma kernel TransformRange
 #pragma kernel TransformGroups
 #pragma kernel UpdateConstraintParameters
+#pragma kernel InsertSleepingCells
 
 #define THREADS 64
 #define FIXED_SCALE 100000.0
@@ -29,6 +31,8 @@
 #define SHAPE_BOX 2
 
 #include "Packages/com.yu5h1.motion/Runtime/Particles/Shaders/ParticleWorldData.hlsl"
+#include "Packages/com.yu5h1.motion/Runtime/Particles/Shaders/ParticleWorldMedia.hlsl"
+#include "Packages/com.yu5h1.motion/Runtime/Particles/Shaders/ParticleWorldSleep.hlsl"
 
 struct Constraint
 {
@@ -60,27 +64,16 @@ struct Collider
     float4 angularVelocity;
 };
 
-struct Medium
-{
-    float4 center;
-    float4 halfExtents;
-    float4 axisX;
-    float4 axisY;
-    float4 axisZ;
-    float4 flow;
-    float4 parameters;
-};
-
 RWStructuredBuffer<int> _Accumulated;
 RWStructuredBuffer<int> _AccumulatedCount;
 StructuredBuffer<uint> _ActiveConstraints;
 StructuredBuffer<uint> _ActiveGroups;
+StructuredBuffer<uint> _SleepingParticles;
 RWStructuredBuffer<Constraint> _Constraints;
 RWStructuredBuffer<ParticleRigidGroup> _Groups;
 StructuredBuffer<uint> _GroupMembers;
 StructuredBuffer<float4> _GroupOffsets;
 StructuredBuffer<Collider> _Colliders;
-StructuredBuffer<Medium> _Media;
 RWStructuredBuffer<int> _CellHead;
 RWStructuredBuffer<int> _CellNext;
 RWStructuredBuffer<int4> _ParticleCell;
@@ -88,8 +81,8 @@ StructuredBuffer<Constraint> _ConstraintStaging;
 
 uint _ActiveConstraintCount;
 uint _ActiveGroupCount;
+uint _SleepingParticleCount;
 uint _ColliderCount;
-uint _MediumCount;
 uint _CellCount;
 float _CellSize;
 float _Damping;
@@ -212,14 +205,29 @@ void InsertCells(uint3 id : SV_DispatchThreadID)
     _ParticleCell[i] = int4(cell, 0);
 }
 
+[numthreads(THREADS, 1, 1)]
+void InsertSleepingCells(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _SleepingParticleCount)
+        return;
+    uint i = _SleepingParticles[id.x];
+    int3 cell = CellOf(_Position[i].xyz);
+    int previousHead;
+    InterlockedExchange(_CellHead[CellHash(cell)], (int)i, previousHead);
+    _CellNext[i] = previousHead;
+    _ParticleCell[i] = int4(cell, 0);
+}
+
 void Contact(uint i, uint j, float4 pi, ParticleMeta mi)
 {
     ParticleMeta mj = _Meta[j];
     if (mi.group != 0u && mi.group == mj.group)
         return;
     float4 pj = _Position[j];
-    float weightSum = pi.w + pj.w;
-    if (weightSum <= 0.0)
+    bool sleeper = (mj.flags & PARTICLE_FLAG_SLEEPING) != 0u;
+    float weightJ = sleeper ? 0.0 : pj.w;
+    float weightSum = pi.w + weightJ;
+    if (weightSum <= 0.0 && !(sleeper && pj.w > 0.0))
         return;
     float3 d = pi.xyz - pj.xyz;
     float distSquared = dot(d, d);
@@ -228,10 +236,19 @@ void Contact(uint i, uint j, float4 pi, ParticleMeta mi)
         return;
     float dist = sqrt(distSquared);
     float penetration = min(reach - dist, _MaxDepenetrationSpeed * _Substep);
+    if (sleeper)
+    {
+        float wouldMove = penetration * pj.w / (pi.w + pj.w) * (float)(_SubstepCount - _SubstepIndex);
+        uint ignoredPush;
+        InterlockedMax(_SleepPush[j], (uint)round(wouldMove * PARTICLE_PUSH_SCALE), ignoredPush);
+        if (pi.w <= 0.0)
+            return;
+    }
     float3 n = d / dist;
     float s = penetration / weightSum;
     Accumulate(i, n * s * pi.w, _ContactWeight);
-    Accumulate(j, -n * s * pj.w, _ContactWeight);
+    if (!sleeper)
+        Accumulate(j, -n * s * pj.w, _ContactWeight);
 
     float3 relative = (pi.xyz - _Previous[i].xyz) - (pj.xyz - _Previous[j].xyz);
     float3 tangent = relative - dot(relative, n) * n;
@@ -241,7 +258,8 @@ void Contact(uint i, uint j, float4 pi, ParticleMeta mi)
     float limit = slide < _FrictionStatic * penetration ? slide : _FrictionKinetic * penetration;
     float3 friction = (tangent / slide) * min(slide, limit);
     Accumulate(i, -friction * pi.w / weightSum, _ContactWeight);
-    Accumulate(j, friction * pj.w / weightSum, _ContactWeight);
+    if (!sleeper)
+        Accumulate(j, friction * pj.w / weightSum, _ContactWeight);
 }
 
 [numthreads(THREADS, 1, 1)]
@@ -259,7 +277,7 @@ void SolveContacts(uint3 id : SV_DispatchThreadID)
         int3 neighbour = cell + int3((int)(c % 3u), (int)((c / 3u) % 3u), (int)(c / 9u)) - 1;
         [loop]
         for (int j = _CellHead[CellHash(neighbour)]; j != -1; j = _CellNext[j])
-            if ((uint)j > i && all(_ParticleCell[j].xyz == neighbour))
+            if (all(_ParticleCell[j].xyz == neighbour) && ((uint)j > i || (_Meta[j].flags & PARTICLE_FLAG_SLEEPING) != 0u))
                 Contact(i, (uint)j, pi, mi);
     }
 }

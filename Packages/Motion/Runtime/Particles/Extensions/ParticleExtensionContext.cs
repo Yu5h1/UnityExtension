@@ -10,6 +10,10 @@ namespace Yu5h1Lib
         void Bind(ComputeShader shader, int kernel);
 
         void Bind(MaterialPropertyBlock block);
+
+        void BindMedia(ComputeShader shader, int kernel);
+
+        void BindSleep(ComputeShader shader, int kernel);
     }
 
     /// <summary>
@@ -66,11 +70,16 @@ namespace Yu5h1Lib
             entity.World == World && entity.IsValid && !entity.IsParked;
 
         /// <summary>
-        ///   Binds the particle buffers and sets the step uniforms on <paramref name="kernel"/>.
+        ///   Binds the particle buffers, the step's media list (_Media, _MediumCount of
+        ///   Shaders/ParticleWorldMedia.hlsl) and the sleep push buffer (_SleepPush of
+        ///   Shaders/ParticleWorldSleep.hlsl), and sets the step uniforms on
+        ///   <paramref name="kernel"/>. Names a kernel does not declare are ignored.
         /// </summary>
         public void Bind(ComputeShader shader, int kernel)
         {
             Binder?.Bind(shader, kernel);
+            Binder?.BindMedia(shader, kernel);
+            Binder?.BindSleep(shader, kernel);
             shader.SetInt(SubstepIndexId, SubstepIndex);
             shader.SetInt(SubstepCountId, SubstepCount);
             shader.SetFloat(SubstepId, Substep);

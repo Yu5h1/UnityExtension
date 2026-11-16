@@ -52,6 +52,13 @@ namespace Yu5h1Lib
         public readonly List<int[]> rigidGroups = new List<int[]>();
         public readonly List<Vector3Int> roles = new List<Vector3Int>();
         public ParticleGroupMode groupMode;
+
+        /// <summary>
+        ///   When above 0, a group from <see cref="ParticleWorld.AllocateGroup"/> that this entity joins
+        ///   instead of getting one of its own, so a whole batch of entities skips one another. The
+        ///   entity never releases it. Overrides <see cref="groupMode"/>.
+        /// </summary>
+        public int sharedGroup;
         public uint category = 1u;
         public Pose pose = Pose.identity;
 

@@ -1,0 +1,1013 @@
+// Behaviour kernels of an emitter's bodies (ParticleExtensions EXT-12, EXT-13, EXT-14), ported from
+// Unified-Solver's SolverParticleModifiers.compute. One thread per body; a body is a few
+// particles described by ParticleBody (Shaders/ParticleBodyFrame.hlsl). The kernels run in the
+// post-step stage in the order ParticleEmitter dispatches them, reading and writing the world's
+// particle buffers (Shaders/ParticleWorldData.hlsl): inverse mass is the w of _Position, previous
+// position and velocity are their own buffers, and a particle's radius is its own in _Meta.
+// Differences from the source, all listed in ParticleExtensions: no medium force here (the solver
+// applies it, SOLVER-17); ApplyMediumState only derives the state sleep and locomotion read; a
+// sleeping body is frozen by leaving the solver's kernels, so ApplySleep decides from contact
+// pushes recorded in _SleepPush instead of holding a pose.
+
+#pragma kernel ApplySpeedLimit
+#pragma kernel ApplyMediumState
+#pragma kernel ApplyRollDamping
+#pragma kernel ApplyOscillation
+#pragma kernel ApplySurfaceImpulse
+#pragma kernel ApplyLocomotion
+#pragma kernel ApplyBounds
+#pragma kernel ApplySleep
+
+#include "Packages/com.yu5h1.motion/Runtime/Particles/Shaders/ParticleWorldData.hlsl"
+#include "Packages/com.yu5h1.motion/Runtime/Particles/Shaders/ParticleWorldMedia.hlsl"
+#include "Packages/com.yu5h1.motion/Runtime/Particles/Shaders/ParticleWorldSleep.hlsl"
+#include "Packages/com.yu5h1.motion/Runtime/Particles/Shaders/ParticleBodyFrame.hlsl"
+
+struct MotionTarget
+{
+    float3 position;
+    float mode;
+    float3 direction;
+    float radius;
+};
+
+struct BoundsEntry
+{
+    float4 center;
+    float4 halfExtents;
+    float4 axisX;
+    float4 axisY;
+    float4 axisZ;
+};
+
+StructuredBuffer<ParticleBody> _Bodies;
+StructuredBuffer<MotionTarget> _MotionTargets;
+StructuredBuffer<BoundsEntry> _Bounds;
+RWStructuredBuffer<float4> _Lifecycle;
+RWStructuredBuffer<float4> _MediumState;
+RWStructuredBuffer<float2> _SleepState;
+RWStructuredBuffer<uint> _SleepCommands;
+
+uint _BodyCount;
+uint _MotionTargetCount;
+uint _BoundsCount;
+float _Time;
+float _SubDeltaTime;
+float3 _UpAxis;
+
+float _RollDamping;
+float _SpeedLimit;
+float _SpeedDecayRate;
+
+float _OscillationAcceleration;
+float _OscillationFrequency;
+float _OscillationRandomness;
+float _OscillationDirectionAngle;
+float _OscillationDirectionRandomness;
+float _OscillationMuscleTension;
+float _OscillationDuration;
+float _OscillationDurationRandomness;
+float _OscillationTensionRandomness;
+float _OscillationTailBias;
+float _OscillationVitality;
+float _OscillationStiffness;
+
+float _SurfaceImpulseSpeed;
+float _SurfaceSpreadSeconds;
+float _SurfaceContactSpeed;
+float _SurfaceFrequency;
+float _SurfaceRandomness;
+
+float _LocomotionSpeed;
+float _LocomotionFrequency;
+float _LocomotionDuration;
+float _LocomotionRandomness;
+float _LocomotionTurnRate;
+float _LocomotionUprightRate;
+float _LocomotionHeadingSpread;
+float _LocomotionMediumThrust;
+
+float _SleepSpeed;
+float _SleepDelay;
+float _WakeDistance;
+float _KeepAwake;
+
+float3 _SpawnCenter;
+float3 _SpawnAxisX;
+float3 _SpawnAxisY;
+float3 _SpawnAxisZ;
+
+static const float SURFACE_PUSH_SPEED = 3.0;
+static const float MAXIMUM_HALF_ANGLE = 1.2217;
+static const float MINIMUM_CHORD_FRACTION = 0.25;
+static const float UNFOLD_SPEED = 0.3;
+static const float UNFOLD_DROP_SPEED = 0.5;
+static const float TARGET_POINT = 0.0;
+static const float SLEEP_AWAKE = 0.0;
+static const float SLEEP_CANDIDATE = 1.0;
+static const float SLEEP_SLEEPING = 2.0;
+static const float SLEEP_REQUESTED = 3.0;
+static const uint COMMAND_NONE = 0u;
+static const uint COMMAND_SLEEP = 1u;
+static const uint COMMAND_WAKE = 2u;
+static const float LIFE_ALIVE = 0.0;
+static const float LIFE_FADING_OUT = 1.0;
+static const float LIFE_FADING_IN = 2.0;
+static const uint BODY_FLAG_SLEEPING = 2u;
+
+bool IsChainBody(ParticleBody body)
+{
+    return body.topology == BODY_CHAIN_3 || body.topology == BODY_GUIDE_4
+        || body.topology == BODY_DUAL_RAIL_6 || body.topology == BODY_ARTICULATED_12;
+}
+
+bool IsSimulated(ParticleBody body)
+{
+    return (body.flags & BODY_FLAG_SIMULATED) != 0u && body.particleCount > 0u;
+}
+
+void MoveParticle(uint index, float3 deltaPosition, float3 deltaVelocity)
+{
+    float4 position = _Position[index];
+    if (position.w <= 0.0)
+        return;
+    _Position[index] = float4(position.xyz + deltaPosition, position.w);
+    _Previous[index] = float4(_Previous[index].xyz + deltaPosition, 0.0);
+    _Velocity[index] = float4(_Velocity[index].xyz + deltaVelocity, 0.0);
+}
+
+void AddVelocity(uint index, float3 delta)
+{
+    if (_Position[index].w > 0.0)
+        _Velocity[index] = float4(_Velocity[index].xyz + delta, 0.0);
+}
+
+void MoveRange(uint start, uint count, float3 deltaPosition)
+{
+    for (uint i = 0u; i < count; i++)
+    {
+        uint index = start + i;
+        float4 position = _Position[index];
+        if (position.w <= 0.0)
+            continue;
+        _Position[index] = float4(position.xyz + deltaPosition, position.w);
+        _Previous[index] = float4(_Previous[index].xyz + deltaPosition, 0.0);
+    }
+}
+
+[numthreads(64, 1, 1)]
+void ApplySpeedLimit(uint3 id : SV_DispatchThreadID)
+{
+    uint bodyIndex = id.x;
+    if (bodyIndex >= _BodyCount || _SpeedLimit <= 0.0)
+        return;
+    ParticleBody body = _Bodies[bodyIndex];
+    if (!IsSimulated(body))
+        return;
+
+    float3 meanVelocity = float3(0.0, 0.0, 0.0);
+    uint movable = 0u;
+    for (uint i = 0u; i < body.particleCount; i++)
+    {
+        uint index = body.particleStart + i;
+        if (_Position[index].w <= 0.0)
+            continue;
+        meanVelocity += _Velocity[index].xyz;
+        movable++;
+    }
+    if (movable == 0u)
+        return;
+
+    meanVelocity /= (float)movable;
+    float speed = length(meanVelocity);
+    if (speed <= _SpeedLimit || speed <= 1e-6)
+        return;
+
+    float excess = speed - _SpeedLimit;
+    float target = _SpeedLimit + excess * exp(-_SpeedDecayRate * _StepTime);
+    float3 correction = meanVelocity * (target / speed - 1.0);
+    for (uint j = 0u; j < body.particleCount; j++)
+        AddVelocity(body.particleStart + j, correction);
+}
+
+[numthreads(64, 1, 1)]
+void ApplyMediumState(uint3 id : SV_DispatchThreadID)
+{
+    uint bodyIndex = id.x;
+    if (bodyIndex >= _BodyCount)
+        return;
+    ParticleBody body = _Bodies[bodyIndex];
+    uint count = body.particleCount;
+    if ((body.flags & 3u) == 0u || count == 0u)
+        return;
+    if (_MediumCount == 0u)
+    {
+        _MediumState[bodyIndex] = float4(0.0, 0.0, 0.0, 0.0);
+        return;
+    }
+
+    uint submerged = 0u;
+    uint movable = 0u;
+    float3 netAcceleration = float3(0.0, 0.0, 0.0);
+    float3 drift = float3(0.0, 0.0, 0.0);
+    float mediumRatio = 0.0;
+    for (uint i = 0u; i < count; i++)
+    {
+        uint index = body.particleStart + i;
+        float4 position = _Position[index];
+        if (position.w <= 0.0)
+            continue;
+        movable++;
+        float3 velocity = _Velocity[index].xyz;
+        float radius = _Meta[index].radius;
+        float volume = 4.0 / 3.0 * 3.14159265358979 * radius * radius * radius;
+        float3 acceleration = _Gravity;
+        bool wet = false;
+        for (uint k = 0u; k < _MediumCount; k++)
+        {
+            Medium medium = _Media[k];
+            if (!MediumReaches(medium, position.xyz))
+                continue;
+            wet = true;
+            float ratio = medium.flow.w * volume * position.w;
+            mediumRatio += ratio;
+            acceleration -= _Gravity * ratio;
+            drift += medium.flow.xyz - velocity;
+        }
+        if (wet)
+            submerged++;
+        netAcceleration += acceleration;
+    }
+
+    float inverseMovable = movable > 0u ? 1.0 / (float)movable : 0.0;
+    _MediumState[bodyIndex] = float4(
+        (float)submerged / (float)count,
+        length(drift * inverseMovable),
+        dot(netAcceleration * inverseMovable, _UpAxis),
+        mediumRatio * inverseMovable);
+}
+
+void DampGuideOrbit(uint particleBase, float3 axis, float strength)
+{
+    float4 guide = _Position[particleBase + 3u];
+    if (guide.w <= 0.0)
+        return;
+
+    float3 radius = guide.xyz - _Position[particleBase + 1u].xyz;
+    float3 radial = radius - axis * dot(radius, axis);
+    float radialLength = length(radial);
+    if (radialLength <= 1e-6)
+        return;
+
+    float3 orbitDirection = cross(axis, radial / radialLength);
+    float3 relativeVelocity = _Velocity[particleBase + 3u].xyz - _Velocity[particleBase + 1u].xyz;
+    float3 correction = orbitDirection * (-strength * dot(relativeVelocity, orbitDirection));
+
+    _Velocity[particleBase + 3u] = float4(_Velocity[particleBase + 3u].xyz + correction, 0.0);
+
+    float3 share = correction / 3.0;
+    for (uint spineIndex = 0u; spineIndex < 3u; spineIndex++)
+        AddVelocity(particleBase + spineIndex, -share);
+}
+
+void DampGroupRoll(uint particleBase, uint start, uint count, float3 axis, float strength)
+{
+    if (count < 2u)
+        return;
+
+    float3 center = float3(0.0, 0.0, 0.0);
+    float3 meanVelocity = float3(0.0, 0.0, 0.0);
+    uint i;
+    for (i = 0u; i < count; i++)
+    {
+        uint index = particleBase + start + i;
+        center += _Position[index].xyz;
+        meanVelocity += _Velocity[index].xyz;
+    }
+    float inverseCount = 1.0 / (float)count;
+    center *= inverseCount;
+    meanVelocity *= inverseCount;
+
+    float angularNumerator = 0.0;
+    float inertia = 0.0;
+    for (i = 0u; i < count; i++)
+    {
+        uint index = particleBase + start + i;
+        float3 radius = _Position[index].xyz - center;
+        float3 radialPerpendicular = radius - axis * dot(radius, axis);
+        float3 relativeVelocity = _Velocity[index].xyz - meanVelocity;
+        angularNumerator += dot(cross(radialPerpendicular, relativeVelocity), axis);
+        inertia += dot(radialPerpendicular, radialPerpendicular);
+    }
+
+    if (inertia <= 1e-8)
+        return;
+
+    float3 deltaAngularVelocity = axis * (-strength * angularNumerator / inertia);
+    for (i = 0u; i < count; i++)
+    {
+        uint index = particleBase + start + i;
+        if (_Position[index].w > 0.0)
+        {
+            float3 radius = _Position[index].xyz - center;
+            float3 radialPerpendicular = radius - axis * dot(radius, axis);
+            AddVelocity(index, cross(deltaAngularVelocity, radialPerpendicular));
+        }
+    }
+}
+
+void UnfoldHairpin(ParticleBody body)
+{
+    float3 head = BodyControlCenter(body, 0u);
+    float3 middle = BodyControlCenter(body, 1u);
+    float3 tail = BodyControlCenter(body, 2u);
+
+    float3 headSegment = head - middle;
+    float3 tailSegment = middle - tail;
+    float headSegmentLength = length(headSegment);
+    float tailSegmentLength = length(tailSegment);
+    float bodyLength = headSegmentLength + tailSegmentLength;
+    if (bodyLength <= 1e-5)
+        return;
+
+    float3 chord = head - tail;
+    float chordLength = length(chord);
+    float minimumChord = bodyLength * MINIMUM_CHORD_FRACTION;
+    if (chordLength >= minimumChord)
+        return;
+
+    float3 headSegmentDirection = headSegmentLength > 1e-6 ? headSegment / headSegmentLength : float3(0.0, 0.0, 0.0);
+    float3 tailSegmentDirection = tailSegmentLength > 1e-6 ? tailSegment / tailSegmentLength : float3(0.0, 0.0, 0.0);
+    float3 spine = BisectDirections(headSegmentDirection, tailSegmentDirection, headSegmentDirection);
+    float3 baseX = Rotate(body.spawnRotation, float3(1.0, 0.0, 0.0));
+    float3 crossDirection = SafePerpendicular(BodySideCandidate(body, 1u, middle), spine, baseX);
+
+    float confidence = saturate(chordLength / (0.25 * minimumChord));
+    float3 chordDirection = chordLength > 1e-9 ? chord / chordLength : float3(0.0, 0.0, 0.0);
+    float3 crossPerpendicular = crossDirection - chordDirection * dot(crossDirection, chordDirection);
+    float3 openCandidate = chordDirection * confidence + crossPerpendicular * (1.0 - confidence);
+    float openLength = length(openCandidate);
+    if (openLength <= 1e-6)
+        return;
+    float3 openDirection = openCandidate / openLength;
+
+    float3 delta = openDirection * min((minimumChord - chordLength) * 0.5, UNFOLD_SPEED * _StepTime);
+
+    float drop = abs(dot(delta, _UpAxis));
+    float maximumDrop = UNFOLD_DROP_SPEED * _SubDeltaTime;
+    if (drop > maximumDrop && drop > 1e-9)
+    {
+        float3 along = _UpAxis * dot(delta, _UpAxis);
+        delta = (delta - along) + along * (maximumDrop / drop);
+    }
+
+    uint headStart;
+    uint headCount;
+    uint middleStart;
+    uint middleCount;
+    uint tailStart;
+    uint tailCount;
+    BodyRanges(body, headStart, headCount, middleStart, middleCount, tailStart, tailCount);
+    MoveRange(body.particleStart + headStart, headCount, delta);
+    MoveRange(body.particleStart + tailStart, tailCount, -delta);
+}
+
+[numthreads(64, 1, 1)]
+void ApplyRollDamping(uint3 id : SV_DispatchThreadID)
+{
+    uint bodyIndex = id.x;
+    if (bodyIndex >= _BodyCount)
+        return;
+    ParticleBody body = _Bodies[bodyIndex];
+    if (!IsSimulated(body))
+        return;
+
+    if (IsChainBody(body))
+        UnfoldHairpin(body);
+
+    if (body.topology != BODY_GUIDE_4 && body.topology != BODY_DUAL_RAIL_6 && body.topology != BODY_ARTICULATED_12)
+        return;
+
+    float strength = saturate(_RollDamping);
+    if (strength <= 0.0)
+        return;
+
+    float3 axis = GetBodyFrame(body, 1u).tangent;
+    if (body.topology == BODY_GUIDE_4)
+    {
+        DampGuideOrbit(body.particleStart, axis, strength);
+        return;
+    }
+
+    uint headStart;
+    uint headCount;
+    uint middleStart;
+    uint middleCount;
+    uint tailStart;
+    uint tailCount;
+    BodyRanges(body, headStart, headCount, middleStart, middleCount, tailStart, tailCount);
+    DampGroupRoll(body.particleStart, headStart, headCount, axis, strength);
+    DampGroupRoll(body.particleStart, middleStart, middleCount, axis, strength);
+    DampGroupRoll(body.particleStart, tailStart, tailCount, axis, strength);
+}
+
+[numthreads(64, 1, 1)]
+void ApplyOscillation(uint3 id : SV_DispatchThreadID)
+{
+    uint instanceIndex = id.x;
+    if (instanceIndex >= _BodyCount)
+        return;
+    ParticleBody instance = _Bodies[instanceIndex];
+    if (!IsSimulated(instance) || !IsChainBody(instance))
+        return;
+
+    float phaseRandom = Hash01(instanceIndex * 3u + 1u);
+    float frequencyRandom = Hash01(instanceIndex * 3u + 2u);
+    float directionRandom = Hash01(instanceIndex * 3u + 3u) * 2.0 - 1.0;
+    float bendRandom = Hash01(instanceIndex * 5u + 4u);
+    float durationRandom = Hash01(instanceIndex * 13u + 11u);
+    float frequencyScale = lerp(1.0 - _OscillationRandomness, 1.0 + _OscillationRandomness, frequencyRandom);
+
+    float tensionScale = lerp(1.0 - _OscillationTensionRandomness, 1.0 + _OscillationTensionRandomness, bendRandom);
+    float muscleTension = saturate(1.0 - (1.0 - _OscillationMuscleTension) * tensionScale);
+    float peakHalfAngle = min(asin(saturate(1.0 - muscleTension)), MAXIMUM_HALF_ANGLE);
+
+    float headPeakAngle = min(peakHalfAngle * 2.0 * (1.0 - _OscillationTailBias), MAXIMUM_HALF_ANGLE);
+    float tailPeakAngle = min(peakHalfAngle * 2.0 * _OscillationTailBias, MAXIMUM_HALF_ANGLE);
+
+    float burstFrequency = _OscillationFrequency * frequencyScale;
+    float durationScale = lerp(1.0 - _OscillationDurationRandomness, 1.0 + _OscillationDurationRandomness, durationRandom);
+    float duration = max(0.0, _OscillationDuration * durationScale);
+    float burstFraction = saturate(duration * burstFrequency);
+
+    float wave = 0.0;
+    float waveRate = 0.0;
+    float playing = 0.0;
+    if (burstFraction > 1e-5)
+    {
+        float cyclePhase = _Time * burstFrequency + phaseRandom;
+        cyclePhase -= floor(cyclePhase);
+        if (cyclePhase < burstFraction)
+        {
+            float burstPhase = cyclePhase / burstFraction;
+            wave = sin(burstPhase * BODY_TWO_PI);
+            waveRate = cos(burstPhase * BODY_TWO_PI) * BODY_TWO_PI * burstFrequency / burstFraction;
+            playing = 1.0;
+        }
+    }
+
+    float3 head = BodyControlCenter(instance, 0u);
+    float3 middle = BodyControlCenter(instance, 1u);
+    float3 tail = BodyControlCenter(instance, 2u);
+    float bodyLength = length(head - middle) + length(middle - tail);
+    if (bodyLength <= 1e-5)
+        return;
+
+    BodyFrame bodyFrame = GetBodyFrame(instance, 1u);
+    float3 tangent = bodyFrame.tangent;
+    float3 side = bodyFrame.side;
+    float3 normal = bodyFrame.normal;
+    float angle = radians(_OscillationDirectionAngle + directionRandom * _OscillationDirectionRandomness);
+    float3 direction = normalize(side * cos(angle) + normal * sin(angle));
+
+    float headAngle = headPeakAngle * wave;
+    float tailAngle = tailPeakAngle * wave;
+    float headAngleVelocity = headPeakAngle * waveRate;
+    float tailAngleVelocity = tailPeakAngle * waveRate;
+    uint headStart;
+    uint headCount;
+    uint middleStart;
+    uint middleCount;
+    uint tailStart;
+    uint tailCount;
+    BodyRanges(instance, headStart, headCount, middleStart, middleCount, tailStart, tailCount);
+    uint particleBase = instance.particleStart;
+    uint drivenMiddleCount = middleCount + (instance.topology == BODY_GUIDE_4 ? 1u : 0u);
+    float totalDrivenCount = (float)(headCount + drivenMiddleCount + tailCount);
+
+    float segmentLength = bodyLength * 0.5;
+
+    float3 headDirection = tangent * cos(headAngle) + direction * sin(headAngle);
+    float3 tailDirection = tangent * cos(tailAngle) - direction * sin(tailAngle);
+    float3 headOffset = segmentLength * headDirection;
+    float3 middleOffset = float3(0.0, 0.0, 0.0);
+    float3 tailOffset = -segmentLength * tailDirection;
+
+    float headWeight = (float)headCount;
+    float middleWeight = (float)drivenMiddleCount;
+    float tailWeight = (float)tailCount;
+    float3 weightedCenter = (head * headWeight + middle * middleWeight + tail * tailWeight) / totalDrivenCount;
+    float3 weightedOffsetMean = (headOffset * headWeight + middleOffset * middleWeight + tailOffset * tailWeight) / totalDrivenCount;
+    float drive = _OscillationVitality * (1.0 - _OscillationStiffness) * playing;
+
+    float3 headDeltaPosition = (weightedCenter + headOffset - weightedOffsetMean - head) * drive;
+    float3 middleDeltaPosition = (weightedCenter + middleOffset - weightedOffsetMean - middle) * drive;
+    float3 tailDeltaPosition = (weightedCenter + tailOffset - weightedOffsetMean - tail) * drive;
+
+    if (duration > 1e-5)
+    {
+        float maximumStep = BODY_TWO_PI * segmentLength * max(headPeakAngle, tailPeakAngle) / duration * _StepTime;
+        float longestStep = max(length(headDeltaPosition), max(length(middleDeltaPosition), length(tailDeltaPosition)));
+        if (longestStep > maximumStep && longestStep > 1e-9)
+        {
+            float paceScale = maximumStep / longestStep;
+            headDeltaPosition *= paceScale;
+            middleDeltaPosition *= paceScale;
+            tailDeltaPosition *= paceScale;
+        }
+    }
+
+    float maximumDrop = drive * SURFACE_PUSH_SPEED * _SubDeltaTime;
+    float headRise = dot(headDeltaPosition, _UpAxis);
+    float middleRise = dot(middleDeltaPosition, _UpAxis);
+    float tailRise = dot(tailDeltaPosition, _UpAxis);
+    float deepestDrop = -min(headRise, min(middleRise, tailRise));
+    if (deepestDrop > maximumDrop && deepestDrop > 1e-9)
+    {
+        float verticalScale = maximumDrop / deepestDrop;
+        headDeltaPosition += _UpAxis * (headRise * verticalScale - headRise);
+        middleDeltaPosition += _UpAxis * (middleRise * verticalScale - middleRise);
+        tailDeltaPosition += _UpAxis * (tailRise * verticalScale - tailRise);
+    }
+
+    float3 headDirectionRate = (-tangent * sin(headAngle) + direction * cos(headAngle)) * headAngleVelocity;
+    float3 tailDirectionRate = (-tangent * sin(tailAngle) - direction * cos(tailAngle)) * tailAngleVelocity;
+    float3 headOffsetVelocity = segmentLength * headDirectionRate;
+    float3 middleOffsetVelocity = float3(0.0, 0.0, 0.0);
+    float3 tailOffsetVelocity = -segmentLength * tailDirectionRate;
+    float3 weightedOffsetVelocityMean = (headOffsetVelocity * headWeight + middleOffsetVelocity * middleWeight + tailOffsetVelocity * tailWeight) / totalDrivenCount;
+    float3 headDeltaVelocity = (headOffsetVelocity - weightedOffsetVelocityMean) * drive;
+    float3 middleDeltaVelocity = (middleOffsetVelocity - weightedOffsetVelocityMean) * drive;
+    float3 tailDeltaVelocity = (tailOffsetVelocity - weightedOffsetVelocityMean) * drive;
+
+    float maximumVelocityCorrection = max(0.0, _OscillationAcceleration) * _StepTime;
+    float largestDeltaVelocity = max(length(headDeltaVelocity), max(length(middleDeltaVelocity), length(tailDeltaVelocity)));
+    float velocityScale = (largestDeltaVelocity > maximumVelocityCorrection && largestDeltaVelocity > 1e-6)
+        ? maximumVelocityCorrection / largestDeltaVelocity
+        : 1.0;
+    headDeltaVelocity *= velocityScale;
+    middleDeltaVelocity *= velocityScale;
+    tailDeltaVelocity *= velocityScale;
+
+    for (uint headIndex = 0u; headIndex < headCount; headIndex++)
+        MoveParticle(particleBase + headStart + headIndex, headDeltaPosition, headDeltaVelocity);
+    for (uint middleIndex = 0u; middleIndex < middleCount; middleIndex++)
+        MoveParticle(particleBase + middleStart + middleIndex, middleDeltaPosition, middleDeltaVelocity);
+    if (instance.topology == BODY_GUIDE_4)
+        MoveParticle(particleBase + 3u, middleDeltaPosition, middleDeltaVelocity);
+    for (uint tailIndex = 0u; tailIndex < tailCount; tailIndex++)
+        MoveParticle(particleBase + tailStart + tailIndex, tailDeltaPosition, tailDeltaVelocity);
+
+    if (_OscillationStiffness > 0.0)
+    {
+        uint frozenIndex;
+        uint frozenCount = 0u;
+        float3 meanVelocity = float3(0.0, 0.0, 0.0);
+        for (frozenIndex = 0u; frozenIndex < instance.particleCount; frozenIndex++)
+        {
+            uint sampleIndex = particleBase + frozenIndex;
+            if (_Position[sampleIndex].w <= 0.0)
+                continue;
+            meanVelocity += _Velocity[sampleIndex].xyz;
+            frozenCount++;
+        }
+
+        if (frozenCount > 0u)
+        {
+            meanVelocity /= (float)frozenCount;
+            for (frozenIndex = 0u; frozenIndex < instance.particleCount; frozenIndex++)
+            {
+                uint index = particleBase + frozenIndex;
+                if (_Position[index].w > 0.0)
+                    _Velocity[index] = float4(lerp(_Velocity[index].xyz, meanVelocity, _OscillationStiffness), 0.0);
+            }
+        }
+    }
+}
+
+float SurfaceTimeSinceHop(float time, float frequencyScale, float random)
+{
+    float angularFrequency = _SurfaceFrequency * frequencyScale * BODY_TWO_PI;
+    if (angularFrequency <= 1e-6)
+        return 3.402823466e+38;
+
+    float phase = time * angularFrequency + random * BODY_TWO_PI;
+    float sinceHop = phase - BODY_TWO_PI * floor(phase / BODY_TWO_PI);
+    return sinceHop / angularFrequency;
+}
+
+[numthreads(64, 1, 1)]
+void ApplySurfaceImpulse(uint3 id : SV_DispatchThreadID)
+{
+    uint instanceIndex = id.x;
+    if (instanceIndex >= _BodyCount)
+        return;
+    ParticleBody instance = _Bodies[instanceIndex];
+    if (!IsSimulated(instance))
+        return;
+
+    float3 meanVelocity = float3(0.0, 0.0, 0.0);
+    uint movableCount = 0u;
+    for (uint contactIndex = 0u; contactIndex < instance.particleCount; contactIndex++)
+    {
+        uint index = instance.particleStart + contactIndex;
+        if (_Position[index].w <= 0.0)
+            continue;
+        meanVelocity += _Velocity[index].xyz;
+        movableCount++;
+    }
+    if (movableCount == 0u)
+        return;
+    meanVelocity /= (float)movableCount;
+
+    float random = Hash01(instanceIndex * 2u + 5u);
+    float frequencyScale = lerp(1.0 - _SurfaceRandomness, 1.0 + _SurfaceRandomness, random);
+    float timeSinceHop = SurfaceTimeSinceHop(_Time, frequencyScale, random);
+
+    int hopState = 0;
+    if (meanVelocity.y < -_SurfaceContactSpeed)
+        hopState = 1;
+    else if (timeSinceHop >= _SurfaceSpreadSeconds)
+        hopState = 2;
+
+    if (hopState != 0)
+        return;
+    for (uint particleIndex = 0u; particleIndex < instance.particleCount; particleIndex++)
+    {
+        uint index = instance.particleStart + particleIndex;
+        float4 position = _Position[index];
+        if (position.w > 0.0)
+        {
+            float3 velocity = _Velocity[index].xyz;
+            velocity.y = max(velocity.y, _SurfaceImpulseSpeed);
+            _Velocity[index] = float4(velocity, 0.0);
+        }
+    }
+}
+
+[numthreads(64, 1, 1)]
+void ApplyLocomotion(uint3 id : SV_DispatchThreadID)
+{
+    uint instanceIndex = id.x;
+    if (instanceIndex >= _BodyCount)
+        return;
+    if (_MotionTargetCount == 0u || _LocomotionSpeed <= 0.0)
+        return;
+    ParticleBody instance = _Bodies[instanceIndex];
+    if (!IsSimulated(instance))
+        return;
+
+    float submersion = _MediumState[instanceIndex].x;
+    if (submersion <= 0.0)
+        return;
+
+    float purchase = saturate(_MediumState[instanceIndex].w * _LocomotionMediumThrust);
+    if (purchase <= 0.0)
+        return;
+
+    uint particleBase = instance.particleStart;
+    uint count = instance.particleCount;
+
+    float frequencyScale = lerp(1.0 - _LocomotionRandomness, 1.0 + _LocomotionRandomness, Hash01(instanceIndex * 7u + 17u));
+    float frequency = _LocomotionFrequency * frequencyScale;
+    float duration = max(0.01, _LocomotionDuration);
+    float burstFraction = saturate(duration * frequency);
+    if (burstFraction <= 1e-5)
+        return;
+
+    float cyclePhase = _Time * frequency + Hash01(instanceIndex * 7u + 23u);
+    cyclePhase -= floor(cyclePhase);
+    bool pushing = cyclePhase < burstFraction;
+
+    uint i;
+    float3 center = float3(0.0, 0.0, 0.0);
+    float3 meanVelocity = float3(0.0, 0.0, 0.0);
+    uint movable = 0u;
+    for (i = 0u; i < count; i++)
+    {
+        uint index = particleBase + i;
+        if (_Position[index].w <= 0.0)
+            continue;
+        center += _Position[index].xyz;
+        meanVelocity += _Velocity[index].xyz;
+        movable++;
+    }
+    if (movable == 0u)
+        return;
+    center /= (float)movable;
+    meanVelocity /= (float)movable;
+
+    float bestDistance = 3.402823466e+38;
+    float3 heading = float3(0.0, 0.0, 0.0);
+    for (uint t = 0u; t < _MotionTargetCount; t++)
+    {
+        MotionTarget target = _MotionTargets[t];
+        float3 toTarget = target.position - center;
+        float distance = length(toTarget);
+        if (target.radius > 0.0 && distance > target.radius)
+            continue;
+        if (distance >= bestDistance)
+            continue;
+
+        bestDistance = distance;
+        heading = target.mode == TARGET_POINT
+            ? (distance > 1e-5 ? toTarget / distance : float3(0.0, 0.0, 0.0))
+            : target.direction;
+    }
+
+    float headingLength = length(heading);
+    if (headingLength <= 1e-5)
+        return;
+    heading /= headingLength;
+
+    if (_LocomotionHeadingSpread > 1e-4)
+    {
+        uint push = (uint)floor(_Time * frequency + Hash01(instanceIndex * 7u + 23u));
+        float azimuth = Hash01(instanceIndex * 31u + push * 97u) * BODY_TWO_PI;
+        float reach = tan(_LocomotionHeadingSpread) * sqrt(Hash01(instanceIndex * 37u + push * 89u));
+
+        float3 guide = abs(heading.y) < 0.9 ? float3(0.0, 1.0, 0.0) : float3(1.0, 0.0, 0.0);
+        float3 across = normalize(cross(heading, guide));
+        heading = normalize(heading + (across * cos(azimuth) + cross(heading, across) * sin(azimuth)) * reach);
+    }
+
+    float3 correction = float3(0.0, 0.0, 0.0);
+    if (pushing)
+    {
+        float blend = 1.0 - exp(-3.0 / duration * _StepTime);
+        correction = (heading * _LocomotionSpeed - meanVelocity) * (blend * submersion * purchase);
+    }
+
+    float3 omega = float3(0.0, 0.0, 0.0);
+    if (IsChainBody(instance))
+    {
+        BodyFrame frame = GetBodyFrame(instance, 1u);
+
+        float3 swing = cross(frame.tangent, heading);
+        float sinSwing = length(swing);
+        if (sinSwing > 1e-5 && _LocomotionTurnRate > 0.0)
+        {
+            float angle = atan2(sinSwing, dot(frame.tangent, heading));
+            float step = min(angle, _LocomotionTurnRate * _StepTime);
+            omega += (swing / sinSwing) * (step / _StepTime);
+        }
+
+        if (_LocomotionUprightRate > 0.0)
+        {
+            float3 desiredUp = _UpAxis - frame.tangent * dot(_UpAxis, frame.tangent);
+            float desiredLength = length(desiredUp);
+            if (desiredLength > 1e-4)
+            {
+                desiredUp /= desiredLength;
+                float roll = atan2(dot(cross(frame.normal, desiredUp), frame.tangent), dot(frame.normal, desiredUp));
+                float limit = _LocomotionUprightRate * _StepTime;
+                omega += frame.tangent * (clamp(roll, -limit, limit) / _StepTime);
+            }
+        }
+
+        omega *= submersion * purchase;
+    }
+
+    for (i = 0u; i < count; i++)
+    {
+        uint index = particleBase + i;
+        AddVelocity(index, correction + cross(omega, _Position[index].xyz - center));
+    }
+}
+
+bool BoundsRecycle(float3 position, out float fadeOut, out float fadeIn)
+{
+    fadeOut = 0.0;
+    fadeIn = 0.0;
+
+    bool anyContain = false;
+    bool inContain = false;
+    bool haveContainFade = false;
+    float containFadeOut = 0.0;
+    float containFadeIn = 0.0;
+
+    for (uint v = 0u; v < _BoundsCount; v++)
+    {
+        BoundsEntry entry = _Bounds[v];
+        float3 offset = position - entry.center.xyz;
+        float3 local = float3(dot(offset, entry.axisX.xyz), dot(offset, entry.axisY.xyz), dot(offset, entry.axisZ.xyz));
+        bool inside = all(abs(local) <= entry.halfExtents.xyz);
+        if (entry.center.w > 0.5)
+        {
+            anyContain = true;
+            if (inside)
+                inContain = true;
+            else if (!haveContainFade)
+            {
+                haveContainFade = true;
+                containFadeOut = entry.halfExtents.w;
+                containFadeIn = entry.axisX.w;
+            }
+        }
+        else if (inside)
+        {
+            fadeOut = entry.halfExtents.w;
+            fadeIn = entry.axisX.w;
+            return true;
+        }
+    }
+
+    if (anyContain && !inContain)
+    {
+        fadeOut = containFadeOut;
+        fadeIn = containFadeIn;
+        return true;
+    }
+    return false;
+}
+
+float FadeRate(float seconds)
+{
+    return seconds > 1e-4 ? 1.0 / seconds : 1e6;
+}
+
+[numthreads(64, 1, 1)]
+void ApplyBounds(uint3 id : SV_DispatchThreadID)
+{
+    uint instanceIndex = id.x;
+    if (instanceIndex >= _BodyCount)
+        return;
+    ParticleBody instance = _Bodies[instanceIndex];
+    if (!IsSimulated(instance))
+        return;
+
+    float4 life = _Lifecycle[instanceIndex];
+    if (life.x == LIFE_ALIVE && _BoundsCount == 0u)
+        return;
+
+    uint particleBase = instance.particleStart;
+    uint count = instance.particleCount;
+
+    uint i;
+    float3 center = float3(0.0, 0.0, 0.0);
+    uint movable = 0u;
+    for (i = 0u; i < count; i++)
+    {
+        uint index = particleBase + i;
+        if (_Position[index].w <= 0.0)
+            continue;
+        center += _Position[index].xyz;
+        movable++;
+    }
+    if (movable == 0u)
+        return;
+    center /= (float)movable;
+
+    float fadeOut = 0.0;
+    float fadeIn = 0.0;
+
+    if (life.x == LIFE_ALIVE)
+    {
+        if (!BoundsRecycle(center, fadeOut, fadeIn))
+        {
+            _Lifecycle[instanceIndex] = float4(LIFE_ALIVE, 0.0, 0.0, 0.0);
+            return;
+        }
+        life = float4(LIFE_FADING_OUT, 0.0, 0.0, FadeRate(fadeOut));
+    }
+
+    life.y += life.w * _StepTime;
+
+    if (life.x == LIFE_FADING_OUT)
+    {
+        life.z = saturate(life.y);
+        if (life.y >= 1.0)
+        {
+            if (!BoundsRecycle(center, fadeOut, fadeIn))
+                fadeIn = 0.0;
+
+            uint seed = instanceIndex * 2654435761u + (uint)(_Time * 60.0);
+            float3 unitOffset = float3(
+                Hash01(seed) * 2.0 - 1.0,
+                Hash01(seed + 101u) * 2.0 - 1.0,
+                Hash01(seed + 211u) * 2.0 - 1.0);
+            float3 target = _SpawnCenter + _SpawnAxisX * unitOffset.x + _SpawnAxisY * unitOffset.y + _SpawnAxisZ * unitOffset.z;
+
+            float3 delta = target - center;
+            for (i = 0u; i < count; i++)
+            {
+                uint index = particleBase + i;
+                float4 position = _Position[index];
+                if (position.w > 0.0)
+                {
+                    float3 moved = position.xyz + delta;
+                    _Position[index] = float4(moved, position.w);
+                    _Previous[index] = float4(moved, 0.0);
+                    _Velocity[index] = float4(0.0, 0.0, 0.0, 0.0);
+                }
+            }
+
+            life = float4(LIFE_FADING_IN, 0.0, 1.0, FadeRate(fadeIn));
+        }
+    }
+    else if (life.x == LIFE_FADING_IN)
+    {
+        life.z = 1.0 - saturate(life.y);
+        if (life.y >= 1.0)
+            life = float4(LIFE_ALIVE, 0.0, 0.0, 0.0);
+    }
+
+    _Lifecycle[instanceIndex] = life;
+}
+
+[numthreads(64, 1, 1)]
+void ApplySleep(uint3 id : SV_DispatchThreadID)
+{
+    uint instanceIndex = id.x;
+    if (instanceIndex >= _BodyCount)
+        return;
+    ParticleBody instance = _Bodies[instanceIndex];
+    bool sleeping = (instance.flags & BODY_FLAG_SLEEPING) != 0u;
+    bool simulated = (instance.flags & BODY_FLAG_SIMULATED) != 0u;
+    uint count = instance.particleCount;
+    if ((!sleeping && !simulated) || count == 0u)
+        return;
+
+    float2 state = _SleepState[instanceIndex];
+    uint i;
+
+    if (_SleepSpeed <= 0.0)
+    {
+        if (sleeping)
+            _SleepCommands[instanceIndex] = COMMAND_WAKE;
+        return;
+    }
+
+    float4 mediumState = _MediumState[instanceIndex];
+    float mediumWakeSpeed = mediumState.y + max(0.0, mediumState.z) * _SleepDelay;
+    if (_KeepAwake > 0.5 || _Lifecycle[instanceIndex].x != LIFE_ALIVE || mediumWakeSpeed > _SleepSpeed)
+    {
+        if (sleeping)
+            _SleepCommands[instanceIndex] = COMMAND_WAKE;
+        else
+        {
+            _SleepState[instanceIndex] = float2(SLEEP_AWAKE, 0.0);
+            _SleepCommands[instanceIndex] = COMMAND_NONE;
+        }
+        return;
+    }
+
+    if (sleeping)
+    {
+        uint pushed = 0u;
+        for (i = 0u; i < count; i++)
+        {
+            uint index = instance.particleStart + i;
+            pushed = max(pushed, _SleepPush[index]);
+            _SleepPush[index] = 0u;
+        }
+        float displaced = (float)pushed / PARTICLE_PUSH_SCALE;
+
+        if (displaced > _WakeDistance)
+        {
+            _SleepCommands[instanceIndex] = COMMAND_WAKE;
+            return;
+        }
+
+        float pushFloor = _WakeDistance * 0.1;
+        state.y = displaced > pushFloor ? state.y + _StepTime : 0.0;
+        if (state.y > _SleepDelay)
+        {
+            _SleepCommands[instanceIndex] = COMMAND_WAKE;
+            return;
+        }
+        _SleepState[instanceIndex] = float2(SLEEP_SLEEPING, state.y);
+        return;
+    }
+
+    float fastest = 0.0;
+    for (i = 0u; i < count; i++)
+        fastest = max(fastest, length(_Velocity[instance.particleStart + i].xyz));
+
+    if (fastest > _SleepSpeed)
+    {
+        _SleepState[instanceIndex] = float2(SLEEP_AWAKE, 0.0);
+        _SleepCommands[instanceIndex] = COMMAND_NONE;
+        return;
+    }
+
+    state.y += _StepTime;
+    if (state.y < _SleepDelay)
+    {
+        _SleepState[instanceIndex] = float2(SLEEP_CANDIDATE, state.y);
+        return;
+    }
+
+    for (i = 0u; i < count; i++)
+    {
+        uint index = instance.particleStart + i;
+        float4 position = _Position[index];
+        if (position.w > 0.0)
+        {
+            _Previous[index] = float4(position.xyz, 0.0);
+            _Velocity[index] = float4(0.0, 0.0, 0.0, 0.0);
+        }
+    }
+    _SleepState[instanceIndex] = float2(SLEEP_REQUESTED, 0.0);
+    _SleepCommands[instanceIndex] = COMMAND_SLEEP;
+}

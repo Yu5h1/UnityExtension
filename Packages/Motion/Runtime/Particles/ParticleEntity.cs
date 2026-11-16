@@ -35,6 +35,12 @@ namespace Yu5h1Lib
         public int Group => _world.RecordOf(this).group;
         public Pose Pose => _world.RecordOf(this).pose;
         public bool IsParked => _world.RecordOf(this).parked;
+
+        /// <summary>
+        ///   True while the entity sleeps: its particles are left out of every solver kernel and
+        ///   act only as immovable contact partners (ParticleExtensions EXT-13).
+        /// </summary>
+        public bool IsSleeping => _world.RecordOf(this).sleeping;
         public uint Category => _world.RecordOf(this).rest.category;
 
         /// <summary>
@@ -80,6 +86,12 @@ namespace Yu5h1Lib
         public void Reset(Pose pose) => _world.Reset(this, pose);
 
         public void SetParked(bool parked) => _world.SetParked(this, parked);
+
+        /// <summary>
+        ///   Puts the entity to sleep or wakes it at the next step boundary. Teleporting, resetting
+        ///   and parking wake it by themselves; a parked entity cannot sleep.
+        /// </summary>
+        public void SetSleeping(bool sleeping) => _world.SetSleeping(this, sleeping);
         public void SetCategory(uint category) => _world.SetCategory(this, category);
         public void SetRadius(float radius) => _world.SetRadius(this, radius);
         public void SetGroupMode(ParticleGroupMode mode) => _world.SetGroupMode(this, mode);

@@ -17,7 +17,8 @@ namespace Yu5h1Lib
         SetCategory,
         SetRadius,
         SetGroup,
-        SetConstraints
+        SetConstraints,
+        SetSleeping
     }
 
     /// <summary>
@@ -38,6 +39,7 @@ namespace Yu5h1Lib
         public Matrix4x4 transformDelta;
         public Vector3 velocity;
         public bool parked;
+        public bool sleeping;
         public uint category;
         public float radius;
     }
