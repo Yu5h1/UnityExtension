@@ -79,7 +79,20 @@
 
 - **Timer 不繼承 `Resolver<T>`**：繼承後序列化事件名變 `resolved`，跟 Timer 既有 `completed` 語意打架——**vocabulary mismatch = 「不是 is-a」的訊號**。Timer 是 Repeater 的 **consumer/composer，不是 is-a Resolver**。
 - Timer 保留既有 Inspector 事件接線，重複計數交給 `RepeaterObject`。`_Completed` 以 UnityEvent 呼叫 `RepeaterObject.Resolve()`，`_resolving` 觸發 `Timer.Start()` 開始下一輪。`_resolved` 表示重啟次數已用完，最後一輪實際結束由 Timer 的完成事件判斷。
-- 這個 consumer **驗證了**：Repeater 核心 + SO 層的 UnityEvent 橋接（無程式碼組合的理由）。**仍未驗**：`IResolver<int>` 的「值」面（restart 用不到 int）、`IResolver<T>` 多型抽換（直接接 concrete RepeaterObject）。
+- 2026-11-17 的 MotionGen 隔離驗證直接接具體的 `RepeaterObject`，確認三輪、UnityEvent 順序及舊 `Wait` 的隔離。原場景接線仍使用 Timer 內建 repeat。`IResolver<int>` 的值輸出與 `IResolver<T>` 的多型抽換需由各自的使用案例驗證。
+
+### 內建 repeat 與 loop 的遷移驗收
+
+2026-11-17 的本機盤點從 C#、Scene、Prefab、Prefab 實例覆寫及 UnityEvent 找到以下使用點。VCP 有執行期設定的案例，場景裡的 `RepeatCount` 為 `0` 仍需查程式。
+
+| 使用點 | 原有行為 | 改接 Repeater 的驗收條件 |
+|---|---|---|
+| MotionGen `Assets/Test/test.unity` 的 `GameObject` | 每輪 1 秒，`RepeatCount = 2`。`_Repeated`、`_FinalRepetition`、`_Completed` 各自接到 `Log`。 | 正好跑三輪。第一輪結束觸發 `_Repeated`，第二輪結束先觸發 `_FinalRepetition` 再觸發 `_Repeated`，第三輪結束觸發 `_Completed`，隨後停止。新一輪啟動後，輪詢舊 `Wait` 會結束等待，呼叫舊 `Wait.Reset()` 也不會改動新一輪。 |
+| KFC `Assets/Scenes/A005.unity` 的 `TentacleTrap` | `TimerEventHandler.events[0]` 的 `RepeatCount = -1`。每 5 秒透過 `_Repeated` 呼叫同物件的 `Caster.Cast()`。 | 啟用後每滿 5 秒呼叫一次 `Cast()`。停用後停止呼叫，重新啟用後重新計時，滿 5 秒才觸發。 |
+| VCP `Assets/Scene/ChatScene.unity` 的 `sequential` 請求 | `SequentialChatRequestData.Init()` 將 `ThinkingTimer.repeatCount` 設為 `-1`。`Repeated` 呼叫 `OnThinkingTimerTick`，依累計次數更新省略號或秒數。 | 每次請求從零開始計數，等待期間每秒更新一次並保留現有的顯示條件。請求結束後停止更新，下一次請求從零重新開始。 |
+| VCP `Assets/Scene/vcp_AudioClient.unity` 的 `characterplatform` | `RepeatCount = -1`。每 15 秒透過 `_Repeated` 呼叫同物件的 `CharacterOption.TryPlay`。盤點時這個場景未啟用於建置。 | 若保留場景，每滿 15 秒呼叫一次 `TryPlay`，沿用原有參數。停止後不追加呼叫，重新啟動後從頭計時 15 秒。 |
+
+Timer 內建 repeat 與 loop 保留到仍受支援的消費端都完成遷移及驗收。退役前一併確認 C# 呼叫、Scene、Prefab、實例覆寫與 UnityEvent，以及仍受支援的舊序列化資料有遷移或相容路徑。
 
 ### 單次計時的執行資料
 
