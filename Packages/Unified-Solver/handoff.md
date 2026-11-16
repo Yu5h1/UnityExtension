@@ -37,6 +37,12 @@ Plan and stages: Motion repo
 `Documentation/GpuPhysicsMigrationPlan.md`. Fixes or features added here for
 BonghuoVR before the switch must also be reproduced in the Motion package.
 
+Exception (2026-11-16, user approved): `SolverParticleInstance.profileId` is an
+`int` again, filled from `profile.GetHashCode()`. It had become `EntityId`, which
+is 8 bytes from Unity 6000.6, so the struct grew to 72 bytes against its declared
+64-byte `Stride` and the instance upload threw in Yu5h1LibTest (6000.6). Nothing
+reads the value; BonghuoVR (6000.3) behaves the same.
+
 ## Where the reasoning lives
 
 | Subject | `plan.md` |

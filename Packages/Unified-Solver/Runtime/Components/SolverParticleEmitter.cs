@@ -731,7 +731,7 @@ namespace Yu5h1Lib.UnifiedSolver
                         requirements.rigidBodies,
                     topology = (int)topology,
                     profileId =
-                        profile.GetEntityId(),
+                        profile.GetHashCode(),
                     scale = request.scale,
                     dragCoefficient =
                         Mathf.Max(0f, profile.dragCoefficient),

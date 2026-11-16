@@ -115,7 +115,9 @@ namespace Yu5h1Lib.UnifiedSolver
         public int rigidBodyOffset;
         public int rigidBodyCount;
         public int topology;
-        public EntityId profileId;
+        // The profile's identity as a 4-byte int. EntityId is 8 bytes from Unity 6000.6,
+        // which grew this struct past Stride and broke the instance upload there.
+        public int profileId;
         public Vector3 scale;
         // How strongly this body couples to any medium: the aggregate of drag
         // coefficient, cross-section and mass, which are the body's properties
