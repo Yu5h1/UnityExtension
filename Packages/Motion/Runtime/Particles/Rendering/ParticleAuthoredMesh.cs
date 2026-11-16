@@ -29,7 +29,7 @@ namespace Yu5h1Lib
             Vector3 scale = ParticleMeshAxis.ClampScale(visualScale);
             if (fitToDimensions)
             {
-                Vector3 target = ParticleMeshAxis.ToCanonical(dimensions, axis);
+                Vector3 target = ParticleMeshAxis.ToMeshSize(dimensions, axis);
                 Vector3 size = bounds.size;
                 scale = Vector3.Scale(
                     new Vector3(
@@ -80,15 +80,8 @@ namespace Yu5h1Lib
                 mesh.normals = normals;
             mesh.uv = source.uv;
             mesh.subMeshCount = source.subMeshCount;
-            bool reflects = axis != 1;
             for (int s = 0; s < source.subMeshCount; s++)
-            {
-                int[] indices = source.GetTriangles(s);
-                if (reflects)
-                    for (int i = 0; i + 2 < indices.Length; i += 3)
-                        (indices[i + 1], indices[i + 2]) = (indices[i + 2], indices[i + 1]);
-                mesh.SetTriangles(indices, s);
-            }
+                mesh.SetTriangles(source.GetTriangles(s), s);
             mesh.RecalculateBounds();
             if (!hasNormals)
                 mesh.RecalculateNormals();

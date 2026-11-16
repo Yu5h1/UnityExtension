@@ -1,6 +1,8 @@
 # ParticleRendering：粒子繪製
 
-> 規格版本 1.0.1 · 2026-11-16 · 第 4 階段：網子、水管、魚身與碎片的繪製，含 VR 單通道立體繪製；Motion package 已實作，PREND-CHECK-01～06 在 Yu5h1LibTest EditMode（DX11）通過；頭盔上的 PREND-CHECK-07 尚未執行
+> 規格版本 1.1.0 · 2026-11-16 · 第 4 階段：網子、水管、魚身與碎片的繪製，含 VR 單通道立體繪製；Motion package 已實作，PREND-CHECK-01～06 在 Yu5h1LibTest EditMode（DX11）通過；頭盔上的 PREND-CHECK-07 尚未執行
+>
+> 1.1.0 前進軸為 X 或 Z 的網格改以旋轉對到身體座標（REND-05、REND-06）：Unified-Solver 原本的軸對換是一次鏡射，網格會左右顛倒、三角形繞向反過來，在背面剔除下畫成裡外顛倒；BonghuoVR 的魚用 Y 軸，沒有受影響。
 >
 > 1.0.1 依實作釐清三處用詞，行為不變：鏈帶寬度是中心線到單邊的距離（REND-04）；網格表面的顏色取自外觀，因為粒子沒有逐顆顏色（REND-03）；繪製範圍以世界的區段讀回一次取得（REND-01）。
 >
@@ -72,6 +74,7 @@
 - **規則**：
   - 外觀 profile 是既有的 `ArticulatedMeshAppearance`，用於身體來源的 Chain3、GuideChain4、DualRail6、ArticulatedCluster12 身體：一次 instanced 繪製畫出來源的所有身體，實例編號就是身體編號。
   - 頂點變形照 `SolverArticulatedMesh.shader` 的 DeformVertex：以 `ParticleBodyFrame.hlsl` 的頭、中、尾座標框，依頂點在前進軸上的位置（網格範圍內 0～1）在尾與中、中與頭之間以 smoothstep 混合；外觀的前進軸與反向、依身體尺寸縮放網格（預設開啟）、視覺縮放照 `SolverRenderProfile`。
+  - 網格對到身體座標的方式：前進軸對到身體的長軸（Y）；前進軸為 X 或 Z 時，網格的上方（Y）對到身體的法線（Z，游動時保持朝上的方向）。這是旋轉，不是鏡射，所以三角形繞向與左右不變；剛體網格的編寫網格用同一個對應。
   - 生命週期的隱藏比例讓網格縮向中段中心（`_Lifecycle.z`），沒有生命週期 buffer 時全部可見。
   - 顏色 = 貼圖 × 外觀顏色 × 身體顏色（EXT-09）；著色照原 shader（固定光線方向、陰影 pass）。
 - **證據**：套件 `Shaders/SolverArticulatedMesh.shader`、`SolverBodyFrame.hlsl`、`Rendering/SolverMeshRenderer.cs` 的 DrawArticulated。

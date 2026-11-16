@@ -431,25 +431,49 @@ namespace Yu5h1Lib
             return result;
         }
 
+        /// <summary>
+        ///   Validates the layout, interaction, behaviour and appearance against each other, as the
+        ///   inspector shows them. Layout and interaction errors stop the emitter from spawning;
+        ///   appearance errors only affect drawing.
+        /// </summary>
+        public void Validate(List<PhysicsParticleMessage> messages)
+        {
+            if (_layout == null)
+                messages.Add(PhysicsParticleMessage.Error("No layout."));
+            else
+                _layout.Validate(messages);
+            if (_interaction == null)
+                messages.Add(PhysicsParticleMessage.Error("No interaction."));
+            else
+                _interaction.Validate(_layout, messages);
+            if (_behaviour == null)
+                messages.Add(PhysicsParticleMessage.Info("No behaviour profile; the bodies simulate without behaviours or sleep."));
+            if (_appearance == null)
+                messages.Add(PhysicsParticleMessage.Info("No appearance; the bodies simulate but are not drawn."));
+            else
+                _appearance.Validate(_layout, _interaction, messages);
+            if (_maxInstances == 0)
+                messages.Add(PhysicsParticleMessage.Info("Max Instances is 0; nothing spawns."));
+        }
+
         bool Validate(out string problem)
         {
             problem = null;
+            var messages = new List<PhysicsParticleMessage>();
             if (_layout == null)
-                problem = "no layout.";
-            else if (_interaction == null)
-                problem = "no interaction.";
+                messages.Add(PhysicsParticleMessage.Error("No layout."));
             else
-            {
-                var messages = new List<PhysicsParticleMessage>();
                 _layout.Validate(messages);
+            if (_interaction == null)
+                messages.Add(PhysicsParticleMessage.Error("No interaction."));
+            else
                 _interaction.Validate(_layout, messages);
-                foreach (PhysicsParticleMessage message in messages)
-                    if (message.severity == PhysicsParticleMessageSeverity.Error)
-                    {
-                        problem = message.text;
-                        break;
-                    }
-            }
+            foreach (PhysicsParticleMessage message in messages)
+                if (message.severity == PhysicsParticleMessageSeverity.Error)
+                {
+                    problem = message.text;
+                    break;
+                }
             return problem == null;
         }
 

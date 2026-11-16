@@ -56,16 +56,16 @@ Shader "Yu5h1Lib/Particles/ArticulatedMesh"
         float3 MeshToCanonical(float3 value)
         {
             if (_MeshForwardAxis == 0)
-                return float3(value.y, value.x, value.z);
+                return float3(value.z, value.x, value.y);
             if (_MeshForwardAxis == 1)
                 return value;
-            return float3(value.x, value.z, value.y);
+            return float3(-value.x, value.z, value.y);
         }
 
         float3 CanonicalScaleToMesh(float3 value)
         {
             if (_MeshForwardAxis == 0)
-                return float3(value.y, value.x, value.z);
+                return float3(value.y, value.z, value.x);
             if (_MeshForwardAxis == 1)
                 return value;
             return float3(value.x, value.z, value.y);

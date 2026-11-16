@@ -24,15 +24,31 @@ namespace Yu5h1Lib
         }
 
         /// <summary>
-        ///   Reorders mesh-space components so the forward axis becomes Y.
+        ///   Turns a mesh-space vector into the body's frame (X side, Y forward, Z normal): the
+        ///   forward axis becomes Y and, for an X or Z forward mesh, the mesh's up (Y) becomes the
+        ///   normal Z. It is a rotation, never a reflection, so triangle winding and handedness are
+        ///   kept; the articulated shader's MeshToCanonical is the same mapping.
         /// </summary>
         public static Vector3 ToCanonical(Vector3 value, int axis)
         {
             if (axis == 0)
-                return new Vector3(value.y, value.x, value.z);
+                return new Vector3(value.z, value.x, value.y);
             if (axis == 1)
                 return value;
-            return new Vector3(value.x, value.z, value.y);
+            return new Vector3(-value.x, value.z, value.y);
+        }
+
+        /// <summary>
+        ///   Sizes along the mesh's own axes for sizes given along the body's frame, the inverse
+        ///   of <see cref="ToCanonical"/> without signs; the shader's CanonicalScaleToMesh.
+        /// </summary>
+        public static Vector3 ToMeshSize(Vector3 canonical, int axis)
+        {
+            if (axis == 0)
+                return new Vector3(canonical.y, canonical.z, canonical.x);
+            if (axis == 1)
+                return canonical;
+            return new Vector3(canonical.x, canonical.z, canonical.y);
         }
 
         public static Vector3 ClampScale(Vector3 value) => new Vector3(
