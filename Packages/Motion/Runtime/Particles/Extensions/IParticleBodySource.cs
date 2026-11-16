@@ -23,8 +23,10 @@ namespace Yu5h1Lib
     /// <summary>
     ///   One body as behaviour kernels and drawing read it on the GPU; mirrors ParticleBody in
     ///   Shaders/ParticleBodyFrame.hlsl (ParticleExtensions EXT-09). <see cref="scale"/>.w carries the
-    ///   body's drag coefficient; <see cref="dimensions"/>.xyz holds the layout's base dimensions in
-    ///   meters before scaling and .w the body colour as RGBA8 bits (asuint in HLSL).
+    ///   body's drag coefficient; <see cref="dimensions"/> holds the layout's base dimensions in
+    ///   meters before scaling and <see cref="color"/> the body colour as RGBA8 (r in the low byte).
+    ///   The colour is an integer field because RGBA8 bits read as a float can be a signalling NaN
+    ///   that a float copy rewrites.
     ///   <see cref="flags"/> bit 0 is set while the body's entity is simulated.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
@@ -38,7 +40,8 @@ namespace Yu5h1Lib
         public uint flags;
         public Vector4 scale;
         public Vector4 spawnRotation;
-        public Vector4 dimensions;
+        public Vector3 dimensions;
+        public uint color;
     }
 
     /// <summary>

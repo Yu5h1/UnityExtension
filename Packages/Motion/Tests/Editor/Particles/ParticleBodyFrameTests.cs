@@ -56,7 +56,8 @@ namespace Yu5h1Lib.Tests
                 flags = 1u,
                 scale = new Vector4(1f, 1f, 1f, 1f),
                 spawnRotation = new Vector4(rotation.x, rotation.y, rotation.z, rotation.w),
-                dimensions = new Vector4(0.1f, 0.2f, 0.1f, System.BitConverter.ToSingle(System.BitConverter.GetBytes(packed), 0))
+                dimensions = new Vector3(0.1f, 0.2f, 0.1f),
+                color = packed
             };
             var bodies = new ComputeBuffer(1, ParticleBodyData.Stride);
             var frames = new ComputeBuffer(4, 16);

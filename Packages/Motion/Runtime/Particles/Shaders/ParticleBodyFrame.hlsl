@@ -2,7 +2,7 @@
 // from them (ParticleExtensions EXT-10). Behaviour kernels and the articulated mesh shader both
 // include this file, so physics and drawing follow the same frame. Include ParticleWorldData.hlsl
 // first. The C# mirror of ParticleBody is ParticleBodyData (64 bytes); topology values match
-// ParticleBodyTopology. scale.w is the drag coefficient, dimensions.w the colour as RGBA8 bits, and
+// ParticleBodyTopology. scale.w is the drag coefficient, color the colour as RGBA8 (r lowest), and
 // flags bit 0 is set while the body's entity is simulated.
 
 #ifndef YU5H1LIB_PARTICLE_BODY_FRAME
@@ -16,7 +16,8 @@ struct ParticleBody
     uint flags;
     float4 scale;
     float4 spawnRotation;
-    float4 dimensions;
+    float3 dimensions;
+    uint color;
 };
 
 struct BodyFrame
@@ -37,7 +38,7 @@ static const float BODY_TWO_PI = 6.28318530718;
 
 float4 BodyColor(ParticleBody body)
 {
-    uint packed = asuint(body.dimensions.w);
+    uint packed = body.color;
     return float4(packed & 0xffu, (packed >> 8) & 0xffu, (packed >> 16) & 0xffu, packed >> 24) / 255.0;
 }
 

@@ -1,6 +1,8 @@
 # ParticleRendering：粒子繪製
 
-> 規格版本 1.0.0 · 2026-11-15 · 第 4 階段：網子、水管、魚身與碎片的繪製，含 VR 單通道立體繪製；已定案，尚未實作
+> 規格版本 1.0.1 · 2026-11-16 · 第 4 階段：網子、水管、魚身與碎片的繪製，含 VR 單通道立體繪製；Motion package 已實作，PREND-CHECK-01～06 在 Yu5h1LibTest EditMode（DX11）通過；頭盔上的 PREND-CHECK-07 尚未執行
+>
+> 1.0.1 依實作釐清三處用詞，行為不變：鏈帶寬度是中心線到單邊的距離（REND-04）；網格表面的顏色取自外觀，因為粒子沒有逐顆顏色（REND-03）；繪製範圍以世界的區段讀回一次取得（REND-01）。
 >
 > 與其他文件的關係：繪製讀取的資料與剛體群姿勢的組法由 [ParticleExtensions](ParticleExtensions.md) 的繪製存取（EXT-08）與身體來源（EXT-09）規定；粒子怎麼動由 [ParticleSolver](ParticleSolver.md) 與 [ParticleWorld](ParticleWorld.md) 規定。外觀來源是 Unified-Solver 套件的 `NetRenderer.shader`、`SolverArticulatedMesh.shader`、`SolverMeshRenderer.cs`、`SolverHullMesh.cs` 與第三方的 `RopeRenderer.shader`，差異列在〈與 Unified-Solver 的差異〉。遷移順序見 Motion repo 的 `Documentation/GpuPhysicsMigrationPlan.md` 第 4 階段。
 
@@ -33,7 +35,7 @@
   - 繪製由 `PhysicsParticleRenderer` 元件負責：它讀同一個 GameObject 上的身體來源（`IParticleBodySource`），依來源的外觀 profile 繪製來源的實體。來源有外觀時自己確保這個元件存在（驅動器與發射器各一行），不需要使用者另外加。
   - 每幀以世界的 `TryBind(MaterialPropertyBlock)` 綁定粒子與剛體群，shader 以 `PARTICLE_WORLD_READ_ONLY` 引入 `ParticleWorldData.hlsl`（魚身另引入 `ParticleBodyFrame.hlsl`）。不讀回粒子到 CPU，不在 CPU 組矩陣。
   - 收起與已釋放的實體不畫；睡眠中的實體照常畫。
-  - 繪製範圍：先用佈局的靜止範圍放在生成姿勢；之後以非同步讀回取得實體粒子的範圍，每秒最多 4 次，加上粒子半徑與一個邊距。不使用固定的 1000 m 範圍。
+  - 繪製範圍：先用佈局的靜止範圍放在生成姿勢；之後以世界的區段讀回（`ParticleWorld.RequestPositions`，涵蓋所有繪製中實體的槽位，一次請求）取得實體粒子的範圍，每秒最多 4 次，加上粒子半徑與一個邊距。不使用固定的 1000 m 範圍。
   - 外觀 profile 新增是否投射陰影、是否接收陰影（預設都開），繪製圖層是來源 GameObject 的 layer。
 - **證據**：Unified-Solver 的繪製範圍固定為 1000 m，陰影裁切因此失效（BonghuoVR `效能評估.md`）；剛體路徑每幀在 CPU 組矩陣（`SolverMeshRenderer.cs`）。
 - **驗證**：PREND-CHECK-01。
@@ -50,7 +52,7 @@
 ## 網格表面（REND-03）
 
 - **規則**：
-  - 外觀 profile `GridSurfaceAppearance`，用於網格佈局（`GridParticleLayout`）的實體：每顆粒子是一個頂點，相鄰四顆組成兩個三角形（雙面時四個），頂點位置與顏色直接讀粒子；法線由上下左右鄰居的差計算，邊緣用單側差。
+  - 外觀 profile `GridSurfaceAppearance`，用於網格佈局（`GridParticleLayout`）的實體：每顆粒子是一個頂點，相鄰四顆組成兩個三角形（雙面時四個），頂點位置直接讀粒子，顏色取自外觀（Unified-Solver 的網子 fragment 也不使用逐顆粒子顏色）；法線由上下左右鄰居的差計算，邊緣用單側差。
   - 外觀欄位照 `NetRenderer.shader`：顏色、網目貼圖與是否使用、網目樣式（方格、菱形）、網目重複數（預設 20 × 20）、線寬、透明裁切值、邊框顏色與寬度、金屬度、平滑度；不使用網目時是一般布料（不透明）。
   - 著色照 `NetRenderer.shader`：雙面（法線翻向攝影機）、固定光線方向 (0.5, 1, 0.3)、0.3 + 0.7 × N·L 的漫射加 Blinn-Phong 高光；陰影 pass 套用同樣的網目裁切。
 - **證據**：套件 `Shaders/NetRenderer.shader`、第三方 `ClothGenerator.cs`（網格與 UV）。
@@ -59,7 +61,7 @@
 ## 鏈帶（REND-04）
 
 - **規則**：
-  - 外觀 profile `ChainStripAppearance`，用於鏈佈局的實體：每顆粒子兩個頂點，沿鏈組成面向攝影機的帶子；切線是鄰居的中央差（端點單側差），寬度 = 外觀的帶寬（預設 0.03 m），兩側依 cross(切線, 視線) 展開。
+  - 外觀 profile `ChainStripAppearance`，用於鏈佈局的實體：每顆粒子兩個頂點，沿鏈組成面向攝影機的帶子；切線是鄰居的中央差（端點單側差），帶寬是中心線到單邊的距離（預設 0.03 m，總寬 0.06 m，與 `RopeRenderer` 的 `_RopeWidth` 相同），兩側依 cross(切線, 視線) 展開。
   - 著色照 `RopeRenderer.shader`：單一顏色、橫向 1 − edge² × 0.4 的明暗、不受光、雙面。
   - 外觀可以開啟陰影投射（Unified-Solver 的水管沒有陰影 pass；這裡補上，預設關閉以維持原樣）。
 - **證據**：第三方 `RopeRenderer.shader`、BonghuoVR `Fishing Hose.prefab`（59 段、寬 0.03）。

@@ -363,6 +363,26 @@ namespace Yu5h1Lib
         ///   WORLD-14). <paramref name="onComplete"/> runs once the data arrives, or immediately with
         ///   <see cref="ParticleReadback.Succeeded"/> false when the world cannot read it.
         /// </summary>
+        /// <summary>
+        ///   Reads the positions of a run of particle slots in one asynchronous request (ParticleWorld
+        ///   WORLD-14), for callers that watch many entities at once, such as draw bounds. The array
+        ///   holds xyz and the inverse mass in w, indexed from <paramref name="particles"/>.start;
+        ///   slots of other or released entities inside the run are included as they are. The step
+        ///   number is the one the request was made after. The array is null when the world cannot
+        ///   read it.
+        /// </summary>
+        public void RequestPositions(RangeInt particles, Action<Vector4[], int> onComplete)
+        {
+            int step = StepCount;
+            if (_destroyed || Backend == null || particles.start < 0 || particles.length <= 0
+                || particles.end > _capacity.particles)
+            {
+                onComplete?.Invoke(null, step);
+                return;
+            }
+            Backend.RequestPositions(particles, positions => onComplete?.Invoke(positions, step));
+        }
+
         public void RequestReadback(ParticleEntity entity, Action<ParticleReadback> onComplete)
         {
             var readback = new ParticleReadback { Entity = entity, Step = StepCount };

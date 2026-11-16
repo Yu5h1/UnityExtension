@@ -288,7 +288,7 @@ namespace Yu5h1Lib.Tests
             for (int i = 0; i < 4; i++)
                 renderer.Draw(null);
 
-            Assert.AreEqual(3, renderer.ReadbackRequestCount, "One refresh requests each drawn entity once.");
+            Assert.AreEqual(1, renderer.ReadbackRequestCount, "One refresh reads the drawn entities' slots in a single request.");
 
             string[] forbidden = { ".GetData(", "WaitForCompletion", "WaitAllRequests", "ReadPixels" };
             foreach (string file in Directory.GetFiles(RenderingFolder(), "*.cs"))
@@ -626,7 +626,8 @@ namespace Yu5h1Lib.Tests
                 flags = 1u,
                 scale = new Vector4(1f, 1f, 1f, 1f),
                 spawnRotation = new Vector4(rotation.x, rotation.y, rotation.z, rotation.w),
-                dimensions = new Vector4(0.1f, 0.2f, 0.1f, System.BitConverter.ToSingle(System.BitConverter.GetBytes(White), 0))
+                dimensions = new Vector3(0.1f, 0.2f, 0.1f),
+                color = White
             };
             var go = new GameObject("Fish");
             _objects.Add(go);

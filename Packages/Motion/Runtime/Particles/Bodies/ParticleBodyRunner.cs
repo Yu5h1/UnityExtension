@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Object = UnityEngine.Object;
@@ -72,7 +71,6 @@ namespace Yu5h1Lib
         ComputeBuffer _bounds;
         ComputeBuffer _targets;
         readonly ParticleBodyData[] _bodyData;
-        readonly uint[] _bodyColor;
         readonly bool[] _bodyDirty;
         readonly bool[] _stateDirty;
         readonly bool[] _lifecycleDirty;
@@ -105,7 +103,6 @@ namespace Yu5h1Lib
             _bounds = new ComputeBuffer(4, Marshal.SizeOf<GpuBounds>());
             _targets = new ComputeBuffer(4, Marshal.SizeOf<GpuTarget>());
             _bodyData = new ParticleBodyData[_capacity];
-            _bodyColor = new uint[_capacity];
             _bodyDirty = new bool[_capacity];
             _stateDirty = new bool[_capacity];
             _lifecycleDirty = new bool[_capacity];
@@ -156,8 +153,8 @@ namespace Yu5h1Lib
         /// </summary>
         public void SetBody(int index, ParticleBodyData data, uint colorBits)
         {
+            data.color = colorBits;
             _bodyData[index] = data;
-            _bodyColor[index] = colorBits;
             _bodyDirty[index] = true;
             _stateDirty[index] = true;
             _lifecycleDirty[index] = true;
@@ -342,22 +339,7 @@ namespace Yu5h1Lib
             UploadRuns(_lifecycleDirty, (start, length) => _lifecycle.SetData(new Vector4[length], 0, start, length));
         }
 
-        /// <summary>
-        ///   Uploads a run of bodies with the colour written as raw bits: as a float it can be a
-        ///   signalling NaN, which any float copy on the way may turn into another colour.
-        /// </summary>
-        void UploadBodies(int start, int length)
-        {
-            var staging = new NativeArray<ParticleBodyData>(length, Allocator.Temp);
-            NativeArray<uint> raw = staging.Reinterpret<uint>(UnsafeUtility.SizeOf<ParticleBodyData>());
-            for (int i = 0; i < length; i++)
-            {
-                staging[i] = _bodyData[start + i];
-                raw[i * 16 + 15] = _bodyColor[start + i];
-            }
-            _bodies.SetData(staging, 0, start, length);
-            staging.Dispose();
-        }
+        void UploadBodies(int start, int length) => _bodies.SetData(_bodyData, start, start, length);
 
         static void UploadRuns(bool[] dirty, Action<int, int> upload)
         {

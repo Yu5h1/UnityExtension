@@ -123,6 +123,8 @@ namespace Yu5h1Lib.Tests
             colliderCountAtLastStep = colliders.Count;
         }
 
+        public void RequestPositions(RangeInt particles, Action<Vector4[]> onComplete) => onComplete?.Invoke(null);
+
         public void RequestReadback(RangeInt particles, RangeInt constraints, RangeInt rigidGroups, ParticleReadback readback, Action<ParticleReadback> onComplete)
         {
             readback.Error = "Recording backend holds no state.";

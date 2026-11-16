@@ -388,6 +388,8 @@ namespace Yu5h1Lib
         /// </summary>
         internal static ParticleBodyTopology ResolveBodyTopology(PhysicsParticleLayout layout, int variant)
         {
+            if (layout is ParticleBodyLayout body)
+                return body.TopologyOf(variant);
             if (layout.Kind != ParticleLayoutKind.Chain)
                 return ParticleBodyTopology.Single;
             return layout.GetParticleCount(variant) == 4 ? ParticleBodyTopology.GuideChain4 : ParticleBodyTopology.Chain3;
@@ -440,7 +442,9 @@ namespace Yu5h1Lib
             float radius = _interaction != null ? _interaction.ParticleRadius : 0.1f;
             Vector3 dimensions;
             Quaternion spin = Quaternion.identity;
-            if (_layout.Kind == ParticleLayoutKind.Chain && _positions.Count >= 3)
+            if (_layout is ParticleBodyLayout bodyLayout)
+                dimensions = bodyLayout.BaseDimensions;
+            else if (_layout.Kind == ParticleLayoutKind.Chain && _positions.Count >= 3)
             {
                 Vector3 headToTail = _positions[2] - _positions[0];
                 dimensions = new Vector3(radius * 2f, headToTail.magnitude, radius * 2f);
@@ -464,7 +468,8 @@ namespace Yu5h1Lib
                 flags = BodyFlags(entity),
                 scale = new Vector4(1f, 1f, 1f, 1f),
                 spawnRotation = new Vector4(rotation.x, rotation.y, rotation.z, rotation.w),
-                dimensions = new Vector4(dimensions.x, dimensions.y, dimensions.z, System.BitConverter.ToSingle(System.BitConverter.GetBytes(White), 0))
+                dimensions = dimensions,
+                color = White
             };
         }
 

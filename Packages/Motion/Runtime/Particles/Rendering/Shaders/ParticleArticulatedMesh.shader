@@ -110,7 +110,7 @@ Shader "Yu5h1Lib/Particles/ArticulatedMesh"
             BodyFrame tail = GetBodyFrame(body, 2u);
 
             float3 meshScale = CanonicalScaleToMesh(body.scale.xyz);
-            float3 baseVisualScale = BaseVisualScale(body.dimensions.xyz);
+            float3 baseVisualScale = BaseVisualScale(body.dimensions);
             float3 localPosition = MeshToCanonical(
                 (meshPosition - _MeshCenter) * baseVisualScale * meshScale);
             float3 localNormal = normalize(MeshToCanonical(

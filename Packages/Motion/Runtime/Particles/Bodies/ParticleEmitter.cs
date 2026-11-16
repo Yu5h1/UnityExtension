@@ -413,7 +413,7 @@ namespace Yu5h1Lib
                 flags = 1u,
                 scale = new Vector4(spawn.scale.x, spawn.scale.y, spawn.scale.z, 1f),
                 spawnRotation = new Vector4(rotation.x, rotation.y, rotation.z, rotation.w),
-                dimensions = new Vector4(dimensions.x, dimensions.y, dimensions.z, 0f)
+                dimensions = dimensions
             };
         }
 

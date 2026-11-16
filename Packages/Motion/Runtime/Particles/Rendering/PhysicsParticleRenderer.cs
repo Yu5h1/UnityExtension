@@ -158,8 +158,6 @@ namespace Yu5h1Lib
         int _boundsPending;
         float _nextBoundsRequest;
         float _boundsRequestTime;
-        bool _boundsAny;
-        Bounds _boundsAccumulator;
 
         /// <summary>
         ///   Distance added around the entities' particles when the draw bounds follow them.
@@ -670,44 +668,58 @@ namespace Yu5h1Lib
                 _boundsToken++;
                 _boundsPending = 0;
             }
-            if (_boundsPending > 0 || now < _nextBoundsRequest)
+            if (_boundsPending > 0 || now < _nextBoundsRequest || _drawn.Count == 0)
                 return;
 
             IReadOnlyList<ParticleEntity> entities = _source.Entities;
-            int token = ++_boundsToken;
-            _boundsAny = false;
-            _boundsRequestTime = now;
-            _nextBoundsRequest = now + BoundsInterval;
-            _boundsPending = _drawn.Count;
+            var ranges = new RangeInt[_drawn.Count];
+            var radii = new float[_drawn.Count];
+            int start = int.MaxValue;
+            int end = 0;
             for (int i = 0; i < _drawn.Count; i++)
             {
-                float radius = _drawnRadii[i];
-                ReadbackRequestCount++;
-                world.RequestReadback(entities[_drawn[i]], readback => OnBoundsReadback(token, radius, readback));
+                ranges[i] = entities[_drawn[i]].Particles;
+                radii[i] = _drawnRadii[i];
+                start = Mathf.Min(start, ranges[i].start);
+                end = Mathf.Max(end, ranges[i].end);
             }
+            int token = ++_boundsToken;
+            _boundsRequestTime = now;
+            _nextBoundsRequest = now + BoundsInterval;
+            _boundsPending = 1;
+            ReadbackRequestCount++;
+            world.RequestPositions(new RangeInt(start, end - start), (positions, step) =>
+                OnBoundsReadback(token, start, ranges, radii, positions));
         }
 
-        void OnBoundsReadback(int token, float radius, ParticleReadback readback)
+        /// <summary>
+        ///   Fits the draw bounds to the drawn entities' slots inside one range readback, skipping
+        ///   the slots of other entities that share the range.
+        /// </summary>
+        void OnBoundsReadback(int token, int start, RangeInt[] ranges, float[] radii, Vector4[] positions)
         {
             if (token != _boundsToken)
                 return;
-            if (readback.Succeeded)
+            _boundsPending = 0;
+            if (positions == null)
+                return;
+            bool any = false;
+            Bounds bounds = default;
+            for (int r = 0; r < ranges.Length; r++)
             {
-                foreach (Vector3 position in readback.Positions)
+                Vector3 size = Vector3.one * (radii[r] * 2f);
+                for (int i = ranges[r].start; i < ranges[r].end; i++)
                 {
-                    Bounds particle = new Bounds(position, Vector3.one * (radius * 2f));
-                    if (_boundsAny)
-                        _boundsAccumulator.Encapsulate(particle);
+                    var particle = new Bounds(positions[i - start], size);
+                    if (any)
+                        bounds.Encapsulate(particle);
                     else
-                        _boundsAccumulator = particle;
-                    _boundsAny = true;
+                        bounds = particle;
+                    any = true;
                 }
             }
-            if (--_boundsPending > 0)
+            if (!any)
                 return;
-            if (!_boundsAny)
-                return;
-            Bounds bounds = _boundsAccumulator;
             bounds.Expand(_boundsMargin * 2f);
             _bounds = bounds;
             BoundsFollowReadback = true;

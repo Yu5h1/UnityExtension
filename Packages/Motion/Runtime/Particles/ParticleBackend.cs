@@ -69,6 +69,12 @@ namespace Yu5h1Lib
         ///   Reads the given slots asynchronously and fills <paramref name="readback"/> before
         ///   invoking <paramref name="onComplete"/>.
         /// </summary>
+        /// <summary>
+        ///   Reads the positions (inverse mass in w) of a run of slots asynchronously; null on
+        ///   failure.
+        /// </summary>
+        void RequestPositions(RangeInt particles, Action<Vector4[]> onComplete);
+
         void RequestReadback(
             RangeInt particles,
             RangeInt constraints,

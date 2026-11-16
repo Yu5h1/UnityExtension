@@ -232,7 +232,7 @@ namespace Yu5h1Lib
                         break;
                     case ParticleWorldChangeKind.Reset:
                         if (_entities.TryGetValue(change.entityId, out Entity reset))
-                            WriteRest(reset, change.pose, writeMembers: false);
+                            WriteRest(reset, change.pose, writeMembers: false, restVelocity: false);
                         break;
                     case ParticleWorldChangeKind.SetParked:
                         if (_entities.TryGetValue(change.entityId, out Entity parked))
@@ -366,6 +366,17 @@ namespace Yu5h1Lib
             block.SetInt(ActiveParticleCountId, _activeParticles.Count);
         }
 
+        public void RequestPositions(RangeInt particles, Action<Vector4[]> onComplete)
+        {
+            if (_disposed || particles.length <= 0)
+            {
+                onComplete?.Invoke(null);
+                return;
+            }
+            AsyncGPUReadback.Request(_position, particles.length * 16, particles.start * 16, request =>
+                onComplete?.Invoke(request.hasError ? null : request.GetData<Vector4>().ToArray()));
+        }
+
         public void RequestReadback(
             RangeInt particles,
             RangeInt constraints,
@@ -487,16 +498,17 @@ namespace Yu5h1Lib
                 entity.members = new RangeInt(0, 0);
             }
             _entities[change.entityId] = entity;
-            WriteRest(entity, change.pose, writeMembers: true);
+            WriteRest(entity, change.pose, writeMembers: true, restVelocity: true);
             _listsDirty = true;
         }
 
         /// <summary>
         ///   Places the entity's rest layout at <paramref name="pose"/>: positions and previous
-        ///   positions, velocities, metadata, unbroken constraints and rigid groups at the pose
-        ///   rotation. Member lists and rest offsets are written only on upload.
+        ///   positions, metadata, unbroken constraints and rigid groups at the pose rotation.
+        ///   Velocities are the allocated ones on upload and zero on reset (ParticleWorld WORLD-07);
+        ///   member lists and rest offsets are written only on upload.
         /// </summary>
-        void WriteRest(Entity entity, Pose pose, bool writeMembers)
+        void WriteRest(Entity entity, Pose pose, bool writeMembers, bool restVelocity)
         {
             ParticleEntityRequest rest = entity.rest;
             int count = entity.particles.length;
@@ -507,7 +519,7 @@ namespace Yu5h1Lib
                 ParticleSpawn spawn = rest.particles[i];
                 Vector3 world = pose.position + pose.rotation * spawn.position;
                 positions[i] = new Vector4(world.x, world.y, world.z, spawn.invMass);
-                Vector3 velocity = pose.rotation * spawn.velocity;
+                Vector3 velocity = restVelocity ? pose.rotation * spawn.velocity : Vector3.zero;
                 velocities[i] = new Vector4(velocity.x, velocity.y, velocity.z, 0f);
             }
             _position.SetData(positions, 0, entity.particles.start, count);
