@@ -5,8 +5,8 @@ using UnityEngine;
 namespace Yu5h1Lib.Tests
 {
     /// <summary>
-    ///   Platform check PEXT-CHECK-13 of ParticleExtensions 1.2.0 and the sleep part of PWORLD-CHECK-12
-    ///   (ParticleWorld 1.2.0 WORLD-10): still bodies fall asleep after the delay and leave the solver's
+    ///   Platform check PEXT-CHECK-13 of ParticleExtensions 1.3.0 and the sleep part of PWORLD-CHECK-12
+    ///   (ParticleWorld 1.3.0 WORLD-10): still bodies fall asleep after the delay and leave the solver's
     ///   kernel ranges, a particle hitting a sleeper at speed is stopped by it and wakes it, and
     ///   teleporting, resetting, parking and enabling a behaviour wake at once.
     /// </summary>
@@ -142,6 +142,52 @@ namespace Yu5h1Lib.Tests
             float y = ParticleBodyTestKit.Read(world, load).Positions[0].y;
             Assert.That(y, Is.InRange(2f * Radius - 2e-3f, 2f * Radius + 0.02f), "the particle came to rest on top of the sleeper");
             Assert.AreEqual(Vector3.zero, ParticleBodyTestKit.Read(world, sleeper).Positions[0], "the sleeper stays where it slept");
+        }
+
+        ParticleBoxCollider Box(ParticleWorld world, float topY)
+        {
+            var box = _kit.scope.Collider<ParticleBoxCollider>("Box", world);
+            box.transform.localScale = new Vector3(1f, 0.2f, 1f);
+            box.transform.position = new Vector3(0f, topY - 0.1f, 0f);
+            box.EnableCollider();
+            return box;
+        }
+
+        [Test]
+        public void AStillColliderKeepsASleeperAsleep_AndAMovingOneWakesIt()
+        {
+            ParticleWorld world = _kit.World();
+            ParticleEmitter emitter = Emitter(world, _kit.Behaviour(sleepSpeed: 0.04f));
+            ParticleEntity sleeper = _kit.Spawn(emitter, ParticleBodyTestKit.At(Vector3.zero))[0];
+            Plain(world, new Vector3(0f, 30f, 0f));
+            ParticleBoxCollider box = Box(world, -Radius);
+            Assert.Greater(FramesUntilAllSleep(world, emitter, 40), 0, "a body resting on a still box falls asleep");
+            _kit.Frame(world, emitter, 10);
+            Assert.IsTrue(sleeper.IsSleeping, "a still box touching the sleeper does not press into it");
+
+            for (int frame = 0; frame < 6 && sleeper.IsSleeping; frame++)
+            {
+                box.transform.position += new Vector3(0f, 0.01f, 0f);
+                _kit.Frame(world, emitter);
+            }
+            Assert.IsFalse(sleeper.IsSleeping, "a box rising 1 cm per step into the sleeper wakes it");
+        }
+
+        [Test]
+        public void AMovingColliderWakesSleepers_WhenNothingElseIsAwake()
+        {
+            ParticleWorld world = _kit.World();
+            ParticleEmitter emitter = Emitter(world, _kit.Behaviour(sleepSpeed: 0.04f));
+            ParticleEntity sleeper = _kit.Spawn(emitter, ParticleBodyTestKit.At(Vector3.zero))[0];
+            ParticleBoxCollider box = Box(world, -1f);
+            Assert.Greater(FramesUntilAllSleep(world, emitter, 40), 0);
+            _kit.Frame(world, emitter);
+            Assert.AreEqual(0, world.ActiveParticleCount, "only the sleeper is left");
+
+            box.transform.position = new Vector3(0f, -Radius - 0.1f + 0.01f, 0f);
+            for (int frame = 0; frame < 4 && sleeper.IsSleeping; frame++)
+                _kit.Frame(world, emitter);
+            Assert.IsFalse(sleeper.IsSleeping, "the collider check still runs with only sleepers in the world");
         }
 
         [Test]

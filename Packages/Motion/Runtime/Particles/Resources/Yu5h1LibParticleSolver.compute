@@ -22,6 +22,7 @@
 #pragma kernel TransformGroups
 #pragma kernel UpdateConstraintParameters
 #pragma kernel InsertSleepingCells
+#pragma kernel PushSleepingByShapes
 
 #define THREADS 64
 #define FIXED_SCALE 100000.0
@@ -570,4 +571,48 @@ void UpdateConstraintParameters(uint3 id : SV_DispatchThreadID)
     _Constraints[index].compliance = source.compliance;
     _Constraints[index].damping = source.damping;
     _Constraints[index].breakForce = source.breakForce;
+}
+
+// Records how deep the colliders press into each sleeping particle, without moving it
+// (ParticleExtensions EXT-13): the depth a collider would push it out by joins _SleepPush, so a
+// moving collider wakes a sleeper while one resting on a still collider stays asleep.
+[numthreads(THREADS, 1, 1)]
+void PushSleepingByShapes(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _SleepingParticleCount)
+        return;
+    uint i = _SleepingParticles[id.x];
+    float4 position = _Position[i];
+    if (position.w == 0.0)
+        return;
+    ParticleMeta meta = _Meta[i];
+    float deepest = 0.0;
+    for (uint k = 0u; k < _ColliderCount; k++)
+    {
+        Collider c = _Colliders[k];
+        if ((meta.category & c.mask) == 0u)
+            continue;
+        float3 closest;
+        float3 n;
+        float penetration;
+        bool touching;
+        if (c.shape == SHAPE_SPHERE)
+            touching = RoundContact(position.xyz, c.center.xyz, c.center.w, meta.radius, closest, n, penetration);
+        else if (c.shape == SHAPE_CAPSULE)
+        {
+            float3 a = c.pointA.xyz;
+            float3 ab = c.pointB.xyz - a;
+            float lengthSquared = dot(ab, ab);
+            float t = lengthSquared < 1e-10 ? 0.0 : saturate(dot(position.xyz - a, ab) / lengthSquared);
+            touching = RoundContact(position.xyz, a + t * ab, c.center.w, meta.radius, closest, n, penetration);
+        }
+        else
+            touching = BoxContact(position.xyz, c, meta.radius, closest, n, penetration);
+        if (touching)
+            deepest = max(deepest, penetration);
+    }
+    if (deepest <= 0.0)
+        return;
+    uint ignoredPush;
+    InterlockedMax(_SleepPush[i], (uint)round(deepest * PARTICLE_PUSH_SCALE), ignoredPush);
 }

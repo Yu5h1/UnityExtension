@@ -253,7 +253,8 @@ namespace Yu5h1Lib
         /// <summary>
         ///   Advances the world by one fixed step: queued changes and extension registrations take
         ///   effect first, collider poses and surface velocities are captured, and the solver and
-        ///   extensions run only when some particle is active and the settings are valid
+        ///   extensions run only when some particle is active or asleep and the settings are valid;
+        ///   with only sleepers, just their collider check and the extensions run (WORLD-10)
         ///   (ParticleSolver SOLVER-01, SOLVER-18; ParticleExtensions EXT-01, EXT-02).
         /// </summary>
         internal void Step(float deltaTime)
@@ -268,7 +269,7 @@ namespace Yu5h1Lib
             }
             ApplyExtensionChanges();
             CaptureColliders(deltaTime);
-            if (ActiveParticleCount == 0 || Backend == null)
+            if ((ActiveParticleCount == 0 && SleepingParticleCount == 0) || Backend == null)
                 return;
             if (!_settings.TryValidate(out string error))
             {

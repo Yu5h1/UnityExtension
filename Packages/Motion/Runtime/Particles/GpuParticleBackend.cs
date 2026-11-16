@@ -114,7 +114,7 @@ namespace Yu5h1Lib
         {
             "Predict", "ClearAccumulators", "SolveDistance", "SolveContacts", "ApplyAccumulated",
             "CollideShapes", "MatchRigidGroups", "UpdateVelocities", "ClearCells", "InsertCells",
-            "ApplyMedia", "TransformRange", "TransformGroups", "UpdateConstraintParameters", "InsertSleepingCells"
+            "ApplyMedia", "TransformRange", "TransformGroups", "UpdateConstraintParameters", "InsertSleepingCells", "PushSleepingByShapes"
         };
 
         readonly ComputeShader _shader;
@@ -273,7 +273,7 @@ namespace Yu5h1Lib
             int activeParticleCount,
             ParticleExtensionRunner extensions)
         {
-            if (_disposed || _activeParticles.Count == 0)
+            if (_disposed || (_activeParticles.Count == 0 && _sleepingParticles.Count == 0))
                 return;
             UploadColliders(colliders);
             UploadMedia(media);
@@ -294,7 +294,7 @@ namespace Yu5h1Lib
             _shader.SetInt("_CellCount", _cellCount);
 
             int particles = _activeParticles.Count;
-            for (int s = 0; s < settings.substeps; s++)
+            for (int s = 0; s < settings.substeps && particles > 0; s++)
             {
                 _shader.SetInt("_SubstepIndex", s);
                 Dispatch(0, particles);
@@ -312,6 +312,7 @@ namespace Yu5h1Lib
             }
             if (_mediumData.Length > 0 && media.Count > 0)
                 Dispatch(10, particles);
+            Dispatch(15, _sleepingParticles.Count);
             extensions?.RunPostStep();
         }
 
