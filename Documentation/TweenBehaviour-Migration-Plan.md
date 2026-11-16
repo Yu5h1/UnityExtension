@@ -67,7 +67,13 @@ KFC 與 BonghuoVR 都以 `file:` 指向同一個 DOTweenExtension 來源。KFC �
 遷移前用同一組 KFC 素材比較兩種做法。
 
 - **`AnimationClip`**。沿用 Unity 的 Sprite 物件曲線。KFC 的 `Boss_jump.anim` 已使用 `m_Sprite` 曲線。以載入圖示確認相同方式能驅動 `Image.sprite` 並在暫停時循環，以齒輪按鈕確認 `SetSprite(int)` 的既有 UnityEvent 仍能指定影格。
-- **共用 `FrameStepResolver`**。由 Animation 播放元件使用共用影格計算，再寫入 Sprite。現行 resolver 用全域 `Time.time` 計算固定 FPS 循環。評估共用時要驗證能以各元件的非縮放經過時間保留播放起點與啟停行為，並提供 `SetSprite(int)` 讓事件直接指定影格。 [FrameStepResolver](../Packages/common/Runtime/Resolver/FrameStepResolver.cs)
+- **共用 `FrameStepResolver`**。以同一組素材驗證共用的影格索引計算及下列顯示入口，核對播放起點、循環順序與啟停行為。 [FrameStepResolver](../Packages/common/Runtime/Resolver/FrameStepResolver.cs)
+
+### 影格計算與顯示分工
+
+- 自動播放時，由呼叫端提供經過秒數與影格數，`FrameStepResolver` 依 FPS 算出影格索引，再交給元件的 `SetFrame(int)`。時鐘與播放位置由呼叫端管理。KFC 的 Loading 使用非縮放時間。
+- `SetFrame(int)` 由各元件實作。`TextureSequenceDriver` 換上該格貼圖，`TextureSheetDriver` 依索引更新材質的 UV scale／offset，Animation 的 Sprite 播放元件指定 `Image.sprite` 或 `SpriteRenderer.sprite`。
+- KFC 保留既有 `SetSprite(int)` UnityEvent 入口，內部轉呼叫 `SetFrame(int)`，沿用原目標與參數。手動指定立即顯示該格，保留播放狀態與目前時間軸位置。驗收時分別在播放中、暫停時和停止時指定影格，核對狀態維持原值。播放中的元件於後續更新繼續按原時間軸取樣。
 
 ### KFC 消費端與驗收條件
 
