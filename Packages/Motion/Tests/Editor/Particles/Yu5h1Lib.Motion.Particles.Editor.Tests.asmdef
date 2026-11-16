@@ -1,6 +1,6 @@
 {
   "name": "Yu5h1Lib.Motion.Particles.Editor.Tests",
-  "references": ["Yu5h1Lib.Motion.Particles"],
+  "references": ["Yu5h1Lib.Motion.Particles", "Yu5h1Lib.Motion.Particles.Editor"],
   "includePlatforms": ["Editor"],
   "optionalUnityReferences": ["TestAssemblies"],
   "autoReferenced": false,
