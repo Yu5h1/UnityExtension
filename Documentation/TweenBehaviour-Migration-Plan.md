@@ -69,7 +69,20 @@ KFC 與 BonghuoVR 都以 `file:` 指向同一個 DOTweenExtension 來源。KFC �
 - **`AnimationClip`**。沿用 Unity 的 Sprite 物件曲線。KFC 的 `Boss_jump.anim` 已使用 `m_Sprite` 曲線。以載入圖示確認相同方式能驅動 `Image.sprite` 並在暫停時循環，以齒輪按鈕確認 `SetSprite(int)` 的既有 UnityEvent 仍能指定影格。
 - **共用 `FrameStepResolver`**。由 Animation 播放元件使用共用影格計算，再寫入 Sprite。現行 resolver 用全域 `Time.time` 計算固定 FPS 循環。評估共用時要驗證能以各元件的非縮放經過時間保留播放起點與啟停行為，並提供 `SetSprite(int)` 讓事件直接指定影格。 [FrameStepResolver](../Packages/common/Runtime/Resolver/FrameStepResolver.cs)
 
-相容基準以 KFC 素材接線為準。`Loading.prefab` 配置六張 Sprite、一秒一輪、無限循環；在 `Time.timeScale = 0` 時仍須按原順序播放，停用及重新啟用的行為比對原版。`gearbutton.prefab`、`gearButtonDoor.prefab` 的 UnityEvent 呼叫 `SetSprite(0/1)` 後須顯示指定影格。素材接線已靜態核對，播放行為留待 Play Mode 驗證。
+### KFC 消費端與驗收條件
+
+2026-11-17 的腳本 GUID 盤點找到 11 筆 `DOSpriteAnimation` 直接引用，全在 KFC，包含備份場景。下表的輪長、自動播放與時鐘設定來自 Unity 隔離副本讀回。播放與事件效果以完整 KFC 專案的原版 Play Mode 作為比對基準。
+
+| 使用點 | 原有設定與接線 | 遷移驗收條件 |
+| --- | --- | --- |
+| `Assets/Scenes/Start.unity` 的 `Artwork/底圖/流星` | `SpriteRenderer`，6 張 Sprite，啟用後每 2 秒循環。 | 啟用後自動播放，6 張影格依原順序每 2 秒循環。暫停及恢復時核對縮放時間的行為。 |
+| `Assets/Scenes/A001.unity` 的 `OldMan` | 7 張 Sprite，啟用後每秒循環。 | 以原 `OldMan.prefab` 的場景實例核對繼承與覆寫。確認啟用後自動播放，7 張影格依原順序每秒循環。 |
+| `Assets/Scenes/A001.unity` 的 `繪製提示1_結果` | `SpriteRenderer`，10 張 Sprite，啟用後每 3 秒循環。 | 讓原場景流程顯示與隱藏提示。確認顯示時 10 張影格依原順序每 3 秒循環，重新顯示時與原版的起始影格及啟停行為一致。 |
+| `Assets/Resources/UI/Loading.prefab` 的 `Loading/Loading.../Image` | `Image`，6 張 Sprite，每秒循環。`UI_Manager` 從 Resources 載入，使用非縮放時間。 | 走原載入流程，確認在 `Time.timeScale = 0` 時，6 張影格仍依原順序每秒循環。停用後停止更新，重新啟用時依原版的起始影格播放。 |
+| `Assets/StaticResources/Gear/gearbutton.prefab` | 兩張 Sprite，啟用時不自動播放，由 UnityEvent 呼叫 `SetSprite(0/1)`。 | 保留 `SetSprite(int)` 的方法簽章、目標與原參數。觸發兩個原事件，確認立即顯示對應影格，並維持到下一次指定。 |
+| `Assets/StaticResources/Gear/gearButtonDoor.prefab` 的 `button` | 兩張 Sprite，啟用時不自動播放，保留 `SetSprite(0/1)` 事件，在 `A001`、`A002` 都有實例。 | 在 `A001` 與 `A002` 各觸發原按鈕流程，確認 `SetSprite(0/1)` 仍命中原目標且顯示對應影格。核對 Prefab 實例覆寫與同一流程中的其他 UnityEvent。 |
+
+`A001 backup.unity` 與 `A001 00.unity` 也有直接引用。若仍有使用，沿用對應使用點的驗收條件。
 
 ## 對外命名
 
